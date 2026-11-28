@@ -6,15 +6,7 @@ import { isAxiosError } from 'axios'
  * refused on 400/409 ({ field }), and slows guessing with 429.
  */
 export type ClaimProblem =
-  | 'invalid'
-  | 'expired'
-  | 'used'
-  | 'emailTaken'
-  | 'socialTaken'
-  | 'badEmail'
-  | 'weakPassword'
-  | 'tooMany'
-  | 'failed'
+  'invalid' | 'expired' | 'used' | 'emailTaken' | 'socialTaken' | 'badEmail' | 'weakPassword' | 'tooMany' | 'failed'
 
 export const MIN_CLAIM_PASSWORD = 8
 
@@ -81,7 +73,9 @@ export function readPendingClaim(now = Date.now()): PendingClaim | null {
     const pending = JSON.parse(raw) as Partial<PendingClaim>
     if (typeof pending.at !== 'number' || now - pending.at > PENDING_FOR_MS || now < pending.at) return null
     const token = readClaimToken(pending.token)
-    return token && typeof pending.hint === 'string' && pending.hint ? { token, hint: pending.hint, at: pending.at } : null
+    return token && typeof pending.hint === 'string' && pending.hint
+      ? { token, hint: pending.hint, at: pending.at }
+      : null
   } catch {
     return null
   }

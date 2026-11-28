@@ -60,46 +60,29 @@ export function WalkInDialog({ place, onOpenChange }: WalkInDialogProps) {
             <Play className='h-5 w-5 rtl:rotate-180' />
             {t('startClockAt', { name: localized(place.name) })}
           </DialogTitle>
-          <DialogDescription className='tabular-nums'>
-            {tariffLine(place, t, localized)}
-          </DialogDescription>
+          <DialogDescription className='tabular-nums'>{tariffLine(place, t, localized)}</DialogDescription>
         </DialogHeader>
 
         <div className='space-y-4 py-2'>
           {hasOptions(place.tariff) && (
             <div className='space-y-2'>
               <Label>{t('rate')}</Label>
-              <RateOptionToggle
-                options={options}
-                value={chosen}
-                onChange={setOptionCode}
-              />
+              <RateOptionToggle options={options} value={chosen} onChange={setOptionCode} />
             </div>
           )}
 
           <div className='space-y-2'>
             <Label htmlFor='walkInNotes'>{t('notesOptional')}</Label>
-            <Textarea
-              id='walkInNotes'
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              rows={2}
-            />
+            <Textarea id='walkInNotes' value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} />
           </div>
         </div>
 
         <DialogFooter>
-          <Button
-            type='button'
-            variant='outline'
-            onClick={() => onOpenChange(false)}
-          >
+          <Button type='button' variant='outline' onClick={() => onOpenChange(false)}>
             {t('cancel')}
           </Button>
           <Button onClick={start} disabled={actions.isBusy}>
-            {actions.isBusy && (
-              <Loader2 className='me-2 h-4 w-4 animate-spin' />
-            )}
+            {actions.isBusy && <Loader2 className='me-2 h-4 w-4 animate-spin' />}
             {t('start')}
           </Button>
         </DialogFooter>

@@ -9,25 +9,13 @@ import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
 import { DatePicker } from '@/components/date-picker'
 import { ErrorState } from '@/components/error-state'
 import { Money } from '@/components/money'
-import {
-  LEDGER_SOURCE,
-  LEDGER_TYPE,
-  ledgerTypeLabel,
-  MANUAL_LEDGER_TYPES,
-  readableDay,
-} from '../format'
+import { LEDGER_SOURCE, LEDGER_TYPE, ledgerTypeLabel, MANUAL_LEDGER_TYPES, readableDay } from '../format'
 import { ledgerQueryOptions } from '../queries'
 import { usePayrollActions } from '../use-payroll-actions'
 
@@ -81,15 +69,8 @@ export function LedgerSection({
       <div className='flex flex-wrap items-center justify-between gap-2'>
         {showBalance ? (
           <div>
-            <div className='text-muted-foreground text-xs'>
-              {balance < 0 ? t('theyOwe') : t('owedToThem')}
-            </div>
-            <div
-              className={cn(
-                'text-lg font-semibold tabular-nums',
-                balance < 0 && 'text-destructive'
-              )}
-            >
+            <div className='text-muted-foreground text-xs'>{balance < 0 ? t('theyOwe') : t('owedToThem')}</div>
+            <div className={cn('text-lg font-semibold tabular-nums', balance < 0 && 'text-destructive')}>
               {formatEgp(Math.abs(balance))}
             </div>
           </div>
@@ -97,12 +78,7 @@ export function LedgerSection({
           <span />
         )}
         {!adding && (
-          <Button
-            type='button'
-            variant='outline'
-            size='sm'
-            onClick={() => setAdding(true)}
-          >
+          <Button type='button' variant='outline' size='sm' onClick={() => setAdding(true)}>
             <Plus />
             {t('addLedgerEntry')}
           </Button>
@@ -110,10 +86,7 @@ export function LedgerSection({
       </div>
 
       {adding && (
-        <form
-          onSubmit={submit}
-          className='bg-muted/40 space-y-3 rounded-lg border p-3'
-        >
+        <form onSubmit={submit} className='bg-muted/40 space-y-3 rounded-lg border p-3'>
           <div className='grid gap-3 sm:grid-cols-3'>
             <div className='flex flex-col gap-1.5'>
               <Label>{t('type')}</Label>
@@ -146,12 +119,7 @@ export function LedgerSection({
             </div>
             <div className='flex flex-col gap-1.5'>
               <Label htmlFor='ledger-date'>{t('date')}</Label>
-              <DatePicker
-                id='ledger-date'
-                value={date}
-                onChange={setDate}
-                disabled={(d) => d > new Date()}
-              />
+              <DatePicker id='ledger-date' value={date} onChange={setDate} disabled={(d) => d > new Date()} />
             </div>
           </div>
           <div className='flex flex-col gap-1.5'>
@@ -164,19 +132,10 @@ export function LedgerSection({
             />
           </div>
           <div className='flex justify-end gap-2'>
-            <Button
-              type='button'
-              variant='ghost'
-              size='sm'
-              onClick={() => setAdding(false)}
-            >
+            <Button type='button' variant='ghost' size='sm' onClick={() => setAdding(false)}>
               {t('cancel')}
             </Button>
-            <Button
-              type='submit'
-              size='sm'
-              disabled={isPending || !(parseFloat(amount) > 0)}
-            >
+            <Button type='submit' size='sm' disabled={isPending || !(parseFloat(amount) > 0)}>
               {isPending && <Spinner />}
               {t('post')}
             </Button>
@@ -185,11 +144,7 @@ export function LedgerSection({
       )}
 
       {ledger.isError ? (
-        <ErrorState
-          size='section'
-          error={ledger.error}
-          onRetry={ledger.refetch}
-        />
+        <ErrorState size='section' error={ledger.error} onRetry={ledger.refetch} />
       ) : ledger.isLoading ? (
         <Skeleton className='h-24' />
       ) : (ledger.data?.entries.length ?? 0) === 0 ? (
@@ -199,29 +154,16 @@ export function LedgerSection({
           {ledger.data!.entries.map((entry) => {
             const signed = toNumber(entry.signed)
             return (
-              <li
-                key={String(entry.id)}
-                className='flex items-start justify-between gap-3 py-2.5'
-              >
+              <li key={String(entry.id)} className='flex items-start justify-between gap-3 py-2.5'>
                 <div className='min-w-0'>
-                  <div className='font-medium'>
-                    {ledgerTypeLabel(entry.type, t)}
-                  </div>
+                  <div className='font-medium'>{ledgerTypeLabel(entry.type, t)}</div>
                   <div className='text-muted-foreground mt-0.5 text-xs'>
                     {readableDay(entry.date, locale, t)}
                     {entry.note && ` · ${entry.note}`}
-                    {toNumber(entry.source) === LEDGER_SOURCE.tillPayOut &&
-                      ` · ${t('fromTill')}`}
+                    {toNumber(entry.source) === LEDGER_SOURCE.tillPayOut && ` · ${t('fromTill')}`}
                   </div>
                 </div>
-                <Money
-                  value={signed}
-                  signed
-                  className={cn(
-                    'shrink-0',
-                    signed < 0 && 'text-muted-foreground'
-                  )}
-                />
+                <Money value={signed} signed className={cn('shrink-0', signed < 0 && 'text-muted-foreground')} />
               </li>
             )
           })}

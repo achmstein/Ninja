@@ -4,41 +4,22 @@ import { getRouteApi } from '@tanstack/react-router'
 import { useTable } from '@tanstack/react-table'
 import { listItemsOptions } from '@/api/catalog/@tanstack/react-query.gen'
 import { type ItemAdvice, type LocalizedText } from '@/api/inventory'
-import {
-  adviseMenuMutation,
-  getRecipeCostsOptions,
-} from '@/api/inventory/@tanstack/react-query.gen'
+import { adviseMenuMutation, getRecipeCostsOptions } from '@/api/inventory/@tanstack/react-query.gen'
 import { getBreakdownReportOptions } from '@/api/sales/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { businessDateOf, businessDaysWindow } from '@/lib/business-day'
 import { useContentLanguages } from '@/lib/content-languages'
-import {
-  useLanguage,
-  useLocalized,
-  useT,
-  type TranslationKey,
-} from '@/lib/i18n'
+import { useLanguage, useLocalized, useT, type TranslationKey } from '@/lib/i18n'
 import { formatEgp } from '@/lib/money'
 import { toast } from '@/lib/toast'
 import { addDays } from '@/lib/zoned-time'
 import { useTableUrlState } from '@/hooks/use-table-url-state'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { AiButton } from '@/components/ai-button'
-import {
-  DataTable,
-  DataTablePagination,
-  DataTableToolbar,
-  dataTableFeatures,
-} from '@/components/data-table'
+import { DataTable, DataTablePagination, DataTableToolbar, dataTableFeatures } from '@/components/data-table'
 import { EmptyState } from '@/components/empty-state'
 import { ErrorState } from '@/components/error-state'
 import { Main } from '@/components/layout/main'
@@ -49,21 +30,9 @@ import { assistErrorMessage } from '@/features/assist/errors'
 import { useAiAvailable } from '@/features/assist/use-ai-available'
 import { useTillWindow } from '@/features/till/use-till-window'
 import { toMenuCostRows } from './menu-cost-rows'
-import {
-  ClassChip,
-  getMenuEngineeringColumns,
-} from './menu-engineering-columns'
-import {
-  ADVICE_LABEL,
-  CLASS_LABEL,
-  CLASS_TONE,
-} from './menu-engineering-labels'
-import {
-  MENU_CLASSES,
-  countClasses,
-  toMenuEngineering,
-  type MenuClass,
-} from './menu-engineering-rows'
+import { ClassChip, getMenuEngineeringColumns } from './menu-engineering-columns'
+import { ADVICE_LABEL, CLASS_LABEL, CLASS_TONE } from './menu-engineering-labels'
+import { MENU_CLASSES, countClasses, toMenuEngineering, type MenuClass } from './menu-engineering-rows'
 import { StockTabs } from './stock-tabs'
 
 const route = getRouteApi('/_authenticated/inventory/menu-engineering')
@@ -112,12 +81,8 @@ export function MenuEngineering() {
     return { from: window.from.toISOString(), to: window.to.toISOString() }
   }, [now, days, hours])
 
-  const costs = useQuery(
-    getRecipeCostsOptions({ query: { 'api-version': API_VERSION } })
-  )
-  const items = useQuery(
-    listItemsOptions({ query: { 'api-version': API_VERSION } })
-  )
+  const costs = useQuery(getRecipeCostsOptions({ query: { 'api-version': API_VERSION } }))
+  const items = useQuery(listItemsOptions({ query: { 'api-version': API_VERSION } }))
   const sales = useQuery({
     ...getBreakdownReportOptions({
       query: {
@@ -178,13 +143,12 @@ export function MenuEngineering() {
     })
   }
 
-  const { globalFilter, onGlobalFilterChange, pagination, onPaginationChange } =
-    useTableUrlState({
-      search,
-      navigate,
-      pagination: { defaultPageSize: 20 },
-      globalFilter: { enabled: true, key: 'q' },
-    })
+  const { globalFilter, onGlobalFilterChange, pagination, onPaginationChange } = useTableUrlState({
+    search,
+    navigate,
+    pagination: { defaultPageSize: 20 },
+    globalFilter: { enabled: true, key: 'q' },
+  })
 
   const columns = useMemo(
     () => getMenuEngineeringColumns({ t, localized, advice }),
@@ -251,11 +215,7 @@ export function MenuEngineering() {
           ))}
         </div>
       ) : matrix.noSales ? (
-        <EmptyState
-          compact
-          title={t('menuEngineeringNoSales')}
-          className='border border-dashed'
-        />
+        <EmptyState compact title={t('menuEngineeringNoSales')} className='border border-dashed' />
       ) : (
         <>
           <p className='text-muted-foreground text-sm'>
@@ -267,34 +227,28 @@ export function MenuEngineering() {
 
           {/* The matrix itself: popular on top, paying on the start side */}
           <div className='grid gap-4 sm:grid-cols-2'>
-            {(['plowhorse', 'star', 'dog', 'puzzle'] as MenuClass[]).map(
-              (c) => {
-                const items = matrix.rows.filter((r) => r.menuClass === c)
-                return (
-                  <Card key={c} className='gap-3 py-4'>
-                    <CardHeader className='px-4'>
-                      <CardTitle className='flex items-center justify-between gap-2'>
-                        <StatusChip tone={CLASS_TONE[c]}>
-                          {t(CLASS_LABEL[c])}
-                        </StatusChip>
-                        <span className='text-2xl tabular-nums'>
-                          {counts[c]}
-                        </span>
-                      </CardTitle>
-                      <CardDescription>{t(CLASS_HINT[c])}</CardDescription>
-                    </CardHeader>
-                    <CardContent className='px-4'>
-                      <p className='truncate text-sm'>
-                        {items
-                          .slice(0, 4)
-                          .map((r) => localized(r.name))
-                          .join(' · ') || '—'}
-                      </p>
-                    </CardContent>
-                  </Card>
-                )
-              }
-            )}
+            {(['plowhorse', 'star', 'dog', 'puzzle'] as MenuClass[]).map((c) => {
+              const items = matrix.rows.filter((r) => r.menuClass === c)
+              return (
+                <Card key={c} className='gap-3 py-4'>
+                  <CardHeader className='px-4'>
+                    <CardTitle className='flex items-center justify-between gap-2'>
+                      <StatusChip tone={CLASS_TONE[c]}>{t(CLASS_LABEL[c])}</StatusChip>
+                      <span className='text-2xl tabular-nums'>{counts[c]}</span>
+                    </CardTitle>
+                    <CardDescription>{t(CLASS_HINT[c])}</CardDescription>
+                  </CardHeader>
+                  <CardContent className='px-4'>
+                    <p className='truncate text-sm'>
+                      {items
+                        .slice(0, 4)
+                        .map((r) => localized(r.name))
+                        .join(' · ') || '—'}
+                    </p>
+                  </CardContent>
+                </Card>
+              )
+            })}
           </div>
 
           {aiAvailable && placed && (
@@ -313,29 +267,18 @@ export function MenuEngineering() {
                     aria-label={t('assistMenuAdviceNote')}
                     disabled={advise.isPending}
                   />
-                  <AiButton
-                    className='h-9 shrink-0'
-                    pending={advise.isPending}
-                    onClick={askNinja}
-                  >
+                  <AiButton className='h-9 shrink-0' pending={advise.isPending} onClick={askNinja}>
                     {t('assistMenuAdvice')}
                   </AiButton>
                 </div>
-                {summary && (
-                  <p className='text-sm leading-relaxed'>
-                    {localized(summary)}
-                  </p>
-                )}
+                {summary && <p className='text-sm leading-relaxed'>{localized(summary)}</p>}
               </CardContent>
             </Card>
           )}
         </>
       )}
 
-      <DataTableToolbar
-        table={table}
-        searchPlaceholder={t('searchMenuCostPlaceholder')}
-      />
+      <DataTableToolbar table={table} searchPlaceholder={t('searchMenuCostPlaceholder')} />
 
       <DataTable
         table={table}
@@ -356,18 +299,12 @@ export function MenuEngineering() {
                   {said && ADVICE_LABEL[said.action] && (
                     <>
                       <Dot />
-                      <span className='text-primary'>
-                        {t(ADVICE_LABEL[said.action])}
-                      </span>
+                      <span className='text-primary'>{t(ADVICE_LABEL[said.action])}</span>
                     </>
                   )}
                 </>
               }
-              trailing={
-                <span className='tabular-nums'>
-                  {formatEgp(r.contribution)}
-                </span>
-              }
+              trailing={<span className='tabular-nums'>{formatEgp(r.contribution)}</span>}
               trailingMeta={
                 <span className='text-muted-foreground text-xs tabular-nums'>
                   {t('margin')} {formatEgp(r.margin)}

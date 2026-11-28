@@ -6,9 +6,7 @@ export type Lang = 'en' | 'ar'
 export type LocalizedValue = { en: string; ar: string }
 
 /** From the API's nullable pair to form state */
-export function toLocalizedValue(
-  text: LocalizedText | null | undefined
-): LocalizedValue {
+export function toLocalizedValue(text: LocalizedText | null | undefined): LocalizedValue {
   return { en: text?.en ?? '', ar: text?.ar ?? '' }
 }
 
@@ -31,8 +29,7 @@ export function primaryText(text: LocalizedText | null | undefined): string {
   return text?.en?.trim() || text?.ar?.trim() || ''
 }
 
-const ARABIC_LETTER =
-  /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/
+const ARABIC_LETTER = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/
 
 /**
  * A text whose language nobody said (a line read off a receipt): Arabic

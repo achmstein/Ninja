@@ -2,17 +2,17 @@ import { useEffect, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Loader2 } from 'lucide-react'
 import { takePartPaymentMutation } from '@/api/sales/@tanstack/react-query.gen'
-import { NumericKeypad } from '@/components/numeric-keypad'
-import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { openCashDrawer } from '@/features/printing/print-sheets'
-import { BASE_TENDERS } from '@/features/ticket/tenders'
 import { API_VERSION } from '@/lib/api-client'
 import { handleServerError } from '@/lib/handle-server-error'
 import { useT } from '@/lib/i18n'
 import { useMoney } from '@/lib/money'
 import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { NumericKeypad } from '@/components/numeric-keypad'
+import { openCashDrawer } from '@/features/printing/print-sheets'
+import { BASE_TENDERS } from '@/features/ticket/tenders'
 import { partAmountProblem } from './part-amounts'
 
 /**
@@ -135,7 +135,9 @@ export function PartPaymentSheet({
             {t('partPaySplit', { items: money(items), extra: money(extra) })}
           </p>
         )}
-        {problem === 'belowItems' && <p className='text-destructive type-detail'>{t('partPayBelowItems', { items: money(items) })}</p>}
+        {problem === 'belowItems' && (
+          <p className='text-destructive type-detail'>{t('partPayBelowItems', { items: money(items) })}</p>
+        )}
         {problem === 'paysAll' && <p className='text-destructive type-detail'>{t('partPayPaysAll')}</p>}
 
         {/* The ways of one choice, the same width */}
@@ -149,7 +151,7 @@ export function PartPaymentSheet({
               onClick={() => setTender(option)}
               className={cn(
                 'h-12 rounded-md text-base font-medium',
-                tender.name === option.name ? 'bg-background shadow-sm ring-1 ring-black/5' : 'text-muted-foreground',
+                tender.name === option.name ? 'bg-background shadow-sm ring-1 ring-black/5' : 'text-muted-foreground'
               )}
             >
               {t(option.labelKey)}

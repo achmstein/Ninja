@@ -41,20 +41,14 @@ export function useCustomizationsAssist() {
     onError: (error) => toast.error(assistErrorMessage(error)),
   })
 
-  const suggest = (
-    args: SuggestArgs
-  ): Promise<SuggestCustomizationsResponse> => {
+  const suggest = (args: SuggestArgs): Promise<SuggestCustomizationsResponse> => {
     const body: SuggestCustomizationsRequest = {
       name: toSide(args.name),
       description:
-        args.description && hasText(args.description.en + args.description.ar)
-          ? toSide(args.description)
-          : null,
+        args.description && hasText(args.description.en + args.description.ar) ? toSide(args.description) : null,
       catalogTypeId: args.catalogTypeId ?? null,
       price: args.price ?? 0,
-      existingGroups: (args.existingGroups ?? []).flatMap((name) =>
-        name ? [name] : []
-      ),
+      existingGroups: (args.existingGroups ?? []).flatMap((name) => (name ? [name] : [])),
       languages,
       note: args.note?.trim() || null,
     }

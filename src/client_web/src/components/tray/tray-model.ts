@@ -16,7 +16,13 @@ export function traySummary(lines: CartLine[], max = TRAY_THUMBS): TraySummary {
   // The newest first, so the item that just flew in sits at the front
   const newest = [...lines].reverse()
   return {
-    thumbs: newest.slice(0, max).map((l) => ({ key: lineKey(l), pictureUrl: l.pictureUrl, name: l.nameEn || l.nameAr, nameAr: l.nameAr, quantity: l.quantity })),
+    thumbs: newest.slice(0, max).map((l) => ({
+      key: lineKey(l),
+      pictureUrl: l.pictureUrl,
+      name: l.nameEn || l.nameAr,
+      nameAr: l.nameAr,
+      quantity: l.quantity,
+    })),
     more: Math.max(0, newest.length - max),
     count: cartCount(lines),
     total: cartTotal(lines),

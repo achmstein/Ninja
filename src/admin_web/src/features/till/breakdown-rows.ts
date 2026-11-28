@@ -1,8 +1,4 @@
-import {
-  type CashierTotal,
-  type ItemTotal,
-  type LocalizedText,
-} from '@/api/sales'
+import { type CashierTotal, type ItemTotal, type LocalizedText } from '@/api/sales'
 import { type TranslationKey } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 
@@ -28,21 +24,11 @@ export function itemRows(items: ItemTotal[] | undefined): ItemRow[] {
       const refundedQty = toNumber(item.refundedQty)
       const refundedAmount = toNumber(item.refundedAmount)
       return {
-        key:
-          item.catalogItemId != null
-            ? `item-${item.catalogItemId}`
-            : `line-${index}`,
-        catalogItemId:
-          item.catalogItemId != null ? toNumber(item.catalogItemId) : null,
+        key: item.catalogItemId != null ? `item-${item.catalogItemId}` : `line-${index}`,
+        catalogItemId: item.catalogItemId != null ? toNumber(item.catalogItemId) : null,
         description: item.description,
-        amount:
-          item.netAmount != null
-            ? toNumber(item.netAmount)
-            : toNumber(item.amount) - refundedAmount,
-        qty:
-          item.netQty != null
-            ? toNumber(item.netQty)
-            : toNumber(item.qty) - refundedQty,
+        amount: item.netAmount != null ? toNumber(item.netAmount) : toNumber(item.amount) - refundedAmount,
+        qty: item.netQty != null ? toNumber(item.netQty) : toNumber(item.qty) - refundedQty,
         refundedQty,
         refundedAmount,
       }
@@ -74,10 +60,7 @@ export function categoryRows(
       }[]
     | undefined
 ): CategoryRow[] {
-  const categoryOf = new Map<
-    number,
-    { id: number; name: LocalizedText | undefined }
-  >()
+  const categoryOf = new Map<number, { id: number; name: LocalizedText | undefined }>()
   for (const item of catalog ?? []) {
     if (item.id == null || item.catalogTypeId == null) continue
     categoryOf.set(toNumber(item.id), {
@@ -87,8 +70,7 @@ export function categoryRows(
   }
   const groups = new Map<string, CategoryRow>()
   for (const row of items) {
-    const category =
-      row.catalogItemId != null ? categoryOf.get(row.catalogItemId) : undefined
+    const category = row.catalogItemId != null ? categoryOf.get(row.catalogItemId) : undefined
     const key = category ? String(category.id) : 'none'
     const group = groups.get(key) ?? {
       id: category?.id ?? null,
@@ -115,7 +97,5 @@ export const cashierKindKey: Record<string, TranslationKey> = {
 
 /** A cashier's net sales (gross less their refunds); older servers only send gross as `net`. */
 export function cashierNetSales(row: CashierTotal): number {
-  return row.netSales != null
-    ? toNumber(row.netSales)
-    : toNumber(row.net) - toNumber(row.refunds)
+  return row.netSales != null ? toNumber(row.netSales) : toNumber(row.net) - toNumber(row.refunds)
 }

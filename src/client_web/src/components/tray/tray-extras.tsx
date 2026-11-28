@@ -1,13 +1,13 @@
 import { useRef, useState } from 'react'
-import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { Award, Loader2, Minus, NotebookPen, Plus, Tag, X } from 'lucide-react'
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { useT } from '@/lib/i18n'
 import { blurSwap, springOpen, springSoft } from '@/lib/motion'
 import { reveal, revealField } from '@/lib/reveal'
 import type { CheckoutExtras } from '@/lib/use-checkout-extras'
 import { cn } from '@/lib/utils'
-import { Odometer } from '../ninja/odometer'
 import { POINTS_STEP, promoReasonKey } from '@/components/cart/savings-model'
+import { Odometer } from '../ninja/odometer'
 
 type Open = 'note' | 'promo' | 'points' | null
 
@@ -39,9 +39,7 @@ export function TrayExtras({ extras }: { extras: CheckoutExtras }) {
         </Pill>
         <Pill icon={Tag} on={open === 'promo'} set={promoOn} onClick={() => toggle('promo')}>
           {promo.code ? (
-            <span className={cn('font-mono tracking-wide', promo.reason && 'text-red-300')}>
-              {promo.code}
-            </span>
+            <span className={cn('font-mono tracking-wide', promo.reason && 'text-red-300')}>{promo.code}</span>
           ) : (
             t('promoCode')
           )}
@@ -67,21 +65,27 @@ export function TrayExtras({ extras }: { extras: CheckoutExtras }) {
             className='scroll-mb-4 overflow-hidden'
           >
             <AnimatePresence mode='wait' initial={false}>
-            <motion.div key={open} {...swap} transition={{ duration: 0.14 }} onAnimationComplete={() => reveal(panel.current, reduced)} className='pt-1'>
-              {open === 'note' && (
-                <textarea
-                  autoFocus
-                  onFocus={(e) => revealField(e.currentTarget)}
-                  rows={2}
-                  value={extras.note}
-                  onChange={(e) => extras.setNote(e.target.value)}
-                  placeholder={t('orderNoteOptional')}
-                  className='bg-background/10 placeholder:text-background/50 focus:bg-background/15 block w-full resize-none rounded-2xl px-4 py-3 text-base transition-colors outline-none'
-                />
-              )}
-              {open === 'promo' && <PromoField extras={extras} onDone={() => setOpen(null)} />}
-              {open === 'points' && <PointsField extras={extras} />}
-            </motion.div>
+              <motion.div
+                key={open}
+                {...swap}
+                transition={{ duration: 0.14 }}
+                onAnimationComplete={() => reveal(panel.current, reduced)}
+                className='pt-1'
+              >
+                {open === 'note' && (
+                  <textarea
+                    autoFocus
+                    onFocus={(e) => revealField(e.currentTarget)}
+                    rows={2}
+                    value={extras.note}
+                    onChange={(e) => extras.setNote(e.target.value)}
+                    placeholder={t('orderNoteOptional')}
+                    className='bg-background/10 placeholder:text-background/50 focus:bg-background/15 block w-full resize-none rounded-2xl px-4 py-3 text-base transition-colors outline-none'
+                  />
+                )}
+                {open === 'promo' && <PromoField extras={extras} onDone={() => setOpen(null)} />}
+                {open === 'points' && <PointsField extras={extras} />}
+              </motion.div>
             </AnimatePresence>
           </motion.div>
         )}
@@ -90,7 +94,7 @@ export function TrayExtras({ extras }: { extras: CheckoutExtras }) {
       {/* Why a code does not apply, said under the row whether its field is open or not */}
       <AnimatePresence initial={false}>
         {promo.code && promo.reason && (
-          <motion.p key='reason' {...swap} className='px-1 text-caption text-red-300'>
+          <motion.p key='reason' {...swap} className='text-caption px-1 text-red-300'>
             {t(promoReasonKey(promo.reason))}
           </motion.p>
         )}
@@ -123,7 +127,7 @@ function Pill({
       aria-expanded={on}
       onClick={onClick}
       className={cn(
-        'flex h-9 min-w-0 max-w-full items-center gap-1.5 rounded-full px-3 text-caption font-semibold whitespace-nowrap transition-colors duration-200',
+        'text-caption flex h-9 max-w-full min-w-0 items-center gap-1.5 rounded-full px-3 font-semibold whitespace-nowrap transition-colors duration-200',
         set ? 'bg-emerald-500/20 text-emerald-300' : on ? 'bg-background/20' : 'bg-background/10 opacity-80'
       )}
     >
@@ -141,11 +145,16 @@ function PromoField({ extras, onDone }: { extras: CheckoutExtras; onDone: () => 
   if (promo.code) {
     return (
       <div className='bg-background/10 flex items-center gap-2 rounded-2xl px-4 py-2'>
-        <span className='min-w-0 flex-1 truncate font-mono text-note font-bold tracking-wide'>{promo.code}</span>
+        <span className='text-note min-w-0 flex-1 truncate font-mono font-bold tracking-wide'>{promo.code}</span>
         {promo.checking ? (
           <Loader2 className='size-4 animate-spin opacity-60' />
         ) : (
-          <button type='button' aria-label={t('removePromo')} onClick={promo.clear} className='bg-background/15 grid size-8 place-items-center rounded-full'>
+          <button
+            type='button'
+            aria-label={t('removePromo')}
+            onClick={promo.clear}
+            className='bg-background/15 grid size-8 place-items-center rounded-full'
+          >
             <X className='size-4' />
           </button>
         )}
@@ -174,7 +183,11 @@ function PromoField({ extras, onDone }: { extras: CheckoutExtras; onDone: () => 
         autoComplete='off'
         className='placeholder:text-background/50 h-9 min-w-0 flex-1 bg-transparent text-base uppercase outline-none placeholder:normal-case'
       />
-      <button type='submit' disabled={!input.trim()} className='bg-background text-foreground h-9 shrink-0 rounded-full px-4 text-caption font-bold disabled:opacity-40'>
+      <button
+        type='submit'
+        disabled={!input.trim()}
+        className='bg-background text-foreground text-caption h-9 shrink-0 rounded-full px-4 font-bold disabled:opacity-40'
+      >
         {t('apply')}
       </button>
     </form>
@@ -227,7 +240,7 @@ function PointsField({ extras }: { extras: CheckoutExtras }) {
         type='button'
         disabled={all}
         onClick={() => set(points.max)}
-        className='bg-background text-foreground h-9 shrink-0 rounded-full px-3.5 text-caption font-bold disabled:opacity-40'
+        className='bg-background text-foreground text-caption h-9 shrink-0 rounded-full px-3.5 font-bold disabled:opacity-40'
       >
         {t('ninjaUseAllPoints')}
       </button>

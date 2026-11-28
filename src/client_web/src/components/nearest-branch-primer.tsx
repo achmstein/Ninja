@@ -1,13 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { LocateFixed, Loader2, MapPinned } from 'lucide-react'
+import { useDeliveryStore } from '@/stores/delivery-store'
 import { useAtBranch } from '@/lib/at-branch'
 import { useBranches } from '@/lib/branch'
 import { pointOf, useDistance, useLocationPermission, useMyLocation } from '@/lib/geo'
 import { useLocalized, useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
 import { moveToNearest, useSayOrderMoved } from '@/lib/use-branch-switch'
-import { useDeliveryStore } from '@/stores/delivery-store'
 import { pillAction, pillCancel, sheetFooterClass } from '@/components/ui/ninja-sheet'
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 
@@ -79,7 +79,8 @@ export function NearestBranchPrimer() {
     const { wanted: delivering, address } = useDeliveryStore.getState()
     if (delivering && address) return
     const moved = moveToNearest(queryClient, branches, location.here, (move) => say(Number(moved?.branch.id), move))
-    if (moved) toast.success(t('nearestBranchMoved', { name: localized(moved.branch.name), distance: distance(moved.meters) }))
+    if (moved)
+      toast.success(t('nearestBranchMoved', { name: localized(moved.branch.name), distance: distance(moved.meters) }))
   }, [location.here, branches, queryClient, say, t, localized, distance])
 
   // Refused at the browser's own prompt: said, and the sheet goes

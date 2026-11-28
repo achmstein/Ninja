@@ -77,11 +77,7 @@ function offsetAt(instantMs: number, timeZone: string): number {
  * `date`. A time the clock skips (spring forward) lands just after the gap;
  * one it reads twice (fall back) is the first of the two.
  */
-export function zonedTime(
-  date: PlainDate,
-  minutes: number,
-  timeZone: string
-): Date {
+export function zonedTime(date: PlainDate, minutes: number, timeZone: string): Date {
   const zone = safeTimeZone(timeZone)
   const wall = Date.UTC(date.year, date.month - 1, date.day, 0, minutes)
   // Two passes settle on the offset in force at the answer itself
@@ -108,11 +104,7 @@ export function addDays(date: PlainDate, days: number): PlainDate {
 
 /** Whole days from `a` to `b` (positive when b is later). */
 export function daysBetween(a: PlainDate, b: PlainDate): number {
-  return Math.round(
-    (Date.UTC(b.year, b.month - 1, b.day) -
-      Date.UTC(a.year, a.month - 1, a.day)) /
-      86_400_000
-  )
+  return Math.round((Date.UTC(b.year, b.month - 1, b.day) - Date.UTC(a.year, a.month - 1, a.day)) / 86_400_000)
 }
 
 export function comparePlainDates(a: PlainDate, b: PlainDate): number {
@@ -125,9 +117,7 @@ export function plainDateKey(date: PlainDate): string {
   return `${pad(date.year, 4)}-${pad(date.month)}-${pad(date.day)}`
 }
 
-export function parsePlainDate(
-  value: string | null | undefined
-): PlainDate | undefined {
+export function parsePlainDate(value: string | null | undefined): PlainDate | undefined {
   const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value ?? '')
   if (!match) return undefined
   return {

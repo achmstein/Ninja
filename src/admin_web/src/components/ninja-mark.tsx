@@ -9,11 +9,7 @@ function spring(t: number, freq: number, zeta: number) {
   if (t <= 0) return 0
   const w = TAU * freq
   const wd = w * Math.sqrt(1 - zeta * zeta)
-  return (
-    1 -
-    Math.exp(-zeta * w * t) *
-      (Math.cos(wd * t) + ((zeta * w) / wd) * Math.sin(wd * t))
-  )
+  return 1 - Math.exp(-zeta * w * t) * (Math.cos(wd * t) + ((zeta * w) / wd) * Math.sin(wd * t))
 }
 
 /** A decaying swing out and back: the squash and stretch after the pop */
@@ -83,10 +79,7 @@ export function NinjaMark({
         swing = wobble(t - GATHER, 3.4, 0.32)
       }
       const bob = -0.35 * Math.sin((t - 0.7) * TAU * 0.8) * idle
-      place.current?.setAttribute(
-        'transform',
-        `translate(11 12.5) scale(${n(scale)}) translate(-11 -12.5)`
-      )
+      place.current?.setAttribute('transform', `translate(11 12.5) scale(${n(scale)}) translate(-11 -12.5)`)
       head.current?.setAttribute(
         'transform',
         `translate(0 ${n(bob)}) translate(11 12.5) scale(${n(1 - 0.16 * swing)} ${n(1 + 0.16 * swing)}) translate(-11 -12.5)`
@@ -102,14 +95,8 @@ export function NinjaMark({
       const e2y = lerp(13.8, 13.0 + 1.2 * Math.sin(w + 2.1), kick) + 0.22 * f2
       const c1y = (11 + e1y) / 2 + 1.6 * Math.sin(w + 1.2) * kick + 0.55 * f1
       const c2y = (11.8 + e2y) / 2 + 1.6 * Math.sin(w + 3.3) * kick + 0.55 * f2
-      tail1.current?.setAttribute(
-        'd',
-        `M18.6 11 Q${n((18.6 + e1x) / 2)} ${n(c1y)} ${n(e1x)} ${n(e1y)}`
-      )
-      tail2.current?.setAttribute(
-        'd',
-        `M18.6 11.8 Q${n((18.6 + e2x) / 2)} ${n(c2y)} ${n(e2x)} ${n(e2y)}`
-      )
+      tail1.current?.setAttribute('d', `M18.6 11 Q${n((18.6 + e1x) / 2)} ${n(c1y)} ${n(e1x)} ${n(e1y)}`)
+      tail2.current?.setAttribute('d', `M18.6 11.8 Q${n((18.6 + e2x) / 2)} ${n(c2y)} ${n(e2x)} ${n(e2y)}`)
     }
 
     const tick = (now: number) => {
@@ -119,8 +106,7 @@ export function NinjaMark({
         draw(t, clamp((elapsed - 0.4) / 0.4))
       } else {
         // The flutter comes in after the pop and fades out again before it rests
-        const idle =
-          clamp((elapsed - 0.7) / 0.5) * clamp((REST_END - elapsed) / 0.6)
+        const idle = clamp((elapsed - 0.7) / 0.5) * clamp((REST_END - elapsed) / 0.6)
         draw(Math.min(elapsed, REST_END), idle)
         if (elapsed >= REST_END) {
           draw(REST_END, 0)
@@ -134,33 +120,18 @@ export function NinjaMark({
   }, [working, replay, reduced])
 
   return (
-    <svg
-      viewBox='0 0 24 24'
-      aria-hidden
-      className={cn('ninja-mark overflow-visible', className)}
-    >
+    <svg viewBox='0 0 24 24' aria-hidden className={cn('ninja-mark overflow-visible', className)}>
       <mask id={slit}>
         <rect width='24' height='24' fill='white' />
         <rect x='5' y='10.2' width='12' height='4' rx='2' fill='black' />
       </mask>
       <g ref={place}>
         <g ref={head}>
-          <circle
-            cx='11'
-            cy='12.5'
-            r='8.5'
-            fill='currentColor'
-            mask={`url(#${slit})`}
-          />
+          <circle cx='11' cy='12.5' r='8.5' fill='currentColor' mask={`url(#${slit})`} />
           <ellipse cx='8.6' cy='12.2' rx='1.1' ry='0.85' fill='currentColor' />
           <ellipse cx='13.4' cy='12.2' rx='1.1' ry='0.85' fill='currentColor' />
         </g>
-        <g
-          fill='none'
-          stroke='currentColor'
-          strokeWidth='2'
-          strokeLinecap='round'
-        >
+        <g fill='none' stroke='currentColor' strokeWidth='2' strokeLinecap='round'>
           <path ref={tail1} d='M18.6 11 L22.4 8.2' />
           <path ref={tail2} d='M18.6 11.8 L22.6 13.8' />
         </g>

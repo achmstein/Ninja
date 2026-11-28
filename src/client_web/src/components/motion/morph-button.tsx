@@ -1,6 +1,6 @@
 import { type ReactNode } from 'react'
-import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { Check, Loader2 } from 'lucide-react'
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { blurSwap, duration, spring } from '@/lib/motion'
 import { cn } from '@/lib/utils'
 
@@ -35,8 +35,7 @@ export function MorphButton({
   height = 44,
 }: MorphButtonProps) {
   const reduced = useReducedMotion()
-  const width =
-    phase === 'busy' ? height * 2 : phase === 'success' ? height : '100%'
+  const width = phase === 'busy' ? height * 2 : phase === 'success' ? height : '100%'
   const swap = blurSwap(reduced)
 
   return (
@@ -60,13 +59,11 @@ export function MorphButton({
       // growing out of it) carries corners across only when both ends state them
       style={{ height, borderRadius: height / 2 }}
       className={cn(
-        'relative mx-auto inline-flex shrink-0 items-center justify-center overflow-hidden text-note font-medium whitespace-nowrap outline-none',
+        'text-note relative mx-auto inline-flex shrink-0 items-center justify-center overflow-hidden font-medium whitespace-nowrap outline-none',
         'transition-[background-color,color,opacity] duration-250',
         'focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50',
-        phase === 'success'
-          ? 'bg-emerald-600 text-white'
-          : 'bg-primary text-primary-foreground shadow-xs',
-        className,
+        phase === 'success' ? 'bg-emerald-600 text-white' : 'bg-primary text-primary-foreground shadow-xs',
+        className
       )}
     >
       <AnimatePresence mode='popLayout' initial={false}>

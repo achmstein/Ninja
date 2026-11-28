@@ -3,19 +3,9 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { getRouteApi, Link } from '@tanstack/react-router'
 import { useTable } from '@tanstack/react-table'
 import { type PaymentRow } from '@/api/sales'
-import {
-  getPaymentsOptions,
-  getRangeReportOptions,
-} from '@/api/sales/@tanstack/react-query.gen'
+import { getPaymentsOptions, getRangeReportOptions } from '@/api/sales/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
-import {
-  useLanguage,
-  useLocale,
-  useLocalized,
-  useT,
-  type TranslateParams,
-  type TranslationKey,
-} from '@/lib/i18n'
+import { useLanguage, useLocale, useLocalized, useT, type TranslateParams, type TranslationKey } from '@/lib/i18n'
 import { useModules } from '@/lib/modules'
 import { formatEgp, toNumber } from '@/lib/money'
 import { dayHeading, dayKey } from '@/lib/when'
@@ -44,21 +34,13 @@ const columnHelper = createAppColumnHelper<PaymentRow>()
 
 type Translate = (key: TranslationKey, params?: TranslateParams) => string
 
-type Localized = (
-  text: { en?: string | null; ar?: string | null } | null | undefined
-) => string
+type Localized = (text: { en?: string | null; ar?: string | null } | null | undefined) => string
 
 /**
  * Four things a payment says, grouped by day so a row needs only its time:
  * the receipt and when, where and who paid, how, and how much.
  */
-function getPaymentColumns({
-  t,
-  localized,
-}: {
-  t: Translate
-  localized: Localized
-}) {
+function getPaymentColumns({ t, localized }: { t: Translate; localized: Localized }) {
   return columnHelper.columns([
     columnHelper.accessor('receiptNumber', {
       id: 'receipt',
@@ -67,16 +49,8 @@ function getPaymentColumns({
         const value = info.getValue()
         return (
           <div className='flex flex-col leading-tight'>
-            {value != null && (
-              <span className='font-medium tabular-nums'>
-                #{toNumber(value)}
-              </span>
-            )}
-            <When
-              value={info.row.original.recordedAt}
-              mode='time'
-              className='text-muted-foreground text-xs'
-            />
+            {value != null && <span className='font-medium tabular-nums'>#{toNumber(value)}</span>}
+            <When value={info.row.original.recordedAt} mode='time' className='text-muted-foreground text-xs' />
           </div>
         )
       },
@@ -88,9 +62,7 @@ function getPaymentColumns({
         <div className='flex max-w-64 flex-col leading-tight'>
           <span className='truncate'>{info.getValue()}</span>
           {info.row.original.customerName && (
-            <span className='text-muted-foreground truncate text-xs'>
-              {info.row.original.customerName}
-            </span>
+            <span className='text-muted-foreground truncate text-xs'>{info.row.original.customerName}</span>
           )}
         </div>
       ),
@@ -106,13 +78,7 @@ function getPaymentColumns({
       meta: { align: 'end' },
       id: 'amount',
       header: t('amount'),
-      cell: (info) => (
-        <Money
-          value={info.getValue()}
-          strong
-          sub={handedOverNote(info.row.original, t)}
-        />
-      ),
+      cell: (info) => <Money value={info.getValue()} strong sub={handedOverNote(info.row.original, t)} />,
     }),
   ])
 }
@@ -124,21 +90,11 @@ function keptOf(payment: PaymentRow): number {
 
 function handedOverNote(payment: PaymentRow, t: Translate): string | undefined {
   const handed = toNumber(payment.amount)
-  return handed > keptOf(payment)
-    ? t('handedOver', { amount: formatEgp(handed) })
-    : undefined
+  return handed > keptOf(payment) ? t('handedOver', { amount: formatEgp(handed) }) : undefined
 }
 
 /** A payment as a phone lists it: where, then the receipt, time and who paid; how much over how */
-function PaymentListRow({
-  row,
-  t,
-  localized,
-}: {
-  row: AppRow<PaymentRow>
-  t: Translate
-  localized: Localized
-}) {
+function PaymentListRow({ row, t, localized }: { row: AppRow<PaymentRow>; t: Translate; localized: Localized }) {
   const payment = row.original
   return (
     <ListRow
@@ -147,9 +103,7 @@ function PaymentListRow({
         <>
           {payment.receiptNumber != null && (
             <>
-              <span className='tabular-nums'>
-                #{toNumber(payment.receiptNumber)}
-              </span>
+              <span className='tabular-nums'>#{toNumber(payment.receiptNumber)}</span>
               <Dot />
             </>
           )}
@@ -162,13 +116,7 @@ function PaymentListRow({
           )}
         </>
       }
-      trailing={
-        <Money
-          value={keptOf(payment)}
-          strong
-          sub={handedOverNote(payment, t)}
-        />
-      }
+      trailing={<Money value={keptOf(payment)} strong sub={handedOverNote(payment, t)} />}
       trailingMeta={<TenderBadge tender={payment.tender} />}
     />
   )
@@ -188,13 +136,12 @@ export function PaymentsList() {
   const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null)
   const { dayWindow, fromIso, toIso } = useTillWindow(search)
 
-  const { pagination, onPaginationChange, ensurePageInRange } =
-    useTableUrlState({
-      search,
-      navigate,
-      pagination: { defaultPageSize: 20 },
-      globalFilter: { enabled: false },
-    })
+  const { pagination, onPaginationChange, ensurePageInRange } = useTableUrlState({
+    search,
+    navigate,
+    pagination: { defaultPageSize: 20 },
+    globalFilter: { enabled: false },
+  })
 
   const tender = TENDERS.find((item) => String(item.value) === search.tender)
   const modules = useModules()
@@ -207,11 +154,7 @@ export function PaymentsList() {
     }),
     enabled: dayWindow !== null && tender != null,
   })
-  const tabPaymentsByTender =
-    tender &&
-    report.data?.tabPaymentTenderTotals?.find(
-      (row) => row.tender === tender.name
-    )
+  const tabPaymentsByTender = tender && report.data?.tabPaymentTenderTotals?.find((row) => row.tender === tender.name)
 
   const paymentsQuery = useQuery({
     ...getPaymentsOptions({
@@ -279,11 +222,7 @@ export function PaymentsList() {
           </ToggleGroupItem>
           {/* The tenders the business runs, and the one picked (from a link) even if its module is off since */}
           {tendersFor(modules, tender ? [tender.name] : []).map((item) => (
-            <ToggleGroupItem
-              key={item.value}
-              value={String(item.value)}
-              className='px-3'
-            >
+            <ToggleGroupItem key={item.value} value={String(item.value)} className='px-3'>
               {t(item.labelKey)}
             </ToggleGroupItem>
           ))}
@@ -308,26 +247,19 @@ export function PaymentsList() {
         )}
 
         {paymentsQuery.isError ? (
-          <ErrorState
-            error={paymentsQuery.error}
-            onRetry={() => paymentsQuery.refetch()}
-          />
+          <ErrorState error={paymentsQuery.error} onRetry={() => paymentsQuery.refetch()} />
         ) : (
           <>
             <DataTable
               table={table}
               isLoading={paymentsQuery.isLoading}
               emptyMessage={t('noPaymentsInRange')}
-              onRowClick={(row) =>
-                setSelectedTicketId(toNumber(row.original.ticketId))
-              }
+              onRowClick={(row) => setSelectedTicketId(toNumber(row.original.ticketId))}
               groupBy={{
                 key: (row) => dayKey(row.recordedAt),
                 label: (key) => dayHeading(key, locale, t),
               }}
-              mobileRow={(row) => (
-                <PaymentListRow row={row} t={t} localized={localized} />
-              )}
+              mobileRow={(row) => <PaymentListRow row={row} t={t} localized={localized} />}
             />
             <DataTablePagination table={table} />
           </>

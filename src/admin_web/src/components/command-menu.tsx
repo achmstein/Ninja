@@ -73,9 +73,7 @@ export function CommandMenu() {
                           <div className='flex size-4 items-center justify-center'>
                             <ArrowRight className='text-muted-foreground/80 size-2' />
                           </div>
-                          {t(navItem.title)}{' '}
-                          <ChevronRight className='rtl:rotate-180' />{' '}
-                          {t(tab.title)}
+                          {t(navItem.title)} <ChevronRight className='rtl:rotate-180' /> {t(tab.title)}
                         </CommandItem>
                       )),
                   ]
@@ -91,9 +89,7 @@ export function CommandMenu() {
                     <div className='flex size-4 items-center justify-center'>
                       <ArrowRight className='text-muted-foreground/80 size-2' />
                     </div>
-                    {t(navItem.title)}{' '}
-                    <ChevronRight className='rtl:rotate-180' />{' '}
-                    {t(subItem.title)}
+                    {t(navItem.title)} <ChevronRight className='rtl:rotate-180' /> {t(subItem.title)}
                   </CommandItem>
                 ))
               })}

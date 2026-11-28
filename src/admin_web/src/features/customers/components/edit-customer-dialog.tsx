@@ -4,13 +4,7 @@ import { useT } from '@/lib/i18n'
 import { editablePhone } from '@/lib/phone'
 import { toast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Spinner } from '@/components/ui/spinner'
 import { Field } from '@/components/field'
@@ -41,21 +35,13 @@ export function EditCustomerDialog({
           <DialogTitle>{t('editCustomerDetails')}</DialogTitle>
         </DialogHeader>
         {/* Mounted on open, so it starts from what the account holds now */}
-        {open && (
-          <DetailsForm customer={customer} onOpenChange={onOpenChange} />
-        )}
+        {open && <DetailsForm customer={customer} onOpenChange={onOpenChange} />}
       </DialogContent>
     </Dialog>
   )
 }
 
-function DetailsForm({
-  customer,
-  onOpenChange,
-}: {
-  customer: Customer
-  onOpenChange: (open: boolean) => void
-}) {
+function DetailsForm({ customer, onOpenChange }: { customer: Customer; onOpenChange: (open: boolean) => void }) {
   const t = useT()
   const queryClient = useQueryClient()
   const [firstName, setFirstName] = useState(customer.firstName ?? '')
@@ -103,37 +89,18 @@ function DetailsForm({
     <form onSubmit={submit} className='space-y-4'>
       <div className='grid grid-cols-2 gap-3'>
         <Field label={t('firstName')} htmlFor='customerFirstName'>
-          <Input
-            id='customerFirstName'
-            value={firstName}
-            onChange={(e) => setFirstName(e.target.value)}
-            autoFocus
-          />
+          <Input id='customerFirstName' value={firstName} onChange={(e) => setFirstName(e.target.value)} autoFocus />
         </Field>
         <Field label={t('lastName')} htmlFor='customerLastName'>
-          <Input
-            id='customerLastName'
-            value={lastName}
-            onChange={(e) => setLastName(e.target.value)}
-          />
+          <Input id='customerLastName' value={lastName} onChange={(e) => setLastName(e.target.value)} />
         </Field>
       </div>
       <Field label={t('phone')} htmlFor='customerPhone'>
-        <Input
-          id='customerPhone'
-          type='tel'
-          dir='ltr'
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-        />
+        <Input id='customerPhone' type='tel' dir='ltr' value={phone} onChange={(e) => setPhone(e.target.value)} />
       </Field>
       {error && <p className='text-destructive text-sm'>{error}</p>}
       <DialogFooter>
-        <Button
-          type='button'
-          variant='outline'
-          onClick={() => onOpenChange(false)}
-        >
+        <Button type='button' variant='outline' onClick={() => onOpenChange(false)}>
           {t('cancel')}
         </Button>
         <Button type='submit' disabled={save.isPending}>

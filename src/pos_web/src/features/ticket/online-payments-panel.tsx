@@ -1,20 +1,17 @@
 import { useState } from 'react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { AxiosError } from 'axios'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Loader2, Smartphone, Undo2 } from 'lucide-react'
-import {
-  cancelOnlinePaymentMutation,
-  refundOnlinePaymentMutation,
-} from '@/api/sales/@tanstack/react-query.gen'
+import { cancelOnlinePaymentMutation, refundOnlinePaymentMutation } from '@/api/sales/@tanstack/react-query.gen'
 import type { OnlinePaymentView } from '@/api/sales/types.gen'
-import { ConfirmDialog } from '@/components/confirm-dialog'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { API_VERSION } from '@/lib/api-client'
 import { useLocale, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
 import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { ConfirmDialog } from '@/components/confirm-dialog'
 import type { OnlineSummary } from './online-payments'
 
 /**
@@ -50,9 +47,7 @@ export function OnlinePaymentsPanel({
       // A 400 carries the server's own words (the bill closed meanwhile,
       // the provider said no)
       const detail =
-        error instanceof AxiosError
-          ? (error.response?.data as { detail?: string } | undefined)?.detail
-          : undefined
+        error instanceof AxiosError ? (error.response?.data as { detail?: string } | undefined)?.detail : undefined
       toast.error(t('onlineRefundFailed'), detail ? { description: detail } : undefined)
     },
   })
@@ -71,13 +66,11 @@ export function OnlinePaymentsPanel({
   if (payments.length === 0) return null
 
   const time = (at: string | null) =>
-    at
-      ? new Intl.DateTimeFormat(locale, { timeStyle: 'short' }).format(new Date(at))
-      : null
+    at ? new Intl.DateTimeFormat(locale, { timeStyle: 'short' }).format(new Date(at)) : null
 
   return (
     <div className='mt-4 flex flex-col gap-2'>
-      <h2 className='text-muted-foreground flex items-center gap-2 type-label'>
+      <h2 className='text-muted-foreground type-label flex items-center gap-2'>
         <Smartphone className='size-4' />
         {t('paidOnlineTitle')}
       </h2>
@@ -87,29 +80,16 @@ export function OnlinePaymentsPanel({
           return (
             <div
               key={payment.key}
-              className={cn(
-                'flex items-center gap-3 px-3 py-2',
-                status === 'Refunded' && 'text-muted-foreground'
-              )}
+              className={cn('flex items-center gap-3 px-3 py-2', status === 'Refunded' && 'text-muted-foreground')}
             >
               <div className='min-w-0 flex-1'>
                 <div className='flex items-center gap-2'>
-                  <span className='truncate font-medium'>
-                    {payment.payerName || t('onlineGuest')}
-                  </span>
+                  <span className='truncate font-medium'>{payment.payerName || t('onlineGuest')}</span>
                   <Badge
-                    variant={
-                      status === 'Paid'
-                        ? 'secondary'
-                        : status === 'Pending'
-                          ? 'outline'
-                          : 'destructive'
-                    }
+                    variant={status === 'Paid' ? 'secondary' : status === 'Pending' ? 'outline' : 'destructive'}
                     className='shrink-0'
                   >
-                    {status === 'Pending' && (
-                      <Loader2 className='size-3 animate-spin' />
-                    )}
+                    {status === 'Pending' && <Loader2 className='size-3 animate-spin' />}
                     {status === 'Paid'
                       ? t('onlinePaid')
                       : status === 'Pending'
@@ -127,12 +107,7 @@ export function OnlinePaymentsPanel({
                 </div>
               </div>
               <div className='flex shrink-0 flex-col items-end'>
-                <span
-                  className={cn(
-                    'font-semibold tabular-nums',
-                    status === 'Refunded' && 'line-through'
-                  )}
-                >
+                <span className={cn('font-semibold tabular-nums', status === 'Refunded' && 'line-through')}>
                   {money(payment.amount)}
                 </span>
               </div>
@@ -172,14 +147,12 @@ export function OnlinePaymentsPanel({
           <span className='font-semibold tabular-nums'>{money(summary.paid)}</span>
         </div>
         {billOpen && (
-          <div className='flex items-center justify-between gap-4 px-3 py-2 type-body'>
+          <div className='type-body flex items-center justify-between gap-4 px-3 py-2'>
             <span className='text-muted-foreground'>{t('remaining')}</span>
             <span
               className={cn(
                 'font-semibold tabular-nums',
-                summary.remaining > 0
-                  ? 'text-destructive'
-                  : 'text-emerald-600 dark:text-emerald-400'
+                summary.remaining > 0 ? 'text-destructive' : 'text-emerald-600 dark:text-emerald-400'
               )}
             >
               {money(summary.remaining)}

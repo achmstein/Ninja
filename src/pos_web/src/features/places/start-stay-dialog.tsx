@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 import { Clock, Loader2, Play, ReceiptText } from 'lucide-react'
-import type {
-  PlaceViewModel,
-  ReservationViewModel,
-} from '@/api/spaces/types.gen'
+import type { PlaceViewModel, ReservationViewModel } from '@/api/spaces/types.gen'
+import { useFeatures } from '@/lib/brand'
+import { useLocalized, useT } from '@/lib/i18n'
+import { useMoney, toNumber } from '@/lib/money'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -14,9 +14,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
-import { useFeatures } from '@/lib/brand'
-import { useLocalized, useT } from '@/lib/i18n'
-import { useMoney, toNumber } from '@/lib/money'
 import { RateOptionToggle } from './rate-option-toggle'
 import { findOption, hasOptions, isRoom, tariffOptions } from './status'
 import { useStayActions } from './use-places'
@@ -38,13 +35,7 @@ type StartStayDialogProps = {
  * customer who just arrived. Where the tariff has options the cashier
  * picks one; where it has one rate there is nothing to pick.
  */
-export function StartStayDialog({
-  place,
-  reservation,
-  onOpenChange,
-  onStarted,
-  onBillOnly,
-}: StartStayDialogProps) {
+export function StartStayDialog({ place, reservation, onOpenChange, onStarted, onBillOnly }: StartStayDialogProps) {
   const t = useT()
   const localized = useLocalized()
   const money = useMoney()
@@ -91,15 +82,13 @@ export function StartStayDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className='gap-4'>
         <DialogHeader>
-          <DialogTitle className='flex items-center gap-2 type-title'>
+          <DialogTitle className='type-title flex items-center gap-2'>
             <Play className='size-5 rtl:rotate-180' />
             {reservation ? t('startSession') : t('startWalkInSession')}
           </DialogTitle>
           {reservation && (
             <DialogDescription className='type-body'>
-              {[localized(place?.name), reservation.customerName]
-                .filter(Boolean)
-                .join(' · ')}
+              {[localized(place?.name), reservation.customerName].filter(Boolean).join(' · ')}
             </DialogDescription>
           )}
         </DialogHeader>
@@ -108,11 +97,9 @@ export function StartStayDialog({
             rate so the others stay in view */}
         <div className='bg-muted rounded-xl p-4 text-center'>
           <div className='type-heading'>{localized(place?.name)}</div>
-          <div className='text-primary flex items-baseline justify-center gap-1 type-figure'>
+          <div className='text-primary type-figure flex items-baseline justify-center gap-1'>
             <span>{money(chosen?.hourlyRate)}</span>
-            <span className='text-muted-foreground type-detail'>
-              {t('perHour')}
-            </span>
+            <span className='text-muted-foreground type-detail'>{t('perHour')}</span>
           </div>
         </div>
 
@@ -123,9 +110,7 @@ export function StartStayDialog({
               options={options}
               value={chosen?.code ?? null}
               onChange={setOptionCode}
-              rates={Object.fromEntries(
-                options.map((o) => [o.code ?? '', money(o.hourlyRate)]),
-              )}
+              rates={Object.fromEntries(options.map((o) => [o.code ?? '', money(o.hourlyRate)]))}
             />
           </div>
         )}
@@ -168,20 +153,10 @@ export function StartStayDialog({
             </div>
           )}
           <div className='flex gap-2'>
-            <Button
-              variant='outline'
-              size='lg'
-              className='h-12 min-w-0 flex-1'
-              onClick={() => onOpenChange(false)}
-            >
+            <Button variant='outline' size='lg' className='h-12 min-w-0 flex-1' onClick={() => onOpenChange(false)}>
               {t('cancel')}
             </Button>
-            <Button
-              size='lg'
-              className='h-12 min-w-0 flex-[2] px-6'
-              disabled={actions.isBusy}
-              onClick={start}
-            >
+            <Button size='lg' className='h-12 min-w-0 flex-[2] px-6' disabled={actions.isBusy} onClick={start}>
               {actions.isBusy ? (
                 <Loader2 className='size-5 animate-spin' />
               ) : (

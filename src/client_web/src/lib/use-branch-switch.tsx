@@ -2,6 +2,9 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { type QueryClient, useQueryClient } from '@tanstack/react-query'
 import { listItemsOptions } from '@/api/catalog/@tanstack/react-query.gen'
 import { type BranchResponse } from '@/api/tenant'
+import { useBranchStore } from '@/stores/branch-store'
+import { usePlaceStore } from '@/stores/place-store'
+import { useAtBranch } from '@/lib/at-branch'
 import { lastUsedFirst, useBranches } from '@/lib/branch'
 import { useCart } from '@/lib/cart'
 import { byDistance, type LatLng, pointOf, useMyLocation } from '@/lib/geo'
@@ -9,9 +12,6 @@ import { useLocalized, useT } from '@/lib/i18n'
 import { moveLines, type OrderMove } from '@/lib/order-move'
 import { toast } from '@/lib/toast'
 import { useHandler } from '@/lib/use-handler'
-import { useAtBranch } from '@/lib/at-branch'
-import { useBranchStore } from '@/stores/branch-store'
-import { usePlaceStore } from '@/stores/place-store'
 
 /**
  * Moving the app to another branch, the order with it: the branch is set
@@ -81,10 +81,13 @@ export function useBranchFallback() {
     if (!branches?.length) return
     if (chosen && branches.some((b) => Number(b.id) === branchId)) return
     const ordered = lastUsedFirst(branches, branchId)
-    const first = ordered.find((b) => b.isActive && b.isOrderingEnabled) ?? ordered.find((b) => b.isActive) ?? ordered[0]
+    const first =
+      ordered.find((b) => b.isActive && b.isOrderingEnabled) ?? ordered.find((b) => b.isActive) ?? ordered[0]
     guessedAt.current = Number(first.id)
     setBranchId(Number(first.id))
-    queryClient.invalidateQueries({ predicate: (query) => (query.queryKey[0] as { _id?: string } | undefined)?._id !== 'getBranches' })
+    queryClient.invalidateQueries({
+      predicate: (query) => (query.queryKey[0] as { _id?: string } | undefined)?._id !== 'getBranches',
+    })
   }, [branches, branchId, chosen, setBranchId, queryClient])
 
   // The branch the guess was made at: settled otherwise meanwhile (a scanned table, a link, the

@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
-import { AnimatePresence, motion, MotionConfig, useReducedMotion } from 'motion/react'
 import { CreditCard, FlaskConical, Lock, Smartphone } from 'lucide-react'
+import { AnimatePresence, motion, MotionConfig, useReducedMotion } from 'motion/react'
 import { type PaymentStatusView } from '@/api/sales'
 import {
   cancelOnlinePaymentMutation,
@@ -14,11 +14,11 @@ import { useBrandName } from '@/lib/brand'
 import { formatMoney } from '@/lib/currency'
 import { useLanguage, useT } from '@/lib/i18n'
 import { blurSwap, springSoft } from '@/lib/motion'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { MorphButton } from '@/components/motion/morph-button'
 import { Odometer } from '@/components/ninja/odometer'
 import { Panel, Segment, Slab } from '@/components/ninja/page/parts'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 
 /** The test cards, as payment providers' sandboxes name them. */
 export const APPROVED_CARD = '4242424242424242'
@@ -28,7 +28,9 @@ const digits = (value: string) => value.replace(/\D/g, '')
 
 /** "4242 4242 4242 4242" as it is typed. */
 export function formatCardNumber(value: string): string {
-  return digits(value).slice(0, 16).replace(/(\d{4})(?=\d)/g, '$1 ')
+  return digits(value)
+    .slice(0, 16)
+    .replace(/(\d{4})(?=\d)/g, '$1 ')
 }
 
 /** "MM/YY" as it is typed. */
@@ -130,7 +132,7 @@ export function DemoCheckout({ payment }: { payment: PaymentStatusView }) {
       {/* No dock on this page: -mb cancels the root <main>'s clearance for it */}
       <div className='-mb-[calc(5rem+env(safe-area-inset-bottom))] min-h-svh'>
         {/* What this page is, said plainly above everything else */}
-        <div className='flex items-center justify-center gap-2 bg-amber-400 px-4 py-1.5 text-caption font-semibold text-amber-950'>
+        <div className='text-caption flex items-center justify-center gap-2 bg-amber-400 px-4 py-1.5 font-semibold text-amber-950'>
           <FlaskConical className='size-3.5' />
           {t('demoBanner')}
         </div>
@@ -141,7 +143,7 @@ export function DemoCheckout({ payment }: { payment: PaymentStatusView }) {
           transition={springSoft}
           className='mx-auto flex w-full max-w-md flex-col gap-4 p-4 pb-10'
         >
-          <div className='text-muted-foreground flex items-center justify-center gap-1.5 pt-2 text-caption'>
+          <div className='text-muted-foreground text-caption flex items-center justify-center gap-1.5 pt-2'>
             <Lock className='size-3.5' />
             {t('demoSecureCheckout')}
           </div>
@@ -150,9 +152,9 @@ export function DemoCheckout({ payment }: { payment: PaymentStatusView }) {
           <Slab className='flex flex-col gap-4'>
             <div className='min-w-0'>
               <div className='text-muted-foreground text-caption font-semibold'>{t('demoPayTo')}</div>
-              <div className='heading truncate text-headline'>{merchant}</div>
+              <div className='heading text-headline truncate'>{merchant}</div>
             </div>
-            <div className='flex flex-col gap-1.5 text-note tabular-nums'>
+            <div className='text-note flex flex-col gap-1.5 tabular-nums'>
               {fee > 0 && (
                 <>
                   <div className='text-muted-foreground flex justify-between gap-2'>
@@ -181,8 +183,24 @@ export function DemoCheckout({ payment }: { payment: PaymentStatusView }) {
                 setError(null)
               }}
               options={[
-                { value: 'card', label: <><CreditCard className='size-4' />{t('card')}</> },
-                { value: 'wallet', label: <><Smartphone className='size-4' />{t('payWallet')}</> },
+                {
+                  value: 'card',
+                  label: (
+                    <>
+                      <CreditCard className='size-4' />
+                      {t('card')}
+                    </>
+                  ),
+                },
+                {
+                  value: 'wallet',
+                  label: (
+                    <>
+                      <Smartphone className='size-4' />
+                      {t('payWallet')}
+                    </>
+                  ),
+                },
               ]}
             />
 
@@ -240,7 +258,7 @@ export function DemoCheckout({ payment }: { payment: PaymentStatusView }) {
                       className='h-11 rounded-xl'
                     />
                   </div>
-                  <div className='bg-muted text-muted-foreground flex flex-col gap-1 rounded-2xl p-3 text-caption'>
+                  <div className='bg-muted text-muted-foreground text-caption flex flex-col gap-1 rounded-2xl p-3'>
                     <span>
                       {t('demoTestApproved')} <span className='font-mono'>4242 4242 4242 4242</span>
                     </span>
@@ -251,7 +269,12 @@ export function DemoCheckout({ payment }: { payment: PaymentStatusView }) {
                       type='button'
                       className='text-foreground self-start font-semibold underline-offset-2 hover:underline'
                       onClick={() => {
-                        setCard({ number: formatCardNumber(APPROVED_CARD), expiry: '12/30', cvc: '123', name: 'Demo Guest' })
+                        setCard({
+                          number: formatCardNumber(APPROVED_CARD),
+                          expiry: '12/30',
+                          cvc: '123',
+                          name: 'Demo Guest',
+                        })
                         setError(null)
                       }}
                     >
@@ -290,13 +313,13 @@ export function DemoCheckout({ payment }: { payment: PaymentStatusView }) {
               {t('payAmount', { amount: money(payment.charged) })}
             </MorphButton>
             {busy && (
-              <p className='text-muted-foreground -mt-2 text-center text-caption' aria-live='polite'>
+              <p className='text-muted-foreground text-caption -mt-2 text-center' aria-live='polite'>
                 {t('demoProcessing')}
               </p>
             )}
             <button
               type='button'
-              className='text-muted-foreground h-10 w-full rounded-full text-note font-semibold disabled:opacity-50'
+              className='text-muted-foreground text-note h-10 w-full rounded-full font-semibold disabled:opacity-50'
               disabled={busy || cancel.isPending}
               onClick={() => cancel.mutate({ path: { key: payment.key }, query: { 'api-version': API_VERSION } })}
             >
@@ -304,7 +327,7 @@ export function DemoCheckout({ payment }: { payment: PaymentStatusView }) {
             </button>
           </Panel>
 
-          <p className='text-muted-foreground text-center text-caption'>{t('demoFooter')}</p>
+          <p className='text-muted-foreground text-caption text-center'>{t('demoFooter')}</p>
         </motion.div>
       </div>
     </MotionConfig>

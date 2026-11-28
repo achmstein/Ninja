@@ -1,9 +1,9 @@
 import { type OrderSummary } from '@/api/ordering'
 import { type BillView } from '@/api/sales'
 import { closedAt } from '@/lib/bills'
+import { isSettled } from '@/lib/bills'
 import { useSelectedBranch } from '@/lib/branch'
 import { businessDayDate } from '@/lib/business-day'
-import { isSettled } from '@/lib/bills'
 import { useLanguage, usePrice, useT } from '@/lib/i18n'
 import { SectionLabel } from '@/components/ninja/page/parts'
 import { BillCard } from './bill-card'
@@ -58,7 +58,6 @@ export function HistoryList({ bills, ordersById }: { bills: BillView[]; ordersBy
   )
 }
 
-
 /**
  * The history, month by month: each month a heading with how many visits
  * it held and what was paid in it, then its bills by day under it.
@@ -76,7 +75,9 @@ export function BillsByMonth({ bills, ordersById }: { bills: BillView[]; ordersB
     else
       months.push({
         key,
-        label: closed ? closed.toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-US', { month: 'long', year: 'numeric' }) : '',
+        label: closed
+          ? closed.toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-US', { month: 'long', year: 'numeric' })
+          : '',
         bills: [bill],
       })
   }
@@ -89,7 +90,9 @@ export function BillsByMonth({ bills, ordersById }: { bills: BillView[]; ordersB
             <div className='flex items-end justify-between gap-3 px-1'>
               <div className='flex flex-col'>
                 <h2 className='heading text-title leading-tight'>{month.label}</h2>
-                <span className='text-muted-foreground text-caption'>{t('ninjaMonthVisits', { count: String(month.bills.length) })}</span>
+                <span className='text-muted-foreground text-caption'>
+                  {t('ninjaMonthVisits', { count: String(month.bills.length) })}
+                </span>
               </div>
               <span className='text-headline font-extrabold tabular-nums'>{price(paid)}</span>
             </div>

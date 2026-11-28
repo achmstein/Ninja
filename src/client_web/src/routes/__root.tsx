@@ -1,18 +1,18 @@
-import { DockPreviewPanel } from '@/lib/dock-preview'
 import { DirectionProvider } from '@radix-ui/react-direction'
 import { type QueryClient } from '@tanstack/react-query'
 import { createRootRouteWithContext, Outlet } from '@tanstack/react-router'
 import { Toaster } from 'sileo'
-import { ThemeProvider, useTheme } from '@/context/theme-provider'
 import { useBrand, useBrandEffects } from '@/lib/brand'
-import { useBranchFallback } from '@/lib/use-branch-switch'
-import { useClaimGuestOrders } from '@/lib/use-claim-guest'
+import { DockPreviewPanel } from '@/lib/dock-preview'
 import { useHub } from '@/lib/hub'
 import { useLanguage } from '@/lib/i18n'
+import { useBranchFallback } from '@/lib/use-branch-switch'
+import { useClaimGuestOrders } from '@/lib/use-claim-guest'
 import { usePushRegistration } from '@/lib/use-push'
+import { ThemeProvider, useTheme } from '@/context/theme-provider'
+import { InstallNudge } from '@/components/install/install-nudge'
 import { BottomNav } from '@/components/ninja/shell/bottom-nav'
 import { OrderPill } from '@/components/order-pill'
-import { InstallNudge } from '@/components/install/install-nudge'
 
 type RouterContext = {
   queryClient: QueryClient
@@ -77,7 +77,10 @@ function AppToaster() {
   useBrand()
   // The slab's colour as it resolves now (the business's deep shade, raised on a dark page): sileo takes a
   // colour, not a variable, for the pill it draws
-  const slab = typeof document === 'undefined' ? undefined : getComputedStyle(document.documentElement).getPropertyValue('--slab').trim() || undefined
+  const slab =
+    typeof document === 'undefined'
+      ? undefined
+      : getComputedStyle(document.documentElement).getPropertyValue('--slab').trim() || undefined
   return (
     <Toaster
       key={`${resolvedTheme}-${slab}`}
@@ -86,7 +89,11 @@ function AppToaster() {
       theme='light'
       // In the column's corner, which on a wide screen is not the window's; on the top bar's middle
       // line (the island is 40 px tall), however tall the business's header makes the bar
-      offset={{ top: 'calc(env(safe-area-inset-top) + (var(--bar-h) - 40px) / 2)', right: COLUMN_EDGE, left: COLUMN_EDGE }}
+      offset={{
+        top: 'calc(env(safe-area-inset-top) + (var(--bar-h) - 40px) / 2)',
+        right: COLUMN_EDGE,
+        left: COLUMN_EDGE,
+      }}
       options={{ autopilot: true, fill: slab }}
     />
   )

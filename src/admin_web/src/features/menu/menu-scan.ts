@@ -1,14 +1,5 @@
-import {
-  type MenuImportRequest,
-  type MenuProposal,
-  type ProposedChoice,
-} from '@/api/catalog'
-import {
-  fromLocalizedValue,
-  isBlank,
-  type LocalizedValue,
-  toLocalizedValue,
-} from '@/lib/localized-value'
+import { type MenuImportRequest, type MenuProposal, type ProposedChoice } from '@/api/catalog'
+import { fromLocalizedValue, isBlank, type LocalizedValue, toLocalizedValue } from '@/lib/localized-value'
 import { toNumber } from '@/lib/money'
 
 /** Where a proposed section's items go: an existing category's id, or a new one */
@@ -69,14 +60,10 @@ export function toReviewCategories(proposal: MenuProposal): ReviewCategory[] {
   return proposal.categories.map((category) => ({
     key: nextKey++,
     name: toLocalizedValue(category.name),
-    catalogTypeId:
-      category.catalogTypeId != null
-        ? String(category.catalogTypeId)
-        : NEW_CATEGORY,
+    catalogTypeId: category.catalogTypeId != null ? String(category.catalogTypeId) : NEW_CATEGORY,
     items: category.items.map((item) => {
       const price = toNumber(item.price)
-      const existingItemId =
-        item.existingItemId != null ? toNumber(item.existingItemId) : null
+      const existingItemId = item.existingItemId != null ? toNumber(item.existingItemId) : null
       return {
         key: nextKey++,
         rawText: item.rawText,
@@ -92,8 +79,7 @@ export function toReviewCategories(proposal: MenuProposal): ReviewCategory[] {
   }))
 }
 
-const isPrice = (value: string) =>
-  value.trim() !== '' && Number.isFinite(Number(value)) && Number(value) >= 0
+const isPrice = (value: string) => value.trim() !== '' && Number.isFinite(Number(value)) && Number(value) >= 0
 
 /** The price an item is saved at: the cheapest choice when it has choices */
 export function reviewItemPrice(item: ReviewItem): number | null {
@@ -109,9 +95,7 @@ export function isReviewItemReady(item: ReviewItem): boolean {
   if (isBlank(item.name) || reviewItemPrice(item) == null) return false
   if (!item.choice) return true
   return (
-    !isBlank(item.choice.name) &&
-    item.choice.options.length >= 2 &&
-    item.choice.options.every((o) => !isBlank(o.name))
+    !isBlank(item.choice.name) && item.choice.options.length >= 2 && item.choice.options.every((o) => !isBlank(o.name))
   )
 }
 
@@ -130,14 +114,8 @@ export function toImportRequest(sections: ReviewCategory[]): MenuImportRequest {
       }))
       .filter(({ items }) => items.length > 0)
       .map(({ section, items }) => ({
-        catalogTypeId:
-          section.catalogTypeId === NEW_CATEGORY
-            ? null
-            : Number(section.catalogTypeId),
-        name:
-          section.catalogTypeId === NEW_CATEGORY
-            ? fromLocalizedValue(section.name)
-            : null,
+        catalogTypeId: section.catalogTypeId === NEW_CATEGORY ? null : Number(section.catalogTypeId),
+        name: section.catalogTypeId === NEW_CATEGORY ? fromLocalizedValue(section.name) : null,
         items: items.map((item) => ({
           name: fromLocalizedValue(item.name),
           description: fromLocalizedValue(item.description),

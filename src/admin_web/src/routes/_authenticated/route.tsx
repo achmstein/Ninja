@@ -23,9 +23,7 @@ function AuthenticatedRoute() {
   }
 
   if (!auth.isAuthenticated) {
-    return (
-      <Navigate to='/sign-in' search={{ redirect: location.href }} replace />
-    )
+    return <Navigate to='/sign-in' search={{ redirect: location.href }} replace />
   }
 
   const roles = getRealmRoles(auth.user)

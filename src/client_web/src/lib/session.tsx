@@ -1,13 +1,6 @@
 import { useEffect, type ReactNode } from 'react'
-import {
-  ErrorResponse,
-  UserManager,
-  type UserManagerSettings,
-} from 'oidc-client-ts'
-import {
-  AuthProvider,
-  type AuthProviderNoUserManagerProps,
-} from 'react-oidc-context'
+import { ErrorResponse, UserManager, type UserManagerSettings } from 'oidc-client-ts'
+import { AuthProvider, type AuthProviderNoUserManagerProps } from 'react-oidc-context'
 
 /*
  * The sign-in kept alive, one renewal at a time for the whole browser.
@@ -91,21 +84,9 @@ function SessionKeeper() {
 }
 
 /** The app's sign-in: Keycloak through one shared UserManager, kept alive by SessionKeeper */
-export function SessionProvider({
-  config,
-  children,
-}: {
-  config: AuthProviderNoUserManagerProps
-  children: ReactNode
-}) {
-  const {
-    onSigninCallback,
-    skipSigninCallback,
-    matchSignoutCallback,
-    onSignoutCallback,
-    onRemoveUser,
-    ...settings
-  } = config
+export function SessionProvider({ config, children }: { config: AuthProviderNoUserManagerProps; children: ReactNode }) {
+  const { onSigninCallback, skipSigninCallback, matchSignoutCallback, onSignoutCallback, onRemoveUser, ...settings } =
+    config
   return (
     <AuthProvider
       userManager={sessionManager(settings)}

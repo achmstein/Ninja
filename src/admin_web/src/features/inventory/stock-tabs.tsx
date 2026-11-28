@@ -6,11 +6,7 @@ import { PageTabs } from '@/components/page-tabs'
  * it, the reports on it, what the menu costs to make from it, and how each
  * item pays against what it sells.
  */
-export function StockTabs({
-  value,
-}: {
-  value: 'stock' | 'history' | 'reports' | 'menu-cost' | 'menu-engineering'
-}) {
+export function StockTabs({ value }: { value: 'stock' | 'history' | 'reports' | 'menu-cost' | 'menu-engineering' }) {
   const t = useT()
   return (
     <PageTabs

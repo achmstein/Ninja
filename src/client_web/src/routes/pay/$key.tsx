@@ -3,12 +3,12 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { getOnlinePaymentOptions } from '@/api/sales/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
+import { markAfterPayment, useBackTo } from '@/lib/back-to'
 import { useBrandName } from '@/lib/brand'
 import { formatMoney } from '@/lib/currency'
 import { useLanguage, useT } from '@/lib/i18n'
 import { DemoCheckout } from '@/components/pay/demo-checkout'
 import { Outcome } from '@/components/pay/pay-outcome'
-import { markAfterPayment, useBackTo } from '@/lib/back-to'
 
 export const Route = createFileRoute('/pay/$key')({
   // simulate: a demo business's pretend checkout, which is this page itself
@@ -107,7 +107,9 @@ function PayReturnPage() {
         amount={formatMoney(payment.charged, payment.currency, language)}
         payment={payment}
       >
-        {orderId == null && payment.billClosed && <p className='text-muted-foreground px-2 text-center text-note'>{t('billClosedNote')}</p>}
+        {orderId == null && payment.billClosed && (
+          <p className='text-muted-foreground text-note px-2 text-center'>{t('billClosedNote')}</p>
+        )}
         {orderId != null ? <FollowOrder /> : <BackToBills />}
       </Outcome>
     )
@@ -115,32 +117,30 @@ function PayReturnPage() {
 
   return (
     <Outcome state='bad' title={t(failedTitle(status))} note={payment.failureReason ?? undefined}>
-      {orderId != null ? (
-        // The order still waits for its payment, until its time runs out: pay it again from its page
-        status !== 'Refunded' &&
-        status !== 'Voided' && (
-          <Link
-            to='/pay/order/$orderId'
-            params={{ orderId: String(orderId) }}
-            replace
-            className='bg-primary text-primary-foreground flex h-[52px] w-full items-center justify-center rounded-full text-body font-bold'
-          >
-            {t('tryAgain')}
-          </Link>
-        )
-      ) : (
-        status !== 'Refunded' &&
-        !payment.billClosed && (
-          <Link
-            to='/bills'
-            search={{ pay: Number(payment.ticketId) }}
-            replace
-            className='bg-primary text-primary-foreground flex h-[52px] w-full items-center justify-center rounded-full text-body font-bold'
-          >
-            {t('tryAgain')}
-          </Link>
-        )
-      )}
+      {orderId != null
+        ? // The order still waits for its payment, until its time runs out: pay it again from its page
+          status !== 'Refunded' &&
+          status !== 'Voided' && (
+            <Link
+              to='/pay/order/$orderId'
+              params={{ orderId: String(orderId) }}
+              replace
+              className='bg-primary text-primary-foreground text-body flex h-[52px] w-full items-center justify-center rounded-full font-bold'
+            >
+              {t('tryAgain')}
+            </Link>
+          )
+        : status !== 'Refunded' &&
+          !payment.billClosed && (
+            <Link
+              to='/bills'
+              search={{ pay: Number(payment.ticketId) }}
+              replace
+              className='bg-primary text-primary-foreground text-body flex h-[52px] w-full items-center justify-center rounded-full font-bold'
+            >
+              {t('tryAgain')}
+            </Link>
+          )}
       {back}
     </Outcome>
   )
@@ -181,7 +181,7 @@ function FollowOrder() {
     <Link
       to='/'
       replace
-      className='bg-primary text-primary-foreground flex h-[52px] w-full items-center justify-center rounded-full text-body font-bold'
+      className='bg-primary text-primary-foreground text-body flex h-[52px] w-full items-center justify-center rounded-full font-bold'
     >
       {t('payAheadFollow')}
     </Link>

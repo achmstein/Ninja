@@ -1,12 +1,12 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useAuth } from 'react-oidc-context'
+import { useGuestStore } from '@/stores/guest-store'
 import { useMyBills } from '@/lib/bills'
 import { useLocalized, useT } from '@/lib/i18n'
 import { useReceipt } from '@/lib/use-receipt'
+import { RequireAuth } from '@/components/auth/require-auth'
 import { BillReceipt } from '@/components/bills/receipt-view'
 import { NinjaPage } from '@/components/ninja/page/page'
-import { RequireAuth } from '@/components/auth/require-auth'
-import { useGuestStore } from '@/stores/guest-store'
 
 export const Route = createFileRoute('/receipts/$ticketId')({
   component: ReceiptRoute,

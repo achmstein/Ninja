@@ -7,32 +7,19 @@ import {
   getTenantHealthOptions,
   getTenantLogsOptions,
 } from '@/api/control/@tanstack/react-query.gen'
+import { useT } from '@/lib/i18n'
+import { isStamped, tenantStatus } from '@/lib/tenant'
+import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty'
 import { Label } from '@/components/ui/label'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Switch } from '@/components/ui/switch'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import { useT } from '@/lib/i18n'
-import { isStamped, tenantStatus } from '@/lib/tenant'
-import { cn } from '@/lib/utils'
 
 const ALL = '__all__'
 const TAILS = [100, 500, 2000] as const
@@ -133,9 +120,7 @@ export function HealthTab({ tenant }: { tenant: TenantDetail }) {
               <TableRow key={c.name}>
                 <TableCell className='font-medium'>{c.service}</TableCell>
                 <TableCell>
-                  <Badge variant={c.state === 'running' ? 'default' : 'destructive'}>
-                    {c.state}
-                  </Badge>
+                  <Badge variant={c.state === 'running' ? 'default' : 'destructive'}>{c.state}</Badge>
                 </TableCell>
                 <TableCell className='text-muted-foreground'>{c.health ?? '—'}</TableCell>
                 <TableCell className='text-muted-foreground' dir='ltr'>

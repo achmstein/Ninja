@@ -40,9 +40,7 @@ export function AnnouncementsManagement() {
     mutationFn: () => announcementsService.send(title.trim(), body.trim()),
     onSuccess: (announcement) => {
       queryClient.invalidateQueries({ queryKey: ['announcements'] })
-      toast.success(
-        t('announcementSentTo', { count: announcement.recipientCount })
-      )
+      toast.success(t('announcementSentTo', { count: announcement.recipientCount }))
       setTitle('')
       setBody('')
       setOpen(false)
@@ -69,11 +67,7 @@ export function AnnouncementsManagement() {
 
   return (
     <Main>
-      <PageHeader
-        title={t('announcements')}
-        description={t('announcementsDescription')}
-        actions={newButton}
-      />
+      <PageHeader title={t('announcements')} description={t('announcementsDescription')} actions={newButton} />
 
       {query.error ? (
         <ErrorState error={query.error} onRetry={() => query.refetch()} />
@@ -90,11 +84,7 @@ export function AnnouncementsManagement() {
           ))}
         </div>
       ) : announcements.length === 0 ? (
-        <EmptyState
-          icon={Megaphone}
-          title={t('nothingSentYet')}
-          action={newButton}
-        />
+        <EmptyState icon={Megaphone} title={t('nothingSentYet')} action={newButton} />
       ) : (
         <div className='bg-card divide-border/60 divide-y overflow-hidden rounded-xl shadow-sm'>
           {announcements.map((announcement) => (
@@ -102,9 +92,7 @@ export function AnnouncementsManagement() {
               key={announcement.id}
               className='items-start px-4 py-3'
               title={announcement.title}
-              meta={
-                <span className='line-clamp-2 w-full'>{announcement.body}</span>
-              }
+              meta={<span className='line-clamp-2 w-full'>{announcement.body}</span>}
               trailing={<When value={announcement.sentAt} />}
               trailingMeta={
                 <span className='text-muted-foreground flex items-center gap-1 text-xs'>
@@ -129,26 +117,14 @@ export function AnnouncementsManagement() {
             <Button variant='outline' onClick={() => setOpen(false)}>
               {t('cancel')}
             </Button>
-            <Button
-              type='submit'
-              form='announcement-form'
-              disabled={send.isPending}
-            >
-              {send.isPending ? (
-                <Spinner />
-              ) : (
-                <Send className='rtl:-scale-x-100' />
-              )}
+            <Button type='submit' form='announcement-form' disabled={send.isPending}>
+              {send.isPending ? <Spinner /> : <Send className='rtl:-scale-x-100' />}
               {t('sendToAllCustomers')}
             </Button>
           </>
         }
       >
-        <form
-          id='announcement-form'
-          onSubmit={handleSubmit}
-          className='grid gap-4'
-        >
+        <form id='announcement-form' onSubmit={handleSubmit} className='grid gap-4'>
           <Field label={t('titleLabel')} htmlFor='announcementTitle'>
             <Input
               id='announcementTitle'
@@ -158,11 +134,7 @@ export function AnnouncementsManagement() {
               onChange={(e) => setTitle(e.target.value)}
             />
           </Field>
-          <Field
-            label={t('messageLabel')}
-            htmlFor='announcementBody'
-            error={error || undefined}
-          >
+          <Field label={t('messageLabel')} htmlFor='announcementBody' error={error || undefined}>
             <Textarea
               id='announcementBody'
               rows={4}

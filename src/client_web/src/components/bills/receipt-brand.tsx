@@ -16,7 +16,7 @@ export function ReceiptBrand() {
         src={wordmark.url}
         alt=''
         style={{ aspectRatio: `${wordmark.width} / ${wordmark.height}` }}
-        className='mb-2 block h-auto w-40 max-h-16 object-contain'
+        className='mb-2 block h-auto max-h-16 w-40 object-contain'
       />
     )
   }

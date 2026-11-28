@@ -7,19 +7,10 @@ import { useLocale, useT } from '@/lib/i18n'
 import { whatsAppLink } from '@/lib/phone'
 import { toast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ErrorState } from '@/components/error-state'
-import {
-  claimUrl,
-  counterCustomersService,
-} from '../services/counter-customers-service'
+import { claimUrl, counterCustomersService } from '../services/counter-customers-service'
 import { getCustomerDisplayName, type Customer } from '../types'
 
 type AppLinkDialogProps = {
@@ -34,11 +25,7 @@ type AppLinkDialogProps = {
  * and the account — points, tab, orders — is theirs. A new link each time
  * the dialog opens; the last one stops working.
  */
-export function AppLinkDialog({
-  customer,
-  open,
-  onOpenChange,
-}: AppLinkDialogProps) {
+export function AppLinkDialog({ customer, open, onOpenChange }: AppLinkDialogProps) {
   const t = useT()
   const locale = useLocale()
   const origin = useCustomerOrigin()
@@ -88,26 +75,13 @@ export function AppLinkDialog({
         ) : (
           <div className='flex flex-col items-center gap-3'>
             <div className='rounded-xl border bg-white p-3'>
-              <QRCodeSVG
-                value={url}
-                size={208}
-                level='M'
-                marginSize={1}
-                bgColor='#ffffff'
-                fgColor='#000000'
-              />
+              <QRCodeSVG value={url} size={208} level='M' marginSize={1} bgColor='#ffffff' fgColor='#000000' />
             </div>
-            <p className='text-muted-foreground text-sm'>
-              {t('appLinkUntil', { time: until })}
-            </p>
+            <p className='text-muted-foreground text-sm'>{t('appLinkUntil', { time: until })}</p>
             <div className='flex w-full flex-col gap-2'>
               {customer.phoneNumber && (
                 <Button asChild>
-                  <a
-                    href={whatsAppLink(customer.phoneNumber, country, message)}
-                    target='_blank'
-                    rel='noreferrer'
-                  >
+                  <a href={whatsAppLink(customer.phoneNumber, country, message)} target='_blank' rel='noreferrer'>
                     <MessageCircle />
                     {t('sendOnWhatsApp')}
                   </a>

@@ -3,13 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Spinner } from '@/components/ui/spinner'
@@ -24,11 +18,7 @@ interface RecordPaymentDialogProps {
   account: AccountSummary | null
 }
 
-export function RecordPaymentDialog({
-  open,
-  onOpenChange,
-  account,
-}: RecordPaymentDialogProps) {
+export function RecordPaymentDialog({ open, onOpenChange, account }: RecordPaymentDialogProps) {
   const t = useT()
   const queryClient = useQueryClient()
   const [amount, setAmount] = useState('')
@@ -78,12 +68,8 @@ export function RecordPaymentDialog({
           <div className='space-y-4 py-4'>
             {account && (
               <div className='bg-muted rounded-lg p-3'>
-                <p className='text-muted-foreground text-sm'>
-                  {t('currentBalance')}
-                </p>
-                <p
-                  className={`text-2xl font-bold ${account.balance > 0 ? 'text-red-500' : 'text-green-500'}`}
-                >
+                <p className='text-muted-foreground text-sm'>{t('currentBalance')}</p>
+                <p className={`text-2xl font-bold ${account.balance > 0 ? 'text-red-500' : 'text-green-500'}`}>
                   {formatEgp(account.balance)}
                 </p>
               </div>

@@ -48,10 +48,7 @@ export const PLACE_OUT_OF_SERVICE = 4
 export const PLACE_PHYSICAL_AVAILABLE = 1
 export const PLACE_PHYSICAL_OUT_OF_SERVICE = 3
 
-export const placeStatusConfig: Record<
-  number,
-  { key: TranslationKey; dotClass: string }
-> = {
+export const placeStatusConfig: Record<number, { key: TranslationKey; dotClass: string }> = {
   [PLACE_AVAILABLE]: { key: 'statusAvailable', dotClass: 'bg-green-500' },
   [PLACE_OCCUPIED]: { key: 'statusOccupied', dotClass: 'bg-red-500' },
   [PLACE_HELD]: { key: 'held', dotClass: 'bg-amber-500' },
@@ -76,31 +73,23 @@ export function isRunning(stay: StayViewModel | null | undefined): boolean {
 }
 
 /** Requested or confirmed: somebody is on their way, or due later. */
-export function isOpenReservation(
-  reservation: ReservationViewModel | null | undefined
-): boolean {
+export function isOpenReservation(reservation: ReservationViewModel | null | undefined): boolean {
   if (reservation == null) return false
   const status = Number(reservation.status)
   return status === RESERVATION_REQUESTED || status === RESERVATION_CONFIRMED
 }
 
 /** Open and keeping the place right now: made for now, or its time has come. */
-export function isHolding(
-  reservation: ReservationViewModel | null | undefined
-): boolean {
+export function isHolding(reservation: ReservationViewModel | null | undefined): boolean {
   return isOpenReservation(reservation) && Boolean(reservation?.isHolding)
 }
 
-export function tariffOptions(
-  tariff: TariffViewModel | null | undefined
-): RateOptionViewModel[] {
+export function tariffOptions(tariff: TariffViewModel | null | undefined): RateOptionViewModel[] {
   return tariff?.options ?? []
 }
 
 /** A tariff with a choice of rates to make. */
-export function hasOptions(
-  tariff: TariffViewModel | null | undefined
-): boolean {
+export function hasOptions(tariff: TariffViewModel | null | undefined): boolean {
   return tariffOptions(tariff).length > 1
 }
 
@@ -112,13 +101,8 @@ export function findOption(
 }
 
 /** The running stay on a place, if any. */
-export function stayForPlace(
-  stays: StayViewModel[],
-  placeId: number | string | undefined
-): StayViewModel | undefined {
-  return stays.find(
-    (s) => Number(s.placeId) === Number(placeId) && isRunning(s)
-  )
+export function stayForPlace(stays: StayViewModel[], placeId: number | string | undefined): StayViewModel | undefined {
+  return stays.find((s) => Number(s.placeId) === Number(placeId) && isRunning(s))
 }
 
 /** The next open reservation on a place: the one keeping it now, else the soonest due (the server sorts). */
@@ -126,9 +110,7 @@ export function reservationForPlace(
   reservations: ReservationViewModel[],
   placeId: number | string | undefined
 ): ReservationViewModel | undefined {
-  return reservations.find(
-    (r) => Number(r.placeId) === Number(placeId) && isOpenReservation(r)
-  )
+  return reservations.find((r) => Number(r.placeId) === Number(placeId) && isOpenReservation(r))
 }
 
 /** Whole-number rates print bare ("60"), fractions keep their decimals. */
@@ -151,9 +133,7 @@ export function tariffLine(
   const rates =
     options.length === 1
       ? formatRate(options[0].hourlyRate)
-      : options
-          .map((o) => `${localized(o.name)} ${formatRate(o.hourlyRate)}`)
-          .join(' · ')
+      : options.map((o) => `${localized(o.name)} ${formatRate(o.hourlyRate)}`).join(' · ')
   return `${rates} ${t('perHour')}`
 }
 
@@ -173,8 +153,7 @@ export function orderName(name: LocalizedText | null | undefined): string {
  */
 export function comparePlaces() {
   return (a: PlaceViewModel, b: PlaceViewModel) =>
-    Number(a.kind ?? PLACE_ROOM) - Number(b.kind ?? PLACE_ROOM) ||
-    naturalCompare(orderName(a.name), orderName(b.name))
+    Number(a.kind ?? PLACE_ROOM) - Number(b.kind ?? PLACE_ROOM) || naturalCompare(orderName(a.name), orderName(b.name))
 }
 
 export function formatClock(totalSeconds: number): string {
@@ -187,17 +166,11 @@ export function formatClock(totalSeconds: number): string {
 
 /** Seconds since the stay's clock started. */
 export function elapsedSeconds(stay: StayViewModel, nowMs: number): number {
-  return stay.startedAt
-    ? (nowMs - new Date(stay.startedAt).getTime()) / 1000
-    : 0
+  return stay.startedAt ? (nowMs - new Date(stay.startedAt).getTime()) / 1000 : 0
 }
 
 /** Seconds spent on one rate option across the stay's segments. */
-export function optionSeconds(
-  stay: StayViewModel,
-  code: string | undefined,
-  nowMs: number
-): number {
+export function optionSeconds(stay: StayViewModel, code: string | undefined, nowMs: number): number {
   return (stay.segments ?? [])
     .filter((segment) => segment.optionCode === code && segment.startTime)
     .reduce((sum, segment) => {

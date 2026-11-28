@@ -15,11 +15,7 @@ import { useT, type TranslationKey } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { InfoTip } from '@/components/info-tip'
 import { SettingsCard } from '@/components/kit'
@@ -151,10 +147,7 @@ export function AssistantPage() {
 
   return (
     <Main>
-      <PageHeader
-        title={t('assistantNav')}
-        description={t('assistantDescription')}
-      />
+      <PageHeader title={t('assistantNav')} description={t('assistantDescription')} />
 
       <Tabs defaultValue='connect' className='gap-4'>
         <TabsList className='w-full sm:w-fit'>
@@ -208,15 +201,9 @@ function ConnectSection() {
       {/* First the app, then only its steps */}
       <section className='bg-card overflow-hidden rounded-xl shadow-sm'>
         <div className='px-5 pt-5'>
-          <h2 className='font-semibold tracking-tight'>
-            {t('assistantPickApp')}
-          </h2>
+          <h2 className='font-semibold tracking-tight'>{t('assistantPickApp')}</h2>
         </div>
-        <div
-          role='radiogroup'
-          aria-label={t('assistantPickApp')}
-          className='grid grid-cols-2 gap-3 p-5'
-        >
+        <div role='radiogroup' aria-label={t('assistantPickApp')} className='grid grid-cols-2 gap-3 p-5'>
           {VENDORS.map((v) => (
             <VendorTile
               key={v.key}
@@ -230,9 +217,7 @@ function ConnectSection() {
 
         <div className='border-border/60 border-t px-5 py-5'>
           <div className='mb-5 flex items-center gap-1'>
-            <h3 className='font-semibold tracking-tight'>
-              {t('assistantStepsTitle', { app: current.name })}
-            </h3>
+            <h3 className='font-semibold tracking-tight'>{t('assistantStepsTitle', { app: current.name })}</h3>
             <InfoTip>{t('assistantAddressHint')}</InfoTip>
           </div>
           <Stepper
@@ -246,11 +231,7 @@ function ConnectSection() {
                 {step.copy && (
                   <CopyField
                     value={step.copy === 'address' ? url : MCP_CLIENT_ID}
-                    copied={t(
-                      step.copy === 'address'
-                        ? 'appsAddressCopied'
-                        : 'assistantClientIdCopied'
-                    )}
+                    copied={t(step.copy === 'address' ? 'appsAddressCopied' : 'assistantClientIdCopied')}
                     large
                   />
                 )}
@@ -320,24 +301,16 @@ function VendorTile({
       )}
     >
       <span className='bg-background grid size-12 shrink-0 place-items-center rounded-xl border shadow-xs'>
-        <img
-          src={vendor.logo}
-          alt=''
-          className={cn('size-7', vendor.invertDark && 'dark:invert')}
-        />
+        <img src={vendor.logo} alt='' className={cn('size-7', vendor.invertDark && 'dark:invert')} />
       </span>
       <span className='min-w-0 flex-1'>
-        <span className='block text-base font-semibold tracking-tight'>
-          {vendor.name}
-        </span>
+        <span className='block text-base font-semibold tracking-tight'>{vendor.name}</span>
         <span className='text-muted-foreground block text-xs'>{where}</span>
       </span>
       <span
         className={cn(
           'absolute end-2.5 top-2.5 grid size-5 place-items-center rounded-full transition-all sm:static',
-          checked
-            ? 'bg-foreground text-background scale-100'
-            : 'border-border scale-90 border'
+          checked ? 'bg-foreground text-background scale-100' : 'border-border scale-90 border'
         )}
       >
         {checked && <Check className='size-3' strokeWidth={3} />}
@@ -352,12 +325,7 @@ function Stepper({ steps }: { steps: React.ReactNode[] }) {
     <ol className='animate-in fade-in-0 slide-in-from-bottom-1 duration-300'>
       {steps.map((step, i) => (
         <li key={i} className='relative flex gap-4 pb-6 last:pb-0'>
-          {i < steps.length - 1 && (
-            <span
-              aria-hidden
-              className='bg-border absolute start-[13px] top-8 bottom-1 w-px'
-            />
-          )}
+          {i < steps.length - 1 && <span aria-hidden className='bg-border absolute start-[13px] top-8 bottom-1 w-px' />}
           <span className='bg-foreground text-background grid size-7 shrink-0 place-items-center rounded-full text-xs font-semibold tabular-nums'>
             {i + 1}
           </span>
@@ -383,10 +351,7 @@ function ClaudeCode({ url }: { url: string }) {
             steps={[
               <>
                 <p>{t('assistantClaudeCode1')}</p>
-                <CopyField
-                  value={claudeCodeCommand(url)}
-                  copied={t('assistantCommandCopied')}
-                />
+                <CopyField value={claudeCodeCommand(url)} copied={t('assistantCommandCopied')} />
               </>,
               t('assistantClaudeCode2'),
               t('assistantClaudeCode3'),
@@ -403,10 +368,7 @@ function ClaudeCode({ url }: { url: string }) {
 function TryAsking() {
   const t = useT()
   return (
-    <SettingsCard
-      title={t('assistantTryTitle')}
-      description={t('assistantAskHint')}
-    >
+    <SettingsCard title={t('assistantTryTitle')} description={t('assistantAskHint')}>
       <div className='space-y-4 px-5 py-4'>
         <div className='flex flex-wrap gap-2'>
           {PROMPTS.map(({ key, write }) => (
@@ -418,10 +380,7 @@ function TryAsking() {
               className='group hover:bg-accent focus-visible:ring-ring/50 bg-background inline-flex max-w-full items-center gap-2 rounded-full border px-3.5 py-2 text-start text-sm shadow-xs transition-colors outline-none focus-visible:ring-[3px]'
             >
               {write && (
-                <ListChecks
-                  className='text-muted-foreground size-3.5 shrink-0'
-                  aria-label={t('assistantWriteTag')}
-                />
+                <ListChecks className='text-muted-foreground size-3.5 shrink-0' aria-label={t('assistantWriteTag')} />
               )}
               <span className='min-w-0'>{t(key)}</span>
               <Copy className='text-muted-foreground size-3.5 shrink-0 opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100' />
@@ -468,29 +427,13 @@ function Folded({
 }
 
 /** A value to paste elsewhere, always left to right, with its copy button. */
-function CopyField({
-  value,
-  copied,
-  large,
-}: {
-  value: string
-  copied: string
-  large?: boolean
-}) {
+function CopyField({ value, copied, large }: { value: string; copied: string; large?: boolean }) {
   const t = useT()
   return (
-    <div
-      className={cn(
-        'bg-muted/50 flex items-center gap-2 rounded-lg border',
-        large ? 'p-2 ps-4' : 'p-1.5 ps-3'
-      )}
-    >
+    <div className={cn('bg-muted/50 flex items-center gap-2 rounded-lg border', large ? 'p-2 ps-4' : 'p-1.5 ps-3')}>
       <code
         dir='ltr'
-        className={cn(
-          'min-w-0 flex-1 text-left font-mono break-all',
-          large ? 'text-sm font-medium' : 'text-xs'
-        )}
+        className={cn('min-w-0 flex-1 text-left font-mono break-all', large ? 'text-sm font-medium' : 'text-xs')}
       >
         {value}
       </code>

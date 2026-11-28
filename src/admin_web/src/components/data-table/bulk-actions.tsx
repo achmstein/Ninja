@@ -1,16 +1,12 @@
-import { type RowData } from '@tanstack/react-table'
 import { useState, useEffect, useRef } from 'react'
+import { type RowData } from '@tanstack/react-table'
 import { X } from 'lucide-react'
-import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n'
+import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { type AppTable } from './features'
 
 type DataTableBulkActionsProps<TData extends RowData> = {
@@ -68,9 +64,7 @@ export function DataTableBulkActions<TData extends RowData>({
     const buttons = toolbarRef.current?.querySelectorAll('button')
     if (!buttons) return
 
-    const currentIndex = Array.from(buttons).findIndex(
-      (button) => button === document.activeElement
-    )
+    const currentIndex = Array.from(buttons).findIndex((button) => button === document.activeElement)
 
     switch (event.key) {
       case 'ArrowRight': {
@@ -81,8 +75,7 @@ export function DataTableBulkActions<TData extends RowData>({
       }
       case 'ArrowLeft': {
         event.preventDefault()
-        const prevIndex =
-          currentIndex === 0 ? buttons.length - 1 : currentIndex - 1
+        const prevIndex = currentIndex === 0 ? buttons.length - 1 : currentIndex - 1
         buttons[prevIndex]?.focus()
         break
       }
@@ -103,8 +96,7 @@ export function DataTableBulkActions<TData extends RowData>({
         // Check if the event target or currently focused element is a dropdown trigger
         const isFromDropdownTrigger =
           target?.getAttribute('data-slot') === 'dropdown-menu-trigger' ||
-          activeElement?.getAttribute('data-slot') ===
-            'dropdown-menu-trigger' ||
+          activeElement?.getAttribute('data-slot') === 'dropdown-menu-trigger' ||
           target?.closest('[data-slot="dropdown-menu-trigger"]') ||
           activeElement?.closest('[data-slot="dropdown-menu-trigger"]')
 
@@ -133,12 +125,7 @@ export function DataTableBulkActions<TData extends RowData>({
   return (
     <>
       {/* Live region for screen reader announcements */}
-      <div
-        aria-live='polite'
-        aria-atomic='true'
-        className='sr-only'
-        role='status'
-      >
+      <div aria-live='polite' aria-atomic='true' className='sr-only' role='status'>
         {announcement}
       </div>
 
@@ -182,16 +169,9 @@ export function DataTableBulkActions<TData extends RowData>({
             </TooltipContent>
           </Tooltip>
 
-          <Separator
-            className='h-5'
-            orientation='vertical'
-            aria-hidden='true'
-          />
+          <Separator className='h-5' orientation='vertical' aria-hidden='true' />
 
-          <div
-            className='flex items-center gap-x-1 text-sm'
-            id='bulk-actions-description'
-          >
+          <div className='flex items-center gap-x-1 text-sm' id='bulk-actions-description'>
             <Badge
               variant='default'
               className='min-w-8 rounded-lg'
@@ -199,15 +179,10 @@ export function DataTableBulkActions<TData extends RowData>({
             >
               {selectedCount}
             </Badge>{' '}
-            <span className='hidden sm:inline'>{entityName}</span>{' '}
-            {t('selected')}
+            <span className='hidden sm:inline'>{entityName}</span> {t('selected')}
           </div>
 
-          <Separator
-            className='h-5'
-            orientation='vertical'
-            aria-hidden='true'
-          />
+          <Separator className='h-5' orientation='vertical' aria-hidden='true' />
 
           {children}
         </div>

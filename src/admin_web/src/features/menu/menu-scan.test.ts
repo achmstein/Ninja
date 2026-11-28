@@ -1,12 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { type MenuProposal } from '@/api/catalog'
-import {
-  isReviewItemReady,
-  NEW_CATEGORY,
-  reviewItemPrice,
-  toImportRequest,
-  toReviewCategories,
-} from './menu-scan'
+import { isReviewItemReady, NEW_CATEGORY, reviewItemPrice, toImportRequest, toReviewCategories } from './menu-scan'
 
 const proposal: MenuProposal = {
   categories: [

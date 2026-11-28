@@ -12,23 +12,30 @@ describe('toPersonalityForm', () => {
   })
 
   it('keeps what the owner chose, and treats an unknown value as the default', () => {
-    expect(
-      toPersonalityForm({ tone: 'detailed', manner: 'formal', language: 'ar-eg', notes: 'x' })
-    ).toEqual({ tone: 'detailed', manner: 'formal', language: 'ar-eg', notes: 'x' })
-    expect(
-      toPersonalityForm({ tone: 'chatty', manner: null, language: 'fr', notes: null }).language
-    ).toBe('match')
+    expect(toPersonalityForm({ tone: 'detailed', manner: 'formal', language: 'ar-eg', notes: 'x' })).toEqual({
+      tone: 'detailed',
+      manner: 'formal',
+      language: 'ar-eg',
+      notes: 'x',
+    })
+    expect(toPersonalityForm({ tone: 'chatty', manner: null, language: 'fr', notes: null }).language).toBe('match')
   })
 })
 
 describe('toPersonalityRequest', () => {
   it('sends a default as null and trims the text', () => {
-    expect(
-      toPersonalityRequest({ tone: 'brief', manner: 'friendly', language: 'match', notes: ' ' })
-    ).toEqual({ tone: null, manner: null, language: null, notes: null })
-    expect(
-      toPersonalityRequest({ tone: 'detailed', manner: 'formal', language: 'en', notes: ' T1 ' })
-    ).toEqual({ tone: 'detailed', manner: 'formal', language: 'en', notes: 'T1' })
+    expect(toPersonalityRequest({ tone: 'brief', manner: 'friendly', language: 'match', notes: ' ' })).toEqual({
+      tone: null,
+      manner: null,
+      language: null,
+      notes: null,
+    })
+    expect(toPersonalityRequest({ tone: 'detailed', manner: 'formal', language: 'en', notes: ' T1 ' })).toEqual({
+      tone: 'detailed',
+      manner: 'formal',
+      language: 'en',
+      notes: 'T1',
+    })
   })
 
   it('counts only a real change as one', () => {

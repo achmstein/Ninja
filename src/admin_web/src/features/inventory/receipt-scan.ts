@@ -1,14 +1,6 @@
-import {
-  type ProposedLine,
-  type ReceiptProposal,
-  type StockItemView,
-} from '@/api/inventory'
+import { type ProposedLine, type ReceiptProposal, type StockItemView } from '@/api/inventory'
 import { toNumber } from '@/lib/money'
-import {
-  isBlank,
-  toLocalizedValue,
-  type LocalizedValue,
-} from '@/components/localized-input'
+import { isBlank, toLocalizedValue, type LocalizedValue } from '@/components/localized-input'
 import { type Line, money, newLine, perUnit } from './lines'
 
 /**
@@ -53,10 +45,7 @@ export function toReviewLines(proposal: ReceiptProposal): ReviewLine[] {
           ? {
               name: toLocalizedValue(line.newItem.name),
               unit: line.newItem.unit,
-              packSize:
-                line.newItem.packSize != null
-                  ? String(toNumber(line.newItem.packSize))
-                  : '',
+              packSize: line.newItem.packSize != null ? String(toNumber(line.newItem.packSize)) : '',
               packName: toLocalizedValue(line.newItem.packName),
             }
           : null,
@@ -72,9 +61,7 @@ export function toReviewLines(proposal: ReceiptProposal): ReviewLine[] {
 }
 
 /** How sure the assistant was, in four steps the badge can show */
-export function confidenceLevel(
-  line: ReviewLine
-): 'high' | 'medium' | 'low' | 'none' {
+export function confidenceLevel(line: ReviewLine): 'high' | 'medium' | 'low' | 'none' {
   if (!line.stockItemId) return 'none'
   const confidence = toNumber(line.proposal.confidence)
   if (confidence >= 0.8) return 'high'
@@ -84,8 +71,7 @@ export function confidenceLevel(
 
 /** A review line is ready when it has (or will have) an item and a quantity */
 export function isReviewLineReady(line: ReviewLine): boolean {
-  const hasItem =
-    !!line.stockItemId || (!!line.newItem && !isBlank(line.newItem.name))
+  const hasItem = !!line.stockItemId || (!!line.newItem && !isBlank(line.newItem.name))
   return hasItem && parseFloat(line.quantity) > 0 && line.unitCost !== ''
 }
 
@@ -103,9 +89,6 @@ export function toReceiveLine(line: ReviewLine, stockItemId: number): Line {
 }
 
 /** The stock item the line points at, when it points at an existing one */
-export function matchedItem(
-  line: ReviewLine,
-  itemById: Map<string, StockItemView>
-): StockItemView | undefined {
+export function matchedItem(line: ReviewLine, itemById: Map<string, StockItemView>): StockItemView | undefined {
   return line.stockItemId ? itemById.get(line.stockItemId) : undefined
 }

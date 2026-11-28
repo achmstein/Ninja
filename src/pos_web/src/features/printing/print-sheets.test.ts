@@ -1,4 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { usePrintSettings } from './print-settings'
+import { openCashDrawer, printSheets, takesCash } from './print-sheets'
 
 const connector = vi.hoisted(() => ({
   connectorStatus: vi.fn(),
@@ -12,9 +14,6 @@ vi.mock('./sheet-image', () => ({
 const toastError = vi.hoisted(() => vi.fn())
 vi.mock('@/lib/toast', () => ({ toast: { error: toastError } }))
 vi.mock('@/lib/i18n', () => ({ translate: (key: string) => key }))
-
-import { openCashDrawer, printSheets, takesCash } from './print-sheets'
-import { usePrintSettings } from './print-settings'
 
 const sheet = (id: string, chit = false) => ({
   id,

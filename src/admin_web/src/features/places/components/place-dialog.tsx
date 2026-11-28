@@ -12,12 +12,7 @@ import { useFeatures } from '@/lib/brand'
 import { useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupInput,
-  InputGroupText,
-} from '@/components/ui/input-group'
+import { InputGroup, InputGroupAddon, InputGroupInput, InputGroupText } from '@/components/ui/input-group'
 import { Label } from '@/components/ui/label'
 import { Spinner } from '@/components/ui/spinner'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
@@ -32,10 +27,7 @@ import {
   type LocalizedValue,
 } from '@/components/localized-input'
 import { FormFillButton } from '@/features/assist/form-fill-button'
-import {
-  localizedFields,
-  mergeLocalized,
-} from '@/features/assist/use-form-fill'
+import { localizedFields, mergeLocalized } from '@/features/assist/use-form-fill'
 import { PLACE_ROOM, placeKindKey, placeKinds, tariffOptions } from '../status'
 import { problemDetail } from '../use-places'
 import { PlaceKindIcon } from './place-kind-icon'
@@ -53,11 +45,7 @@ type OptionDraft = {
 }
 
 let nextKey = 1
-const draft = (
-  code: string,
-  name: LocalizedValue,
-  rate: number | string | undefined
-): OptionDraft => ({
+const draft = (code: string, name: LocalizedValue, rate: number | string | undefined): OptionDraft => ({
   key: nextKey++,
   code,
   name,
@@ -93,10 +81,7 @@ function defaultOptions(kind: number, places: PlaceViewModel[]): OptionDraft[] {
   return [draft('standard', { en: 'Standard', ar: 'عادي' }, rateOf('standard'))]
 }
 
-function toTariff(
-  options: OptionDraft[],
-  rounding: number
-): TariffRequest | null {
+function toTariff(options: OptionDraft[], rounding: number): TariffRequest | null {
   // A rate named in Arabic only spells no code, so it takes its position
   const list = options.map((o, index) => ({
     code: o.code || codeFor(o.name.en) || `rate-${index + 1}`,
@@ -125,12 +110,7 @@ function tariffKey(tariff: TariffRequest | null): string {
   if (!tariff) return ''
   return JSON.stringify({
     rounding: Number(tariff.roundingMinutes),
-    options: tariff.options.map((o) => [
-      o.code,
-      o.name.en ?? '',
-      o.name.ar ?? '',
-      Number(o.hourlyRate),
-    ]),
+    options: tariff.options.map((o) => [o.code, o.name.en ?? '', o.name.ar ?? '', Number(o.hourlyRate)]),
   })
 }
 
@@ -151,26 +131,15 @@ interface PlaceDialogProps {
  * while open, so the fields always start from the current place without
  * syncing state in an effect. The kind is fixed once created.
  */
-export function PlaceDialog({
-  place,
-  places,
-  open,
-  onOpenChange,
-}: PlaceDialogProps) {
+export function PlaceDialog({ place, places, open, onOpenChange }: PlaceDialogProps) {
   const t = useT()
   const queryClient = useQueryClient()
   const features = useFeatures()
   const isEditing = place !== null
 
-  const [kind, setKind] = useState<number>(() =>
-    Number(place?.kind ?? PLACE_ROOM)
-  )
-  const [name, setName] = useState<LocalizedValue>(() =>
-    toLocalizedValue(place?.name)
-  )
-  const [description, setDescription] = useState<LocalizedValue>(() =>
-    toLocalizedValue(place?.description)
-  )
+  const [kind, setKind] = useState<number>(() => Number(place?.kind ?? PLACE_ROOM))
+  const [name, setName] = useState<LocalizedValue>(() => toLocalizedValue(place?.name))
+  const [description, setDescription] = useState<LocalizedValue>(() => toLocalizedValue(place?.description))
   // With the clock or the bookings off (not in the plan, or switched off on
   // the brand page) their switches are not shown: a new place starts without
   // them, an existing one keeps what it has, since nothing about the rate or
@@ -181,31 +150,21 @@ export function PlaceDialog({
   // Whether customers can book it: on by default with a clock, the
   // owner's call without one (a restaurant books tables, a café does not)
   const [reservable, setReservable] = useState(() =>
-    place
-      ? Boolean(place.reservable)
-      : kind === PLACE_ROOM && features.reservations
+    place ? Boolean(place.reservable) : kind === PLACE_ROOM && features.reservations
   )
   const [reservableTouched, setReservableTouched] = useState(false)
   const [options, setOptions] = useState<OptionDraft[]>(() =>
     place?.tariff
-      ? tariffOptions(place.tariff).map((o) =>
-          draft(o.code ?? '', toLocalizedValue(o.name), o.hourlyRate)
-        )
+      ? tariffOptions(place.tariff).map((o) => draft(o.code ?? '', toLocalizedValue(o.name), o.hourlyRate))
       : defaultOptions(kind, places)
   )
-  const [rounding, setRounding] = useState(() =>
-    Number(place?.tariff?.roundingMinutes ?? DEFAULT_ROUNDING)
-  )
+  const [rounding, setRounding] = useState(() => Number(place?.tariff?.roundingMinutes ?? DEFAULT_ROUNDING))
 
   const create = useMutation(createPlaceMutation())
   const update = useMutation(updatePlaceMutation())
   const setTariff = useMutation(setPlaceTariffMutation())
   const setReservableFlag = useMutation(setPlaceReservableMutation())
-  const isSaving =
-    create.isPending ||
-    update.isPending ||
-    setTariff.isPending ||
-    setReservableFlag.isPending
+  const isSaving = create.isPending || update.isPending || setTariff.isPending || setReservableFlag.isPending
 
   const tariff = timed ? toTariff(options, rounding) : null
   const canSave = !isBlank(name) && (!timed || tariff !== null)
@@ -218,9 +177,7 @@ export function PlaceDialog({
             name: fromLocalizedValue(toLocalizedValue(o.name)),
             hourlyRate: Number(o.hourlyRate ?? 0),
           })),
-          roundingMinutes: Number(
-            place.tariff.roundingMinutes ?? DEFAULT_ROUNDING
-          ),
+          roundingMinutes: Number(place.tariff.roundingMinutes ?? DEFAULT_ROUNDING),
         }
       : null
   )
@@ -243,9 +200,7 @@ export function PlaceDialog({
   }
 
   const updateOption = (key: number, patch: Partial<OptionDraft>) =>
-    setOptions((list) =>
-      list.map((o) => (o.key === key ? { ...o, ...patch } : o))
-    )
+    setOptions((list) => list.map((o) => (o.key === key ? { ...o, ...patch } : o)))
 
   // A rounding the place already has that is not one of the usual choices
   // stays offered, so editing never silently changes it
@@ -295,12 +250,7 @@ export function PlaceDialog({
       onOpenChange={onOpenChange}
       title={
         <span className='flex items-center gap-2'>
-          {isEditing && (
-            <PlaceKindIcon
-              kind={kind}
-              className='text-muted-foreground size-5'
-            />
-          )}
+          {isEditing && <PlaceKindIcon kind={kind} className='text-muted-foreground size-5' />}
           {t(isEditing ? 'editPlace' : 'newPlace')}
         </span>
       }
@@ -308,7 +258,7 @@ export function PlaceDialog({
         // Its name in the other language and a line about it, told from
         // the kind and what is typed; never a rate
         <FormFillButton
-          form='a place in a caf� or restaurant (a room, a table or a station)'
+          form='a place in a caf� or restaurant (a room, a table or a station)'
           fields={[
             {
               key: 'kind',
@@ -325,9 +275,7 @@ export function PlaceDialog({
           ]}
           onFilled={(filled) => {
             setName((prev) => mergeLocalized('name', prev, filled))
-            setDescription((prev) =>
-              mergeLocalized('description', prev, filled)
-            )
+            setDescription((prev) => mergeLocalized('description', prev, filled))
           }}
         />
       }
@@ -360,11 +308,7 @@ export function PlaceDialog({
                   aria-label={t('kind')}
                 >
                   {placeKinds.map(({ kind: value }) => (
-                    <ToggleGroupItem
-                      key={value}
-                      value={String(value)}
-                      className='flex-1 px-3'
-                    >
+                    <ToggleGroupItem key={value} value={String(value)} className='flex-1 px-3'>
                       <PlaceKindIcon kind={value} className='size-4' />
                       {t(placeKindKey[value])}
                     </ToggleGroupItem>
@@ -373,13 +317,7 @@ export function PlaceDialog({
               </Field>
             )}
 
-            <LocalizedInput
-              id='place-name'
-              label={t('name')}
-              value={name}
-              onChange={setName}
-              autoFocus={!isEditing}
-            />
+            <LocalizedInput id='place-name' label={t('name')} value={name} onChange={setName} autoFocus={!isEditing} />
 
             <LocalizedInput
               id='place-description'
@@ -412,17 +350,12 @@ export function PlaceDialog({
                     </div>
 
                     {options.map((option) => (
-                      <div
-                        key={option.key}
-                        className='grid grid-cols-[1fr_8rem_2rem] items-center gap-2'
-                      >
+                      <div key={option.key} className='grid grid-cols-[1fr_8rem_2rem] items-center gap-2'>
                         <LocalizedInput
                           id={`option-name-${option.key}`}
                           ariaLabel={t('rateOptions')}
                           value={option.name}
-                          onChange={(value) =>
-                            updateOption(option.key, { name: value })
-                          }
+                          onChange={(value) => updateOption(option.key, { name: value })}
                           compact
                         />
                         <InputGroup className='h-8'>
@@ -452,11 +385,7 @@ export function PlaceDialog({
                           className='size-8'
                           aria-label={t('remove')}
                           disabled={options.length <= 1}
-                          onClick={() =>
-                            setOptions((list) =>
-                              list.filter((o) => o.key !== option.key)
-                            )
-                          }
+                          onClick={() => setOptions((list) => list.filter((o) => o.key !== option.key))}
                         >
                           <X className='h-4 w-4' />
                         </Button>
@@ -468,12 +397,7 @@ export function PlaceDialog({
                       variant='ghost'
                       size='sm'
                       className='-ms-2'
-                      onClick={() =>
-                        setOptions((list) => [
-                          ...list,
-                          draft('', { en: '', ar: '' }, undefined),
-                        ])
-                      }
+                      onClick={() => setOptions((list) => [...list, draft('', { en: '', ar: '' }, undefined)])}
                     >
                       <Plus />
                       {t('addRateOption')}
@@ -487,16 +411,10 @@ export function PlaceDialog({
                       variant='outline'
                       size='sm'
                       value={String(rounding)}
-                      onValueChange={(value) =>
-                        value && setRounding(Number(value))
-                      }
+                      onValueChange={(value) => value && setRounding(Number(value))}
                     >
                       {roundingChoices.map((minutes) => (
-                        <ToggleGroupItem
-                          key={minutes}
-                          value={String(minutes)}
-                          className='px-2.5 tabular-nums'
-                        >
+                        <ToggleGroupItem key={minutes} value={String(minutes)} className='px-2.5 tabular-nums'>
                           {t('minutesShort', { count: minutes })}
                         </ToggleGroupItem>
                       ))}

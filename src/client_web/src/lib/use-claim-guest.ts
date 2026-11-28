@@ -2,8 +2,8 @@ import { useEffect, useRef } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useAuth } from 'react-oidc-context'
 import { claimGuestOrders } from '@/api/ordering'
-import { API_VERSION } from '@/lib/api-client'
 import { useGuestStore } from '@/stores/guest-store'
+import { API_VERSION } from '@/lib/api-client'
 
 /**
  * A guest who signs in takes their orders with them. The device still

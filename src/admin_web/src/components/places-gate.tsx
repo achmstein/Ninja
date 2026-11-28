@@ -9,14 +9,7 @@ export function PlacesGate({ children }: { children: React.ReactNode }) {
   const cloudKitchen = useIsCloudKitchen()
 
   if (cloudKitchen) {
-    return (
-      <ErrorState
-        size='page'
-        title={t('noPlacesTitle')}
-        description={t('noPlacesDescription')}
-        home
-      />
-    )
+    return <ErrorState size='page' title={t('noPlacesTitle')} description={t('noPlacesDescription')} home />
   }
 
   return <>{children}</>

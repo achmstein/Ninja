@@ -1,7 +1,7 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { apiClient } from '@/lib/api-client'
-import { digitCount } from '@/lib/phone'
 import { normalizeName } from '@/lib/names'
+import { digitCount } from '@/lib/phone'
 import { useDebounced } from '@/lib/use-debounced'
 
 // Customers the till adds by name and phone (Identity.API's
@@ -36,18 +36,13 @@ export type CustomerLookup = {
 export type ClaimLink = { token: string; expiresAt: string }
 
 export function customerName(customer: IdentityCustomer): string {
-  return (
-    [customer.firstName, customer.lastName].filter(Boolean).join(' ') ||
-    customer.username ||
-    ''
-  )
+  return [customer.firstName, customer.lastName].filter(Boolean).join(' ') || customer.username || ''
 }
 
 /** A lookup is worth making once a number is most of the way typed, or a name has begun. */
 export const MIN_PHONE_DIGITS = 7
 export const MIN_NAME_LENGTH = 2
 const LOOKUP_DEBOUNCE_MS = 300
-
 
 /**
  * Who the till may already know, as the cashier types: the customer with

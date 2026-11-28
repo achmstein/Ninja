@@ -3,13 +3,7 @@ import { type LoyaltyTier } from '@/features/loyalty/types'
 /** What the customer list can be sorted by. */
 export type CustomerSort = 'lastOrder' | 'spent' | 'owes' | 'points' | 'name'
 
-export const customerSorts = [
-  'lastOrder',
-  'spent',
-  'owes',
-  'points',
-  'name',
-] as const satisfies readonly CustomerSort[]
+export const customerSorts = ['lastOrder', 'spent', 'owes', 'points', 'name'] as const satisfies readonly CustomerSort[]
 
 /** One row of the list: the account, joined with what Ordering, Accounts and Loyalty know of it. */
 export type CustomerRow = {
@@ -32,20 +26,15 @@ export type CustomerRow = {
   tier?: LoyaltyTier
 }
 
-const byName = (a: CustomerRow, b: CustomerRow) =>
-  a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
+const byName = (a: CustomerRow, b: CustomerRow) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
 
 /**
  * The rows in the order asked for: the most first (the latest order, the
  * most spent, owed, or held), names A to Z. Rows with nothing to sort by
  * (never ordered, owing nothing) come after those with, by name.
  */
-export function sortRows(
-  rows: CustomerRow[],
-  sort: CustomerSort
-): CustomerRow[] {
-  const most = (value: (row: CustomerRow) => number) =>
-    [...rows].sort((a, b) => value(b) - value(a) || byName(a, b))
+export function sortRows(rows: CustomerRow[], sort: CustomerSort): CustomerRow[] {
+  const most = (value: (row: CustomerRow) => number) => [...rows].sort((a, b) => value(b) - value(a) || byName(a, b))
   switch (sort) {
     case 'name':
       return [...rows].sort(byName)

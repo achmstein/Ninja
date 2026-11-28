@@ -2,8 +2,8 @@ import { Languages } from 'lucide-react'
 import { useBrand } from '@/lib/brand'
 import { useLanguage, useT } from '@/lib/i18n'
 import { contentLanguagesOf } from '@/lib/opening-language'
-import { TileRow } from '@/components/ninja/page/tile-row'
 import { Segment } from '@/components/ninja/page/parts'
+import { TileRow } from '@/components/ninja/page/tile-row'
 
 /**
  * The language row on the settings page: both languages in one track, each

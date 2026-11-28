@@ -12,15 +12,7 @@ export function OnlinePaymentsGate({ children }: { children: React.ReactNode }) 
   const brand = useBrand()
 
   if (brand && !entitledTo(brand, 'onlinePayments')) {
-    return (
-      <ErrorState
-        size='page'
-        code={403}
-        title={t('notInPlan')}
-        description={t('featureOffDescription')}
-        home
-      />
-    )
+    return <ErrorState size='page' code={403} title={t('notInPlan')} description={t('featureOffDescription')} home />
   }
 
   return <>{children}</>

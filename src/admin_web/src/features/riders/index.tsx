@@ -11,11 +11,7 @@ import { API_VERSION } from '@/lib/api-client'
 import { useLanguage, useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import {
-  createAppColumnHelper,
-  DataTable,
-  dataTableFeatures,
-} from '@/components/data-table'
+import { createAppColumnHelper, DataTable, dataTableFeatures } from '@/components/data-table'
 import { EmptyState } from '@/components/empty-state'
 import { EntityAvatar } from '@/components/entity-avatar'
 import { ErrorState } from '@/components/error-state'
@@ -27,13 +23,7 @@ import { StatusChip } from '@/components/status-chip'
 import { When } from '@/components/when'
 import { AddStaffDialog } from '@/features/staff/components/add-staff-dialog'
 import { useBusinessDayOffset } from '@/features/till/use-till-window'
-import {
-  compareRiders,
-  num,
-  presenceLabel,
-  presenceOf,
-  presenceTone,
-} from './format'
+import { compareRiders, num, presenceLabel, presenceOf, presenceTone } from './format'
 import { refreshRiders } from './refresh'
 
 const columnHelper = createAppColumnHelper<RiderOverview>()
@@ -43,13 +33,8 @@ export function PresenceChip({ status }: { status?: string | null }) {
   const t = useT()
   const presence = presenceOf(status)
   return (
-    <StatusChip
-      tone={presenceTone[presence]}
-      className={cn(presence === 'Quiet' && 'cursor-help')}
-    >
-      <span title={presence === 'Quiet' ? t('riderQuietHint') : undefined}>
-        {t(presenceLabel[presence])}
-      </span>
+    <StatusChip tone={presenceTone[presence]} className={cn(presence === 'Quiet' && 'cursor-help')}>
+      <span title={presence === 'Quiet' ? t('riderQuietHint') : undefined}>{t(presenceLabel[presence])}</span>
     </StatusChip>
   )
 }
@@ -90,10 +75,7 @@ export function Riders() {
     enabled: tzOffsetMinutes !== undefined,
     refetchInterval: 60_000,
   })
-  const riders = useMemo(
-    () => [...(overview.data ?? [])].sort(compareRiders),
-    [overview.data]
-  )
+  const riders = useMemo(() => [...(overview.data ?? [])].sort(compareRiders), [overview.data])
   const online = riders.filter((r) => presenceOf(r.status) === 'Online').length
 
   const columns = useMemo(
@@ -115,9 +97,7 @@ export function Riders() {
                   {row.original.name}
                 </Link>
                 {row.original.enabled === false && (
-                  <span className='text-muted-foreground text-xs'>
-                    {t('riderDisabled')}
-                  </span>
+                  <span className='text-muted-foreground text-xs'>{t('riderDisabled')}</span>
                 )}
               </div>
             </div>
@@ -135,9 +115,7 @@ export function Riders() {
           id: 'out',
           meta: { align: 'end' },
           header: t('riderOutNow'),
-          cell: ({ getValue }) => (
-            <span className='tabular-nums'>{getValue() || '—'}</span>
-          ),
+          cell: ({ getValue }) => <span className='tabular-nums'>{getValue() || '—'}</span>,
         }),
         columnHelper.accessor((row) => num(row.deliveredToday), {
           id: 'deliveredToday',
@@ -158,9 +136,7 @@ export function Riders() {
           id: 'cashToday',
           meta: { align: 'end' },
           header: t('riderCashToday'),
-          cell: ({ row }) => (
-            <Money value={row.original.cashCollectedToday} dashZero />
-          ),
+          cell: ({ row }) => <Money value={row.original.cashCollectedToday} dashZero />,
         }),
       ]),
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -194,19 +170,13 @@ export function Riders() {
         }
         badge={
           riders.length > 0 ? (
-            <StatusChip tone={online > 0 ? 'success' : 'muted'}>
-              {t('ridersOnlineCount', { n: online })}
-            </StatusChip>
+            <StatusChip tone={online > 0 ? 'success' : 'muted'}>{t('ridersOnlineCount', { n: online })}</StatusChip>
           ) : undefined
         }
       />
 
       {overview.isError ? (
-        <ErrorState
-          title={t('ridersLoadFailed')}
-          error={overview.error}
-          onRetry={overview.refetch}
-        />
+        <ErrorState title={t('ridersLoadFailed')} error={overview.error} onRetry={overview.refetch} />
       ) : !overview.isLoading && riders.length === 0 ? (
         <EmptyState
           icon={Motorbike}

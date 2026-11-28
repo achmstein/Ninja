@@ -1,7 +1,7 @@
 import { CircleAlert, MapPin, MapPinCheck } from 'lucide-react'
-import type { PinSource } from '@/features/sale/cart'
 import { useT, type TranslationKey } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
+import type { PinSource } from '@/features/sale/cart'
 
 /** How far a pin can be trusted, from where it came */
 export type PinQuality = 'exact' | 'approximate' | 'none'
@@ -41,11 +41,11 @@ export function PinQualityLabel({
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-md px-2 py-1 type-caption font-medium',
+        'type-caption inline-flex items-center gap-1.5 rounded-md px-2 py-1 font-medium',
         quality === 'exact' && 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400',
         quality === 'approximate' && 'bg-amber-500/10 text-amber-700 dark:text-amber-400',
         quality === 'none' && 'bg-destructive/10 text-destructive',
-        className,
+        className
       )}
     >
       <Icon className='size-3.5 shrink-0' aria-hidden />

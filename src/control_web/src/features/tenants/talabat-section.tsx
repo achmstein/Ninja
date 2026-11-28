@@ -2,20 +2,17 @@ import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { AlertCircle } from 'lucide-react'
 import type { TenantDetail } from '@/api/control'
-import {
-  getTenantQueryKey,
-  updateTenantTalabatMutation,
-} from '@/api/control/@tanstack/react-query.gen'
-import { CopyButton } from '@/components/copy-button'
+import { getTenantQueryKey, updateTenantTalabatMutation } from '@/api/control/@tanstack/react-query.gen'
+import { useT } from '@/lib/i18n'
+import { problemDetail } from '@/lib/problem'
+import { toast } from '@/lib/toast'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Spinner } from '@/components/ui/spinner'
-import { useT } from '@/lib/i18n'
-import { problemDetail } from '@/lib/problem'
-import { toast } from '@/lib/toast'
+import { CopyButton } from '@/components/copy-button'
 
 /**
  * The business on Talabat, as Talabat's onboarding gives it: its chain there and
@@ -33,9 +30,8 @@ export function TalabatSection({ tenant }: { tenant: TenantDetail }) {
   const save = useMutation({
     ...updateTenantTalabatMutation(),
     onSuccess: (dto) => {
-      queryClient.setQueryData(
-        getTenantQueryKey({ path: { slug: tenant.slug } }),
-        (old: TenantDetail | undefined) => (old ? { ...old, talabat: dto } : old)
+      queryClient.setQueryData(getTenantQueryKey({ path: { slug: tenant.slug } }), (old: TenantDetail | undefined) =>
+        old ? { ...old, talabat: dto } : old
       )
       toast.success(t('talabatSaved'))
     },

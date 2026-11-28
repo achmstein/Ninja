@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
+import { AxiosError } from 'axios'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate } from '@tanstack/react-router'
-import { AxiosError } from 'axios'
-import { useAuth } from 'react-oidc-context'
+import { getRealmRoles } from '@/config/oidc-config'
 import {
   ArrowLeft,
   ArrowRight,
@@ -20,6 +20,7 @@ import {
   User,
   UserPlus,
 } from 'lucide-react'
+import { useAuth } from 'react-oidc-context'
 import { assignOrderCustomerMutation } from '@/api/ordering/@tanstack/react-query.gen'
 import {
   assignTicketLinesCustomerMutation,
@@ -27,73 +28,53 @@ import {
   moveTicketLinesMutation,
 } from '@/api/sales/@tanstack/react-query.gen'
 import type { TicketLineView } from '@/api/sales/types.gen'
+import { API_VERSION } from '@/lib/api-client'
+import { useLanguage, useLocale, useLocalized, useT } from '@/lib/i18n'
+import { useMoney, toNumber } from '@/lib/money'
+import { orderIdsOn } from '@/lib/stock-disposition'
+import { TICKET_TYPE_COUNTER, TICKET_TYPE_TABLE } from '@/lib/ticket-types'
+import { toast } from '@/lib/toast'
+import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Skeleton } from '@/components/ui/skeleton'
+import { ConfirmDialog } from '@/components/confirm-dialog'
 import { useTakenByText } from '@/features/branch/use-branch-name'
+import { CustomerCard, type CardCustomer } from '@/features/customer/customer-card'
+import { CustomerSearch } from '@/features/customer/customer-search'
 import { BillTitle } from '@/features/deliveries/bill-title'
 import { billLabel } from '@/features/deliveries/delivery-format'
 import { PendingOrders } from '@/features/orders/pending-orders'
-import {
-  pendingForTicket,
-  usePendingOrders,
-} from '@/features/orders/use-pending-orders'
-import {
-  ReceiptSheet,
-  type ReceiptPayment,
-} from '@/features/receipt/receipt-sheet'
-import { StayBar } from '@/features/places/stay-bar'
-import { StayMembers } from '@/features/places/stay-members'
+import { pendingForTicket, usePendingOrders } from '@/features/orders/use-pending-orders'
 import { EndedTime } from '@/features/places/ended-time'
 import { isRunning, stayRoster } from '@/features/places/status'
+import { StayBar } from '@/features/places/stay-bar'
+import { StayMembers } from '@/features/places/stay-members'
 import { TimeSoFar } from '@/features/places/time-so-far'
 import { useStay, useStayActions } from '@/features/places/use-places'
+import { printSheets } from '@/features/printing/print-sheets'
+import { ReceiptSheet, type ReceiptPayment } from '@/features/receipt/receipt-sheet'
 import { saleTotal, type SaleCustomer } from '@/features/sale/cart'
 import { totalWith } from '@/features/sending/bill'
 import { landSend, sendsFor, useSending } from '@/features/sending/sending'
 import { SendingLines } from '@/features/sending/sending-lines'
-import { CustomerSearch } from '@/features/customer/customer-search'
-import {
-  CustomerCard,
-  type CardCustomer,
-} from '@/features/customer/customer-card'
-import { ConfirmDialog } from '@/components/confirm-dialog'
-import { getRealmRoles } from '@/config/oidc-config'
-import { API_VERSION } from '@/lib/api-client'
-import { useLanguage, useLocale, useLocalized, useT } from '@/lib/i18n'
-import { useMoney, toNumber } from '@/lib/money'
-import { TICKET_TYPE_COUNTER, TICKET_TYPE_TABLE } from '@/lib/ticket-types'
-import { toast } from '@/lib/toast'
-import { cn } from '@/lib/utils'
+import { LineRow, mergeIdenticalLines } from './bill-lines'
+import { BreakdownDialog } from './breakdown-dialog'
+import { ChangeTenderDialog, CORRECTABLE_TENDERS, type TenderFix } from './change-tender-dialog'
 import { DiscardTicketDialog } from './discard-dialog'
-import { MoveTargetDialog, type MoveTarget } from './move-target-dialog'
-import { RefundDialog } from './refund-dialog'
-import {
-  ChangeTenderDialog,
-  CORRECTABLE_TENDERS,
-  type TenderFix,
-} from './change-tender-dialog'
-import { tenderLabelKey } from './tenders'
-import { SettleDialog, type SettleOutcome } from './settle-dialog'
-import { orderIdsOn } from '@/lib/stock-disposition'
-import { VoidTicketDialog } from './void-dialog'
 import { DiscountDialog } from './discount-dialog'
 import { KitchenReprintDialog, useCanReprintKitchen } from './kitchen-reprint'
-import { printSheets } from '@/features/printing/print-sheets'
-import { BreakdownDialog } from './breakdown-dialog'
-import { LineRow, mergeIdenticalLines } from './bill-lines'
+import { MoveTargetDialog, type MoveTarget } from './move-target-dialog'
 import { onlineSummary } from './online-payments'
 import { OnlinePaymentsPanel } from './online-payments-panel'
+import { RefundDialog } from './refund-dialog'
+import { SettleDialog, type SettleOutcome } from './settle-dialog'
+import { tenderLabelKey } from './tenders'
 import { useOnlinePayments } from './use-online-payments'
+import { VoidTicketDialog } from './void-dialog'
 
-const percent = (rate: number | string | undefined) =>
-  Math.round(toNumber(rate) * 10000) / 100
+const percent = (rate: number | string | undefined) => Math.round(toNumber(rate) * 10000) / 100
 
 export function TicketScreen({
   ticketId,
@@ -160,9 +141,7 @@ export function TicketScreen({
     }),
     // A discarded or deleted ticket 404s — don't retry that, so the screen
     // learns at once that the bill is gone instead of retrying a dead one
-    retry: (count, error) =>
-      !(error instanceof AxiosError && error.response?.status === 404) &&
-      count < 3,
+    retry: (count, error) => !(error instanceof AxiosError && error.response?.status === 404) && count < 3,
     // Poll fallback in case the SignalR connection is silently dead; quick
     // while an order the server took is still to show its lines here
     refetchInterval: placedHere ? 700 : 20_000,
@@ -177,22 +156,15 @@ export function TicketScreen({
   useEffect(() => {
     const grew = mySends.length > shownSends.current
     shownSends.current = mySends.length
-    if (grew)
-      sendingRef.current?.scrollIntoView({ block: 'end', behavior: 'smooth' })
+    if (grew) sendingRef.current?.scrollIntoView({ block: 'end', behavior: 'smooth' })
   }, [mySends.length])
 
   // An order's lines are on the bill: its faded copy goes, the real ones tick
   useEffect(() => {
     if (!ticket) return
-    const orderIds = new Set(
-      (ticket.lines ?? []).map((l) => toNumber(l.orderId)),
-    )
+    const orderIds = new Set((ticket.lines ?? []).map((l) => toNumber(l.orderId)))
     for (const send of mySends) {
-      if (
-        send.status === 'placed' &&
-        send.orderId != null &&
-        orderIds.has(send.orderId)
-      ) {
+      if (send.status === 'placed' && send.orderId != null && orderIds.has(send.orderId)) {
         landSend(send.requestId, send.orderId)
       }
     }
@@ -202,9 +174,7 @@ export function TicketScreen({
   // ticket deleted out from under the screen. react-query keeps the last data
   // on error, so a 404 is the only honest signal that the bill no longer exists.
   const ticketGone =
-    ticketQuery.isError &&
-    ticketQuery.error instanceof AxiosError &&
-    ticketQuery.error.response?.status === 404
+    ticketQuery.isError && ticketQuery.error instanceof AxiosError && ticketQuery.error.response?.status === 404
 
   // Nothing to do here once the bill is gone — hand the cashier back to the floor
   useEffect(() => {
@@ -213,10 +183,7 @@ export function TicketScreen({
 
   // What guests paid from their phones (online payments), while the bill is
   // open: the till takes only what is left
-  const online = useOnlinePayments(
-    ticketId,
-    ticket != null && ticket.status !== 'Settled' && ticket.voidedAt == null,
-  )
+  const online = useOnlinePayments(ticketId, ticket != null && ticket.status !== 'Settled' && ticket.voidedAt == null)
 
   // App orders for this table or session that have not been accepted yet —
   // they are not on the bill until someone taps Confirm
@@ -229,9 +196,7 @@ export function TicketScreen({
   // are still its account holders
   const stay = useStay(
     ticket?.sessionId,
-    ticket?.sessionId != null &&
-      ticket?.settledAt == null &&
-      ticket?.voidedAt == null,
+    ticket?.sessionId != null && ticket?.settledAt == null && ticket?.voidedAt == null
   )
   const stayActions = useStayActions()
 
@@ -275,11 +240,7 @@ export function TicketScreen({
     const lineIds = assignLineIds ?? []
     // Somebody with an account named on a room's lines is in the room:
     // onto the roster, so their share of the time has a tab at settle
-    if (
-      stay &&
-      customer.id &&
-      !stayRoster(stay).some((m) => m.id === customer.id)
-    ) {
+    if (stay && customer.id && !stayRoster(stay).some((m) => m.id === customer.id)) {
       stayActions.addMember(toNumber(stay.id), customer.id, customer.name)
     }
     try {
@@ -292,8 +253,8 @@ export function TicketScreen({
             // and a later assignment is a new one
             headers: { 'x-requestid': crypto.randomUUID() },
             body: { customerUserId: customer.id, customerName: customer.name },
-          }),
-        ),
+          })
+        )
       )
       // Part of an order (or several): the snapshot on just those lines
       if (lineIds.length > 0) {
@@ -316,13 +277,8 @@ export function TicketScreen({
     } catch (error) {
       // A 400 carries the domain's own words (cancelled, already somebody's)
       const detail =
-        error instanceof AxiosError && typeof error.response?.data === 'string'
-          ? error.response.data
-          : undefined
-      toast.error(
-        t('failedToAssignCustomer'),
-        detail ? { description: detail } : undefined,
-      )
+        error instanceof AxiosError && typeof error.response?.data === 'string' ? error.response.data : undefined
+      toast.error(t('failedToAssignCustomer'), detail ? { description: detail } : undefined)
     }
   }
 
@@ -357,9 +313,7 @@ export function TicketScreen({
       <div className='flex flex-col items-center gap-4 py-24'>
         <p className='text-muted-foreground type-body'>{t('ticketNotFound')}</p>
         <Button asChild size='lg'>
-          <Link to={backTo}>
-            {backTo === '/' ? t('backToFloor') : t('goBack')}
-          </Link>
+          <Link to={backTo}>{backTo === '/' ? t('backToFloor') : t('goBack')}</Link>
         </Button>
       </div>
     )
@@ -421,12 +375,7 @@ export function TicketScreen({
   // "Table 1" and is standing in front of that table. The kind of place is
   // only spelled out when the name does not already say it — the fallback for
   // a counter ticket, which has no name of its own.
-  const typeLabel =
-    ticket.type === 'Room'
-      ? t('room')
-      : ticket.type === 'Table'
-        ? t('table')
-        : t('counter')
+  const typeLabel = ticket.type === 'Room' ? t('room') : ticket.type === 'Table' ? t('table') : t('counter')
   // What identifies this bill: the place it belongs to, or — for a counter
   // tab, which has no place — the name the cashier gave it. Who ordered is a
   // different question, and the line groups below are the honest answer.
@@ -515,9 +464,7 @@ export function TicketScreen({
   // come. Once a line lands, only an owner's void (with its reason) takes it
   // off the floor.
   const canDiscard =
-    lines.length === 0 &&
-    mySends.length === 0 &&
-    (ticket.type !== 'Room' || ticket.sessionEndedAt != null)
+    lines.length === 0 && mySends.length === 0 && (ticket.type !== 'Room' || ticket.sessionEndedAt != null)
   const canVoid = !canDiscard && isOwner
   // An open bill with something on it can go on paper before it is paid
   const canPrintBill = isOpen && (ticket.lines?.length ?? 0) > 0
@@ -525,15 +472,12 @@ export function TicketScreen({
   // The bill's parts (menu money, discount, service, VAT, what went back)
   // are one tap away; the bar carries the total
   const hasParts =
-    discount > 0 ||
-    toNumber(ticket.serviceCharge) > 0 ||
-    toNumber(ticket.vat) > 0 ||
-    toNumber(ticket.refundedTotal) > 0
+    discount > 0 || toNumber(ticket.serviceCharge) > 0 || toNumber(ticket.vat) > 0 || toNumber(ticket.refundedTotal) > 0
   const total =
     onTheirWay.length > 0 && !isSettled
       ? totalWith(
           ticket,
-          onTheirWay.reduce((sum, x) => sum + saleTotal(x.lines), 0),
+          onTheirWay.reduce((sum, x) => sum + saleTotal(x.lines), 0)
         )
       : ticket.total
   const noneChosen = selectedIds.size === 0
@@ -551,9 +495,7 @@ export function TicketScreen({
     <div className='flex flex-col gap-6'>
       <EndedTime stay={endedStay} />
       <div className='flex flex-col gap-2'>
-        <h2 className='text-muted-foreground type-label'>
-          {t('inTheRoom')}
-        </h2>
+        <h2 className='text-muted-foreground type-label'>{t('inTheRoom')}</h2>
         <StayMembers stay={endedStay} />
       </div>
     </div>
@@ -564,7 +506,7 @@ export function TicketScreen({
   const actionClass = (main = false) =>
     cn(
       'h-14 gap-2 max-sm:min-w-0 max-sm:flex-1 max-sm:px-3 max-sm:text-base',
-      main ? 'min-w-60 px-6 text-lg' : 'min-w-40 px-5 text-base',
+      main ? 'min-w-60 px-6 text-lg' : 'min-w-40 px-5 text-base'
     )
 
   // Every bill is laid out the same: the header across the top, the money
@@ -580,16 +522,8 @@ export function TicketScreen({
           void) in ⋯, far from Settle in the bar so none of them can be
           fat-fingered */}
       <div className='flex h-16 shrink-0 items-center gap-2 border-b px-3 max-sm:px-2'>
-        <Button
-          asChild
-          variant='ghost'
-          size='icon'
-          className='size-12 shrink-0'
-        >
-          <Link
-            to={backTo}
-            aria-label={backTo === '/' ? t('backToFloor') : t('goBack')}
-          >
+        <Button asChild variant='ghost' size='icon' className='size-12 shrink-0'>
+          <Link to={backTo} aria-label={backTo === '/' ? t('backToFloor') : t('goBack')}>
             <BackIcon className='size-6' />
           </Link>
         </Button>
@@ -597,17 +531,16 @@ export function TicketScreen({
             place name in Arabic the bidi algorithm lays the whole line out
             left-to-right and an inline start margin ends up on the outer
             edge, not between the two */}
-        <h1 className='flex min-w-0 flex-1 items-baseline gap-2 type-title'>
+        <h1 className='type-title flex min-w-0 flex-1 items-baseline gap-2'>
           <BillTitle title={title} className='truncate' />
-          <span className='text-muted-foreground shrink-0 type-detail font-medium tabular-nums'>
+          <span className='text-muted-foreground type-detail shrink-0 font-medium tabular-nums'>
             #{toNumber(ticket.id)}
           </span>
         </h1>
         {isSettled ? (
           <Badge className='h-8 shrink-0 px-3 text-sm' variant='secondary'>
             {t('settledBadge')}
-            {ticket.receiptNumber != null &&
-              ` · ${t('receiptNumber', { number: toNumber(ticket.receiptNumber) })}`}
+            {ticket.receiptNumber != null && ` · ${t('receiptNumber', { number: toNumber(ticket.receiptNumber) })}`}
           </Badge>
         ) : isVoided ? (
           <Badge className='h-8 shrink-0 px-3 text-sm' variant='destructive'>
@@ -620,9 +553,7 @@ export function TicketScreen({
             <Button
               className='h-12 shrink-0 gap-2 px-3'
               aria-label={t('addItems')}
-              onClick={() =>
-                navigate({ to: '/order/$ticketId', params: { ticketId: String(ticketId) } })
-              }
+              onClick={() => navigate({ to: '/order/$ticketId', params: { ticketId: String(ticketId) } })}
             >
               <ShoppingCart className='size-5' />
               <span className='max-sm:hidden'>{t('addItems')}</span>
@@ -642,12 +573,7 @@ export function TicketScreen({
         {hasMenu && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button
-                variant='outline'
-                size='icon'
-                className='size-12 shrink-0'
-                aria-label={t('moreActions')}
-              >
+              <Button variant='outline' size='icon' className='size-12 shrink-0' aria-label={t('moreActions')}>
                 <Ellipsis className='size-5' />
               </Button>
             </DropdownMenuTrigger>
@@ -672,19 +598,13 @@ export function TicketScreen({
               {/* The bill on paper before it is paid: the customer looks it
                   over, then says how they pay */}
               {canPrintBill && (
-                <DropdownMenuItem
-                  className='h-12 gap-3 px-3 text-base'
-                  onSelect={() => void printSheets()}
-                >
+                <DropdownMenuItem className='h-12 gap-3 px-3 text-base' onSelect={() => void printSheets()}>
                   <Printer className='size-5' />
                   {t('printBill')}
                 </DropdownMenuItem>
               )}
               {canReprint && (
-                <DropdownMenuItem
-                  className='h-12 gap-3 px-3 text-base'
-                  onSelect={() => setReprintOpen(true)}
-                >
+                <DropdownMenuItem className='h-12 gap-3 px-3 text-base' onSelect={() => setReprintOpen(true)}>
                   <Printer className='size-5' />
                   {t('kitchenTickets')}
                 </DropdownMenuItem>
@@ -704,9 +624,7 @@ export function TicketScreen({
                   <DropdownMenuItem
                     variant='destructive'
                     className='h-12 gap-3 px-3 text-base'
-                    onSelect={() =>
-                      runningStay ? setVoidGuardOpen(true) : setVoidOpen(true)
-                    }
+                    onSelect={() => (runningStay ? setVoidGuardOpen(true) : setVoidOpen(true))}
                   >
                     <Ban className='size-5' />
                     {t('voidTicket')}
@@ -722,7 +640,7 @@ export function TicketScreen({
         {room && (
           // A light tint: the room's own surface beside the bill, not more
           // of its list
-          <aside className='shrink-0 p-4 pb-2 min-[900px]:order-last min-[900px]:w-[340px] min-[900px]:overflow-y-auto min-[900px]:border-s min-[900px]:bg-muted/40 min-[900px]:pb-4 xl:w-[380px]'>
+          <aside className='min-[900px]:bg-muted/40 shrink-0 p-4 pb-2 min-[900px]:order-last min-[900px]:w-[340px] min-[900px]:overflow-y-auto min-[900px]:border-s min-[900px]:pb-4 xl:w-[380px]'>
             {room}
           </aside>
         )}
@@ -732,13 +650,13 @@ export function TicketScreen({
               here): why a bill nobody here rang up is on the floor, and whom
               to ask. Taken here, everyone on shift knows */}
           {takenBy && ticket.takenAtBranchId != null && (
-            <p className='text-muted-foreground mb-3 type-detail'>{takenBy}</p>
+            <p className='text-muted-foreground type-detail mb-3'>{takenBy}</p>
           )}
 
           {/* Confirmed here, they land on this bill — which is why the guard
               stops a settle while any are still waiting */}
           {waiting.length > 0 && (
-            <div className='border-amber-500/50 bg-amber-500/10 mb-4 flex flex-col gap-2 rounded-xl border p-3'>
+            <div className='mb-4 flex flex-col gap-2 rounded-xl border border-amber-500/50 bg-amber-500/10 p-3'>
               <div className='flex items-center gap-2 font-semibold'>
                 <Clock className='size-5 text-amber-600 dark:text-amber-500' />
                 {t('ticketPendingOrders', { count: waiting.length })}
@@ -751,11 +669,7 @@ export function TicketScreen({
             // Nothing to say while a session runs: the clock in the panel is
             // the bill so far; nor while lines are on their way
             !runningStay &&
-            mySends.length === 0 && (
-              <p className='text-muted-foreground py-16 text-center'>
-                {t('emptyTicket')}
-              </p>
-            )
+            mySends.length === 0 && <p className='text-muted-foreground py-16 text-center'>{t('emptyTicket')}</p>
           ) : groups.length === 1 && groups[0].key === null ? (
             <div className='flex flex-col divide-y'>
               {/* Selecting moves individual lines to another ticket, so the
@@ -785,7 +699,7 @@ export function TicketScreen({
                       /* An account holder: tap the name for their card */
                       <button
                         type='button'
-                        className='flex min-w-0 items-center gap-2 type-heading underline-offset-4 hover:underline'
+                        className='type-heading flex min-w-0 items-center gap-2 underline-offset-4 hover:underline'
                         onClick={() =>
                           setCardFor({
                             id: String(group.lines[0].customerId),
@@ -794,27 +708,18 @@ export function TicketScreen({
                         }
                       >
                         <User className='size-4 shrink-0' />
-                        <span className='truncate'>
-                          {group.name ?? t('guest')}
-                        </span>
+                        <span className='truncate'>{group.name ?? t('guest')}</span>
                       </button>
                     ) : (
-                      <span className='flex min-w-0 items-center gap-2 type-heading'>
+                      <span className='type-heading flex min-w-0 items-center gap-2'>
                         <User className='size-4 shrink-0' />
-                        <span className='truncate'>
-                          {group.name ?? (group.key ? t('guest') : location)}
-                        </span>
+                        <span className='truncate'>{group.name ?? (group.key ? t('guest') : location)}</span>
                       </span>
                     )}
-                    <span className='shrink-0 tabular-nums'>
-                      {money(group.total)}
-                    </span>
+                    <span className='shrink-0 tabular-nums'>{money(group.total)}</span>
                   </div>
                   <div className='flex flex-col divide-y'>
-                    {(choosing
-                      ? group.lines
-                      : mergeIdenticalLines(group.lines)
-                    ).map((line) => (
+                    {(choosing ? group.lines : mergeIdenticalLines(group.lines)).map((line) => (
                       <LineRow
                         key={String(line.id)}
                         line={line}
@@ -832,18 +737,12 @@ export function TicketScreen({
 
           {isOpen && <SendingLines ref={sendingRef} sends={mySends} />}
 
-          {isOpen && (
-            <OnlinePaymentsPanel
-              payments={online.payments}
-              summary={onlinePaid}
-              billOpen
-            />
-          )}
+          {isOpen && <OnlinePaymentsPanel payments={online.payments} summary={onlinePaid} billOpen />}
 
           {/* A voided ticket keeps its lines for the record but loses every
               action — what remains is the audit trail */}
           {isVoided && (
-            <div className='mt-4 divide-y rounded-lg border type-body'>
+            <div className='type-body mt-4 divide-y rounded-lg border'>
               <div className='text-destructive flex items-center gap-2 px-3 py-2 font-semibold'>
                 <Ban className='size-5' />
                 {t('voidedBadge')}
@@ -878,28 +777,18 @@ export function TicketScreen({
               put right while the shift is open (Cash pressed, InstaPay sent) */}
           {ticket.settledAt && (ticket.payments?.length ?? 0) > 0 && (
             <div className='mt-4 flex flex-col gap-2'>
-              <h2 className='text-muted-foreground type-label'>
-                {t('paymentsTitle')}
-              </h2>
+              <h2 className='text-muted-foreground type-label'>{t('paymentsTitle')}</h2>
               <div className='divide-y rounded-lg border'>
                 {ticket.payments!.map((payment, i) => (
-                  <div
-                    key={String(payment.id ?? i)}
-                    className='flex flex-col gap-0.5 px-3 py-2'
-                  >
+                  <div key={String(payment.id ?? i)} className='flex flex-col gap-0.5 px-3 py-2'>
                     <div className='flex items-center justify-between gap-4'>
                       <span className='font-medium'>
-                        {[
-                          t(tenderLabelKey[payment.tender ?? ''] ?? 'cash'),
-                          payment.customerName,
-                        ]
+                        {[t(tenderLabelKey[payment.tender ?? ''] ?? 'cash'), payment.customerName]
                           .filter(Boolean)
                           .join(' · ')}
                       </span>
                       <div className='flex items-center gap-2'>
-                        <span className='font-semibold tabular-nums'>
-                          {money(payment.amount)}
-                        </span>
+                        <span className='font-semibold tabular-nums'>{money(payment.amount)}</span>
                         {payment.id != null &&
                           (ticket.refunds?.length ?? 0) === 0 &&
                           CORRECTABLE_TENDERS.includes(payment.tender ?? '') && (
@@ -942,22 +831,13 @@ export function TicketScreen({
           {/* Credit notes: money that went back, each with its reason */}
           {(ticket.refunds?.length ?? 0) > 0 && (
             <div className='mt-4 flex flex-col gap-2'>
-              <h2 className='text-muted-foreground type-label'>
-                {t('refundsTitle')}
-              </h2>
+              <h2 className='text-muted-foreground type-label'>{t('refundsTitle')}</h2>
               <div className='divide-y rounded-lg border'>
                 {ticket.refunds!.map((refund) => (
-                  <div
-                    key={String(refund.id)}
-                    className='flex flex-col gap-0.5 px-3 py-2'
-                  >
+                  <div key={String(refund.id)} className='flex flex-col gap-0.5 px-3 py-2'>
                     <div className='flex items-baseline justify-between gap-4'>
-                      <span className='font-medium'>
-                        {t('creditNote', { number: toNumber(refund.number) })}
-                      </span>
-                      <span className='text-destructive font-semibold tabular-nums'>
-                        −{money(refund.amount)}
-                      </span>
+                      <span className='font-medium'>{t('creditNote', { number: toNumber(refund.number) })}</span>
+                      <span className='text-destructive font-semibold tabular-nums'>−{money(refund.amount)}</span>
                     </div>
                     <p className='type-detail'>{refund.reason}</p>
                     <p className='text-muted-foreground type-caption tabular-nums'>
@@ -990,10 +870,8 @@ export function TicketScreen({
         <div className='min-w-0 flex-1'>
           <div className='flex h-10 items-center gap-1'>
             {/* While lines are picked, how many, where the actions for them are */}
-            <span className='text-muted-foreground truncate type-detail'>
-              {choosing
-                ? t('selectedLinesCount', { count: selectedIds.size })
-                : t('total')}
+            <span className='text-muted-foreground type-detail truncate'>
+              {choosing ? t('selectedLinesCount', { count: selectedIds.size }) : t('total')}
             </span>
             {hasParts && (
               <Button
@@ -1005,20 +883,17 @@ export function TicketScreen({
               </Button>
             )}
           </div>
-          <div className='truncate type-figure'>
-            {money(total)}
-          </div>
+          <div className='type-figure truncate'>{money(total)}</div>
           {discount > 0 && (
-            <div className='truncate type-caption font-medium text-emerald-600 tabular-nums dark:text-emerald-400'>
+            <div className='type-caption truncate font-medium text-emerald-600 tabular-nums dark:text-emerald-400'>
               {t('discount')} −{money(ticket.discount)}
-              {ticket.discountRate != null &&
-                ` (${percent(ticket.discountRate)}%)`}
+              {ticket.discountRate != null && ` (${percent(ticket.discountRate)}%)`}
             </div>
           )}
           {/* Guests paid part (or all) of it from their phones: what the
               till still takes is the rest */}
           {isOpen && onlinePaid.paid > 0 && (
-            <div className='truncate type-detail font-medium tabular-nums'>
+            <div className='type-detail truncate font-medium tabular-nums'>
               {onlinePaid.covered
                 ? t('paidOnlineClosing')
                 : t('remainingAfterOnline', {
@@ -1027,13 +902,13 @@ export function TicketScreen({
             </div>
           )}
           {isOpen && onlinePaid.pending && (
-            <div className='flex items-center gap-1 type-caption text-amber-600 dark:text-amber-500'>
+            <div className='type-caption flex items-center gap-1 text-amber-600 dark:text-amber-500'>
               <Loader2 className='size-3 animate-spin' />
               {t('guestPayingOnline')}
             </div>
           )}
           {runningStay && (
-            <div className='text-muted-foreground truncate type-caption tabular-nums'>
+            <div className='text-muted-foreground type-caption truncate tabular-nums'>
               + {t('timeSoFar')} ≈ <TimeSoFar stay={runningStay} />
             </div>
           )}
@@ -1041,31 +916,23 @@ export function TicketScreen({
 
         {isVoided ? null : isSettled ? (
           <div className='flex gap-2 max-sm:w-full'>
-            <Button
-              size='lg'
-              className={actionClass(true)}
-              onClick={() => void printSheets()}
-            >
+            <Button size='lg' className={actionClass(true)} onClick={() => void printSheets()}>
               <Printer className='size-5' />
               {t('print')}
             </Button>
             {/* Owner-only, like void: money goes back, so an owner says so.
                 Gone once the whole receipt has been credited. */}
-            {isOwner &&
-              toNumber(ticket.refundedTotal) < toNumber(ticket.total) && (
-                <Button
-                  size='lg'
-                  variant='outline'
-                  className={cn(
-                    actionClass(),
-                    'text-destructive hover:text-destructive',
-                  )}
-                  onClick={() => setRefundOpen(true)}
-                >
-                  <Undo2 className='size-5' />
-                  {t('refundTicket')}
-                </Button>
-              )}
+            {isOwner && toNumber(ticket.refundedTotal) < toNumber(ticket.total) && (
+              <Button
+                size='lg'
+                variant='outline'
+                className={cn(actionClass(), 'text-destructive hover:text-destructive')}
+                onClick={() => setRefundOpen(true)}
+              >
+                <Undo2 className='size-5' />
+                {t('refundTicket')}
+              </Button>
+            )}
           </div>
         ) : choosing ? (
           <div className='flex gap-2 max-sm:grid max-sm:w-full max-sm:grid-cols-2'>
@@ -1073,9 +940,7 @@ export function TicketScreen({
               variant='outline'
               size='lg'
               className={cn(actionClass(), 'max-sm:col-span-2')}
-              disabled={
-                noneChosen || assignCustomer.isPending || assignLines.isPending
-              }
+              disabled={noneChosen || assignCustomer.isPending || assignLines.isPending}
               onClick={assignSelected}
             >
               <UserPlus className='size-5' />
@@ -1102,9 +967,7 @@ export function TicketScreen({
             // Not while a guest is at the provider's checkout, nor before
             // every line charged here is in: the money is never taken
             // against a bill the server has not got all of
-            disabled={
-              lines.length === 0 || mySends.length > 0 || onlinePaid.pending
-            }
+            disabled={lines.length === 0 || mySends.length > 0 || onlinePaid.pending}
             onClick={() =>
               runningStay
                 ? setSessionGuardOpen(true)
@@ -1125,28 +988,18 @@ export function TicketScreen({
         )}
       </div>
 
-      <DiscardTicketDialog
-        ticketId={ticketId}
-        open={discardOpen}
-        onOpenChange={setDiscardOpen}
-      />
+      <DiscardTicketDialog ticketId={ticketId} open={discardOpen} onOpenChange={setDiscardOpen} />
       <MoveTargetDialog
         open={moving}
         onOpenChange={setMoving}
         ticket={ticket}
         count={selectedIds.size}
         allSelected={selectedIds.size >= movableCount}
-        suggestedName={oneCustomer(
-          (ticket.lines ?? []).filter((line) => selectedIds.has(toNumber(line.id))),
-        )}
+        suggestedName={oneCustomer((ticket.lines ?? []).filter((line) => selectedIds.has(toNumber(line.id))))}
         isPending={moveLines.isPending}
         onPick={doMoveLines}
       />
-      <RefundDialog
-        ticket={ticket}
-        open={refundOpen}
-        onOpenChange={setRefundOpen}
-      />
+      <RefundDialog ticket={ticket} open={refundOpen} onOpenChange={setRefundOpen} />
       <ChangeTenderDialog
         ticketId={toNumber(ticket.id)}
         payment={tenderFix}
@@ -1188,12 +1041,7 @@ export function TicketScreen({
           if (runningStay) stayActions.endStay(toNumber(runningStay.id))
         }}
       />
-      <BreakdownDialog
-        ticket={ticket}
-        open={breakdownOpen}
-        onOpenChange={setBreakdownOpen}
-        percent={percent}
-      />
+      <BreakdownDialog ticket={ticket} open={breakdownOpen} onOpenChange={setBreakdownOpen} percent={percent} />
       <SettleDialog
         ticket={ticket}
         title={title}
@@ -1215,16 +1063,8 @@ export function TicketScreen({
         open={voidOpen}
         onOpenChange={setVoidOpen}
       />
-      <DiscountDialog
-        ticket={ticket}
-        open={discountOpen}
-        onOpenChange={setDiscountOpen}
-      />
-      <KitchenReprintDialog
-        lines={lines}
-        open={reprintOpen}
-        onOpenChange={setReprintOpen}
-      />
+      <DiscountDialog ticket={ticket} open={discountOpen} onOpenChange={setDiscountOpen} />
+      <KitchenReprintDialog lines={lines} open={reprintOpen} onOpenChange={setReprintOpen} />
       {/* The sale pad's own picker, reused: an account, or just a name —
           with the room's people first when this is a room's bill */}
       <CustomerSearch
@@ -1235,10 +1075,7 @@ export function TicketScreen({
         onPick={doAssignCustomer}
         offered={stayRoster(stay)}
       />
-      <CustomerCard
-        customer={cardFor}
-        onOpenChange={(open) => !open && setCardFor(null)}
-      />
+      <CustomerCard customer={cardFor} onOpenChange={(open) => !open && setCardFor(null)} />
       {isSettled || settleOutcome ? (
         <ReceiptSheet
           ticket={ticket}

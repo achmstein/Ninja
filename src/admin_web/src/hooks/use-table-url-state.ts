@@ -1,17 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import type {
-  ColumnFiltersState,
-  OnChangeFn,
-  PaginationState,
-} from '@tanstack/react-table'
+import type { ColumnFiltersState, OnChangeFn, PaginationState } from '@tanstack/react-table'
 
 type SearchRecord = Record<string, unknown>
 
 type NavigateFn = (opts: {
-  search:
-    | true
-    | SearchRecord
-    | ((prev: SearchRecord) => Partial<SearchRecord> | SearchRecord)
+  search: true | SearchRecord | ((prev: SearchRecord) => Partial<SearchRecord> | SearchRecord)
   replace?: boolean
 }) => void
 
@@ -61,16 +54,10 @@ type UseTableUrlStateReturn = {
   pagination: PaginationState
   onPaginationChange: OnChangeFn<PaginationState>
   // Helpers
-  ensurePageInRange: (
-    pageCount: number,
-    opts?: { resetTo?: 'first' | 'last' }
-  ) => void
+  ensurePageInRange: (pageCount: number, opts?: { resetTo?: 'first' | 'last' }) => void
 }
 
-function filtersFromSearch(
-  search: SearchRecord,
-  configs: ColumnFilterConfig[]
-): ColumnFiltersState {
+function filtersFromSearch(search: SearchRecord, configs: ColumnFilterConfig[]): ColumnFiltersState {
   const collected: ColumnFiltersState = []
   for (const cfg of configs) {
     const raw = search[cfg.searchKey]
@@ -97,9 +84,7 @@ function filtersFromSearch(
  * back/forward and pasted links re-sync the table. Typing is debounced on
  * its way to the URL so the history doesn't fill with keystrokes.
  */
-export function useTableUrlState(
-  params: UseTableUrlStateParams
-): UseTableUrlStateReturn {
+export function useTableUrlState(params: UseTableUrlStateParams): UseTableUrlStateReturn {
   const {
     search,
     navigate,
@@ -118,27 +103,17 @@ export function useTableUrlState(
   const debounceMs = globalFilterCfg?.debounceMs ?? 250
 
   // Column filters: local state seeded from, and re-synced with, the URL
-  const urlColumnFilters = useMemo(
-    () => filtersFromSearch(search, columnFiltersCfg),
-    [columnFiltersCfg, search]
-  )
-  const [columnFilters, setColumnFilters] =
-    useState<ColumnFiltersState>(urlColumnFilters)
+  const urlColumnFilters = useMemo(() => filtersFromSearch(search, columnFiltersCfg), [columnFiltersCfg, search])
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>(urlColumnFilters)
 
-  const configuredIds = useMemo(
-    () => new Set(columnFiltersCfg.map((cfg) => cfg.columnId)),
-    [columnFiltersCfg]
-  )
+  const configuredIds = useMemo(() => new Set(columnFiltersCfg.map((cfg) => cfg.columnId)), [columnFiltersCfg])
   const urlFiltersKey = JSON.stringify(urlColumnFilters)
   useEffect(() => {
     setColumnFilters((current) => {
       const configured = current.filter((f) => configuredIds.has(f.id))
       if (JSON.stringify(configured) === urlFiltersKey) return current
       // Keep filters that are not URL-backed, take the URL for the rest
-      return [
-        ...current.filter((f) => !configuredIds.has(f.id)),
-        ...urlColumnFilters,
-      ]
+      return [...current.filter((f) => !configuredIds.has(f.id)), ...urlColumnFilters]
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [urlFiltersKey, configuredIds])
@@ -147,8 +122,7 @@ export function useTableUrlState(
     const rawPage = search[pageKey]
     const rawPageSize = search[pageSizeKey]
     const pageNum = typeof rawPage === 'number' ? rawPage : defaultPage
-    const pageSizeNum =
-      typeof rawPageSize === 'number' ? rawPageSize : defaultPageSize
+    const pageSizeNum = typeof rawPageSize === 'number' ? rawPageSize : defaultPageSize
     return { pageIndex: Math.max(0, pageNum - 1), pageSize: pageSizeNum }
   }, [search, pageKey, pageSizeKey, defaultPage, defaultPageSize])
 
@@ -160,17 +134,14 @@ export function useTableUrlState(
       search: (prev) => ({
         ...prev,
         [pageKey]: nextPage <= defaultPage ? undefined : nextPage,
-        [pageSizeKey]:
-          nextPageSize === defaultPageSize ? undefined : nextPageSize,
+        [pageSizeKey]: nextPageSize === defaultPageSize ? undefined : nextPageSize,
       }),
     })
   }
 
   // Global filter: local state updates on every keystroke, the URL after a pause
   const urlGlobalFilter =
-    globalFilterEnabled && typeof search[globalFilterKey] === 'string'
-      ? (search[globalFilterKey] as string)
-      : ''
+    globalFilterEnabled && typeof search[globalFilterKey] === 'string' ? (search[globalFilterKey] as string) : ''
   const [globalFilter, setGlobalFilter] = useState<string>(urlGlobalFilter)
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -178,9 +149,7 @@ export function useTableUrlState(
     // A pending debounce means the URL is about to catch up with the input;
     // otherwise the URL (back/forward, pasted link) wins
     if (debounceTimer.current) return
-    setGlobalFilter((current) =>
-      current === urlGlobalFilter ? current : urlGlobalFilter
-    )
+    setGlobalFilter((current) => (current === urlGlobalFilter ? current : urlGlobalFilter))
   }, [urlGlobalFilter])
 
   useEffect(
@@ -190,31 +159,28 @@ export function useTableUrlState(
     []
   )
 
-  const onGlobalFilterChange: OnChangeFn<string> | undefined =
-    globalFilterEnabled
-      ? (updater) => {
-          const value =
-            typeof updater === 'function' ? updater(globalFilter) : updater
-          setGlobalFilter(value)
-          if (debounceTimer.current) clearTimeout(debounceTimer.current)
-          debounceTimer.current = setTimeout(() => {
-            debounceTimer.current = null
-            const trimmed = value.trim()
-            navigate({
-              replace: true,
-              search: (prev) => ({
-                ...prev,
-                [pageKey]: undefined,
-                [globalFilterKey]: trimmed ? trimmed : undefined,
-              }),
-            })
-          }, debounceMs)
-        }
-      : undefined
+  const onGlobalFilterChange: OnChangeFn<string> | undefined = globalFilterEnabled
+    ? (updater) => {
+        const value = typeof updater === 'function' ? updater(globalFilter) : updater
+        setGlobalFilter(value)
+        if (debounceTimer.current) clearTimeout(debounceTimer.current)
+        debounceTimer.current = setTimeout(() => {
+          debounceTimer.current = null
+          const trimmed = value.trim()
+          navigate({
+            replace: true,
+            search: (prev) => ({
+              ...prev,
+              [pageKey]: undefined,
+              [globalFilterKey]: trimmed ? trimmed : undefined,
+            }),
+          })
+        }, debounceMs)
+      }
+    : undefined
 
   const onColumnFiltersChange: OnChangeFn<ColumnFiltersState> = (updater) => {
-    const next =
-      typeof updater === 'function' ? updater(columnFilters) : updater
+    const next = typeof updater === 'function' ? updater(columnFilters) : updater
     setColumnFilters(next)
 
     const patch: Record<string, unknown> = {}
@@ -223,14 +189,10 @@ export function useTableUrlState(
       const found = next.find((f) => f.id === cfg.columnId)
       const serialize = cfg.serialize ?? ((v: unknown) => v)
       if (cfg.type === 'string') {
-        const value =
-          typeof found?.value === 'string' ? (found.value as string) : ''
-        patch[cfg.searchKey] =
-          value.trim() !== '' ? serialize(value) : undefined
+        const value = typeof found?.value === 'string' ? (found.value as string) : ''
+        patch[cfg.searchKey] = value.trim() !== '' ? serialize(value) : undefined
       } else {
-        const value = Array.isArray(found?.value)
-          ? (found!.value as unknown[])
-          : []
+        const value = Array.isArray(found?.value) ? (found!.value as unknown[]) : []
         patch[cfg.searchKey] = value.length > 0 ? serialize(value) : undefined
       }
     }
@@ -244,10 +206,7 @@ export function useTableUrlState(
     })
   }
 
-  const ensurePageInRange = (
-    pageCount: number,
-    opts: { resetTo?: 'first' | 'last' } = { resetTo: 'first' }
-  ) => {
+  const ensurePageInRange = (pageCount: number, opts: { resetTo?: 'first' | 'last' } = { resetTo: 'first' }) => {
     const currentPage = search[pageKey]
     const pageNum = typeof currentPage === 'number' ? currentPage : defaultPage
     if (pageCount > 0 && pageNum > pageCount) {

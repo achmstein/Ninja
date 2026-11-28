@@ -1,11 +1,12 @@
 import { useState } from 'react'
-import { useMutation } from '@tanstack/react-query'
-import { useAuth } from 'react-oidc-context'
 import { isAxiosError } from 'axios'
-import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
+import { useMutation } from '@tanstack/react-query'
 import { Check, CircleAlert, FlaskConical, Lock } from 'lucide-react'
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
+import { useAuth } from 'react-oidc-context'
 import { type PayLineView, type PayView } from '@/api/sales'
 import { startOnlinePaymentMutation } from '@/api/sales/@tanstack/react-query.gen'
+import { useGuestStore } from '@/stores/guest-store'
 import { API_VERSION } from '@/lib/api-client'
 import { useLocalized, usePrice, useT, type TranslationKey } from '@/lib/i18n'
 import { blurSwap, springSoft } from '@/lib/motion'
@@ -23,13 +24,12 @@ import {
 } from '@/lib/pay'
 import { usePayView, type PaySource } from '@/lib/use-pay'
 import { cn } from '@/lib/utils'
-import { useGuestStore } from '@/stores/guest-store'
-import { MorphButton } from '@/components/motion/morph-button'
-import { Odometer } from '@/components/ninja/odometer'
-import { Segment, Slab } from '@/components/ninja/page/parts'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Skeleton } from '@/components/ui/skeleton'
+import { MorphButton } from '@/components/motion/morph-button'
+import { Odometer } from '@/components/ninja/odometer'
+import { Segment, Slab } from '@/components/ninja/page/parts'
 import { PaidSoFar, PayWhy, SharesList } from './pay-progress'
 import { AmountPicker, SeatsTable } from './split-pickers'
 
@@ -90,9 +90,7 @@ export function PaySheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent
-        className='gap-0 p-0'
-      >
+      <SheetContent className='gap-0 p-0'>
         <SheetHeader className='shrink-0 px-5 pt-3 pb-0 text-start'>
           <SheetTitle className='heading text-headline pe-8'>
             {t(start === 'full' ? 'payFully' : start === 'split' ? 'splitBill' : 'payTheBill')}
@@ -147,7 +145,11 @@ function PayForm({ view, start, onRefetch }: { view: PayView; start: PayStart; o
   const [amountText, setAmountText] = useState('')
   // Who paid, so the others at the table see whose share it was: known already for an account or a
   // guest who gave a name at checkout, so asked only of a guest we have no name for
-  const knownName = (auth.isAuthenticated ? (auth.user?.profile?.name ?? auth.user?.profile?.preferred_username) : guestContact?.name)?.trim() || ''
+  const knownName =
+    (auth.isAuthenticated
+      ? (auth.user?.profile?.name ?? auth.user?.profile?.preferred_username)
+      : guestContact?.name
+    )?.trim() || ''
   const [name, setName] = useState('')
 
   const total = num(view.total)
@@ -192,7 +194,10 @@ function PayForm({ view, start, onRefetch }: { view: PayView; start: PayStart; o
       body: {
         mode: SPLIT[mode],
         // A line someone took since it was ticked is not asked for
-        lineIds: mode === 'items' ? view.lines.filter((l) => !l.claimed && picked.has(String(l.id))).map((l) => Number(l.id)) : null,
+        lineIds:
+          mode === 'items'
+            ? view.lines.filter((l) => !l.claimed && picked.has(String(l.id))).map((l) => Number(l.id))
+            : null,
         parts: mode === 'equal' ? parts : null,
         of: mode === 'equal' ? of : null,
         amount: mode === 'custom' ? typed : null,
@@ -222,7 +227,11 @@ function PayForm({ view, start, onRefetch }: { view: PayView; start: PayStart; o
               <Segment
                 value={mode}
                 onChange={setMode}
-                options={modes.map((m) => ({ value: m, label: <span className='truncate'>{t(MODE_SHORT[m])}</span>, ariaLabel: t(MODE_LABEL[m]) }))}
+                options={modes.map((m) => ({
+                  value: m,
+                  label: <span className='truncate'>{t(MODE_SHORT[m])}</span>,
+                  ariaLabel: t(MODE_LABEL[m]),
+                }))}
               />
             )}
 
@@ -277,7 +286,7 @@ function PayForm({ view, start, onRefetch }: { view: PayView; start: PayStart; o
 
             {!knownName && (
               <label className='flex flex-col gap-1.5'>
-                <span className='px-1 text-caption font-semibold'>{t('payerNameLabel')}</span>
+                <span className='text-caption px-1 font-semibold'>{t('payerNameLabel')}</span>
                 <input
                   autoComplete='given-name'
                   maxLength={60}
@@ -286,7 +295,7 @@ function PayForm({ view, start, onRefetch }: { view: PayView; start: PayStart; o
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                 />
-                <span className='text-muted-foreground px-1 text-caption'>{t('payerNameHint')}</span>
+                <span className='text-muted-foreground text-caption px-1'>{t('payerNameHint')}</span>
               </label>
             )}
           </>
@@ -295,7 +304,7 @@ function PayForm({ view, start, onRefetch }: { view: PayView; start: PayStart; o
 
       {view.canPay && (
         <div className='bg-background shrink-0 border-t px-5 pt-3 pb-[max(1.25rem,env(safe-area-inset-bottom))]'>
-          <div className='flex flex-col gap-1 text-note tabular-nums'>
+          <div className='text-note flex flex-col gap-1 tabular-nums'>
             {guestPaysFee && summary.fee > 0 && (
               <>
                 <Row label={t('yourShare')} value={price(summary.share)} />
@@ -318,7 +327,7 @@ function PayForm({ view, start, onRefetch }: { view: PayView; start: PayStart; o
                 transition={springSoft}
                 className='overflow-hidden'
               >
-                <div className='bg-destructive/10 text-destructive mt-3 flex items-center gap-2 rounded-2xl p-3 text-caption'>
+                <div className='bg-destructive/10 text-destructive text-caption mt-3 flex items-center gap-2 rounded-2xl p-3'>
                   <CircleAlert className='size-4 shrink-0' />
                   {problem}
                 </div>
@@ -382,7 +391,7 @@ function ItemsPicker({
 
   return (
     <div className='flex flex-col gap-2'>
-      <span className='px-1 text-caption font-semibold'>{t('pickItemsToPay')}</span>
+      <span className='text-caption px-1 font-semibold'>{t('pickItemsToPay')}</span>
       {lines.map((line) => {
         const id = String(line.id)
         const qty = num(line.qty)
@@ -408,7 +417,14 @@ function ItemsPicker({
             >
               <AnimatePresence initial={false}>
                 {on && (
-                  <motion.span key='tick' initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }} transition={springSoft} className='grid place-items-center'>
+                  <motion.span
+                    key='tick'
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    exit={{ scale: 0 }}
+                    transition={springSoft}
+                    className='grid place-items-center'
+                  >
                     <Check className='size-3.5' strokeWidth={3} />
                   </motion.span>
                 )}
@@ -422,10 +438,14 @@ function ItemsPicker({
               {line.claimed ? (
                 <span className='text-muted-foreground text-caption'>{claimedLabel}</span>
               ) : (
-                localized(line.details) && <span className='text-muted-foreground truncate text-caption'>{localized(line.details)}</span>
+                localized(line.details) && (
+                  <span className='text-muted-foreground text-caption truncate'>{localized(line.details)}</span>
+                )
               )}
             </span>
-            <span className={cn('shrink-0 text-note font-semibold tabular-nums', line.claimed && 'line-through')}>{price(line.share)}</span>
+            <span className={cn('text-note shrink-0 font-semibold tabular-nums', line.claimed && 'line-through')}>
+              {price(line.share)}
+            </span>
           </button>
         )
       })}
@@ -440,7 +460,7 @@ function Methods({ view }: { view: PayView }) {
   // A demo business: the next page is ours, and nothing is charged
   const Icon = view.options.simulated ? FlaskConical : Lock
   return (
-    <div className='text-muted-foreground mt-2 flex items-center justify-center gap-1 text-caption'>
+    <div className='text-muted-foreground text-caption mt-2 flex items-center justify-center gap-1'>
       <Icon className='size-3' />
       {t(view.options.simulated ? 'demoPaymentsBadge' : 'paySecureNote')}
     </div>

@@ -66,8 +66,7 @@ const sortLabels: Record<StockSort, TranslationKey> = {
 
 // The list's columns where there is room for them: the item, then what is on
 // hand, how long it lasts, where its warning line sits, its cost and its worth
-const COLUMNS =
-  'md:grid md:grid-cols-[minmax(0,1fr)_8rem_7rem_8rem_7rem_7rem] md:gap-4'
+const COLUMNS = 'md:grid md:grid-cols-[minmax(0,1fr)_8rem_7rem_8rem_7rem_7rem] md:gap-4'
 
 /**
  * The branch's stock as one list across the page: every item with what is
@@ -86,18 +85,14 @@ export function Stock() {
   const { branches } = useAllowedBranches()
   const { rebuildLevels, isPending } = useInventoryActions()
 
-  const [receiveFor, setReceiveFor] = useState<number | null | undefined>(
-    undefined
-  )
+  const [receiveFor, setReceiveFor] = useState<number | null | undefined>(undefined)
   const [transferOpen, setTransferOpen] = useState(false)
   const [newItemOpen, setNewItemOpen] = useState(false)
   const [rebuildOpen, setRebuildOpen] = useState(false)
   const [counting, setCounting] = useState(false)
 
   // One fetch for everything; retired items are hidden client-side unless asked for
-  const levelsQuery = useQuery(
-    stockLevelsQueryOptions({ includeRetired: true })
-  )
+  const levelsQuery = useQuery(stockLevelsQueryOptions({ includeRetired: true }))
   const levels = levelsQuery.data ?? NO_LEVELS
   const active = useMemo(() => levels.filter((l) => l.isActive), [levels])
 
@@ -111,10 +106,7 @@ export function Stock() {
         .filter((l) => l.isActive || search.retired)
         .filter((l) => !search.low || l.isLow)
         .filter(
-          (l) =>
-            !q ||
-            (l.name?.en ?? '').toLowerCase().includes(q) ||
-            (l.name?.ar ?? '').toLowerCase().includes(q)
+          (l) => !q || (l.name?.en ?? '').toLowerCase().includes(q) || (l.name?.ar ?? '').toLowerCase().includes(q)
         ),
       sort,
       (l) => localized(l.name)
@@ -123,8 +115,7 @@ export function Stock() {
 
   const selected = levels.find((l) => toNumber(l.stockItemId) === search.item)
 
-  const select = (item: number | undefined) =>
-    navigate({ search: (prev) => ({ ...prev, item }) })
+  const select = (item: number | undefined) => navigate({ search: (prev) => ({ ...prev, item }) })
 
   const setQuery = (q: string) =>
     navigate({
@@ -156,39 +147,24 @@ export function Stock() {
               actions={
                 <>
                   {/* One Receive for the page; the rest is behind More */}
-                  <Button
-                    size='sm'
-                    onClick={() => setReceiveFor(null)}
-                    disabled={counting}
-                  >
+                  <Button size='sm' onClick={() => setReceiveFor(null)} disabled={counting}>
                     <PackagePlus />
                     {t('receiveStock')}
                   </Button>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button
-                        variant='outline'
-                        size='icon'
-                        className='size-9'
-                        aria-label={t('moreActions')}
-                      >
+                      <Button variant='outline' size='icon' className='size-9' aria-label={t('moreActions')}>
                         <MoreHorizontal className='h-4 w-4' />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align='end'>
                       {/* A count has its own Cancel and Save on the page */}
-                      <DropdownMenuItem
-                        disabled={counting}
-                        onClick={() => setCounting(true)}
-                      >
+                      <DropdownMenuItem disabled={counting} onClick={() => setCounting(true)}>
                         <ClipboardCheck className='h-4 w-4' />
                         {t('countStock')}
                       </DropdownMenuItem>
                       {branches.length > 1 && (
-                        <DropdownMenuItem
-                          disabled={counting}
-                          onClick={() => setTransferOpen(true)}
-                        >
+                        <DropdownMenuItem disabled={counting} onClick={() => setTransferOpen(true)}>
                           <ArrowLeftRight className='h-4 w-4' />
                           {t('transferStock')}
                         </DropdownMenuItem>
@@ -214,9 +190,7 @@ export function Stock() {
                       {owner && (
                         <>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            onClick={() => setRebuildOpen(true)}
-                          >
+                          <DropdownMenuItem onClick={() => setRebuildOpen(true)}>
                             <RefreshCw className='h-4 w-4' />
                             {t('rebuildLevels')}
                           </DropdownMenuItem>
@@ -265,13 +239,9 @@ export function Stock() {
                         })
                       }
                     >
-                      <TriangleAlert
-                        className={cn(lowCount > 0 && 'text-destructive')}
-                      />
+                      <TriangleAlert className={cn(lowCount > 0 && 'text-destructive')} />
                       {t('lowItems')}
-                      <span className='text-muted-foreground tabular-nums'>
-                        {lowCount}
-                      </span>
+                      <span className='text-muted-foreground tabular-nums'>{lowCount}</span>
                     </Button>
                   </div>
                   <DropdownMenu>
@@ -288,10 +258,7 @@ export function Stock() {
                           navigate({
                             search: (prev) => ({
                               ...prev,
-                              sort:
-                                value === 'low'
-                                  ? undefined
-                                  : (value as StockSort),
+                              sort: value === 'low' ? undefined : (value as StockSort),
                             }),
                           })
                         }
@@ -322,10 +289,7 @@ export function Stock() {
                     <span className='text-end'>{t('valueColumn')}</span>
                   </div>
                   {levelsQuery.isError ? (
-                    <ErrorState
-                      error={levelsQuery.error}
-                      onRetry={() => levelsQuery.refetch()}
-                    />
+                    <ErrorState error={levelsQuery.error} onRetry={() => levelsQuery.refetch()} />
                   ) : levelsQuery.isLoading ? (
                     <div className='space-y-2 p-3'>
                       {[...Array(8)].map((_, i) => (
@@ -345,10 +309,7 @@ export function Stock() {
                       }
                       action={
                         levels.length === 0 ? (
-                          <Button
-                            variant='outline'
-                            onClick={() => setNewItemOpen(true)}
-                          >
+                          <Button variant='outline' onClick={() => setNewItemOpen(true)}>
                             <Plus />
                             {t('addStockItem')}
                           </Button>
@@ -358,11 +319,7 @@ export function Stock() {
                   ) : (
                     <ScrollArea className='min-h-0 flex-1'>
                       {visible.map((level) => (
-                        <StockRow
-                          key={String(level.stockItemId)}
-                          level={level}
-                          onOpen={select}
-                        />
+                        <StockRow key={String(level.stockItemId)} level={level} onOpen={select} />
                       ))}
                     </ScrollArea>
                   )}
@@ -381,11 +338,7 @@ export function Stock() {
         stockItemId={receiveFor}
       />
       <TransferDialog open={transferOpen} onOpenChange={setTransferOpen} />
-      <StockItemDialog
-        open={newItemOpen}
-        onOpenChange={setNewItemOpen}
-        item={null}
-      />
+      <StockItemDialog open={newItemOpen} onOpenChange={setNewItemOpen} item={null} />
 
       <ConfirmDialog
         open={rebuildOpen}
@@ -411,21 +364,12 @@ export function Stock() {
  * One item of the list. Wide: a row of columns. On a phone: the name with
  * how long it lasts and its reorder level under it, what is on hand at the end.
  */
-function StockRow({
-  level,
-  onOpen,
-}: {
-  level: StockLevelView
-  onOpen: (id: number) => void
-}) {
+function StockRow({ level, onOpen }: { level: StockLevelView; onOpen: (id: number) => void }) {
   const t = useT()
   const localized = useLocalized()
   const packs = packsOf(level.onHand, level.packSize)
   const days = level.isActive ? daysLeft(level) : null
-  const reorderAt =
-    level.reorderLevel != null
-      ? formatQuantity(level.reorderLevel, level.unit, t)
-      : null
+  const reorderAt = level.reorderLevel != null ? formatQuantity(level.reorderLevel, level.unit, t) : null
   const nothing = <span className='text-muted-foreground/60'>–</span>
 
   return (
@@ -450,29 +394,17 @@ function StockRow({
                 {' · '}
               </>
             )}
-            {reorderAt
-              ? t('reorderAt', { level: reorderAt })
-              : t('noReorderLevel')}
+            {reorderAt ? t('reorderAt', { level: reorderAt }) : t('noReorderLevel')}
           </div>
         )}
         {/* How much is left against the reorder level, at a glance:
             full at three times it, red at or under it, amber within twice it */}
-        {level.isActive &&
-          level.reorderLevel != null &&
-          toNumber(level.reorderLevel) > 0 && (
-            <StockGauge
-              onHand={toNumber(level.onHand)}
-              reorderAt={toNumber(level.reorderLevel)}
-            />
-          )}
+        {level.isActive && level.reorderLevel != null && toNumber(level.reorderLevel) > 0 && (
+          <StockGauge onHand={toNumber(level.onHand)} reorderAt={toNumber(level.reorderLevel)} />
+        )}
       </div>
       <div className='shrink-0 text-end'>
-        <div
-          className={cn(
-            'font-medium tabular-nums',
-            level.isLow && 'text-destructive'
-          )}
-        >
+        <div className={cn('font-medium tabular-nums', level.isLow && 'text-destructive')}>
           {formatQuantity(level.onHand, level.unit, t)}
         </div>
         {packs !== null && (
@@ -484,9 +416,7 @@ function StockRow({
           </div>
         )}
       </div>
-      <span className='hidden truncate text-end md:block'>
-        {days !== null ? <DaysLeft days={days} /> : nothing}
-      </span>
+      <span className='hidden truncate text-end md:block'>{days !== null ? <DaysLeft days={days} /> : nothing}</span>
       <span className='text-muted-foreground hidden truncate text-end tabular-nums md:block'>
         {reorderAt ?? nothing}
       </span>
@@ -523,13 +453,7 @@ type CountModeProps = {
  * is actually there on the end side. Blank rows are skipped, so a partial
  * count (just the fridge) posts fine.
  */
-function CountMode({
-  levels,
-  total,
-  query,
-  onQueryChange,
-  onDone,
-}: CountModeProps) {
+function CountMode({ levels, total, query, onQueryChange, onDone }: CountModeProps) {
   const t = useT()
   const localized = useLocalized()
   const { postCount, isPending } = useInventoryActions()
@@ -577,9 +501,7 @@ function CountMode({
           className='h-9 min-w-48 flex-1'
           aria-label={t('notesOptional')}
         />
-        <span className='text-muted-foreground text-sm tabular-nums'>
-          {t('countingProgress', { done, total })}
-        </span>
+        <span className='text-muted-foreground text-sm tabular-nums'>{t('countingProgress', { done, total })}</span>
         <Button variant='ghost' size='sm' onClick={onDone} disabled={isPending}>
           {t('cancel')}
         </Button>
@@ -600,12 +522,9 @@ function CountMode({
             return (
               <li key={id} className='flex items-center gap-3 py-2'>
                 <div className='min-w-0 flex-1'>
-                  <div className='truncate text-sm font-medium'>
-                    {localized(level.name)}
-                  </div>
+                  <div className='truncate text-sm font-medium'>{localized(level.name)}</div>
                   <div className='text-muted-foreground text-xs tabular-nums'>
-                    {t('expected')}:{' '}
-                    {formatQuantity(level.onHand, level.unit, t)}
+                    {t('expected')}: {formatQuantity(level.onHand, level.unit, t)}
                   </div>
                 </div>
                 {off && (
@@ -628,43 +547,25 @@ function CountMode({
                   placeholder={unitLabel(level.unit, t)}
                   aria-label={`${t('counted')} ${localized(level.name)}`}
                   value={value}
-                  onChange={(e) =>
-                    setCounted((prev) => ({ ...prev, [id]: e.target.value }))
-                  }
+                  onChange={(e) => setCounted((prev) => ({ ...prev, [id]: e.target.value }))}
                 />
               </li>
             )
           })}
         </ul>
-        {levels.length === 0 && (
-          <EmptyState compact icon={Boxes} title={t('noResults')} />
-        )}
+        {levels.length === 0 && <EmptyState compact icon={Boxes} title={t('noResults')} />}
       </ScrollArea>
     </div>
   )
 }
 
-function StockGauge({
-  onHand,
-  reorderAt,
-}: {
-  onHand: number
-  reorderAt: number
-}) {
+function StockGauge({ onHand, reorderAt }: { onHand: number; reorderAt: number }) {
   const share = Math.max(0, Math.min(1, onHand / (reorderAt * 3)))
-  const tone =
-    onHand <= reorderAt
-      ? 'bg-destructive'
-      : onHand <= reorderAt * 2
-        ? 'bg-warning'
-        : 'bg-success'
+  const tone = onHand <= reorderAt ? 'bg-destructive' : onHand <= reorderAt * 2 ? 'bg-warning' : 'bg-success'
   return (
     <div className='bg-muted mt-1.5 h-1 w-full max-w-40 overflow-hidden rounded-full'>
       <div
-        className={cn(
-          'h-full rounded-full transition-[width] duration-500',
-          tone
-        )}
+        className={cn('h-full rounded-full transition-[width] duration-500', tone)}
         style={{ width: `${Math.max(share * 100, onHand > 0 ? 4 : 0)}%` }}
       />
     </div>

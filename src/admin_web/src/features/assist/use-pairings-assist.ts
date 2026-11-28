@@ -1,9 +1,6 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import {
-  type SuggestPairingsRequest,
-  type SuggestPairingsResponse,
-} from '@/api/catalog'
+import { type SuggestPairingsRequest, type SuggestPairingsResponse } from '@/api/catalog'
 import { suggestPairingsMutation } from '@/api/catalog/@tanstack/react-query.gen'
 import { getItemPairsReportOptions } from '@/api/sales/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'

@@ -28,10 +28,7 @@ export function KitchenPrinterBanner() {
   })
 
   const stuck = useMemo(
-    () =>
-      waiting.filter(
-        (ticket) => dataUpdatedAt - new Date(ticket.createdAt ?? 0).getTime() > PATIENCE_MS
-      ),
+    () => waiting.filter((ticket) => dataUpdatedAt - new Date(ticket.createdAt ?? 0).getTime() > PATIENCE_MS),
     [waiting, dataUpdatedAt]
   )
 
@@ -47,9 +44,7 @@ export function KitchenPrinterBanner() {
         <p className='type-detail font-semibold text-amber-700 dark:text-amber-400'>
           {t('kitchenPrinterStuck', { stations })}
         </p>
-        <p className='text-muted-foreground type-caption truncate'>
-          {reason ?? t('kitchenPrintingElsewhere')}
-        </p>
+        <p className='text-muted-foreground type-caption truncate'>{reason ?? t('kitchenPrintingElsewhere')}</p>
       </div>
     </div>
   )

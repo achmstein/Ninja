@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import { Check, MapPinned, X } from 'lucide-react'
 import type { StaffDeliveryZone } from '@/api/ordering/types.gen'
-import { Input } from '@/components/ui/input'
-import { useBranchName } from '@/features/branch/use-branch-name'
-import type { SaleZone } from '@/features/sale/cart'
 import { useLanguage, useLocalized, useT } from '@/lib/i18n'
 import { toNumber, useMoney } from '@/lib/money'
 import { cn } from '@/lib/utils'
+import { Input } from '@/components/ui/input'
+import { useBranchName } from '@/features/branch/use-branch-name'
+import type { SaleZone } from '@/features/sale/cart'
 import { matchAreas } from './area-match'
 
 /** Up to this many named areas are shown as buttons, one tap each; more are searched by name */
@@ -77,7 +77,7 @@ export function AreaButtons({
             }}
             className={cn(
               'relative flex min-h-14 flex-col items-start justify-center rounded-lg border px-3 py-2 text-start',
-              chosen ? 'border-primary bg-primary/5 ring-primary ring-1' : 'hover:bg-muted',
+              chosen ? 'border-primary bg-primary/5 ring-primary ring-1' : 'hover:bg-muted'
             )}
           >
             {/* The tick sits on the corner, never in the name's way: a long name wraps whole */}
@@ -86,8 +86,8 @@ export function AreaButtons({
                 <Check className='size-3' strokeWidth={3} aria-hidden />
               </span>
             )}
-            <bdi className='line-clamp-2 w-full font-medium leading-snug break-words'>{localized(z.name)}</bdi>
-            <span className='text-muted-foreground w-full truncate type-caption tabular-nums'>
+            <bdi className='line-clamp-2 w-full leading-snug font-medium break-words'>{localized(z.name)}</bdi>
+            <span className='text-muted-foreground type-caption w-full truncate tabular-nums'>
               {severalBranches && (
                 <>
                   <bdi>{branchName(toNumber(z.branchId))}</bdi>
@@ -228,11 +228,16 @@ export function AreaPicker({
       />
       {open &&
         (found.length === 0 ? (
-          <p className='text-muted-foreground px-1 type-detail' role='status'>
+          <p className='text-muted-foreground type-detail px-1' role='status'>
             {t('deliveryAreaNone')}
           </p>
         ) : (
-          <ul id={listId} className='flex flex-col rounded-md border' role='listbox' aria-label={t('deliveryAreaLabel')}>
+          <ul
+            id={listId}
+            className='flex flex-col rounded-md border'
+            role='listbox'
+            aria-label={t('deliveryAreaLabel')}
+          >
             {found.map((zone, index) => {
               const zoneId = toNumber(zone.zoneId)
               const fee = toNumber(zone.fee)
@@ -249,7 +254,10 @@ export function AreaPicker({
                     onMouseDown={(e) => e.preventDefault()}
                     onMouseEnter={() => setActive(index)}
                     onClick={() => pick(zone)}
-                    className={cn('flex min-h-12 w-full items-center gap-2 px-3 py-2 text-start', index === at && 'bg-muted')}
+                    className={cn(
+                      'flex min-h-12 w-full items-center gap-2 px-3 py-2 text-start',
+                      index === at && 'bg-muted'
+                    )}
                   >
                     <MapPinned className='text-muted-foreground size-4 shrink-0' aria-hidden />
                     <span className='min-w-0 flex-1'>
@@ -263,15 +271,17 @@ export function AreaPicker({
                         )}
                         {' · '}
                         {fee > 0 ? t('callCentreFeeIs', { fee: money(fee) }) : t('deliveryFree')}
-                        {zone.etaMinutes != null && <> · {t('deliveryAboutMinutes', { minutes: toNumber(zone.etaMinutes) })}</>}
+                        {zone.etaMinutes != null && (
+                          <> · {t('deliveryAboutMinutes', { minutes: toNumber(zone.etaMinutes) })}</>
+                        )}
                       </span>
                       {off && (
-                        <span className='ms-1.5 type-detail font-medium text-amber-700 dark:text-amber-400'>
+                        <span className='type-detail ms-1.5 font-medium text-amber-700 dark:text-amber-400'>
                           · {armed === zoneId ? t('deliveryAreaOffTapAgain') : t('deliveryAreaOff')}
                         </span>
                       )}
                       {zone.branchPaused && (
-                        <span className='ms-1.5 type-detail font-medium text-amber-700 dark:text-amber-400'>
+                        <span className='type-detail ms-1.5 font-medium text-amber-700 dark:text-amber-400'>
                           · {armed === zoneId && !off ? t('callCentreTapAgainPaused') : t('deliveryBranchPaused')}
                         </span>
                       )}

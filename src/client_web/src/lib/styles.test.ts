@@ -4,8 +4,15 @@ import { withStyleDefaults } from './styles'
 
 describe('Ninja style defaults', () => {
   it('fill only the seeds the business left unset', () => {
-    expect(withStyleDefaults({})).toMatchObject({ radius: 'xl', fontLatin: 'Plus Jakarta Sans', fontArabic: 'IBM Plex Sans Arabic' })
-    expect(withStyleDefaults({ radius: 'none', fontLatin: 'Inter' })).toMatchObject({ radius: 'none', fontLatin: 'Inter' })
+    expect(withStyleDefaults({})).toMatchObject({
+      radius: 'xl',
+      fontLatin: 'Plus Jakarta Sans',
+      fontArabic: 'IBM Plex Sans Arabic',
+    })
+    expect(withStyleDefaults({ radius: 'none', fontLatin: 'Inter' })).toMatchObject({
+      radius: 'none',
+      fontLatin: 'Inter',
+    })
     expect(withStyleDefaults(null)).toMatchObject({ radius: 'xl', fontLatin: 'Plus Jakarta Sans' })
   })
 

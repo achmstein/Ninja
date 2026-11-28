@@ -1,7 +1,7 @@
-import { LangProvider, type Lang } from '@/lib/lang'
-import type { Page } from '@/lib/pages'
 import { Footer, Header } from '@/sections/chrome'
 import { Call, Hero, Moments, Plans } from '@/sections/page'
+import { LangProvider, type Lang } from '@/lib/lang'
+import type { Page } from '@/lib/pages'
 
 /**
  * The page: Ninja shown, not described. The apps on it are the real ones,

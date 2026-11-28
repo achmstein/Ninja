@@ -1,13 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { getRouteApi } from '@tanstack/react-router'
-import {
-  Banknote,
-  CheckCircle2,
-  FileText,
-  RefreshCw,
-  Trash2,
-} from 'lucide-react'
+import { Banknote, CheckCircle2, FileText, RefreshCw, Trash2 } from 'lucide-react'
 import { type PayslipView } from '@/api/payroll'
 import { formatDay } from '@/lib/business-day'
 import { downloadCsv } from '@/lib/csv'
@@ -59,11 +53,7 @@ import {
   type PayslipState,
 } from './format'
 import { PayrollTabs } from './payroll-tabs'
-import {
-  employeesQueryOptions,
-  ledgerQueryOptions,
-  payslipsQueryOptions,
-} from './queries'
+import { employeesQueryOptions, ledgerQueryOptions, payslipsQueryOptions } from './queries'
 import { usePayrollActions } from './use-payroll-actions'
 
 const route = getRouteApi('/_authenticated/payroll/payslips')
@@ -102,9 +92,7 @@ function PayslipChip({ payslip }: { payslip: PayslipView }) {
     case 'paid':
       return (
         <StatusChip tone='success'>
-          {payslip.paidAt
-            ? t('paidOn', { date: readableDay(payslip.paidAt, locale, t) })
-            : t('paidStatus')}
+          {payslip.paidAt ? t('paidOn', { date: readableDay(payslip.paidAt, locale, t) }) : t('paidStatus')}
         </StatusChip>
       )
     case 'toPay':
@@ -118,9 +106,7 @@ function PayslipChip({ payslip }: { payslip: PayslipView }) {
 
 /** The figure a payslip ends on: what was handed over, or what is still owed */
 function payslipAmount(p: PayslipView): number {
-  return payslipState(p) === 'paid'
-    ? toNumber(p.paidAmount ?? p.remaining)
-    : toNumber(p.remaining)
+  return payslipState(p) === 'paid' ? toNumber(p.paidAmount ?? p.remaining) : toNumber(p.remaining)
 }
 
 /**
@@ -137,9 +123,7 @@ export function Payslips() {
   const { generatePayslips, deletePayslip, isPending } = usePayrollActions()
 
   const today = formatDay(new Date())
-  const [year, month] = (search.month ?? today.slice(0, 7))
-    .split('-')
-    .map(Number)
+  const [year, month] = (search.month ?? today.slice(0, 7)).split('-').map(Number)
   const range = monthRange(year, month - 1)
   const monthKey = `${year}-${String(month).padStart(2, '0')}`
   const monthLabel = monthName(year, month, locale)
@@ -148,8 +132,7 @@ export function Payslips() {
   // For each person's job under their name; people who left still have payslips
   const employees = useQuery(employeesQueryOptions(true))
   const jobOf = (employeeId: PayslipView['employeeId']) =>
-    employees.data?.find((e) => toNumber(e.id) === toNumber(employeeId))
-      ?.jobTitle ?? null
+    employees.data?.find((e) => toNumber(e.id) === toNumber(employeeId))?.jobTitle ?? null
 
   const [openId, setOpenId] = useState<string | null>(null)
   const [paying, setPaying] = useState<PayslipView | null>(null)
@@ -164,9 +147,7 @@ export function Payslips() {
       // toasted by usePayrollActions
     })
 
-  const rows = [...(payslips.data ?? [])].sort(
-    (a, b) => stateOrder[payslipState(a)] - stateOrder[payslipState(b)]
-  )
+  const rows = [...(payslips.data ?? [])].sort((a, b) => stateOrder[payslipState(a)] - stateOrder[payslipState(b)])
   const opened = rows.find((p) => String(p.id) === openId) ?? null
 
   const toPay = rows.filter((p) => payslipState(p) === 'toPay')
@@ -217,9 +198,7 @@ export function Payslips() {
         toNumber(p.carriedOver),
         toNumber(p.amountDue),
         toNumber(p.remaining),
-        toNumber(p.status) === PAYSLIP_STATUS.paid
-          ? t('paidStatus')
-          : t('draft'),
+        toNumber(p.status) === PAYSLIP_STATUS.paid ? t('paidStatus') : t('draft'),
         p.paidAmount == null ? '' : toNumber(p.paidAmount),
       ])
     )
@@ -233,12 +212,7 @@ export function Payslips() {
             <div className='flex gap-2'>
               <ExportButton onExport={exportCsv} disabled={rows.length === 0} />
               {rows.length > 0 && (
-                <Button
-                  size='sm'
-                  variant='outline'
-                  onClick={() => generate()}
-                  disabled={isPending}
-                >
+                <Button size='sm' variant='outline' onClick={() => generate()} disabled={isPending}>
                   {isPending ? <Spinner /> : <RefreshCw />}
                   {t('refreshPayslips')}
                 </Button>
@@ -249,9 +223,7 @@ export function Payslips() {
           <PayrollTabs value='payslips' />
           <MonthSwitcher
             monthKey={monthKey}
-            onChange={(next) =>
-              navigate({ search: (prev) => ({ ...prev, month: next }) })
-            }
+            onChange={(next) => navigate({ search: (prev) => ({ ...prev, month: next }) })}
           />
         </PageHeader>
 
@@ -292,24 +264,12 @@ export function Payslips() {
             )}
 
             <MetricStrip>
-              <MetricTile
-                label={t('monthPayTotal')}
-                value={<CountUp value={totalPay} format={formatEgp} />}
-              />
-              <MetricTile
-                label={t('paidSoFar')}
-                value={<CountUp value={totalPaid} format={formatEgp} />}
-              />
+              <MetricTile label={t('monthPayTotal')} value={<CountUp value={totalPay} format={formatEgp} />} />
+              <MetricTile label={t('paidSoFar')} value={<CountUp value={totalPaid} format={formatEgp} />} />
               <MetricTile
                 label={t('dueTotal')}
                 value={
-                  <span
-                    className={
-                      stillOwed > 0
-                        ? 'text-warning-foreground dark:text-warning'
-                        : undefined
-                    }
-                  >
+                  <span className={stillOwed > 0 ? 'text-warning-foreground dark:text-warning' : undefined}>
                     <CountUp value={stillOwed} format={formatEgp} />
                   </span>
                 }
@@ -338,9 +298,7 @@ export function Payslips() {
                                 <Dot />
                               </>
                             )}
-                            <span className='tabular-nums'>
-                              {payShort(p, t, locale)}
-                            </span>
+                            <span className='tabular-nums'>{payShort(p, t, locale)}</span>
                             {toNumber(p.overtimeHours) > 0 && (
                               <>
                                 <Dot />
@@ -392,11 +350,7 @@ export function Payslips() {
         onDelete={() => opened && setDeleting(opened)}
       />
 
-      <PayDialog
-        payslip={paying}
-        monthLabel={monthLabel}
-        onClose={() => setPaying(null)}
-      />
+      <PayDialog payslip={paying} monthLabel={monthLabel} onClose={() => setPaying(null)} />
 
       <ConfirmDialog
         open={deleting !== null}
@@ -443,15 +397,9 @@ function Line({
       <div className='flex items-start justify-between gap-4'>
         <div className='min-w-0'>
           <div className='text-sm'>{label}</div>
-          {detail && (
-            <div className='text-muted-foreground mt-0.5 text-xs'>{detail}</div>
-          )}
+          {detail && <div className='text-muted-foreground mt-0.5 text-xs'>{detail}</div>}
         </div>
-        <Money
-          value={value}
-          signed
-          className={cn('text-sm', value < 0 && 'text-muted-foreground')}
-        />
+        <Money value={value} signed className={cn('text-sm', value < 0 && 'text-muted-foreground')} />
       </div>
       {children}
     </li>
@@ -524,9 +472,7 @@ function PayslipSheet({
         draft ? (
           <Button onClick={onPay} disabled={busy}>
             <Banknote />
-            {remaining > 0
-              ? t('payAmountAction', { amount: formatEgp(remaining) })
-              : t('markPaidAction')}
+            {remaining > 0 ? t('payAmountAction', { amount: formatEgp(remaining) }) : t('markPaidAction')}
           </Button>
         ) : undefined
       }
@@ -546,10 +492,7 @@ function PayslipBreakdown({ payslip: p }: { payslip: PayslipView }) {
   // totals, read from the person's account
   const ledger = useQuery(ledgerQueryOptions(n(p.employeeId)))
   const inMonth = (ledger.data?.entries ?? []).filter(
-    (e) =>
-      e.date >= p.periodStart &&
-      e.date <= p.periodEnd &&
-      n(e.source) !== LEDGER_SOURCE.payslip
+    (e) => e.date >= p.periodStart && e.date <= p.periodEnd && n(e.source) !== LEDGER_SOURCE.payslip
   )
   /** The entries of a kind, shown only when they add up to the payslip's figure */
   const entriesOf = (type: number, total: number | string) => {
@@ -563,8 +506,7 @@ function PayslipBreakdown({ payslip: p }: { payslip: PayslipView }) {
             <span className='min-w-0 truncate'>
               {readableDay(e.date, locale, t)}
               {e.note && ` · ${e.note}`}
-              {n(e.source) === LEDGER_SOURCE.tillPayOut &&
-                ` · ${t('fromTill')}`}
+              {n(e.source) === LEDGER_SOURCE.tillPayOut && ` · ${t('fromTill')}`}
             </span>
             <span className='shrink-0 tabular-nums'>{formatEgp(e.amount)}</span>
           </li>
@@ -589,8 +531,7 @@ function PayslipBreakdown({ payslip: p }: { payslip: PayslipView }) {
       : state === 'owes'
         ? t('theyOwe')
         : t('payslipTotalLine')
-  const headlineAmount =
-    state === 'paid' ? n(p.paidAmount ?? p.remaining) : Math.abs(n(p.remaining))
+  const headlineAmount = state === 'paid' ? n(p.paidAmount ?? p.remaining) : Math.abs(n(p.remaining))
 
   return (
     <>
@@ -604,23 +545,15 @@ function PayslipBreakdown({ payslip: p }: { payslip: PayslipView }) {
         >
           {formatEgp(headlineAmount)}
         </div>
-        {state === 'paid' && p.note && (
-          <div className='text-muted-foreground mt-1 text-sm'>{p.note}</div>
-        )}
+        {state === 'paid' && p.note && <div className='text-muted-foreground mt-1 text-sm'>{p.note}</div>}
       </div>
 
       <section>
-        <h3 className='text-muted-foreground mb-1 text-xs font-medium'>
-          {t('howCostAddsUp')}
-        </h3>
+        <h3 className='text-muted-foreground mb-1 text-xs font-medium'>{t('howCostAddsUp')}</h3>
         <ul className='divide-border/60 divide-y'>
           {n(p.carriedOver) !== 0 && (
             <Line
-              label={
-                n(p.carriedOver) > 0
-                  ? t('owedFromBefore')
-                  : t('owedByThemFromBefore')
-              }
+              label={n(p.carriedOver) > 0 ? t('owedFromBefore') : t('owedByThemFromBefore')}
               value={n(p.carriedOver)}
             />
           )}
@@ -631,24 +564,14 @@ function PayslipBreakdown({ payslip: p }: { payslip: PayslipView }) {
                 {p.termsChangedOn && <InfoTip>{t('payChangedHint')}</InfoTip>}
               </span>
             }
-            detail={
-              daily && n(p.paidOffDays) > 0
-                ? t('inclPaidDaysOff', { count: n(p.paidOffDays) })
-                : undefined
-            }
+            detail={daily && n(p.paidOffDays) > 0 ? t('inclPaidDaysOff', { count: n(p.paidOffDays) }) : undefined}
             value={n(p.earned)}
           />
           {n(p.overtimePay) > 0 && (
-            <Line
-              label={t('overtimeHoursLine', { hours: n(p.overtimeHours) })}
-              value={n(p.overtimePay)}
-            />
+            <Line label={t('overtimeHoursLine', { hours: n(p.overtimeHours) })} value={n(p.overtimePay)} />
           )}
           {n(p.absenceDeduction) > 0 && (
-            <Line
-              label={t('absentDaysLine', { count: n(p.absentDays) })}
-              value={-n(p.absenceDeduction)}
-            />
+            <Line label={t('absentDaysLine', { count: n(p.absentDays) })} value={-n(p.absenceDeduction)} />
           )}
           {n(p.bonuses) > 0 && (
             <Line label={t('bonusesLine')} value={n(p.bonuses)}>
@@ -690,17 +613,11 @@ function PayslipBreakdown({ payslip: p }: { payslip: PayslipView }) {
           {t('daysOffBalance', {
             // Daily workers spend the allowance on paid days off, monthly
             // staff on days away
-            used: String(
-              Math.min(
-                n(p.daysOffAllowance),
-                n(p.paidOffDays) + n(p.absentDays)
-              )
-            ),
+            used: String(Math.min(n(p.daysOffAllowance), n(p.paidOffDays) + n(p.absentDays))),
             allowance: String(n(p.daysOffAllowance)),
             unused: String(n(p.daysOffUnused)),
           })}
-          {n(p.daysOffCarriedIn) > 0 &&
-            ` (${t('daysOffCarriedIn', { days: String(n(p.daysOffCarriedIn)) })})`}
+          {n(p.daysOffCarriedIn) > 0 && ` (${t('daysOffCarriedIn', { days: String(n(p.daysOffCarriedIn)) })})`}
         </p>
       )}
     </>
@@ -723,28 +640,13 @@ function PayDialog({
     <Dialog open={payslip !== null} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className='sm:max-w-md'>
         {/* Keyed so each payslip opens with its own fresh form */}
-        {payslip && (
-          <PayForm
-            key={String(payslip.id)}
-            payslip={payslip}
-            monthLabel={monthLabel}
-            onClose={onClose}
-          />
-        )}
+        {payslip && <PayForm key={String(payslip.id)} payslip={payslip} monthLabel={monthLabel} onClose={onClose} />}
       </DialogContent>
     </Dialog>
   )
 }
 
-function PayForm({
-  payslip,
-  monthLabel,
-  onClose,
-}: {
-  payslip: PayslipView
-  monthLabel: string
-  onClose: () => void
-}) {
+function PayForm({ payslip, monthLabel, onClose }: { payslip: PayslipView; monthLabel: string; onClose: () => void }) {
   const t = useT()
   const { payPayslip, isPending } = usePayrollActions()
   const owed = Math.max(0, toNumber(payslip.remaining))
@@ -767,12 +669,8 @@ function PayForm({
   return (
     <form onSubmit={submit} className='space-y-4'>
       <DialogHeader>
-        <DialogTitle>
-          {t('payEmployee', { name: payslip.employeeName })}
-        </DialogTitle>
-        <DialogDescription>
-          {t('payDialogLine', { month: monthLabel, amount: formatEgp(owed) })}
-        </DialogDescription>
+        <DialogTitle>{t('payEmployee', { name: payslip.employeeName })}</DialogTitle>
+        <DialogDescription>{t('payDialogLine', { month: monthLabel, amount: formatEgp(owed) })}</DialogDescription>
       </DialogHeader>
 
       <div className='grid gap-3 sm:grid-cols-2'>
@@ -792,12 +690,7 @@ function PayForm({
         </div>
         <div className='flex flex-col gap-1.5'>
           <Label htmlFor='pay-note'>{t('note')}</Label>
-          <Input
-            id='pay-note'
-            value={note}
-            placeholder={t('payNoteHint')}
-            onChange={(e) => setNote(e.target.value)}
-          />
+          <Input id='pay-note' value={note} placeholder={t('payNoteHint')} onChange={(e) => setNote(e.target.value)} />
         </div>
       </div>
 
@@ -805,10 +698,7 @@ function PayForm({
         <Button type='button' variant='outline' onClick={onClose}>
           {t('cancel')}
         </Button>
-        <Button
-          type='submit'
-          disabled={isPending || !(parseFloat(amount) >= 0)}
-        >
+        <Button type='submit' disabled={isPending || !(parseFloat(amount) >= 0)}>
           {isPending && <Spinner />}
           {t('confirmPayment')}
         </Button>

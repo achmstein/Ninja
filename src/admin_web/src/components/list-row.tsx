@@ -35,9 +35,7 @@ export function ListRow({
       </div>
       {(trailing || trailingMeta) && (
         <div className='flex shrink-0 flex-col items-end gap-1 text-end'>
-          {trailing && (
-            <div className='text-sm font-medium tabular-nums'>{trailing}</div>
-          )}
+          {trailing && <div className='text-sm font-medium tabular-nums'>{trailing}</div>}
           {trailingMeta}
         </div>
       )}

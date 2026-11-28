@@ -5,14 +5,7 @@ import { type ChipTone } from '@/components/status-chip'
 export type RiderPresence = 'Online' | 'Quiet' | 'Off'
 
 /** A history row's stage: the delivery's own while it stayed theirs, or how it left them */
-export type RiderStage =
-  | 'Assigned'
-  | 'OnTheWay'
-  | 'Delivered'
-  | 'Failed'
-  | 'Returned'
-  | 'TakenBack'
-  | 'GivenToOther'
+export type RiderStage = 'Assigned' | 'OnTheWay' | 'Delivered' | 'Failed' | 'Returned' | 'TakenBack' | 'GivenToOther'
 
 /** One step of a delivery's history */
 export type DeliveryAction =
@@ -69,14 +62,11 @@ type SortableRider = {
  * a live refresh keeps the same order.
  */
 export function compareRiders(a: SortableRider, b: SortableRider): number {
-  const rank =
-    presenceRank[presenceOf(a.status)] - presenceRank[presenceOf(b.status)]
+  const rank = presenceRank[presenceOf(a.status)] - presenceRank[presenceOf(b.status)]
   if (rank !== 0) return rank
   const out = num(b.out) - num(a.out)
   if (out !== 0) return out
-  const seen =
-    (b.lastSeenAt ? Date.parse(b.lastSeenAt) : 0) -
-    (a.lastSeenAt ? Date.parse(a.lastSeenAt) : 0)
+  const seen = (b.lastSeenAt ? Date.parse(b.lastSeenAt) : 0) - (a.lastSeenAt ? Date.parse(a.lastSeenAt) : 0)
   if (seen !== 0) return seen
   return (a.name ?? '').localeCompare(b.name ?? '')
 }
@@ -128,15 +118,9 @@ export function stageLabel(stage: string | null | undefined): TranslationKey {
 }
 
 /** Still with the rider and not finished: what the "Now" list shows */
-export function isOpenForRider(row: {
-  stage?: string | null
-  stillWithRider?: boolean
-}): boolean {
+export function isOpenForRider(row: { stage?: string | null; stillWithRider?: boolean }): boolean {
   const stage = stageOf(row.stage)
-  return (
-    row.stillWithRider !== false &&
-    (stage === 'Assigned' || stage === 'OnTheWay' || stage === 'Failed')
-  )
+  return row.stillWithRider !== false && (stage === 'Assigned' || stage === 'OnTheWay' || stage === 'Failed')
 }
 
 const actionLabels: Record<DeliveryAction, TranslationKey> = {
@@ -168,9 +152,7 @@ export function addressLine(row: {
 }
 
 /** Short, over or even: how a cash difference reads */
-export function cashDifferenceTone(
-  difference: number | string | null | undefined
-): 'short' | 'over' | 'even' | null {
+export function cashDifferenceTone(difference: number | string | null | undefined): 'short' | 'over' | 'even' | null {
   if (difference == null) return null
   const n = num(difference)
   if (n < 0) return 'short'
@@ -179,10 +161,7 @@ export function cashDifferenceTone(
 }
 
 /** The window spans more than the history endpoint takes */
-export function windowTooWide(
-  from: Date | null | undefined,
-  to: Date | null | undefined
-): boolean {
+export function windowTooWide(from: Date | null | undefined, to: Date | null | undefined): boolean {
   if (!from || !to) return false
   return to.getTime() - from.getTime() > MAX_HISTORY_DAYS * 86_400_000
 }

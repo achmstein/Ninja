@@ -1,6 +1,6 @@
 import { Delete } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
 
 const MAX_LENGTH = 9
 
@@ -36,11 +36,7 @@ type NumericKeypadProps = {
  * rendered western (tabular) regardless of UI language, matching the
  * amounts everywhere else.
  */
-export function NumericKeypad({
-  value,
-  onChange,
-  className,
-}: NumericKeypadProps) {
+export function NumericKeypad({ value, onChange, className }: NumericKeypadProps) {
   const press = (key: string) => onChange(applyKeypadKey(value, key))
 
   const keyButton = (key: string, label?: React.ReactNode) => (

@@ -11,13 +11,7 @@ import { useAllowedBranches } from '@/hooks/use-allowed-branches'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Spinner } from '@/components/ui/spinner'
 import { Combobox } from '@/components/combobox'
 import { EntitySheet, SheetActions } from '@/components/entity-sheet'
@@ -35,12 +29,7 @@ export function TransferDialog({ open, onOpenChange }: TransferDialogProps) {
   const t = useT()
 
   return (
-    <EntitySheet
-      open={open}
-      onOpenChange={onOpenChange}
-      title={t('transferStock')}
-      size='wide'
-    >
+    <EntitySheet open={open} onOpenChange={onOpenChange} title={t('transferStock')} size='wide'>
       {open && <TransferForm onOpenChange={onOpenChange} />}
     </EntitySheet>
   )
@@ -60,23 +49,16 @@ const newLine = (): Line => ({
 })
 
 /** Column template shared by the header row and every line */
-const LINE_GRID =
-  'sm:grid-cols-[minmax(0,2fr)_repeat(2,minmax(0,1fr))_auto] sm:gap-2 sm:items-center'
+const LINE_GRID = 'sm:grid-cols-[minmax(0,2fr)_repeat(2,minmax(0,1fr))_auto] sm:gap-2 sm:items-center'
 
-function TransferForm({
-  onOpenChange,
-}: {
-  onOpenChange: (open: boolean) => void
-}) {
+function TransferForm({ onOpenChange }: { onOpenChange: (open: boolean) => void }) {
   const t = useT()
   const localized = useLocalized()
   const { transferStock, isPending } = useInventoryActions()
   const activeBranchId = useBranchStore((s) => s.branchId)
   const { branches } = useAllowedBranches()
   // Everywhere this account may send to, except where the stock already is
-  const destinations = branches.filter(
-    (branch) => toNumber(branch.id) !== activeBranchId
-  )
+  const destinations = branches.filter((branch) => toNumber(branch.id) !== activeBranchId)
   // Levels rather than the item list: the picker shows what is on hand here
   const { data: levels = [] } = useQuery(stockLevelsQueryOptions())
   const levelById = new Map(levels.map((l) => [String(l.stockItemId), l]))
@@ -86,9 +68,7 @@ function TransferForm({
   const [lines, setLines] = useState<Line[]>([newLine()])
 
   const updateLine = (key: number, patch: Partial<Line>) =>
-    setLines((prev) =>
-      prev.map((line) => (line.key === key ? { ...line, ...patch } : line))
-    )
+    setLines((prev) => prev.map((line) => (line.key === key ? { ...line, ...patch } : line)))
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -100,9 +80,7 @@ function TransferForm({
       toast.error(t('transferNeedsLine'))
       return
     }
-    const complete = lines.every(
-      (line) => line.stockItemId && parseFloat(line.quantity) > 0
-    )
+    const complete = lines.every((line) => line.stockItemId && parseFloat(line.quantity) > 0)
     if (!complete) {
       toast.error(t('transferLineIncomplete'))
       return
@@ -125,19 +103,9 @@ function TransferForm({
     <form id='transfer-form' onSubmit={handleSubmit} className='space-y-4'>
       <FieldGrid>
         <Field label={t('toBranch')} htmlFor='toBranch'>
-          <Select
-            value={toBranchId}
-            onValueChange={setToBranchId}
-            disabled={destinations.length === 0}
-          >
+          <Select value={toBranchId} onValueChange={setToBranchId} disabled={destinations.length === 0}>
             <SelectTrigger id='toBranch' className='w-full'>
-              <SelectValue
-                placeholder={
-                  destinations.length === 0
-                    ? t('noOtherBranches')
-                    : t('pickBranch')
-                }
-              />
+              <SelectValue placeholder={destinations.length === 0 ? t('noOtherBranches') : t('pickBranch')} />
             </SelectTrigger>
             <SelectContent>
               {destinations.map((branch) => (
@@ -163,9 +131,7 @@ function TransferForm({
         {/* One list, not a card per line: a header row names the columns on
             wide screens; on a phone each field carries its own small label */}
         <div className='rounded-lg border'>
-          <div
-            className={`text-muted-foreground hidden border-b px-3 py-2 text-xs sm:grid ${LINE_GRID}`}
-          >
+          <div className={`text-muted-foreground hidden border-b px-3 py-2 text-xs sm:grid ${LINE_GRID}`}>
             <span>{t('stockItem')}</span>
             <span>{t('quantity')}</span>
             <span className='text-end'>{t('onHand')}</span>
@@ -176,42 +142,25 @@ function TransferForm({
               <TransferLine
                 key={line.key}
                 line={line}
-                level={
-                  line.stockItemId ? levelById.get(line.stockItemId) : undefined
-                }
+                level={line.stockItemId ? levelById.get(line.stockItemId) : undefined}
                 levels={levels}
                 onChange={(patch) => updateLine(line.key, patch)}
-                onRemove={() =>
-                  setLines((prev) => prev.filter((l) => l.key !== line.key))
-                }
+                onRemove={() => setLines((prev) => prev.filter((l) => l.key !== line.key))}
               />
             ))}
           </div>
         </div>
-        <Button
-          type='button'
-          variant='outline'
-          size='sm'
-          onClick={() => setLines((prev) => [...prev, newLine()])}
-        >
+        <Button type='button' variant='outline' size='sm' onClick={() => setLines((prev) => [...prev, newLine()])}>
           <Plus />
           {t('addLine')}
         </Button>
       </div>
 
       <SheetActions>
-        <Button
-          type='button'
-          variant='outline'
-          onClick={() => onOpenChange(false)}
-        >
+        <Button type='button' variant='outline' onClick={() => onOpenChange(false)}>
           {t('cancel')}
         </Button>
-        <Button
-          type='submit'
-          form='transfer-form'
-          disabled={isPending || destinations.length === 0}
-        >
+        <Button type='submit' form='transfer-form' disabled={isPending || destinations.length === 0}>
           {isPending && <Spinner />}
           {t('transferStock')}
         </Button>
@@ -236,8 +185,7 @@ function TransferLine({
   const t = useT()
   const localized = useLocalized()
   // Sending more than is here is refused by the API; flag it before that
-  const overdrawn =
-    level !== undefined && parseFloat(line.quantity) > toNumber(level.onHand)
+  const overdrawn = level !== undefined && parseFloat(line.quantity) > toNumber(level.onHand)
 
   return (
     <div className='px-3 py-2'>
@@ -258,13 +206,7 @@ function TransferLine({
         >
           <X className='h-4 w-4' />
         </Button>
-        <LabeledInput
-          label={
-            level
-              ? `${t('quantity')} (${unitLabel(level.unit, t)})`
-              : t('quantity')
-          }
-        >
+        <LabeledInput label={level ? `${t('quantity')} (${unitLabel(level.unit, t)})` : t('quantity')}>
           <Input
             type='number'
             min='0'
@@ -280,9 +222,7 @@ function TransferLine({
           <div
             className={cn(
               'flex h-9 items-center justify-end text-sm tabular-nums',
-              overdrawn
-                ? 'text-destructive font-medium'
-                : 'text-muted-foreground'
+              overdrawn ? 'text-destructive font-medium' : 'text-muted-foreground'
             )}
           >
             {level ? formatQuantity(level.onHand, level.unit, t) : '—'}
@@ -298,18 +238,10 @@ function TransferLine({
  * bare number box would mean nothing. On a wide screen the header row names
  * the columns and the label is hidden.
  */
-function LabeledInput({
-  label,
-  children,
-}: {
-  label: string
-  children: React.ReactNode
-}) {
+function LabeledInput({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className='space-y-1'>
-      <span className='text-muted-foreground block truncate text-xs sm:hidden'>
-        {label}
-      </span>
+      <span className='text-muted-foreground block truncate text-xs sm:hidden'>{label}</span>
       {children}
     </div>
   )

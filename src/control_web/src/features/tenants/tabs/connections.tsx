@@ -1,14 +1,14 @@
 import { useState } from 'react'
 import { ExternalLink } from 'lucide-react'
 import type { TenantDetail } from '@/api/control'
-import { MapsField } from '@/components/brand/maps-field'
-import { SocialField } from '@/components/brand/social-field'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { useT } from '@/lib/i18n'
 import { tenantStatus } from '@/lib/tenant'
-import { TalabatSection } from '../talabat-section'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { MapsField } from '@/components/brand/maps-field'
+import { SocialField } from '@/components/brand/social-field'
 import { useRecordSave } from '../record-save'
+import { TalabatSection } from '../talabat-section'
 import { Section } from './business'
 
 /**
@@ -41,9 +41,21 @@ function DomainCard({ tenant }: { tenant: TenantDetail }) {
     >
       <div className='grid gap-2'>
         <Label htmlFor='connections-domain'>{t('customerDomain')}</Label>
-        <Input id='connections-domain' dir='ltr' placeholder='menu.example.com' value={domain} onChange={(e) => setDomain(e.target.value)} />
+        <Input
+          id='connections-domain'
+          dir='ltr'
+          placeholder='menu.example.com'
+          value={domain}
+          onChange={(e) => setDomain(e.target.value)}
+        />
       </div>
-      <a href={tenant.hosts.customer} target='_blank' rel='noreferrer' className='text-muted-foreground inline-flex items-center gap-1 text-xs hover:underline' dir='ltr'>
+      <a
+        href={tenant.hosts.customer}
+        target='_blank'
+        rel='noreferrer'
+        className='text-muted-foreground inline-flex items-center gap-1 text-xs hover:underline'
+        dir='ltr'
+      >
         {tenant.hosts.customer.replace(/^https?:\/\//, '')}
         <ExternalLink className='size-3' />
       </a>
@@ -57,7 +69,12 @@ function SignInCard({ tenant }: { tenant: TenantDetail }) {
   const saved = tenant.socialSignIn ?? true
   const [social, setSocial] = useState(saved)
   return (
-    <Section title={t('signInTitle')} dirty={social !== saved} pending={pending} onSave={() => save({ socialSignIn: social })}>
+    <Section
+      title={t('signInTitle')}
+      dirty={social !== saved}
+      pending={pending}
+      onSave={() => save({ socialSignIn: social })}
+    >
       <SocialField id='connections-social' checked={social} onChange={setSocial} />
     </Section>
   )
@@ -70,10 +87,17 @@ function MapsCard({ tenant }: { tenant: TenantDetail }) {
   const [maps, setMaps] = useState(saved)
   return (
     <Section title={t('googleMaps')} dirty={maps !== saved} pending={pending} onSave={() => save({ googleMaps: maps })}>
-      <MapsField id='connections-maps' checked={maps} onChange={setMaps} available={tenant.googleMapsAvailable ?? false} />
+      <MapsField
+        id='connections-maps'
+        checked={maps}
+        onChange={setMaps}
+        available={tenant.googleMapsAvailable ?? false}
+      />
       {/* Google takes the browser key only from the sites it lists: until this one is, its web keeps the free map */}
       {tenant.mapsDomainToAdd && (
-        <p className='text-muted-foreground text-xs'>{t('googleMapsAddDomain', { pattern: `https://${tenant.mapsDomainToAdd}/*` })}</p>
+        <p className='text-muted-foreground text-xs'>
+          {t('googleMapsAddDomain', { pattern: `https://${tenant.mapsDomainToAdd}/*` })}
+        </p>
       )}
     </Section>
   )

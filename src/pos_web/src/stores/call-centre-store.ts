@@ -16,6 +16,6 @@ export const useCallCentreStore = create<CallCentreState>()(
       on: false,
       setOn: (on) => set({ on }),
     }),
-    { name: 'ninja-pos-call-centre' },
-  ),
+    { name: 'ninja-pos-call-centre' }
+  )
 )

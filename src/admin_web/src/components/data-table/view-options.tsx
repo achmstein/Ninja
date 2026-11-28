@@ -1,6 +1,6 @@
-import { type RowData } from '@tanstack/react-table'
 import { DropdownMenuTrigger } from '@radix-ui/react-dropdown-menu'
 import { MixerHorizontalIcon } from '@radix-ui/react-icons'
+import { type RowData } from '@tanstack/react-table'
 import { useT } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
 import {
@@ -16,18 +16,12 @@ type DataTableViewOptionsProps<TData extends RowData> = {
   table: AppTable<TData>
 }
 
-export function DataTableViewOptions<TData extends RowData>({
-  table,
-}: DataTableViewOptionsProps<TData>) {
+export function DataTableViewOptions<TData extends RowData>({ table }: DataTableViewOptionsProps<TData>) {
   const t = useT()
   return (
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
-        <Button
-          variant='outline'
-          size='sm'
-          className='ms-auto hidden h-8 lg:flex'
-        >
+        <Button variant='outline' size='sm' className='ms-auto hidden h-8 lg:flex'>
           <MixerHorizontalIcon className='size-4' />
           {t('view')}
         </Button>
@@ -37,10 +31,7 @@ export function DataTableViewOptions<TData extends RowData>({
         <DropdownMenuSeparator />
         {table
           .getAllColumns()
-          .filter(
-            (column) =>
-              typeof column.accessorFn !== 'undefined' && column.getCanHide()
-          )
+          .filter((column) => typeof column.accessorFn !== 'undefined' && column.getCanHide())
           .map((column) => {
             // Translated column headers are plain strings; fall back to the id
             const header = column.columnDef.header

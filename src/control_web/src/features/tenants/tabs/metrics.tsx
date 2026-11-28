@@ -4,33 +4,15 @@ import { BarChart3 } from 'lucide-react'
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from 'recharts'
 import type { TenantDetail } from '@/api/control'
 import { getTenantMetricsOptions } from '@/api/control/@tanstack/react-query.gen'
-import { Stat, StatStrip } from '@/components/stat-strip'
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-  type ChartConfig,
-} from '@/components/ui/chart'
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from '@/components/ui/empty'
-import { Skeleton } from '@/components/ui/skeleton'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { useLocale, useT } from '@/lib/i18n'
 import { formatMoney } from '@/lib/locale'
 import { statusLabelKey, tenantStatus } from '@/lib/tenant'
+import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from '@/components/ui/chart'
+import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+import { Stat, StatStrip } from '@/components/stat-strip'
 
 const RANGES = [7, 30, 90] as const
 
@@ -68,8 +50,7 @@ export function MetricsTab({ tenant }: { tenant: TenantDetail }) {
   const data = metrics.data
   const loading = metrics.isLoading
   const money = (v: number | string | null | undefined) => formatMoney(v, currency, 'en')
-  const count = (v: number | string | null | undefined) =>
-    new Intl.NumberFormat(locale).format(Number(v ?? 0))
+  const count = (v: number | string | null | undefined) => new Intl.NumberFormat(locale).format(Number(v ?? 0))
   const series = (data?.series ?? []).map((d) => ({
     date: d.date,
     orders: Number(d.orders),
@@ -129,13 +110,7 @@ export function MetricsTab({ tenant }: { tenant: TenantDetail }) {
                 tickFormatter={dayLabel}
               />
               <YAxis yAxisId='orders' tickLine={false} axisLine={false} width={32} allowDecimals={false} />
-              <YAxis
-                yAxisId='revenue'
-                orientation='right'
-                tickLine={false}
-                axisLine={false}
-                width={48}
-              />
+              <YAxis yAxisId='revenue' orientation='right' tickLine={false} axisLine={false} width={48} />
               <ChartTooltip
                 cursor={false}
                 content={

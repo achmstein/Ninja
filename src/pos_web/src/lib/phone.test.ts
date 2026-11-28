@@ -1,13 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { normalizeName, sameName } from './names'
-import {
-  digitCount,
-  formatPhone,
-  internationalDigits,
-  isValidPhone,
-  normalizePhone,
-  whatsAppLink,
-} from './phone'
+import { digitCount, formatPhone, internationalDigits, isValidPhone, normalizePhone, whatsAppLink } from './phone'
 
 // The same cases as the server's PhoneRulesTest: one rule, four places
 describe('normalizePhone', () => {

@@ -1,5 +1,4 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import type { CourierProviderView, DeliveryOrder, DeliveryStaffView, RiderView } from '@/api/ordering/types.gen'
 import {
   assignDeliveryCourierMutation,
   assignDeliveryRiderMutation,
@@ -17,6 +16,7 @@ import {
   markDeliveryReturnedMutation,
   unassignDeliveryRiderMutation,
 } from '@/api/ordering/@tanstack/react-query.gen'
+import type { CourierProviderView, DeliveryOrder, DeliveryStaffView, RiderView } from '@/api/ordering/types.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { brandQueryKey } from '@/lib/brand'
 import { translate, type TranslationKey } from '@/lib/i18n'
@@ -129,9 +129,13 @@ export function useDeliveryActions() {
 
   const q = { 'api-version': API_VERSION }
   return {
-    assign: (orderId: number, riderUserId: string) => assign.mutate({ path: { orderId }, body: { riderUserId }, query: q }),
+    assign: (orderId: number, riderUserId: string) =>
+      assign.mutate({ path: { orderId }, body: { riderUserId }, query: q }),
     unassign: (orderId: number) => unassign.mutate({ path: { orderId }, query: q }),
-    assignCourier: (orderId: number, courier: { providerId: number; courierName?: string; courierPhone?: string; fee?: number | null }) =>
+    assignCourier: (
+      orderId: number,
+      courier: { providerId: number; courierName?: string; courierPhone?: string; fee?: number | null }
+    ) =>
       assignCourier.mutate({
         path: { orderId },
         body: {
@@ -158,7 +162,7 @@ export function useDeliveryActions() {
             toast.success(translate('riderCashTaken', { count: amounts.size }))
             then?.()
           },
-        },
+        }
       ),
     // A delivery that failed or came back, its cash never in: the order goes, the
     // customer charged nothing, and its food goes as the cashier said
@@ -168,6 +172,18 @@ export function useDeliveryActions() {
         headers: { 'x-requestid': crypto.randomUUID() },
         query: q,
       }),
-    busy: [assign, unassign, out, delivered, fail, returned, cashIn, cancel, cashInMany, assignCourier, courierDelivered].some((m) => m.isPending),
+    busy: [
+      assign,
+      unassign,
+      out,
+      delivered,
+      fail,
+      returned,
+      cashIn,
+      cancel,
+      cashInMany,
+      assignCourier,
+      courierDelivered,
+    ].some((m) => m.isPending),
   }
 }

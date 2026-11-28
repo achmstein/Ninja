@@ -1,22 +1,10 @@
 import { useMemo, useState } from 'react'
 import { AxiosError } from 'axios'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import {
-  ArrowDown,
-  ArrowUp,
-  ChefHat,
-  Monitor,
-  Pencil,
-  Plus,
-  Printer,
-  Trash2,
-} from 'lucide-react'
+import { ArrowDown, ArrowUp, ChefHat, Monitor, Pencil, Plus, Printer, Trash2 } from 'lucide-react'
 import { createPortal } from 'react-dom'
 import { listCategoriesOptions } from '@/api/catalog/@tanstack/react-query.gen'
-import {
-  type KitchenStationView,
-  type PrintConnectorView,
-} from '@/api/ordering'
+import { type KitchenStationView, type PrintConnectorView } from '@/api/ordering'
 import {
   createKitchenStationMutation,
   deleteKitchenStationMutation,
@@ -48,10 +36,7 @@ import {
   type LocalizedValue,
 } from '@/components/localized-input'
 import { FormFillButton } from '@/features/assist/form-fill-button'
-import {
-  localizedFields,
-  mergeLocalized,
-} from '@/features/assist/use-form-fill'
+import { localizedFields, mergeLocalized } from '@/features/assist/use-form-fill'
 import { PrintConnectors } from './print-connectors'
 
 interface KitchenDialogProps {
@@ -61,9 +46,7 @@ interface KitchenDialogProps {
 
 /** Ordering answers a refused station with the reason as a bare string. */
 const refusal = (error: unknown) =>
-  error instanceof AxiosError && typeof error.response?.data === 'string'
-    ? error.response.data
-    : null
+  error instanceof AxiosError && typeof error.response?.data === 'string' ? error.response.data : null
 
 /**
  * A branch's kitchen: its stations, the menu categories each one makes, and
@@ -76,9 +59,7 @@ export function KitchenDialog({ branch, onOpenChange }: KitchenDialogProps) {
   const branchId = Number(branch?.id ?? 0)
   // This dialog speaks for the branch it was opened on, not the sidebar's
   const scope = { headers: { 'X-Branch-Id': String(branchId) } }
-  const [editing, setEditing] = useState<KitchenStationView | 'new' | null>(
-    null
-  )
+  const [editing, setEditing] = useState<KitchenStationView | 'new' | null>(null)
   // The station form owns its fields; its "Fill in with AI" is drawn into the header
   const [fillSlot, setFillSlot] = useState<HTMLElement | null>(null)
 
@@ -102,9 +83,7 @@ export function KitchenDialog({ branch, onOpenChange }: KitchenDialogProps) {
   })
   const connectors = connectorsQuery.data ?? []
 
-  const categoriesQuery = useQuery(
-    listCategoriesOptions({ query: { 'api-version': API_VERSION } })
-  )
+  const categoriesQuery = useQuery(listCategoriesOptions({ query: { 'api-version': API_VERSION } }))
   const categoryName = useMemo(() => {
     const names = new Map<number, string>()
     for (const c of categoriesQuery.data ?? []) {
@@ -139,8 +118,7 @@ export function KitchenDialog({ branch, onOpenChange }: KitchenDialogProps) {
             printsTickets: station.printsTickets ?? false,
             printerHost: station.printerHost ?? null,
             printerPort: Number(station.printerPort ?? 9100),
-            connectorId:
-              station.connectorId == null ? null : Number(station.connectorId),
+            connectorId: station.connectorId == null ? null : Number(station.connectorId),
             printerName: station.printerName ?? null,
             displayOrder: index,
           },
@@ -162,11 +140,7 @@ export function KitchenDialog({ branch, onOpenChange }: KitchenDialogProps) {
       title={
         <span className='flex items-center gap-2'>
           <ChefHat className='h-5 w-5' />
-          {editing === 'new'
-            ? t('addStation')
-            : editing
-              ? t('editStation')
-              : t('kitchenStations')}
+          {editing === 'new' ? t('addStation') : editing ? t('editStation') : t('kitchenStations')}
         </span>
       }
       subtitle={editing == null ? t('kitchenStationsHint') : undefined}
@@ -192,18 +166,11 @@ export function KitchenDialog({ branch, onOpenChange }: KitchenDialogProps) {
         <>
           <ul className='divide-y rounded-lg border'>
             {stations.map((station, index) => (
-              <li
-                key={String(station.id)}
-                className='flex items-start justify-between gap-3 p-3'
-              >
+              <li key={String(station.id)} className='flex items-start justify-between gap-3 p-3'>
                 <div className='min-w-0 space-y-1'>
                   <div className='flex items-center gap-2'>
-                    <span className='text-sm font-medium'>
-                      {localized(station.name)}
-                    </span>
-                    {station.isDefault && (
-                      <Badge variant='secondary'>{t('defaultStation')}</Badge>
-                    )}
+                    <span className='text-sm font-medium'>{localized(station.name)}</span>
+                    {station.isDefault && <Badge variant='secondary'>{t('defaultStation')}</Badge>}
                   </div>
                   <div className='text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 text-xs'>
                     {station.showsOnScreen && (
@@ -217,22 +184,16 @@ export function KitchenDialog({ branch, onOpenChange }: KitchenDialogProps) {
                         <Printer className='h-3.5 w-3.5' />
                         {station.printerName
                           ? `${station.printerName} · ${
-                              connectors.find(
-                                (c) =>
-                                  Number(c.id) === Number(station.connectorId)
-                              )?.name ?? ''
+                              connectors.find((c) => Number(c.id) === Number(station.connectorId))?.name ?? ''
                             }`
                           : `${station.printerHost}:${String(station.printerPort)}`}
                       </span>
                     )}
                   </div>
                   <div className='text-muted-foreground text-xs'>
-                    {station.isDefault &&
-                    (station.categoryIds ?? []).length === 0
+                    {station.isDefault && (station.categoryIds ?? []).length === 0
                       ? t('defaultStationHint')
-                      : (station.categoryIds ?? [])
-                          .map((id) => categoryName.get(Number(id)) ?? `#${id}`)
-                          .join(' · ')}
+                      : (station.categoryIds ?? []).map((id) => categoryName.get(Number(id)) ?? `#${id}`).join(' · ')}
                   </div>
                 </div>
                 <div className='flex shrink-0 items-center'>
@@ -241,9 +202,7 @@ export function KitchenDialog({ branch, onOpenChange }: KitchenDialogProps) {
                     size='icon'
                     aria-label={t('moveUp')}
                     disabled={index === 0 || reorder.isPending}
-                    onClick={() =>
-                      reorder.mutate({ from: index, to: index - 1 })
-                    }
+                    onClick={() => reorder.mutate({ from: index, to: index - 1 })}
                   >
                     <ArrowUp className='h-4 w-4' />
                   </Button>
@@ -251,21 +210,12 @@ export function KitchenDialog({ branch, onOpenChange }: KitchenDialogProps) {
                     variant='ghost'
                     size='icon'
                     aria-label={t('moveDown')}
-                    disabled={
-                      index === stations.length - 1 || reorder.isPending
-                    }
-                    onClick={() =>
-                      reorder.mutate({ from: index, to: index + 1 })
-                    }
+                    disabled={index === stations.length - 1 || reorder.isPending}
+                    onClick={() => reorder.mutate({ from: index, to: index + 1 })}
                   >
                     <ArrowDown className='h-4 w-4' />
                   </Button>
-                  <Button
-                    variant='ghost'
-                    size='icon'
-                    aria-label={t('editStation')}
-                    onClick={() => setEditing(station)}
-                  >
+                  <Button variant='ghost' size='icon' aria-label={t('editStation')} onClick={() => setEditing(station)}>
                     <Pencil className='h-4 w-4' />
                   </Button>
                 </div>
@@ -308,29 +258,17 @@ function StationForm({
   const queryClient = useQueryClient()
   const scope = { headers: { 'X-Branch-Id': String(branchId) } }
 
-  const [name, setName] = useState<LocalizedValue>(() =>
-    toLocalizedValue(station?.name)
-  )
-  const [categoryIds, setCategoryIds] = useState<number[]>(() =>
-    (station?.categoryIds ?? []).map(Number)
-  )
-  const [showsOnScreen, setShowsOnScreen] = useState(
-    station?.showsOnScreen ?? true
-  )
-  const [printsTickets, setPrintsTickets] = useState(
-    station?.printsTickets ?? false
-  )
+  const [name, setName] = useState<LocalizedValue>(() => toLocalizedValue(station?.name))
+  const [categoryIds, setCategoryIds] = useState<number[]>(() => (station?.categoryIds ?? []).map(Number))
+  const [showsOnScreen, setShowsOnScreen] = useState(station?.showsOnScreen ?? true)
+  const [printsTickets, setPrintsTickets] = useState(station?.printsTickets ?? false)
   const [printerHost, setPrinterHost] = useState(station?.printerHost ?? '')
-  const [printerPort, setPrinterPort] = useState(
-    String(station?.printerPort ?? 9100)
-  )
+  const [printerPort, setPrinterPort] = useState(String(station?.printerPort ?? 9100))
   // Where the paper comes out: 'network' (an address any device in the shop
   // reaches) or `${connectorId}|${printerName}`, a printer Windows knows on
   // a paired connector
   const [target, setTarget] = useState(
-    station?.connectorId != null && station.printerName
-      ? `${station.connectorId}|${station.printerName}`
-      : 'network'
+    station?.connectorId != null && station.printerName ? `${station.connectorId}|${station.printerName}` : 'network'
   )
   const onConnector = target !== 'network'
   const [error, setError] = useState('')
@@ -348,8 +286,7 @@ function StationForm({
     return map
   }, [stations, station, localized])
 
-  const refresh = () =>
-    queryClient.invalidateQueries({ queryKey: [{ _id: 'getKitchenStations' }] })
+  const refresh = () => queryClient.invalidateQueries({ queryKey: [{ _id: 'getKitchenStations' }] })
 
   const onError = (e: unknown) => {
     const reason = refusal(e)
@@ -419,12 +356,8 @@ function StationForm({
       printsTickets,
       printerHost: onConnector ? null : printerHost.trim() || null,
       printerPort: Number(printerPort) || 9100,
-      connectorId:
-        printsTickets && onConnector ? Number(target.split('|')[0]) : null,
-      printerName:
-        printsTickets && onConnector
-          ? target.slice(target.indexOf('|') + 1)
-          : null,
+      connectorId: printsTickets && onConnector ? Number(target.split('|')[0]) : null,
+      printerName: printsTickets && onConnector ? target.slice(target.indexOf('|') + 1) : null,
       displayOrder: station?.displayOrder ?? stations.length,
     }
     const query = { 'api-version': API_VERSION }
@@ -469,19 +402,11 @@ function StationForm({
                     ]
                   : []),
               ]}
-              onFilled={(filled) =>
-                setName((prev) => mergeLocalized('name', prev, filled))
-              }
+              onFilled={(filled) => setName((prev) => mergeLocalized('name', prev, filled))}
             />,
             fillSlot
           )}
-        <LocalizedInput
-          id='station-name'
-          label={t('name')}
-          value={name}
-          onChange={setName}
-          autoFocus={!station}
-        />
+        <LocalizedInput id='station-name' label={t('name')} value={name} onChange={setName} autoFocus={!station} />
 
         <SwitchGroup>
           <SwitchRow
@@ -516,10 +441,7 @@ function StationForm({
             >
               <option value='network'>{t('networkPrinter')}</option>
               {connectors.map((connector) => (
-                <optgroup
-                  key={String(connector.id)}
-                  label={connector.name ?? ''}
-                >
+                <optgroup key={String(connector.id)} label={connector.name ?? ''}>
                   {(connector.printers ?? []).map((printer) => (
                     <option key={printer} value={`${connector.id}|${printer}`}>
                       {printer}
@@ -529,9 +451,7 @@ function StationForm({
               ))}
             </select>
             {connectors.length === 0 && (
-              <p className='text-muted-foreground text-xs'>
-                {t('pairConnectorForWindowsPrinters')}
-              </p>
+              <p className='text-muted-foreground text-xs'>{t('pairConnectorForWindowsPrinters')}</p>
             )}
           </Field>
         )}
@@ -554,9 +474,7 @@ function StationForm({
                 dir='ltr'
                 inputMode='numeric'
                 value={printerPort}
-                onChange={(e) =>
-                  setPrinterPort(e.target.value.replace(/\D/g, ''))
-                }
+                onChange={(e) => setPrinterPort(e.target.value.replace(/\D/g, ''))}
               />
             </Field>
           </div>
@@ -585,18 +503,12 @@ function StationForm({
           </div>
         )}
 
-        <Field
-          label={t('stationCategories')}
-          hint={station?.isDefault ? t('defaultStationHint') : undefined}
-        >
+        <Field label={t('stationCategories')} hint={station?.isDefault ? t('defaultStationHint') : undefined}>
           <div className='grid max-h-48 grid-cols-2 gap-2 overflow-y-auto rounded-lg border p-3'>
             {categories.map(([id, label]) => {
               const owner = takenBy.get(id)
               return (
-                <label
-                  key={id}
-                  className='flex items-center gap-2 text-sm has-disabled:opacity-60'
-                >
+                <label key={id} className='flex items-center gap-2 text-sm has-disabled:opacity-60'>
                   <Checkbox
                     checked={categoryIds.includes(id)}
                     disabled={owner != null}

@@ -24,10 +24,7 @@ type Options = {
  * The APIs only take UTC bounds; the SPA owns the calendar, so no service
  * ever has to ask Tenant.API what a day is.
  */
-export function useTillWindow(
-  search: RangeSearch,
-  { defaultPreset = 'today' }: Options = {}
-) {
+export function useTillWindow(search: RangeSearch, { defaultPreset = 'today' }: Options = {}) {
   const branchId = useBranchStore((s) => s.branchId)
 
   // Same query the sidebar branch switcher runs — served from the cache

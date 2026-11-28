@@ -2,22 +2,10 @@ import { useState } from 'react'
 import { Plus } from 'lucide-react'
 import { type TranslationKey, useT } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useEarnPoints } from '../hooks/use-loyalty'
 
 interface EarnPointsDialogProps {
@@ -34,11 +22,7 @@ const earnTypes: { value: string; labelKey: TranslationKey }[] = [
   { value: 'other', labelKey: 'other' },
 ]
 
-export function EarnPointsDialog({
-  open,
-  onOpenChange,
-  userId,
-}: EarnPointsDialogProps) {
+export function EarnPointsDialog({ open, onOpenChange, userId }: EarnPointsDialogProps) {
   const t = useT()
   const [points, setPoints] = useState('')
   const [type, setType] = useState('bonus')
@@ -147,11 +131,7 @@ export function EarnPointsDialog({
           </div>
 
           <DialogFooter>
-            <Button
-              type='button'
-              variant='outline'
-              onClick={() => handleOpenChange(false)}
-            >
+            <Button type='button' variant='outline' onClick={() => handleOpenChange(false)}>
               {t('cancel')}
             </Button>
             <Button type='submit' disabled={earnPoints.isPending}>

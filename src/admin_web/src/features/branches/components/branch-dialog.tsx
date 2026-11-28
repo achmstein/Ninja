@@ -4,10 +4,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { MapPin } from 'lucide-react'
 import { createPortal } from 'react-dom'
 import { type BranchResponse } from '@/api/tenant'
-import {
-  createBranchMutation,
-  updateBranchMutation,
-} from '@/api/tenant/@tanstack/react-query.gen'
+import { createBranchMutation, updateBranchMutation } from '@/api/tenant/@tanstack/react-query.gen'
 import { useIsCloudKitchen } from '@/lib/brand'
 import { useT } from '@/lib/i18n'
 import { locationText, pointOfText } from '@/lib/maps'
@@ -18,17 +15,9 @@ import { Input } from '@/components/ui/input'
 import { Spinner } from '@/components/ui/spinner'
 import { EntitySheet, SheetActions } from '@/components/entity-sheet'
 import { Field, FieldGrid, SwitchGroup, SwitchRow } from '@/components/field'
-import {
-  fromLocalizedValue,
-  isBlank,
-  LocalizedInput,
-  toLocalizedValue,
-} from '@/components/localized-input'
+import { fromLocalizedValue, isBlank, LocalizedInput, toLocalizedValue } from '@/components/localized-input'
 import { FormFillButton } from '@/features/assist/form-fill-button'
-import {
-  localizedFields,
-  mergeLocalized,
-} from '@/features/assist/use-form-fill'
+import { localizedFields, mergeLocalized } from '@/features/assist/use-form-fill'
 import { BranchMap } from './branch-map'
 
 interface BranchDialogProps {
@@ -37,11 +26,7 @@ interface BranchDialogProps {
   branch: BranchResponse | null
 }
 
-export function BranchDialog({
-  open,
-  onOpenChange,
-  branch,
-}: BranchDialogProps) {
+export function BranchDialog({ open, onOpenChange, branch }: BranchDialogProps) {
   const t = useT()
   const isEditing = !!branch
   // The form owns its fields; its "Fill in with AI" is drawn into the header
@@ -55,12 +40,7 @@ export function BranchDialog({
       headerAction={<div ref={setFillSlot} className='contents' />}
     >
       {/* Keyed so form state resets per branch; closing unmounts it */}
-      <BranchForm
-        key={String(branch?.id ?? 'new')}
-        branch={branch}
-        onOpenChange={onOpenChange}
-        fillSlot={fillSlot}
-      />
+      <BranchForm key={String(branch?.id ?? 'new')} branch={branch} onOpenChange={onOpenChange} fillSlot={fillSlot} />
     </EntitySheet>
   )
 }
@@ -104,9 +84,7 @@ function BranchForm({
   const onSuccess = () => {
     queryClient.invalidateQueries({ queryKey: [{ _id: 'getAllBranches' }] })
     queryClient.invalidateQueries({ queryKey: [{ _id: 'getBranches' }] })
-    toast.success(
-      isEditing ? t('branchUpdatedSuccess') : t('branchCreatedSuccess')
-    )
+    toast.success(isEditing ? t('branchUpdatedSuccess') : t('branchCreatedSuccess'))
     onOpenChange(false)
   }
 
@@ -163,9 +141,7 @@ function BranchForm({
     const phone = form.phone.trim() || null
     const taxNumber = form.taxNumber.trim() || null
     const receiptFooter =
-      form.receiptFooter.en.trim() || form.receiptFooter.ar.trim()
-        ? fromLocalizedValue(form.receiptFooter)
-        : null
+      form.receiptFooter.en.trim() || form.receiptFooter.ar.trim() ? fromLocalizedValue(form.receiptFooter) : null
     const dayStartTime = `${form.dayStartTime}:00`
     const location = form.clearLocation ? '' : form.location.trim() || null
 
@@ -226,27 +202,15 @@ function BranchForm({
                 value: form.addressAr,
                 language: 'ar',
               },
-              ...localizedFields(
-                'receiptFooter',
-                'Line at the foot of the receipt',
-                form.receiptFooter
-              ),
+              ...localizedFields('receiptFooter', 'Line at the foot of the receipt', form.receiptFooter),
             ]}
             onFilled={(filled) =>
               setForm((prev) => ({
                 ...prev,
                 name: mergeLocalized('name', prev.name, filled),
-                addressEn: prev.addressEn.trim()
-                  ? prev.addressEn
-                  : (filled['address.en'] ?? prev.addressEn),
-                addressAr: prev.addressAr.trim()
-                  ? prev.addressAr
-                  : (filled['address.ar'] ?? prev.addressAr),
-                receiptFooter: mergeLocalized(
-                  'receiptFooter',
-                  prev.receiptFooter,
-                  filled
-                ),
+                addressEn: prev.addressEn.trim() ? prev.addressEn : (filled['address.en'] ?? prev.addressEn),
+                addressAr: prev.addressAr.trim() ? prev.addressAr : (filled['address.ar'] ?? prev.addressAr),
+                receiptFooter: mergeLocalized('receiptFooter', prev.receiptFooter, filled),
               }))
             }
           />,
@@ -308,9 +272,7 @@ function BranchForm({
               <button
                 type='button'
                 className='text-destructive hover:underline'
-                onClick={() =>
-                  setForm({ ...form, clearLocation: true, location: '' })
-                }
+                onClick={() => setForm({ ...form, clearLocation: true, location: '' })}
               >
                 {t('remove')}
               </button>
@@ -322,13 +284,9 @@ function BranchForm({
           id='branchLocation'
           inputMode='url'
           dir='ltr'
-          placeholder={
-            pinned ? t('branchLocationReplace') : 'https://maps.app.goo.gl/…'
-          }
+          placeholder={pinned ? t('branchLocationReplace') : 'https://maps.app.goo.gl/…'}
           value={form.location}
-          onChange={(e) =>
-            setForm({ ...form, location: e.target.value, clearLocation: false })
-          }
+          onChange={(e) => setForm({ ...form, location: e.target.value, clearLocation: false })}
         />
       </Field>
 
@@ -336,9 +294,7 @@ function BranchForm({
       <BranchMap
         start={
           pointOfText(form.location) ??
-          (pinned
-            ? { lat: Number(branch?.latitude), lng: Number(branch?.longitude) }
-            : null)
+          (pinned ? { lat: Number(branch?.latitude), lng: Number(branch?.longitude) } : null)
         }
         radiusKm={Number(branch?.deliveryRadiusKm ?? 0)}
         onPlace={(point) =>
@@ -366,11 +322,7 @@ function BranchForm({
       />
 
       {/* One time, when the day turns over: a day runs from it round to it, so nothing falls outside one */}
-      <Field
-        label={t('dayStartTime')}
-        htmlFor='dayStart'
-        hint={t('dayStartTimeHint')}
-      >
+      <Field label={t('dayStartTime')} htmlFor='dayStart' hint={t('dayStartTimeHint')}>
         <Input
           id='dayStart'
           type='time'
@@ -385,9 +337,7 @@ function BranchForm({
           <SwitchRow
             title={t('branchActive')}
             checked={form.isActive}
-            onCheckedChange={(checked) =>
-              setForm({ ...form, isActive: checked })
-            }
+            onCheckedChange={(checked) => setForm({ ...form, isActive: checked })}
           />
           {/* Off by default; on when strangers with a table's link become a
               problem — a guest may still browse, but a table order needs an
@@ -396,20 +346,14 @@ function BranchForm({
             <SwitchRow
               title={t('requireSignInForTableOrders')}
               checked={form.requireSignInForTableOrders}
-              onCheckedChange={(checked) =>
-                setForm({ ...form, requireSignInForTableOrders: checked })
-              }
+              onCheckedChange={(checked) => setForm({ ...form, requireSignInForTableOrders: checked })}
             />
           )}
         </SwitchGroup>
       )}
 
       <SheetActions>
-        <Button
-          type='button'
-          variant='outline'
-          onClick={() => onOpenChange(false)}
-        >
+        <Button type='button' variant='outline' onClick={() => onOpenChange(false)}>
           {t('cancel')}
         </Button>
         <Button type='submit' form='branch-form' disabled={isSaving}>

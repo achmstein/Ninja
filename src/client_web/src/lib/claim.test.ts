@@ -1,6 +1,14 @@
 import { AxiosError, AxiosHeaders } from 'axios'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { checkClaimForm, claimProblem, forgetPendingClaim, isLinkProblem, readClaimToken, readPendingClaim, rememberPendingClaim } from './claim'
+import {
+  checkClaimForm,
+  claimProblem,
+  forgetPendingClaim,
+  isLinkProblem,
+  readClaimToken,
+  readPendingClaim,
+  rememberPendingClaim,
+} from './claim'
 
 // A customer the business added at the counter opens the link the cashier
 // showed them: what the page makes of the token, and of each refusal.

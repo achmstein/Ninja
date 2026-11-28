@@ -1,13 +1,34 @@
-import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ComponentProps, type CSSProperties, type ReactNode, type RefObject } from 'react'
-import { animate, AnimatePresence, LayoutGroup, motion, MotionConfig, useMotionValue, useMotionValueEvent, useReducedMotion, useTransform } from 'motion/react'
-import { ArrowLeft } from 'lucide-react'
-import { useStore } from 'zustand'
+import {
+  memo,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ComponentProps,
+  type CSSProperties,
+  type ReactNode,
+  type RefObject,
+} from 'react'
 import { useNavigate } from '@tanstack/react-router'
+import { ArrowLeft } from 'lucide-react'
+import {
+  animate,
+  AnimatePresence,
+  LayoutGroup,
+  motion,
+  MotionConfig,
+  useMotionValue,
+  useMotionValueEvent,
+  useReducedMotion,
+  useTransform,
+} from 'motion/react'
+import { useStore } from 'zustand'
 import type { CatalogItemDto, PromotionDto } from '@/api/catalog'
 import { useIsCloudKitchen } from '@/lib/brand'
 import { useCart, type CartLine } from '@/lib/cart'
 import { useLocalized, useT } from '@/lib/i18n'
-import { takeOrderResume } from '@/components/auth/phone-gate'
 import { useLiveBills } from '@/lib/live-bills'
 import { useOrderPill } from '@/lib/order-pill'
 import { toast } from '@/lib/toast'
@@ -15,15 +36,17 @@ import { useCheckoutExtras } from '@/lib/use-checkout-extras'
 import { useHandler } from '@/lib/use-handler'
 import { usePlaceOrder } from '@/lib/use-place-order'
 import { cn } from '@/lib/utils'
+import { takeOrderResume } from '@/components/auth/phone-gate'
 import { SignInSheet } from '@/components/auth/sign-in-options'
+import { NearestBranchPrimer } from '@/components/nearest-branch-primer'
 import { useTimeout } from '@/components/ninja/gestures/use-hint'
 import { DECK_COMPACT_TOP, DECK_TOP, DOCK_INSET, DOCK_SIDE, TABS_H } from '@/components/ninja/shell/chrome'
 import { DockBill } from '@/components/ninja/shell/dock-bill'
 import { TuckedTabs } from '@/components/ninja/shell/nav'
 import { NinjaTopBar } from '@/components/ninja/shell/top-bar'
-import { MenuSearch } from './menu-search'
 import { useDockRowShown } from '@/components/ninja/shell/use-dock-row'
 import { useTuck, useTuckOnScroll } from '@/components/ninja/shell/use-tuck'
+import { PromoChip, PromoPopup, useLivePromotion } from '@/components/promotions/promo-popup'
 import { Tray } from '@/components/tray/tray'
 import { LiquidTabs } from './category-tabs'
 import { useItemPreferences } from './data/use-item-preferences'
@@ -34,11 +57,10 @@ import { FlightLayer, type Flight } from './flights'
 import { itemPictureUrl } from './item-picture'
 import { MenuGrid } from './list/menu-grid'
 import { createMenuScreenStore, type MenuScreenStore, type Tuning } from './menu-screen-store'
+import { MenuSearch } from './menu-search'
 import { MenuSkeleton } from './menu-skeleton'
 import { useMenuStyle } from './menu-style'
 import { MAX_ON_SHEET, menuById, pairedFor } from './paired-items'
-import { NearestBranchPrimer } from '@/components/nearest-branch-primer'
-import { PromoChip, PromoPopup, useLivePromotion } from '@/components/promotions/promo-popup'
 import { OrderingPausedNote } from './paused-note'
 import { cornerOf } from './photo-corner'
 import { FLIGHT_SPRING, FlyingPhoto, planFlight, type Flight as PhotoFlight } from './photo-flight'
@@ -79,7 +101,12 @@ export function MenuScreen({ menu }: HomeProps) {
   const [moved, setMoved] = useState<DeckPosition>({ column: 0, row: 0 })
   // Until the customer moves, the deck sits on its first column (the usuals once they land)
   const [touched, setTouched] = useState(false)
-  const column = touched ? Math.max(0, columns.findIndex((c) => c.id === activeId)) : 0
+  const column = touched
+    ? Math.max(
+        0,
+        columns.findIndex((c) => c.id === activeId)
+      )
+    : 0
   const start = useMemo<DeckPosition>(() => (touched ? moved : { column: 0, row: 0 }), [touched, moved])
   const rows = useRef<Record<number, number>>({})
   const [pastFirst, setPastFirst] = useState(false)
@@ -142,7 +169,11 @@ export function MenuScreen({ menu }: HomeProps) {
       gridScroller.addEventListener('scroll', follow, { passive: true })
       return () => gridScroller.removeEventListener('scroll', follow)
     }
-    const run = animate(barY, compact ? -barHeight() : 0, reduced ? { duration: 0 } : { duration: 0.3, ease: 'easeOut' })
+    const run = animate(
+      barY,
+      compact ? -barHeight() : 0,
+      reduced ? { duration: 0 } : { duration: 0.3, ease: 'easeOut' }
+    )
     return () => run.stop()
   }, [gridScroller, compact, barY, reduced])
   const target = useRef<HTMLDivElement>(null)
@@ -302,7 +333,9 @@ export function MenuScreen({ menu }: HomeProps) {
     }
     if (promotion.link !== 'Category') return
     const of = (cols: typeof columns) =>
-      cols.findIndex((c) => c.kind === 'category' && c.items.some((i) => String(i.catalogTypeId) === String(promotion.linkId)))
+      cols.findIndex(
+        (c) => c.kind === 'category' && c.items.some((i) => String(i.catalogTypeId) === String(promotion.linkId))
+      )
     if (mode === 'deck') {
       const index = of(columns)
       if (index >= 0) selectColumn(index)
@@ -323,7 +356,9 @@ export function MenuScreen({ menu }: HomeProps) {
     fly(item, photo, () => addLine(item, { customizations, unitPrice, quantity: 1, instructions: '' }, 'Pairing'))
   })
 
-  const openItem = useHandler((item: CatalogItemDto, from: HTMLElement | null) => store.setState({ tuning: { item, from } }))
+  const openItem = useHandler((item: CatalogItemDto, from: HTMLElement | null) =>
+    store.setState({ tuning: { item, from } })
+  )
 
   const onQuickAdd = useHandler((item: CatalogItemDto, photo: HTMLElement | null) => {
     if (!canOrder) {
@@ -357,21 +392,26 @@ export function MenuScreen({ menu }: HomeProps) {
 
   return (
     <MotionConfig reducedMotion='user'>
-      <div
-        className='bg-background fixed inset-x-0 top-[env(safe-area-inset-top)] bottom-0 z-10 mx-auto flex max-w-lg flex-col'
-      >
+      <div className='bg-background fixed inset-x-0 top-[env(safe-area-inset-top)] bottom-0 z-10 mx-auto flex max-w-lg flex-col'>
         <div className='relative flex min-h-0 flex-1 flex-col'>
           <div
             className='deck-top min-h-0 flex-1'
             // Its room at the top eases as the bar comes and goes, except in a move to or from the whole
             // menu, where the cards must be the size their photos fly to
-            style={{ '--deck-top': compact ? `${DECK_COMPACT_TOP}px` : DECK_TOP, transition: leaving ? 'none' : undefined } as CSSProperties}
+            style={
+              {
+                '--deck-top': compact ? `${DECK_COMPACT_TOP}px` : DECK_TOP,
+                transition: leaving ? 'none' : undefined,
+              } as CSSProperties
+            }
           >
             {loading ? (
               // In the shape the menu's style will take, so it lands where its placeholder stood
               <MenuSkeleton style={style} />
             ) : columns.length === 0 ? (
-              <p className='text-muted-foreground grid h-full place-items-center px-8 text-center'>{t('noItemsAvailable')}</p>
+              <p className='text-muted-foreground grid h-full place-items-center px-8 text-center'>
+                {t('noItemsAvailable')}
+              </p>
             ) : (
               <div ref={stage} className='relative h-full overflow-hidden'>
                 {(mode === 'grid' || leaving === 'grid') && (
@@ -446,9 +486,13 @@ export function MenuScreen({ menu }: HomeProps) {
             }
             start={
               mode === 'grid' && !classic ? (
-                <button type='button' onClick={() => zoomIn()} className='-ms-2 flex min-w-0 items-center gap-1.5 rounded-full py-2 ps-2 pe-3'>
+                <button
+                  type='button'
+                  onClick={() => zoomIn()}
+                  className='-ms-2 flex min-w-0 items-center gap-1.5 rounded-full py-2 ps-2 pe-3'
+                >
                   <ArrowLeft className='size-5 shrink-0 rtl:rotate-180' />
-                  <span className='heading truncate text-headline'>{t('ninjaWholeMenu')}</span>
+                  <span className='heading text-headline truncate'>{t('ninjaWholeMenu')}</span>
                 </button>
               ) : undefined
             }
@@ -488,19 +532,30 @@ export function MenuScreen({ menu }: HomeProps) {
         </div>
 
         <LayoutGroup>
-          <MenuDock store={store} target={target} canOrder={canOrder} scroller={gridScroller} deckTucked={compact && !tabsAsked} />
+          <MenuDock
+            store={store}
+            target={target}
+            canOrder={canOrder}
+            scroller={gridScroller}
+            deckTucked={compact && !tabsAsked}
+          />
         </LayoutGroup>
       </div>
 
       <Flights store={store} />
-      {live.promotion && <PromoPopup promotion={live.promotion} open={promoOpen} onOpenChange={setPromoOpen} onGo={goPromotion} />}
+      {live.promotion && (
+        <PromoPopup promotion={live.promotion} open={promoOpen} onOpenChange={setPromoOpen} onGo={goPromotion} />
+      )}
       <Announcer store={store} />
     </MotionConfig>
   )
 }
 
 /** The whole menu, with what it follows from the store: the category asked for, and the one in view */
-function GridStage({ store, ...props }: Omit<ComponentProps<typeof MenuGrid>, 'jump' | 'onSection'> & { store: MenuScreenStore }) {
+function GridStage({
+  store,
+  ...props
+}: Omit<ComponentProps<typeof MenuGrid>, 'jump' | 'onSection'> & { store: MenuScreenStore }) {
   const jump = useStore(store, (s) => s.jump)
   const onSection = useCallback((index: number) => store.setState({ section: index }), [store])
   return <MenuGrid {...props} jump={jump} onSection={onSection} />
@@ -646,7 +701,12 @@ const MenuDock = memo(function MenuDock({
     <>
       {/* The order opened darkens what is behind it, not the dock itself */}
       {scrim && (
-        <motion.div aria-hidden className='fixed inset-0 z-30 bg-black/40' style={{ opacity: openness }} onClick={() => setExpanded(false)} />
+        <motion.div
+          aria-hidden
+          className='fixed inset-0 z-30 bg-black/40'
+          style={{ opacity: openness }}
+          onClick={() => setExpanded(false)}
+        />
       )}
 
       <DockFrame scroller={scroller} deckTucked={deckTucked} bare={bare}>
@@ -679,7 +739,17 @@ const MenuDock = memo(function MenuDock({
  * the flag itself, so a scroll that flips it restyles the slab and folds the
  * tabs while the tray inside (`children`, made by the dock) is passed by.
  */
-function DockFrame({ scroller, deckTucked, bare, children }: { scroller: HTMLDivElement | null; deckTucked: boolean; bare: boolean; children: ReactNode }) {
+function DockFrame({
+  scroller,
+  deckTucked,
+  bare,
+  children,
+}: {
+  scroller: HTMLDivElement | null
+  deckTucked: boolean
+  bare: boolean
+  children: ReactNode
+}) {
   const scrolledDown = useTuck((s) => s.tucked)
   const tucked = scroller ? scrolledDown : deckTucked
   // Nothing in the tray's row and the tabs tucked: the dock is gone, the categories left at the bottom
@@ -696,7 +766,11 @@ function DockFrame({ scroller, deckTucked, bare, children }: { scroller: HTMLDiv
       )}
       style={{
         marginInline: stuck ? 0 : DOCK_SIDE,
-        marginBottom: stuck ? 0 : docked ? `max(${DOCK_INSET}px, env(safe-area-inset-bottom))` : 'env(safe-area-inset-bottom)',
+        marginBottom: stuck
+          ? 0
+          : docked
+            ? `max(${DOCK_INSET}px, env(safe-area-inset-bottom))`
+            : 'env(safe-area-inset-bottom)',
         paddingBottom: stuck ? 'env(safe-area-inset-bottom)' : undefined,
       }}
       // A sheet grows out of it (components/ui/ninja-sheet.tsx)
@@ -718,4 +792,3 @@ function DockFrame({ scroller, deckTucked, bare, children }: { scroller: HTMLDiv
 function afterThisFrame(fn: () => void) {
   window.setTimeout(fn, 0)
 }
-

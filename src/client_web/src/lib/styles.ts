@@ -37,7 +37,12 @@ export const NINJA: StylePreset = {
  * left unset (all of them, for a business with no theme yet). The business's own
  * values always win.
  */
-type Seeds = { radius?: string | null; fontLatin?: string | null; fontArabic?: string | null; headerSize?: string | null }
+type Seeds = {
+  radius?: string | null
+  fontLatin?: string | null
+  fontArabic?: string | null
+  headerSize?: string | null
+}
 
 export function withStyleDefaults(theme: Seeds | null | undefined): Seeds {
   const d = NINJA.defaults

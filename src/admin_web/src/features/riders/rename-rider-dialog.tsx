@@ -3,13 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Spinner } from '@/components/ui/spinner'
 import { Field } from '@/components/field'
@@ -75,19 +69,10 @@ export function RenameRiderDialog({
             />
           </Field>
           <DialogFooter>
-            <Button
-              type='button'
-              variant='outline'
-              onClick={() => onOpenChange(false)}
-            >
+            <Button type='button' variant='outline' onClick={() => onOpenChange(false)}>
               {t('cancel')}
             </Button>
-            <Button
-              type='submit'
-              disabled={
-                rename.isPending || !value.trim() || value.trim() === name
-              }
-            >
+            <Button type='submit' disabled={rename.isPending || !value.trim() || value.trim() === name}>
               {rename.isPending && <Spinner />}
               {t('save')}
             </Button>

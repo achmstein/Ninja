@@ -15,7 +15,7 @@ export function Slab({ className, children, ...props }: HTMLMotionProps<'div'>) 
     <motion.div
       className={cn(
         'slab relative overflow-hidden rounded-[1.75rem] p-5 shadow-(--slab-shadow)',
-        '[--muted-foreground:color-mix(in_oklab,var(--background)_60%,var(--foreground))] [--muted:color-mix(in_oklab,var(--background)_10%,var(--foreground))] [--border:color-mix(in_oklab,var(--background)_16%,var(--foreground))]',
+        '[--border:color-mix(in_oklab,var(--background)_16%,var(--foreground))] [--muted-foreground:color-mix(in_oklab,var(--background)_60%,var(--foreground))] [--muted:color-mix(in_oklab,var(--background)_10%,var(--foreground))]',
         className
       )}
       {...props}
@@ -36,7 +36,7 @@ export function Panel({ className, children, ...props }: HTMLMotionProps<'div'>)
 
 /** A small label over a group of panels or tiles */
 export function SectionLabel({ children, className }: { children: ReactNode; className?: string }) {
-  return <h2 className={cn('text-muted-foreground px-1 text-caption font-semibold', className)}>{children}</h2>
+  return <h2 className={cn('text-muted-foreground text-caption px-1 font-semibold', className)}>{children}</h2>
 }
 
 /**
@@ -59,11 +59,23 @@ export function Segment<T extends string>({
 }) {
   const row = useRef<HTMLDivElement>(null)
   const items = useRef<Array<HTMLButtonElement | null>>([])
-  const active = Math.max(0, options.findIndex((o) => o.value === value))
+  const active = Math.max(
+    0,
+    options.findIndex((o) => o.value === value)
+  )
   const edges = useLiquidEdges(active, items, row, options.map((o) => o.value).join())
   return (
-    <div ref={row} role='tablist' className={cn('bg-muted relative flex items-stretch rounded-full p-1', compact ? 'h-9' : 'h-11', className)}>
-      <LiquidPill edges={edges} height={compact ? 28 : 36} top={4} className='bg-background shadow-[0_1px_3px_rgb(0_0_0/0.12)]' />
+    <div
+      ref={row}
+      role='tablist'
+      className={cn('bg-muted relative flex items-stretch rounded-full p-1', compact ? 'h-9' : 'h-11', className)}
+    >
+      <LiquidPill
+        edges={edges}
+        height={compact ? 28 : 36}
+        top={4}
+        className='bg-background shadow-[0_1px_3px_rgb(0_0_0/0.12)]'
+      />
       {options.map((option, i) => (
         <button
           key={option.value}
@@ -77,7 +89,7 @@ export function Segment<T extends string>({
           onClick={() => onChange(option.value)}
           className={cn(
             'relative z-10 flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-full font-semibold transition-colors duration-200',
-            compact ? 'px-2.5 text-caption' : 'px-3 text-note',
+            compact ? 'text-caption px-2.5' : 'text-note px-3',
             i === active ? 'text-foreground' : 'text-muted-foreground'
           )}
         >

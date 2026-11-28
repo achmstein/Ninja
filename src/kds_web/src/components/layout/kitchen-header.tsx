@@ -1,15 +1,10 @@
+import { Download, Languages, LogOut, Maximize, Minimize, Moon, Settings, Sun, VolumeX } from 'lucide-react'
 import { useAuth } from 'react-oidc-context'
-import {
-  Download,
-  Languages,
-  LogOut,
-  Maximize,
-  Minimize,
-  Moon,
-  Settings,
-  Sun,
-  VolumeX,
-} from 'lucide-react'
+import { useLanguage, useT } from '@/lib/i18n'
+import { toast } from '@/lib/toast'
+import { useInstallPrompt } from '@/lib/use-install-prompt'
+import { useTheme } from '@/context/theme-provider'
+import { useFullscreen } from '@/hooks/use-fullscreen'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -23,11 +18,6 @@ import { StationSwitcher } from '@/components/layout/station-switcher'
 import { BoardTally } from '@/features/board/board-tally'
 import { HistoryDialog } from '@/features/board/history-dialog'
 import { useSoundUnlock } from '@/features/board/use-sound-unlock'
-import { useFullscreen } from '@/hooks/use-fullscreen'
-import { useLanguage, useT } from '@/lib/i18n'
-import { toast } from '@/lib/toast'
-import { useInstallPrompt } from '@/lib/use-install-prompt'
-import { useTheme } from '@/context/theme-provider'
 
 /**
  * The single app-chrome row: brand + branch on the start side; the day's
@@ -47,9 +37,7 @@ export function KitchenHeader() {
 
   // Chromium: the native prompt. iPad: no prompt exists, only the hint.
   // Installed already, or a browser that offers neither: nothing to show.
-  const showInstall =
-    installPrompt.canInstall ||
-    (installPrompt.isIos && !installPrompt.isStandalone)
+  const showInstall = installPrompt.canInstall || (installPrompt.isIos && !installPrompt.isStandalone)
 
   const handleInstall = () => {
     if (installPrompt.canInstall) {
@@ -75,20 +63,9 @@ export function KitchenHeader() {
         )}
         <HistoryDialog />
         {fullscreen.supported && (
-          <Button
-            variant='ghost'
-            size='icon'
-            className='size-12'
-            onClick={fullscreen.toggle}
-          >
-            {fullscreen.isFullscreen ? (
-              <Minimize className='size-5' />
-            ) : (
-              <Maximize className='size-5' />
-            )}
-            <span className='sr-only'>
-              {fullscreen.isFullscreen ? t('exitFullscreen') : t('fullscreen')}
-            </span>
+          <Button variant='ghost' size='icon' className='size-12' onClick={fullscreen.toggle}>
+            {fullscreen.isFullscreen ? <Minimize className='size-5' /> : <Maximize className='size-5' />}
+            <span className='sr-only'>{fullscreen.isFullscreen ? t('exitFullscreen') : t('fullscreen')}</span>
           </Button>
         )}
         <DropdownMenu>
@@ -101,10 +78,7 @@ export function KitchenHeader() {
           <DropdownMenuContent align='end' className='min-w-56 rounded-lg'>
             {showInstall && (
               <>
-                <DropdownMenuItem
-                  className='type-body min-h-12 gap-2 p-3'
-                  onSelect={handleInstall}
-                >
+                <DropdownMenuItem className='type-body min-h-12 gap-2 p-3' onSelect={handleInstall}>
                   <Download className='size-5' />
                   <span className='flex-1'>{t('installApp')}</span>
                 </DropdownMenuItem>
@@ -119,21 +93,13 @@ export function KitchenHeader() {
             >
               <Languages className='size-5' />
               <span className='flex-1'>{t('language')}</span>
-              <span className='text-muted-foreground'>
-                {language === 'ar' ? 'العربية' : 'English'}
-              </span>
+              <span className='text-muted-foreground'>{language === 'ar' ? 'العربية' : 'English'}</span>
             </DropdownMenuItem>
             <DropdownMenuItem
               className='type-body min-h-12 gap-2 p-3'
-              onSelect={() =>
-                setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')
-              }
+              onSelect={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
             >
-              {resolvedTheme === 'dark' ? (
-                <Moon className='size-5' />
-              ) : (
-                <Sun className='size-5' />
-              )}
+              {resolvedTheme === 'dark' ? <Moon className='size-5' /> : <Sun className='size-5' />}
               <span className='flex-1'>{t('theme')}</span>
               <span className='text-muted-foreground'>
                 {resolvedTheme === 'dark' ? t('themeDark') : t('themeLight')}

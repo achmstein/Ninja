@@ -1,10 +1,10 @@
 import { useEffect } from 'react'
-import { useAuth } from 'react-oidc-context'
 import { Loader2, Store } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { useAllowedBranches } from '@/hooks/use-allowed-branches'
+import { useAuth } from 'react-oidc-context'
 import { useBranchStore } from '@/stores/branch-store'
 import { useT } from '@/lib/i18n'
+import { useAllowedBranches } from '@/hooks/use-allowed-branches'
+import { Button } from '@/components/ui/button'
 
 /**
  * Sits between the role gate and the board. Narrows the active branch to

@@ -29,7 +29,9 @@ function named(el: Element): string {
 function findControl(doc: Document, find: string | RegExp, scope?: string, nth = 0): HTMLElement | null {
   const root = scope ? doc.querySelector(scope) : doc
   if (!root) return null
-  const hits = [...root.querySelectorAll<HTMLElement>('button, a, [role=button], [role=tab], [role=radio], [role=checkbox], label')].filter((el) => {
+  const hits = [
+    ...root.querySelectorAll<HTMLElement>('button, a, [role=button], [role=tab], [role=radio], [role=checkbox], label'),
+  ].filter((el) => {
     if (!el.getClientRects().length) return false
     const name = named(el).trim()
     return typeof find === 'string' ? name.toLowerCase().includes(find.toLowerCase()) : find.test(name)
@@ -84,7 +86,8 @@ export function runScript(frame: HTMLIFrameElement, script: Script): () => void 
           win.history.back()
         } else if (step.do === 'reload') {
           // What the last round left behind (a tray, a table) goes; the language and whoever is signed in stay
-          for (const key of Object.keys(win.localStorage)) if (!key.endsWith('-language') && !key.startsWith('oidc.')) win.localStorage.removeItem(key)
+          for (const key of Object.keys(win.localStorage))
+            if (!key.endsWith('-language') && !key.startsWith('oidc.')) win.localStorage.removeItem(key)
           win.sessionStorage.clear()
           win.location.reload()
           await wait(2500)

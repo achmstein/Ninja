@@ -1,12 +1,12 @@
-import { useSecondTick } from '@/lib/clock'
 import { Link } from '@tanstack/react-router'
-import { useAuth } from 'react-oidc-context'
-import { motion } from 'motion/react'
 import { Clock, Users } from 'lucide-react'
+import { motion } from 'motion/react'
+import { useAuth } from 'react-oidc-context'
 import { type StaySegmentViewModel, type StayViewModel } from '@/api/spaces'
+import { useSecondTick } from '@/lib/clock'
+import { useLanguage, useLocalized, usePrice, useT } from '@/lib/i18n'
 import { springSoft } from '@/lib/motion'
 import { hasOptions, optionColor, PlaceIcon, STAY_CANCELLED, STAY_ENDED, STAY_RUNNING } from '@/lib/places'
-import { useLanguage, useLocalized, usePrice, useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { Odometer } from '@/components/ninja/odometer'
 import { Panel, Slab } from '@/components/ninja/page/parts'
@@ -29,7 +29,9 @@ export function StayCard({ stay }: { stay: StayViewModel }) {
   const now = useSecondTick(active)
 
   const timeOf = (raw: string | null | undefined) =>
-    raw ? new Date(raw).toLocaleTimeString(language === 'ar' ? 'ar-EG' : 'en-US', { hour: 'numeric', minute: '2-digit' }) : ''
+    raw
+      ? new Date(raw).toLocaleTimeString(language === 'ar' ? 'ar-EG' : 'en-US', { hour: 'numeric', minute: '2-digit' })
+      : ''
   const minutesOf = (start: string | null | undefined, end: string | null | undefined) =>
     start ? Math.max(0, Math.floor(((end ? new Date(end).getTime() : now) - new Date(start).getTime()) / 60000)) : 0
   const durationOf = (start: string | null | undefined, end: string | null | undefined) => {
@@ -37,7 +39,9 @@ export function StayCard({ stay }: { stay: StayViewModel }) {
     const minutes = minutesOf(start, end)
     const h = Math.floor(minutes / 60)
     const m = minutes % 60
-    return h > 0 ? `${t('hoursShort', { count: h })} ${t('minutesShort', { count: m })}` : t('minutesShort', { count: m })
+    return h > 0
+      ? `${t('hoursShort', { count: h })} ${t('minutesShort', { count: m })}`
+      : t('minutesShort', { count: m })
   }
   // The base rate wears the business's colour, which the dark slab is made of: on it, the slab's own light instead
   const color = (code: string | undefined) => {
@@ -59,11 +63,14 @@ export function StayCard({ stay }: { stay: StayViewModel }) {
     <Surface className={cn('relative isolate flex flex-col gap-3 overflow-hidden', !active && 'p-5')}>
       <PlaceIcon
         kind={Number(stay.placeKind)}
-        className={cn('pointer-events-none absolute -end-5 -bottom-6 -z-10 size-32 -rotate-12', active ? 'opacity-[0.08]' : 'opacity-[0.05]')}
+        className={cn(
+          'pointer-events-none absolute -end-5 -bottom-6 -z-10 size-32 -rotate-12',
+          active ? 'opacity-[0.08]' : 'opacity-[0.05]'
+        )}
       />
 
       <div className='flex items-center gap-2'>
-        <span className='flex min-w-0 flex-1 items-center gap-1.5 text-body font-semibold'>
+        <span className='text-body flex min-w-0 flex-1 items-center gap-1.5 font-semibold'>
           <PlaceIcon kind={Number(stay.placeKind)} className='size-4 shrink-0' />
           <span className='truncate'>{localized(stay.placeName)}</span>
         </span>
@@ -73,16 +80,22 @@ export function StayCard({ stay }: { stay: StayViewModel }) {
       <div className='flex items-end justify-between gap-3'>
         <div className='flex min-w-0 flex-col'>
           {/* A stay cancelled before its clock started has no length to show */}
-          {duration && <span className='text-display leading-tight font-extrabold'>{active ? <Odometer value={duration} /> : duration}</span>}
+          {duration && (
+            <span className='text-display leading-tight font-extrabold'>
+              {active ? <Odometer value={duration} /> : duration}
+            </span>
+          )}
           {start && (
-            <span className='text-muted-foreground flex items-center gap-1 text-caption tabular-nums'>
+            <span className='text-muted-foreground text-caption flex items-center gap-1 tabular-nums'>
               <Clock className='size-3.5' />
               {timeOf(start.toISOString())}
               {stay.endedAt && ` – ${timeOf(stay.endedAt)}`}
             </span>
           )}
         </div>
-        {stay.totalCost != null && <span className='shrink-0 text-headline font-bold tabular-nums'>{price(Number(stay.totalCost))}</span>}
+        {stay.totalCost != null && (
+          <span className='text-headline shrink-0 font-bold tabular-nums'>{price(Number(stay.totalCost))}</span>
+        )}
       </div>
 
       {showOptions && segments.length > 1 ? (
@@ -90,7 +103,12 @@ export function StayCard({ stay }: { stay: StayViewModel }) {
       ) : (
         showOptions &&
         segments.length === 1 && (
-          <span className={cn('w-fit rounded-full px-2.5 py-0.5 text-caption font-semibold', color(segments[0].optionCode).chip)}>
+          <span
+            className={cn(
+              'text-caption w-fit rounded-full px-2.5 py-0.5 font-semibold',
+              color(segments[0].optionCode).chip
+            )}
+          >
             {localized(segments[0].optionName)}
           </span>
         )
@@ -99,7 +117,7 @@ export function StayCard({ stay }: { stay: StayViewModel }) {
       {/* Who played with you: the owner first, then in the order they joined */}
       {others.length > 0 && (
         <div className='flex flex-wrap items-center gap-1.5'>
-          <span className='text-muted-foreground flex items-center gap-1 pe-1 text-caption'>
+          <span className='text-muted-foreground text-caption flex items-center gap-1 pe-1'>
             <Users className='size-3.5 shrink-0' />
             {t('ninjaPlayedWith')}
           </span>
@@ -111,9 +129,17 @@ export function StayCard({ stay }: { stay: StayViewModel }) {
                 <span
                   key={member.customerId ?? name}
                   title={name}
-                  className={cn('flex items-center gap-1.5 rounded-full py-0.5 ps-0.5 pe-2.5 text-caption font-semibold', active ? 'bg-background/12' : 'bg-background')}
+                  className={cn(
+                    'text-caption flex items-center gap-1.5 rounded-full py-0.5 ps-0.5 pe-2.5 font-semibold',
+                    active ? 'bg-background/12' : 'bg-background'
+                  )}
                 >
-                  <span className={cn('grid size-5 place-items-center rounded-full text-micro font-bold', active ? 'bg-background text-foreground' : 'bg-foreground text-background')}>
+                  <span
+                    className={cn(
+                      'text-micro grid size-5 place-items-center rounded-full font-bold',
+                      active ? 'bg-background text-foreground' : 'bg-foreground text-background'
+                    )}
+                  >
                     {name[0]?.toUpperCase()}
                   </span>
                   {name.split(' ')[0]}
@@ -160,7 +186,7 @@ function RateBar({
       </motion.div>
       <ol className='flex flex-col gap-0.5'>
         {segments.map((segment, i) => (
-          <li key={i} className='flex items-baseline gap-2 text-caption'>
+          <li key={i} className='text-caption flex items-baseline gap-2'>
             <span className={cn('size-2 shrink-0 self-center rounded-full', color(segment.optionCode).dot)} />
             <span className={cn('font-semibold', color(segment.optionCode).text)}>{localized(segment.optionName)}</span>
             <span className='text-muted-foreground text-caption tabular-nums'>
@@ -200,7 +226,9 @@ function StatusChip({ stay }: { stay: StayViewModel }) {
       </span>
     )
   }
-  if (status === STAY_CANCELLED) return <span className={cn(base, 'bg-destructive/10 text-destructive')}>{t('statusCancelled')}</span>
-  if (status === STAY_ENDED) return <span className={cn(base, 'bg-muted text-muted-foreground')}>{t('statusCompleted')}</span>
+  if (status === STAY_CANCELLED)
+    return <span className={cn(base, 'bg-destructive/10 text-destructive')}>{t('statusCancelled')}</span>
+  if (status === STAY_ENDED)
+    return <span className={cn(base, 'bg-muted text-muted-foreground')}>{t('statusCompleted')}</span>
   return null
 }

@@ -16,34 +16,20 @@ import {
   X,
 } from 'lucide-react'
 import { getOpenTicketsOptions } from '@/api/sales/@tanstack/react-query.gen'
-import type {
-  PlaceViewModel,
-  ReservationViewModel,
-  StayViewModel,
-} from '@/api/spaces/types.gen'
-import { ConfirmDialog } from '@/components/confirm-dialog'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import { Separator } from '@/components/ui/separator'
-import {
-  CustomerCard,
-  type CardCustomer,
-} from '@/features/customer/customer-card'
-import { CustomerSearch } from '@/features/customer/customer-search'
+import type { PlaceViewModel, ReservationViewModel, StayViewModel } from '@/api/spaces/types.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useFeatures } from '@/lib/brand'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Separator } from '@/components/ui/separator'
+import { ConfirmDialog } from '@/components/confirm-dialog'
+import { CustomerCard, type CardCustomer } from '@/features/customer/customer-card'
+import { CustomerSearch } from '@/features/customer/customer-search'
 import { RateOptionToggle } from './rate-option-toggle'
-import { StayMembers } from './stay-members'
 import { StartStayDialog } from './start-stay-dialog'
 import {
   elapsedSeconds,
@@ -62,6 +48,7 @@ import {
   tariffLine,
   tariffOptions,
 } from './status'
+import { StayMembers } from './stay-members'
 import { useSecondsClock, useStayActions } from './use-places'
 
 type PlacePanelProps = {
@@ -87,14 +74,7 @@ type PlacePanelProps = {
  * clock; any place shows who reserved it. Hours here; the money is the
  * ticket's, one tap away while the clock runs.
  */
-export function PlacePanel({
-  place,
-  stay,
-  reservation,
-  onOpenChange,
-  onStarted,
-  onSeated,
-}: PlacePanelProps) {
+export function PlacePanel({ place, stay, reservation, onOpenChange, onStarted, onSeated }: PlacePanelProps) {
   const t = useT()
   const features = useFeatures()
   const localized = useLocalized()
@@ -128,22 +108,16 @@ export function PlacePanel({
     ...getOpenTicketsOptions({ query: { 'api-version': API_VERSION } }),
     enabled: open && running,
   })
-  const ticket = running
-    ? tickets?.find((candidate) => toNumber(candidate.sessionId) === stayId)
-    : undefined
+  const ticket = running ? tickets?.find((candidate) => toNumber(candidate.sessionId) === stayId) : undefined
 
   const currentCode = stay?.currentOptionCode ?? null
   const elapsed = running ? elapsedSeconds(stay, now) : 0
-  const used = running
-    ? options.filter((o) => optionSeconds(stay, o.code, now) > 0)
-    : []
+  const used = running ? options.filter((o) => optionSeconds(stay, o.code, now) > 0) : []
   const billed = stay ? stayBilledHours(stay) : 0
   const billedLabel = formatBillingHours(billed, t)
   const expiresIn = held ? expiresInSeconds(reservation, now) : null
   const optionName = (code: string | null) =>
-    localized(findOption(stay?.tariff ?? place?.tariff, code)?.name) ||
-    code ||
-    ''
+    localized(findOption(stay?.tariff ?? place?.tariff, code)?.name) || code || ''
   const timeOf = (iso: string) =>
     new Date(iso).toLocaleTimeString(locale, {
       hour: 'numeric',
@@ -157,12 +131,9 @@ export function PlacePanel({
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className='max-h-[95svh] gap-4'>
           <DialogHeader>
-            <DialogTitle className='flex items-center gap-2 type-title'>
+            <DialogTitle className='type-title flex items-center gap-2'>
               <span
-                className={cn(
-                  'size-3 shrink-0 rounded-full',
-                  placeStatusDot[Number(place?.status ?? 0)] ?? 'bg-muted',
-                )}
+                className={cn('size-3 shrink-0 rounded-full', placeStatusDot[Number(place?.status ?? 0)] ?? 'bg-muted')}
               />
               {localized(place?.name)}
             </DialogTitle>
@@ -175,15 +146,12 @@ export function PlacePanel({
 
           {running ? (
             <div className='flex flex-col items-center gap-4'>
-              <span className='font-mono type-figure tracking-widest'>
-                {formatClock(elapsed)}
-              </span>
+              <span className='type-figure font-mono tracking-widest'>{formatClock(elapsed)}</span>
               {used.length > 0 && hasOptions(stay.tariff) && (
-                <div className='text-muted-foreground flex gap-4 font-mono type-detail'>
+                <div className='text-muted-foreground type-detail flex gap-4 font-mono'>
                   {used.map((o) => (
                     <span key={o.code}>
-                      {localized(o.name)}{' '}
-                      {formatClock(optionSeconds(stay, o.code, now))}
+                      {localized(o.name)} {formatClock(optionSeconds(stay, o.code, now))}
                     </span>
                   ))}
                 </div>
@@ -206,19 +174,15 @@ export function PlacePanel({
               {/* Billed hours in rounding steps; hidden until the first step
                   lands, like the admin panel */}
               {billed > 0 && (
-                <div className='w-full rounded-xl border p-3 type-detail'>
+                <div className='type-detail w-full rounded-xl border p-3'>
                   {(stay.costs ?? [])
                     .filter((c) => Number(c.hours ?? 0) > 0)
                     .map((c) => (
                       <div key={c.optionCode} className='flex justify-between'>
                         <span className='text-muted-foreground'>
-                          {hasOptions(stay.tariff)
-                            ? localized(c.optionName)
-                            : t('time')}
+                          {hasOptions(stay.tariff) ? localized(c.optionName) : t('time')}
                         </span>
-                        <span className='tabular-nums'>
-                          {formatBillingHours(c.hours, t)}
-                        </span>
+                        <span className='tabular-nums'>{formatBillingHours(c.hours, t)}</span>
                       </div>
                     ))}
                   <Separator className='my-2' />
@@ -275,9 +239,7 @@ export function PlacePanel({
               <p className='text-muted-foreground flex items-center gap-1'>
                 <User className='size-4' />
                 {seated.customerName || t('table')}
-                {seated.partySize
-                  ? ` · ${t('partyOf', { count: seated.partySize })}`
-                  : ''}
+                {seated.partySize ? ` · ${t('partyOf', { count: seated.partySize })}` : ''}
               </p>
               {seated.seatedAt && (
                 <p className='text-muted-foreground type-detail tabular-nums'>
@@ -319,16 +281,12 @@ export function PlacePanel({
               <div className='flex size-16 items-center justify-center rounded-full bg-amber-500/10'>
                 <Clock className='size-7 text-amber-500' />
               </div>
-              <p className='type-heading'>
-                {timed ? t('readyToStart') : t('statusReserved')}
-              </p>
+              <p className='type-heading'>{timed ? t('readyToStart') : t('statusReserved')}</p>
               {reservation.customerName ? (
                 <p className='text-muted-foreground flex items-center gap-1'>
                   <User className='size-4' />
                   {reservation.customerName}
-                  {reservation.partySize
-                    ? ` · ${t('partyOf', { count: reservation.partySize })}`
-                    : ''}
+                  {reservation.partySize ? ` · ${t('partyOf', { count: reservation.partySize })}` : ''}
                 </p>
               ) : (
                 <Button
@@ -342,7 +300,7 @@ export function PlacePanel({
                 </Button>
               )}
               {expiresIn != null && (
-                <p className='font-mono type-detail text-amber-600 tabular-nums dark:text-amber-500'>
+                <p className='type-detail font-mono text-amber-600 tabular-nums dark:text-amber-500'>
                   {t('expiresIn', {
                     countdown: formatClock(expiresIn).slice(3),
                   })}
@@ -352,13 +310,11 @@ export function PlacePanel({
                   counter confirms the reservation, at the rate they picked:
                   one tap does both */}
               {reservation.startOnConfirm && (
-                <p className='text-muted-foreground flex items-center gap-1.5 type-detail'>
+                <p className='text-muted-foreground type-detail flex items-center gap-1.5'>
                   <TimerReset className='size-4' />
                   {t('startsOnConfirm')}
                   {reservation.requestedOptionName && (
-                    <Badge variant='secondary'>
-                      {localized(reservation.requestedOptionName)}
-                    </Badge>
+                    <Badge variant='secondary'>{localized(reservation.requestedOptionName)}</Badge>
                   )}
                 </p>
               )}
@@ -410,12 +366,7 @@ export function PlacePanel({
                     {t('confirmHold')}
                   </Button>
                 ) : (
-                  <Button
-                    size='lg'
-                    className='h-12'
-                    disabled={actions.isBusy}
-                    onClick={() => setStartOpen(true)}
-                  >
+                  <Button size='lg' className='h-12' disabled={actions.isBusy} onClick={() => setStartOpen(true)}>
                     <Play className='size-5 rtl:rotate-180' />
                     {t('startSession')}
                   </Button>
@@ -427,9 +378,7 @@ export function PlacePanel({
               <div className='bg-muted flex size-16 items-center justify-center rounded-full'>
                 <Wrench className='text-muted-foreground size-7' />
               </div>
-              <p className='text-muted-foreground type-heading'>
-                {t('underMaintenance')}
-              </p>
+              <p className='text-muted-foreground type-heading'>{t('underMaintenance')}</p>
             </div>
           ) : (
             <div className='flex flex-col items-center gap-3 py-2'>
@@ -438,7 +387,7 @@ export function PlacePanel({
               </div>
               <p className='type-heading'>{t('statusAvailable')}</p>
               {localized(place?.description) && (
-                <p className='text-muted-foreground max-w-sm text-center type-detail'>
+                <p className='text-muted-foreground type-detail max-w-sm text-center'>
                   {localized(place?.description)}
                 </p>
               )}
@@ -461,12 +410,7 @@ export function PlacePanel({
                     {t('reserve')}
                   </Button>
                 )}
-                <Button
-                  size='lg'
-                  className='h-12'
-                  disabled={actions.isBusy}
-                  onClick={() => setStartOpen(true)}
-                >
+                <Button size='lg' className='h-12' disabled={actions.isBusy} onClick={() => setStartOpen(true)}>
                   <Play className='size-5 rtl:rotate-180' />
                   {t('startSession')}
                 </Button>
@@ -489,10 +433,7 @@ export function PlacePanel({
         }}
       />
 
-      <CustomerCard
-        customer={cardFor}
-        onOpenChange={(isOpen) => !isOpen && setCardFor(null)}
-      />
+      <CustomerCard customer={cardFor} onOpenChange={(isOpen) => !isOpen && setCardFor(null)} />
       <CustomerSearch
         accountsOnly
         open={pickerFor != null}
@@ -501,12 +442,7 @@ export function PlacePanel({
         }}
         onPick={(picked) => {
           if (picked.id) {
-            if (pickerFor === 'assign')
-              actions.assignReservationCustomer(
-                reservationId,
-                picked.id,
-                picked.name,
-              )
+            if (pickerFor === 'assign') actions.assignReservationCustomer(reservationId, picked.id, picked.name)
             else actions.addMember(stayId, picked.id, picked.name)
           }
           setPickerFor(null)
@@ -530,9 +466,7 @@ export function PlacePanel({
         title={running ? t('cancelThisSession') : t('cancelThisReservation')}
         description={running ? t('cancelSessionHint') : undefined}
         cancelLabel={t('keepIt')}
-        actionLabel={
-          running ? t('cancelSessionButton') : t('cancelReservation')
-        }
+        actionLabel={running ? t('cancelSessionButton') : t('cancelReservation')}
         destructive
         // Close the panel once cancelled — otherwise it falls through to the
         // "available" state, re-showing the Start/Reserve options as if

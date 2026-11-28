@@ -30,10 +30,7 @@ const transactionLabelKeys: Record<string, TranslationKey> = {
   referral: 'transactionTypeReferral',
 }
 
-export function LoyaltyTransactionList({
-  transactions,
-  isLoading,
-}: LoyaltyTransactionListProps) {
+export function LoyaltyTransactionList({ transactions, isLoading }: LoyaltyTransactionListProps) {
   const t = useT()
   const locale = useLocale()
 
@@ -48,10 +45,7 @@ export function LoyaltyTransactionList({
         <h4 className='text-sm font-medium'>{t('history')}</h4>
         <div>
           {Array.from({ length: 5 }).map((_, i) => (
-            <div
-              key={i}
-              className='flex items-center gap-3 border-b py-2.5 last:border-b-0'
-            >
+            <div key={i} className='flex items-center gap-3 border-b py-2.5 last:border-b-0'>
               <Skeleton className='h-8 w-8 rounded-full' />
               <div className='flex-1 space-y-1'>
                 <Skeleton className='h-4 w-24' />
@@ -84,23 +78,16 @@ export function LoyaltyTransactionList({
         {/* One list, rows split by a hairline, as the place's past stays are */}
         <div className='pe-4'>
           {transactions.map((transaction) => (
-            <div
-              key={transaction.id}
-              className='flex items-center gap-3 border-b py-2.5 last:border-b-0'
-            >
+            <div key={transaction.id} className='flex items-center gap-3 border-b py-2.5 last:border-b-0'>
               <div className='bg-muted flex h-8 w-8 items-center justify-center rounded-full'>
                 {getTransactionIcon(transaction.type, transaction.points)}
               </div>
               <div className='min-w-0 flex-1'>
                 <div className='flex items-center gap-2'>
-                  <span className='text-sm font-medium'>
-                    {getTransactionLabel(transaction.type)}
-                  </span>
+                  <span className='text-sm font-medium'>{getTransactionLabel(transaction.type)}</span>
                 </div>
                 {transaction.description && (
-                  <p className='text-muted-foreground truncate text-xs'>
-                    {transaction.description}
-                  </p>
+                  <p className='text-muted-foreground truncate text-xs'>{transaction.description}</p>
                 )}
               </div>
               <div className='text-end'>
@@ -112,10 +99,7 @@ export function LoyaltyTransactionList({
                   {transaction.points > 0 ? '+' : ''}
                   {transaction.points.toLocaleString(locale)}
                 </span>
-                <When
-                  value={transaction.createdAt}
-                  className='text-muted-foreground block text-xs'
-                />
+                <When value={transaction.createdAt} className='text-muted-foreground block text-xs' />
               </div>
             </div>
           ))}

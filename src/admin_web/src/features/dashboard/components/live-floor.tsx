@@ -7,12 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ErrorState } from '@/components/error-state'
-import {
-  formatEgp,
-  orderUrgency,
-  relativeTime,
-  urgencyTextClass,
-} from '@/features/orders/status'
+import { formatEgp, orderUrgency, relativeTime, urgencyTextClass } from '@/features/orders/status'
 import { useOrderActions } from '@/features/orders/use-order-actions'
 import { PlaceKindIcon } from '@/features/places/components/place-kind-icon'
 
@@ -42,15 +37,7 @@ type LiveFloorProps = {
  * and the orders waiting with Confirm in reach. Rows, not cards — each
  * links to the page that owns it.
  */
-export function LiveFloor({
-  stays,
-  places,
-  pending,
-  nowMs,
-  isLoading,
-  error,
-  onRetry,
-}: LiveFloorProps) {
+export function LiveFloor({ stays, places, pending, nowMs, isLoading, error, onRetry }: LiveFloorProps) {
   const t = useT()
   const locale = useLocale()
   const localized = useLocalized()
@@ -67,9 +54,7 @@ export function LiveFloor({
           <h2 className='text-sm font-semibold'>
             {t('timeRunning')}
             {stays.length > 0 && (
-              <span className='text-muted-foreground ms-2 font-normal tabular-nums'>
-                {stays.length}
-              </span>
+              <span className='text-muted-foreground ms-2 font-normal tabular-nums'>{stays.length}</span>
             )}
           </h2>
           <Button variant='link' size='sm' className='h-auto p-0' asChild>
@@ -82,15 +67,11 @@ export function LiveFloor({
             <Skeleton className='h-10' />
           </div>
         ) : stays.length === 0 ? (
-          <p className='text-muted-foreground py-3 text-sm'>
-            {t('noTimeRunning')}
-          </p>
+          <p className='text-muted-foreground py-3 text-sm'>{t('noTimeRunning')}</p>
         ) : (
           <ul className='divide-y'>
             {stays.slice(0, MAX_ROWS).map((stay) => {
-              const place = places.find(
-                (p) => Number(p.id) === Number(stay.placeId)
-              )
+              const place = places.find((p) => Number(p.id) === Number(stay.placeId))
               const option = localized(stay.currentOptionName)
               return (
                 <li key={String(stay.id)}>
@@ -109,9 +90,7 @@ export function LiveFloor({
                         {option && ` · ${option}`}
                       </span>
                     </span>
-                    <span className='font-mono text-sm tabular-nums'>
-                      {elapsed(stay.startedAt, nowMs)}
-                    </span>
+                    <span className='font-mono text-sm tabular-nums'>{elapsed(stay.startedAt, nowMs)}</span>
                   </Link>
                 </li>
               )
@@ -125,9 +104,7 @@ export function LiveFloor({
           <h2 className='text-sm font-semibold'>
             {t('pendingOrders')}
             {pending.length > 0 && (
-              <span className='text-muted-foreground ms-2 font-normal tabular-nums'>
-                {pending.length}
-              </span>
+              <span className='text-muted-foreground ms-2 font-normal tabular-nums'>{pending.length}</span>
             )}
           </h2>
           <Button variant='link' size='sm' className='h-auto p-0' asChild>
@@ -140,42 +117,28 @@ export function LiveFloor({
             <Skeleton className='h-10' />
           </div>
         ) : pending.length === 0 ? (
-          <p className='text-muted-foreground py-3 text-sm'>
-            {t('noPendingOrders')}
-          </p>
+          <p className='text-muted-foreground py-3 text-sm'>{t('noPendingOrders')}</p>
         ) : (
           <ul className='divide-y'>
             {pending.slice(0, MAX_ROWS).map((order) => {
               const urgency = orderUrgency(order.date, nowMs)
               const place = localized(order.placeName)
-              const acting =
-                Number(actingOrderNumber) === Number(order.orderNumber)
+              const acting = Number(actingOrderNumber) === Number(order.orderNumber)
               return (
-                <li
-                  key={String(order.orderNumber)}
-                  className='flex items-center gap-3 py-2 text-sm'
-                >
+                <li key={String(order.orderNumber)} className='flex items-center gap-3 py-2 text-sm'>
                   <span className='min-w-0 flex-1'>
                     <span className='flex items-center gap-2'>
                       <span className='font-medium'>#{order.orderNumber}</span>
                       {place && (
-                        <Badge
-                          variant='outline'
-                          className='h-5 gap-1 px-1.5 text-[11px] font-normal'
-                        >
-                          <PlaceKindIcon
-                            kind={order.placeKind}
-                            className='size-3'
-                          />
+                        <Badge variant='outline' className='h-5 gap-1 px-1.5 text-[11px] font-normal'>
+                          <PlaceKindIcon kind={order.placeKind} className='size-3' />
                           {place}
                         </Badge>
                       )}
                     </span>
                     <span className='text-muted-foreground block truncate text-xs'>
                       {order.userName || t('guest')} ·{' '}
-                      <span className={urgencyTextClass(urgency)}>
-                        {relativeTime(order.date, nowMs, t, locale)}
-                      </span>
+                      <span className={urgencyTextClass(urgency)}>{relativeTime(order.date, nowMs, t, locale)}</span>
                     </span>
                   </span>
                   <span className='tabular-nums'>{formatEgp(order.total)}</span>
@@ -195,9 +158,7 @@ export function LiveFloor({
             {pending.length > MAX_ROWS && (
               <li className='py-2 text-center'>
                 <Button variant='link' size='sm' asChild>
-                  <Link to='/orders/live'>
-                    {t('viewAllOrdersCount', { count: pending.length })}
-                  </Link>
+                  <Link to='/orders/live'>{t('viewAllOrdersCount', { count: pending.length })}</Link>
                 </Button>
               </li>
             )}

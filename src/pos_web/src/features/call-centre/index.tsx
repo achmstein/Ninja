@@ -2,8 +2,20 @@ import { useId, useState } from 'react'
 import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { Bike, Headset, History, Loader2, MapPin, ShoppingBag, Store, X } from 'lucide-react'
-import { getKnownDeliveryAddressesOptions, resolveDeliveryBranchForStaffOptions } from '@/api/ordering/@tanstack/react-query.gen'
+import {
+  getKnownDeliveryAddressesOptions,
+  resolveDeliveryBranchForStaffOptions,
+} from '@/api/ordering/@tanstack/react-query.gen'
 import type { KnownAddressView } from '@/api/ordering/types.gen'
+import { useBranchStore } from '@/stores/branch-store'
+import { API_VERSION } from '@/lib/api-client'
+import { useBrand } from '@/lib/brand'
+import { useLocalized, useT } from '@/lib/i18n'
+import { toNumber, useMoney } from '@/lib/money'
+import { digitCount, normalizePhone } from '@/lib/phone'
+import { useDebounced } from '@/lib/use-debounced'
+import { cn } from '@/lib/utils'
+import { useAllowedBranches } from '@/hooks/use-allowed-branches'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -14,15 +26,6 @@ import { useAddressLine, useDistanceText } from '@/features/deliveries/delivery-
 import { PinQualityLabel } from '@/features/deliveries/pin-quality'
 import { emptyDelivery, useSale, type PinSource, type SaleDelivery } from '@/features/sale/cart'
 import { DELIVERY_LIMITS, MIN_PHONE_DIGITS, toSaleZone, validatePhoneDelivery } from '@/features/sale/sale-delivery'
-import { useAllowedBranches } from '@/hooks/use-allowed-branches'
-import { API_VERSION } from '@/lib/api-client'
-import { useBrand } from '@/lib/brand'
-import { useLocalized, useT } from '@/lib/i18n'
-import { toNumber, useMoney } from '@/lib/money'
-import { digitCount, normalizePhone } from '@/lib/phone'
-import { useDebounced } from '@/lib/use-debounced'
-import { cn } from '@/lib/utils'
-import { useBranchStore } from '@/stores/branch-store'
 import { branchOffers, callerDelivery, chosenArea, offeredBranch, pinArea } from './call-centre'
 
 /**
@@ -66,7 +69,10 @@ export function CallCentre() {
   const [tried, setTried] = useState(false)
   const set = (patch: Partial<SaleDelivery>) => setForm((f) => ({ ...f, ...patch }))
 
-  const lookupPhone = useDebounced(digitCount(form.phone) >= MIN_PHONE_DIGITS ? normalizePhone(form.phone, country) : '', 400)
+  const lookupPhone = useDebounced(
+    digitCount(form.phone) >= MIN_PHONE_DIGITS ? normalizePhone(form.phone, country) : '',
+    400
+  )
   const known = useQuery({
     ...getKnownDeliveryAddressesOptions({
       // Any branch's deliveries: the call centre answers for all of them
@@ -151,7 +157,7 @@ export function CallCentre() {
     if (Object.keys(errors).length > 0 || branchId == null || !settled) return
     startAt(
       branchId,
-      callerDelivery({ ...form, zone: area ? toSaleZone(area) : null, phone: normalizePhone(form.phone, country) }, pin),
+      callerDelivery({ ...form, zone: area ? toSaleZone(area) : null, phone: normalizePhone(form.phone, country) }, pin)
     )
   }
 
@@ -165,13 +171,17 @@ export function CallCentre() {
 
   return (
     <div className='mx-auto flex w-full max-w-2xl flex-col gap-5 p-4'>
-      <h1 className='flex items-center gap-2 type-title'>
+      <h1 className='type-title flex items-center gap-2'>
         <Headset className='size-6' aria-hidden />
         {t('callCentreNextCaller')}
       </h1>
 
       <div className='grid gap-3 sm:grid-cols-2'>
-        <Labelled id={`${ids}-phone`} label={t('deliveryPhoneLabel')} error={tried && errors.phone ? t('deliveryPhoneInvalid') : null}>
+        <Labelled
+          id={`${ids}-phone`}
+          label={t('deliveryPhoneLabel')}
+          error={tried && errors.phone ? t('deliveryPhoneInvalid') : null}
+        >
           <Input
             id={`${ids}-phone`}
             value={form.phone}
@@ -183,14 +193,24 @@ export function CallCentre() {
             autoFocus
           />
         </Labelled>
-        <Labelled id={`${ids}-name`} label={t('deliveryCustomerName')} error={tried && errors.name ? t('deliveryNeedsName') : null}>
-          <Input id={`${ids}-name`} value={name} onChange={(e) => setName(e.target.value)} className='h-12 text-base' autoComplete='off' />
+        <Labelled
+          id={`${ids}-name`}
+          label={t('deliveryCustomerName')}
+          error={tried && errors.name ? t('deliveryNeedsName') : null}
+        >
+          <Input
+            id={`${ids}-name`}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className='h-12 text-base'
+            autoComplete='off'
+          />
         </Labelled>
       </div>
 
       {(known.data ?? []).length > 0 && (
         <div className='flex flex-col gap-1.5'>
-          <span className='text-muted-foreground flex items-center gap-1.5 type-caption font-medium'>
+          <span className='text-muted-foreground type-caption flex items-center gap-1.5 font-medium'>
             <History className='size-3.5' aria-hidden />
             {t('deliveryKnownAddresses')}
           </span>
@@ -200,8 +220,10 @@ export function CallCentre() {
               type='button'
               onClick={() => pickKnown(a)}
               className={cn(
-                'flex items-start gap-2 rounded-lg border p-2.5 text-start type-detail',
-                a.address === form.address && (a.building ?? '') === form.building ? 'border-primary bg-primary/5' : 'bg-background',
+                'type-detail flex items-start gap-2 rounded-lg border p-2.5 text-start',
+                a.address === form.address && (a.building ?? '') === form.building
+                  ? 'border-primary bg-primary/5'
+                  : 'bg-background'
               )}
             >
               <MapPin className='text-muted-foreground mt-0.5 size-4 shrink-0' aria-hidden />
@@ -215,7 +237,7 @@ export function CallCentre() {
       )}
 
       <section className='flex flex-col gap-3 rounded-xl border p-4'>
-        <h2 className='flex items-center gap-2 type-heading'>
+        <h2 className='type-heading flex items-center gap-2'>
           <Bike className='size-5' aria-hidden />
           {t('callCentreDelivery')}
         </h2>
@@ -253,7 +275,11 @@ export function CallCentre() {
             })
           }}
         />
-        <Labelled id={`${ids}-street`} label={t('deliveryStreetLabel')} error={tried && errors.address ? t('deliveryNeedsStreet') : null}>
+        <Labelled
+          id={`${ids}-street`}
+          label={t('deliveryStreetLabel')}
+          error={tried && errors.address ? t('deliveryNeedsStreet') : null}
+        >
           <Input
             id={`${ids}-street`}
             value={form.address}
@@ -298,7 +324,7 @@ export function CallCentre() {
         {location === '' ? (
           <PinQualityLabel source='None' pinned={false} className='self-start' />
         ) : (
-          <p className='flex items-center gap-1.5 type-detail'>
+          <p className='type-detail flex items-center gap-1.5'>
             <PinQualityLabel source={form.pinSource} pinned />
             <button
               type='button'
@@ -317,7 +343,7 @@ export function CallCentre() {
         )}
 
         {/* Which branch makes it: the picked area's, the nearest whose area takes the point in, or the agent's own pick */}
-        <div className='flex flex-col gap-2 type-detail' aria-live='polite'>
+        <div className='type-detail flex flex-col gap-2' aria-live='polite'>
           {area && (
             <p className='border-primary bg-primary/5 flex min-h-12 items-center gap-2 rounded-lg border p-3'>
               <Store className='text-muted-foreground size-4 shrink-0' aria-hidden />
@@ -326,12 +352,22 @@ export function CallCentre() {
                 <span className='text-muted-foreground'>
                   {' · '}
                   {toNumber(area.fee) > 0 ? t('callCentreFeeIs', { fee: money(area.fee) }) : t('deliveryFree')}
-                  {toNumber(area.minimumOrder) > 0 && <> · {t('deliveryMinimumIs', { amount: money(area.minimumOrder) })}</>}
-                  {area.etaMinutes != null && <> · {t('deliveryAboutMinutes', { minutes: toNumber(area.etaMinutes) })}</>}
+                  {toNumber(area.minimumOrder) > 0 && (
+                    <> · {t('deliveryMinimumIs', { amount: money(area.minimumOrder) })}</>
+                  )}
+                  {area.etaMinutes != null && (
+                    <> · {t('deliveryAboutMinutes', { minutes: toNumber(area.etaMinutes) })}</>
+                  )}
                 </span>
-                {!area.on && <span className='ms-1.5 font-medium text-amber-700 dark:text-amber-400'>· {t('deliveryAreaOff')}</span>}
+                {!area.on && (
+                  <span className='ms-1.5 font-medium text-amber-700 dark:text-amber-400'>
+                    · {t('deliveryAreaOff')}
+                  </span>
+                )}
                 {area.branchPaused && (
-                  <span className='ms-1.5 font-medium text-amber-700 dark:text-amber-400'>· {t('deliveryBranchPaused')}</span>
+                  <span className='ms-1.5 font-medium text-amber-700 dark:text-amber-400'>
+                    · {t('deliveryBranchPaused')}
+                  </span>
                 )}
               </span>
             </p>
@@ -356,7 +392,13 @@ export function CallCentre() {
             <>
               {byHand && (
                 <p className={location !== '' ? 'text-amber-700 dark:text-amber-400' : 'text-muted-foreground'}>
-                  {t(location !== '' ? 'callCentreOutsideAreas' : searchOn ? 'callCentrePickBranchSearch' : 'callCentrePickBranch')}
+                  {t(
+                    location !== ''
+                      ? 'callCentreOutsideAreas'
+                      : searchOn
+                        ? 'callCentrePickBranchSearch'
+                        : 'callCentrePickBranch'
+                  )}
                 </p>
               )}
               {offers.map((b) => {
@@ -380,7 +422,7 @@ export function CallCentre() {
                     }}
                     className={cn(
                       'flex min-h-12 items-center gap-2 rounded-lg border p-3 text-start',
-                      isChosen ? 'border-primary bg-primary/5' : 'bg-background',
+                      isChosen ? 'border-primary bg-primary/5' : 'bg-background'
                     )}
                   >
                     <Store className='text-muted-foreground size-4 shrink-0' aria-hidden />
@@ -415,13 +457,18 @@ export function CallCentre() {
       </section>
 
       <section className='flex flex-col gap-3 rounded-xl border p-4'>
-        <h2 className='flex items-center gap-2 type-heading'>
+        <h2 className='type-heading flex items-center gap-2'>
           <ShoppingBag className='size-5' aria-hidden />
           {t('callCentrePickupAt')}
         </h2>
         <div className='grid gap-2 sm:grid-cols-2'>
           {allBranches.map((b) => (
-            <Button key={String(b.id)} variant='outline' className='h-12 justify-start text-base' onClick={() => pickup(Number(b.id))}>
+            <Button
+              key={String(b.id)}
+              variant='outline'
+              className='h-12 justify-start text-base'
+              onClick={() => pickup(Number(b.id))}
+            >
               <Store className='size-4' aria-hidden />
               {localized(b.name)}
             </Button>
@@ -432,7 +479,17 @@ export function CallCentre() {
   )
 }
 
-function Labelled({ id, label, error, children }: { id: string; label: string; error?: string | null; children: React.ReactNode }) {
+function Labelled({
+  id,
+  label,
+  error,
+  children,
+}: {
+  id: string
+  label: string
+  error?: string | null
+  children: React.ReactNode
+}) {
   return (
     <div className='flex flex-col gap-1.5'>
       <Label htmlFor={id}>{label}</Label>

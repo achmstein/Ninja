@@ -1,12 +1,5 @@
 import { useEffect, useRef } from 'react'
-import {
-  APILoadingStatus,
-  APIProvider,
-  Circle,
-  Map,
-  useApiLoadingStatus,
-  useMap,
-} from '@vis.gl/react-google-maps'
+import { APILoadingStatus, APIProvider, Circle, Map, useApiLoadingStatus, useMap } from '@vis.gl/react-google-maps'
 import { TerraDrawGoogleMapsAdapter } from 'terra-draw-google-maps-adapter'
 import { areaStartingBox } from '@/lib/maps'
 import { Waiting } from './branch-map'
@@ -31,25 +24,13 @@ export default function DeliveryAreaGoogleMap({
   ...props
 }: Props & { apiKey: string; language: string; region: string }) {
   return (
-    <APIProvider
-      apiKey={apiKey}
-      language={language}
-      region={region}
-      onError={props.onFail}
-    >
+    <APIProvider apiKey={apiKey} language={language} region={region} onError={props.onFail}>
       <AreaMap {...props} />
     </APIProvider>
   )
 }
 
-function AreaMap({
-  centre,
-  radiusKm,
-  initial,
-  onChange,
-  onReady,
-  onFail,
-}: Props) {
+function AreaMap({ centre, radiusKm, initial, onChange, onReady, onFail }: Props) {
   const status = useApiLoadingStatus()
   const map = useMap()
   // What the map opens with; later changes are the drawing's own
@@ -68,11 +49,7 @@ function AreaMap({
   }, [onFail])
 
   useEffect(() => {
-    if (
-      status === APILoadingStatus.FAILED ||
-      status === APILoadingStatus.AUTH_FAILURE
-    )
-      fail.current()
+    if (status === APILoadingStatus.FAILED || status === APILoadingStatus.AUTH_FAILURE) fail.current()
   }, [status])
 
   useEffect(() => {
@@ -87,10 +64,8 @@ function AreaMap({
     // The adapter draws through an overlay, which needs the map's projection
     const start = () => {
       if (draw || !map.getProjection()) return
-      draw = startAreaDraw(
-        new TerraDrawGoogleMapsAdapter({ lib: google.maps, map }),
-        initial,
-        (area) => change.current(area)
+      draw = startAreaDraw(new TerraDrawGoogleMapsAdapter({ lib: google.maps, map }), initial, (area) =>
+        change.current(area)
       )
       ready.current(draw)
     }

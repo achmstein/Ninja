@@ -5,11 +5,7 @@ import { PageTabs } from '@/components/page-tabs'
  * Employees as one page of three tabs: the register, the month's
  * attendance, and the month's payslips.
  */
-export function PayrollTabs({
-  value,
-}: {
-  value: 'employees' | 'attendance' | 'payslips'
-}) {
+export function PayrollTabs({ value }: { value: 'employees' | 'attendance' | 'payslips' }) {
   const t = useT()
   return (
     <PageTabs

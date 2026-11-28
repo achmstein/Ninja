@@ -38,9 +38,7 @@ async function subscribe(token: string, language: string) {
 }
 
 async function unsubscribe() {
-  await apiClient
-    .delete('/api/notifications/subscriptions/admin-orders')
-    .catch(() => {})
+  await apiClient.delete('/api/notifications/subscriptions/admin-orders').catch(() => {})
 }
 
 /** The push toggle: whether it can be offered here, whether the browser has blocked it, and the switch. */

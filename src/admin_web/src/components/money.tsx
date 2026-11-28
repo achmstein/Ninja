@@ -37,26 +37,9 @@ export function Money({
         ? 'text-success'
         : undefined
   return (
-    <span
-      className={cn(
-        'inline-flex flex-col items-end text-end leading-tight',
-        className
-      )}
-    >
-      <span
-        className={cn(
-          'whitespace-nowrap tabular-nums',
-          strong && 'font-semibold',
-          colour
-        )}
-      >
-        {text}
-      </span>
-      {sub && (
-        <span className='text-muted-foreground text-xs whitespace-nowrap tabular-nums'>
-          {sub}
-        </span>
-      )}
+    <span className={cn('inline-flex flex-col items-end text-end leading-tight', className)}>
+      <span className={cn('whitespace-nowrap tabular-nums', strong && 'font-semibold', colour)}>{text}</span>
+      {sub && <span className='text-muted-foreground text-xs whitespace-nowrap tabular-nums'>{sub}</span>}
     </span>
   )
 }

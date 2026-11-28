@@ -34,10 +34,7 @@ export function AiButton({
       type='button'
       size='sm'
       variant={variant}
-      className={cn(
-        variant === 'outline' && 'text-primary hover:text-primary',
-        className
-      )}
+      className={cn(variant === 'outline' && 'text-primary hover:text-primary', className)}
       disabled={disabled || pending}
       title={disabled ? why : undefined}
       onClick={onClick}

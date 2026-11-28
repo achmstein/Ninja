@@ -1,16 +1,10 @@
 import { useState } from 'react'
 import { Store } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import { TradingSwitches } from '@/features/shift/trading-switches'
 import { useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { TradingSwitches } from '@/features/shift/trading-switches'
 import { useBranchFlags } from './use-branch-flags'
 
 /**
@@ -62,10 +56,7 @@ export function TradingChip() {
           />
         </span>
         <span
-          className={cn(
-            'type-detail font-medium max-lg:sr-only',
-            flags.paused && 'text-amber-600 dark:text-amber-400'
-          )}
+          className={cn('type-detail font-medium max-lg:sr-only', flags.paused && 'text-amber-600 dark:text-amber-400')}
         >
           {label}
         </span>
@@ -73,21 +64,14 @@ export function TradingChip() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className='gap-4'>
           <DialogHeader>
-            <DialogTitle className='flex items-center gap-2 type-title'>
+            <DialogTitle className='type-title flex items-center gap-2'>
               <Store className='size-5' />
               {reservations ? t('ordersAndReservations') : t('customerOrders')}
             </DialogTitle>
-            <DialogDescription className='type-body'>
-              {t('tradingHint')}
-            </DialogDescription>
+            <DialogDescription className='type-body'>{t('tradingHint')}</DialogDescription>
           </DialogHeader>
           <TradingSwitches />
-          <Button
-            variant='outline'
-            size='lg'
-            className='h-12'
-            onClick={() => setOpen(false)}
-          >
+          <Button variant='outline' size='lg' className='h-12' onClick={() => setOpen(false)}>
             {t('done')}
           </Button>
         </DialogContent>

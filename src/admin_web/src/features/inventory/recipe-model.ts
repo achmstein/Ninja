@@ -19,10 +19,7 @@ export type SlotLine = {
 }
 
 /** The line a slot resolves to: the most specific applicable override, else the default, else nothing */
-function resolveSlot(
-  lines: SlotLine[],
-  chosen: ReadonlySet<string>
-): SlotLine | undefined {
+function resolveSlot(lines: SlotLine[], chosen: ReadonlySet<string>): SlotLine | undefined {
   let best: SlotLine | undefined
   for (const line of lines) {
     if (line.optionIds.length === 0) continue
@@ -36,9 +33,7 @@ function resolveSlot(
 /** Lines grouped by slot, in slot order */
 function bySlot(lines: SlotLine[]): Map<string, SlotLine[]> {
   const slots = new Map<string, SlotLine[]>()
-  for (const line of [...lines].sort(
-    (a, b) => toNumber(a.slot) - toNumber(b.slot)
-  )) {
+  for (const line of [...lines].sort((a, b) => toNumber(a.slot) - toNumber(b.slot))) {
     const key = String(line.slot)
     slots.set(key, [...(slots.get(key) ?? []), line])
   }
@@ -49,11 +44,7 @@ function bySlot(lines: SlotLine[]): Map<string, SlotLine[]> {
  * What a sale with these options deducts, per stock item — every slot
  * resolved, none overrides skipped.
  */
-export function resolve(
-  lines: SlotLine[],
-  chosen: ReadonlySet<string>,
-  units = 1
-): Map<string, number> {
+export function resolve(lines: SlotLine[], chosen: ReadonlySet<string>, units = 1): Map<string, number> {
   const totals = new Map<string, number>()
   for (const slot of bySlot(lines).values()) {
     const line = resolveSlot(slot, chosen)
@@ -96,10 +87,7 @@ export type RecipeDraft = { slots: SlotDraft[] }
 let nextKey = 1
 export const draftKey = () => nextKey++
 
-export function newSlot(
-  stockItemId: string | null = null,
-  quantity = ''
-): SlotDraft {
+export function newSlot(stockItemId: string | null = null, quantity = ''): SlotDraft {
   return {
     key: draftKey(),
     stockItemId,
@@ -165,29 +153,17 @@ export function fromApi(
 }
 
 /** Whether an override cell says anything at all */
-export const overrideHasContent = (o: OverrideDraft) =>
-  o.none || o.stockItemId !== null || o.quantity.trim() !== ''
+export const overrideHasContent = (o: OverrideDraft) => o.none || o.stockItemId !== null || o.quantity.trim() !== ''
 
 /** The line the resolver would see for an override, with the slot's default filled in */
-function overrideLine(
-  slot: SlotDraft,
-  o: OverrideDraft
-): { stockItemId: string | null; quantity: number } {
+function overrideLine(slot: SlotDraft, o: OverrideDraft): { stockItemId: string | null; quantity: number } {
   return {
     stockItemId: o.stockItemId ?? slot.stockItemId,
-    quantity:
-      o.quantity.trim() !== ''
-        ? parseFloat(o.quantity)
-        : parseFloat(slot.quantity),
+    quantity: o.quantity.trim() !== '' ? parseFloat(o.quantity) : parseFloat(slot.quantity),
   }
 }
 
-type DraftProblem =
-  | 'recipeNeedsLine'
-  | 'recipeLineIncomplete'
-  | 'recipeOverrideIncomplete'
-  | 'recipeSlotEmpty'
-  | null
+type DraftProblem = 'recipeNeedsLine' | 'recipeLineIncomplete' | 'recipeOverrideIncomplete' | 'recipeSlotEmpty' | null
 
 /** The first thing wrong with a draft, as a message key; null when it can be saved */
 export function validateDraft(draft: RecipeDraft): DraftProblem {
@@ -227,10 +203,7 @@ export function toApi(draft: RecipeDraft): RecipeRequest {
       })
     }
     // A none override needs a stock item to name its slot by
-    const anchor =
-      slot.stockItemId ??
-      slot.overrides.find((o) => !o.none && o.stockItemId)?.stockItemId ??
-      null
+    const anchor = slot.stockItemId ?? slot.overrides.find((o) => !o.none && o.stockItemId)?.stockItemId ?? null
     for (const o of slot.overrides.filter(overrideHasContent)) {
       if (o.none) {
         if (!anchor) continue

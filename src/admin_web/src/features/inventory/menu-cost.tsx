@@ -3,11 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { getRouteApi } from '@tanstack/react-router'
 import { useTable } from '@tanstack/react-table'
 import { type CatalogItemDto } from '@/api/catalog'
-import {
-  deleteItemMutation,
-  listCategoriesOptions,
-  listItemsOptions,
-} from '@/api/catalog/@tanstack/react-query.gen'
+import { deleteItemMutation, listCategoriesOptions, listItemsOptions } from '@/api/catalog/@tanstack/react-query.gen'
 import { getRecipeCostsOptions } from '@/api/inventory/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useLanguage, useLocalized, useT } from '@/lib/i18n'
@@ -17,28 +13,16 @@ import { useTableUrlState } from '@/hooks/use-table-url-state'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
-import {
-  DataTable,
-  DataTablePagination,
-  DataTableToolbar,
-  dataTableFeatures,
-} from '@/components/data-table'
+import { ConfirmDialog } from '@/components/confirm-dialog'
+import { DataTable, DataTablePagination, DataTableToolbar, dataTableFeatures } from '@/components/data-table'
 import { Main } from '@/components/layout/main'
 import { Dot, ListRow } from '@/components/list-row'
 import { PageHeader } from '@/components/page-header'
 import { Stat, StatStrip } from '@/components/stat-strip'
 import { StatusChip } from '@/components/status-chip'
-import { ConfirmDialog } from '@/components/confirm-dialog'
-import {
-  ItemSheet,
-  type ItemSheetState,
-} from '@/features/menu/components/item-sheet'
+import { ItemSheet, type ItemSheetState } from '@/features/menu/components/item-sheet'
 import { getMenuCostColumns } from './menu-cost-columns'
-import {
-  DEFAULT_FOOD_COST_TARGET,
-  summarize,
-  toMenuCostRows,
-} from './menu-cost-rows'
+import { DEFAULT_FOOD_COST_TARGET, summarize, toMenuCostRows } from './menu-cost-rows'
 import { StockTabs } from './stock-tabs'
 
 const route = getRouteApi('/_authenticated/inventory/menu-cost')
@@ -57,15 +41,9 @@ export function MenuCost() {
   const navigate = route.useNavigate()
   const target = search.target ?? DEFAULT_FOOD_COST_TARGET
 
-  const costs = useQuery(
-    getRecipeCostsOptions({ query: { 'api-version': API_VERSION } })
-  )
-  const items = useQuery(
-    listItemsOptions({ query: { 'api-version': API_VERSION } })
-  )
-  const categories = useQuery(
-    listCategoriesOptions({ query: { 'api-version': API_VERSION } })
-  )
+  const costs = useQuery(getRecipeCostsOptions({ query: { 'api-version': API_VERSION } }))
+  const items = useQuery(listItemsOptions({ query: { 'api-version': API_VERSION } }))
+  const categories = useQuery(listCategoriesOptions({ query: { 'api-version': API_VERSION } }))
 
   // "Edit recipe" on a row opens the item's sheet on its stock section, the
   // same sheet the menu page opens; a delete from there is confirmed here
@@ -89,21 +67,19 @@ export function MenuCost() {
   )
   const summary = useMemo(() => summarize(rows, target), [rows, target])
 
-  const { globalFilter, onGlobalFilterChange, pagination, onPaginationChange } =
-    useTableUrlState({
-      search,
-      navigate,
-      pagination: { defaultPageSize: 20 },
-      globalFilter: { enabled: true, key: 'q' },
-    })
+  const { globalFilter, onGlobalFilterChange, pagination, onPaginationChange } = useTableUrlState({
+    search,
+    navigate,
+    pagination: { defaultPageSize: 20 },
+    globalFilter: { enabled: true, key: 'q' },
+  })
 
   const columns = useMemo(
     () =>
       getMenuCostColumns({
         t,
         localized,
-        onEdit: (catalogItemId) =>
-          setSheet({ mode: 'edit', itemId: catalogItemId }),
+        onEdit: (catalogItemId) => setSheet({ mode: 'edit', itemId: catalogItemId }),
       }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [language]
@@ -147,12 +123,7 @@ export function MenuCost() {
                     search: (prev) => ({
                       ...prev,
                       page: undefined,
-                      target:
-                        next > 0 &&
-                        next < 100 &&
-                        next !== DEFAULT_FOOD_COST_TARGET
-                          ? next
-                          : undefined,
+                      target: next > 0 && next < 100 && next !== DEFAULT_FOOD_COST_TARGET ? next : undefined,
                     }),
                   })
                 }}
@@ -174,17 +145,8 @@ export function MenuCost() {
           <Stat label={t('trackedItems')} value={String(summary.tracked)} />
           <Stat
             label={t('averageFoodCost')}
-            value={
-              summary.averageFoodCost === null
-                ? '—'
-                : `${summary.averageFoodCost}%`
-            }
-            tone={
-              summary.averageFoodCost !== null &&
-              summary.averageFoodCost > target
-                ? 'negative'
-                : 'default'
-            }
+            value={summary.averageFoodCost === null ? '—' : `${summary.averageFoodCost}%`}
+            tone={summary.averageFoodCost !== null && summary.averageFoodCost > target ? 'negative' : 'default'}
           />
           <Stat
             label={t('itemsOverTarget', { target })}
@@ -199,18 +161,13 @@ export function MenuCost() {
         </StatStrip>
       )}
 
-      <DataTableToolbar
-        table={table}
-        searchPlaceholder={t('searchMenuCostPlaceholder')}
-      />
+      <DataTableToolbar table={table} searchPlaceholder={t('searchMenuCostPlaceholder')} />
 
       <DataTable
         table={table}
         isLoading={loading}
         emptyMessage={t('noTrackedItems')}
-        onRowClick={(row) =>
-          setSheet({ mode: 'edit', itemId: row.original.catalogItemId })
-        }
+        onRowClick={(row) => setSheet({ mode: 'edit', itemId: row.original.catalogItemId })}
         mobileRow={({ original: r }) => (
           <ListRow
             title={localized(r.name) || '—'}
@@ -224,29 +181,17 @@ export function MenuCost() {
                   {t('costPerSaleHeader')} {formatEgp(r.cost)}
                 </span>
                 {r.status === 'incomplete' && (
-                  <StatusChip tone='warning'>
-                    {t('costIncomplete', { count: r.uncosted })}
-                  </StatusChip>
+                  <StatusChip tone='warning'>{t('costIncomplete', { count: r.uncosted })}</StatusChip>
                 )}
               </>
             }
             trailing={
-              <span
-                className={cn(
-                  r.status === 'over' && 'text-destructive',
-                  r.status === 'ok' && 'text-success'
-                )}
-              >
+              <span className={cn(r.status === 'over' && 'text-destructive', r.status === 'ok' && 'text-success')}>
                 {r.foodCost != null ? `${r.foodCost}%` : '—'}
               </span>
             }
             trailingMeta={
-              <span
-                className={cn(
-                  'text-xs tabular-nums',
-                  r.margin < 0 ? 'text-destructive' : 'text-muted-foreground'
-                )}
-              >
+              <span className={cn('text-xs tabular-nums', r.margin < 0 ? 'text-destructive' : 'text-muted-foreground')}>
                 {t('margin')} {formatEgp(r.margin)}
               </span>
             }

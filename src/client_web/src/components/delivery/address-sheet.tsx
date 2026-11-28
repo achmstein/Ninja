@@ -1,29 +1,41 @@
 import { useState } from 'react'
+import * as SheetPrimitive from '@radix-ui/react-dialog'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import {
+  ArrowLeft,
+  Check,
+  ChevronRight,
+  Home,
+  Briefcase,
+  Loader2,
+  LocateFixed,
+  MapPin,
+  Phone,
+  Plus,
+  Trash2,
+} from 'lucide-react'
 import { useAuth } from 'react-oidc-context'
-import { ArrowLeft, Check, ChevronRight, Home, Briefcase, Loader2, LocateFixed, MapPin, Phone, Plus, Trash2 } from 'lucide-react'
 import {
   addMyAddressMutation,
   deleteMyAddressMutation,
   updateMyAddressMutation,
 } from '@/api/ordering/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
+import { useDeliveryStore, type DeliveryAddress } from '@/stores/delivery-store'
+import { useGuestStore } from '@/stores/guest-store'
 import { addressRow, labelKind, shownLabel, storedLabel, type LabelKind } from '@/lib/address-line'
-import { showPhone, useBrand, usePhoneRule } from '@/lib/brand'
-import { formatPhone, isValidPhone, normalizePhone } from '@/lib/phone'
+import { API_VERSION } from '@/lib/api-client'
 import { useSelectedBranch } from '@/lib/branch'
+import { showPhone, useBrand, usePhoneRule } from '@/lib/brand'
 import { addressBody, fromSaved, useMyAddresses } from '@/lib/delivery'
 import { pointOf, useLocationPermission, useMyLocation, type LatLng } from '@/lib/geo'
 import { useLanguage, useT } from '@/lib/i18n'
+import { formatPhone, isValidPhone, normalizePhone } from '@/lib/phone'
 import { problemMessage } from '@/lib/problem'
 import { getMyProfile } from '@/lib/services/identity'
 import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
-import { useDeliveryStore, type DeliveryAddress } from '@/stores/delivery-store'
-import { useGuestStore } from '@/stores/guest-store'
 import { Input } from '@/components/ui/input'
 import { pillAction } from '@/components/ui/ninja-sheet'
-import * as SheetPrimitive from '@radix-ui/react-dialog'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { AddressSearch } from './address-search'
 import { DetailChips } from './detail-chips'
@@ -80,7 +92,13 @@ export function AddressSheet({
       <SheetContent>
         <SheetHeader>
           <SheetTitle>
-            {form === 'new' ? t('deliveryNewAddress') : form ? t('deliveryEditAddress') : manage ? t('myAddresses') : t('deliveryAddressTitle')}
+            {form === 'new'
+              ? t('deliveryNewAddress')
+              : form
+                ? t('deliveryEditAddress')
+                : manage
+                  ? t('myAddresses')
+                  : t('deliveryAddressTitle')}
           </SheetTitle>
         </SheetHeader>
         {form ? (
@@ -121,26 +139,33 @@ export function AddressSheet({
                       onOpenChange(false)
                     }}
                     aria-pressed={on}
-                    className={cn('flex min-h-16 items-center gap-3 rounded-[1.25rem] px-4 py-3 text-start', on && 'bg-muted')}
+                    className={cn(
+                      'flex min-h-16 items-center gap-3 rounded-[1.25rem] px-4 py-3 text-start',
+                      on && 'bg-muted'
+                    )}
                   >
                     <span className='bg-muted grid size-10 shrink-0 place-items-center rounded-full'>
                       <LabelIcon kind={labelKind(address.label)} />
                     </span>
                     <span className='flex min-w-0 flex-1 flex-col'>
-                      <span className='truncate text-body font-semibold'>{row.title}</span>
+                      <span className='text-body truncate font-semibold'>{row.title}</span>
                       {/* Only when there is more to say than the line above already does */}
-                      {row.line && <span className='text-muted-foreground line-clamp-2 text-caption'>{row.line}</span>}
+                      {row.line && <span className='text-muted-foreground text-caption line-clamp-2'>{row.line}</span>}
                     </span>
-                    {on ? <Check className='size-5 shrink-0' /> : manage && <ChevronRight className='text-muted-foreground size-4 shrink-0 rtl:rotate-180' />}
+                    {on ? (
+                      <Check className='size-5 shrink-0' />
+                    ) : (
+                      manage && <ChevronRight className='text-muted-foreground size-4 shrink-0 rtl:rotate-180' />
+                    )}
                   </button>
                 )
               })
             )}
-            {manage && empty && <p className='text-muted-foreground px-1 py-4 text-note'>{t('myAddressesEmpty')}</p>}
+            {manage && empty && <p className='text-muted-foreground text-note px-1 py-4'>{t('myAddressesEmpty')}</p>}
             <button
               type='button'
               onClick={() => setEditing('new')}
-              className='flex min-h-14 items-center gap-3 rounded-[1.25rem] px-4 text-start text-body font-semibold'
+              className='text-body flex min-h-14 items-center gap-3 rounded-[1.25rem] px-4 text-start font-semibold'
             >
               <span className='bg-primary text-primary-foreground grid size-10 shrink-0 place-items-center rounded-full'>
                 <Plus className='size-5' />
@@ -155,7 +180,9 @@ export function AddressSheet({
 }
 
 function sameAddress(a: DeliveryAddress, b: DeliveryAddress) {
-  return a.id != null ? a.id === b.id : a.latitude === b.latitude && a.longitude === b.longitude && a.address === b.address
+  return a.id != null
+    ? a.id === b.id
+    : a.latitude === b.latitude && a.longitude === b.longitude && a.address === b.address
 }
 
 function LabelIcon({ kind }: { kind: LabelKind }) {
@@ -201,10 +228,13 @@ function AddressForm({
   // the browser gives it already, else on the customer's word, once they have read why (under the map)
   const location = useMyLocation(initial == null, { precise: true, quiet: true })
   const permission = useLocationPermission()
-  const explain = initial == null && !location.here && location.canLocate && (permission === 'prompt' || permission === null)
+  const explain =
+    initial == null && !location.here && location.canLocate && (permission === 'prompt' || permission === null)
 
   const [point, setPoint] = useState<LatLng>(() =>
-    initial ? { lat: initial.latitude, lng: initial.longitude } : (location.here ?? pointOf(branch) ?? COUNTRY_CENTRES[country] ?? COUNTRY_CENTRES.EG),
+    initial
+      ? { lat: initial.latitude, lng: initial.longitude }
+      : (location.here ?? pointOf(branch) ?? COUNTRY_CENTRES[country] ?? COUNTRY_CENTRES.EG)
   )
   // The pin was put on a door: an address being changed already was; a new one once moved or located
   const [pinned, setPinned] = useState(initial != null || location.here != null)
@@ -357,227 +387,265 @@ function AddressForm({
               className='bg-background fixed inset-0 z-[100] flex flex-col outline-none'
             >
               <SheetPrimitive.Title className='sr-only'>{t('deliveryConfirmPin')}</SheetPrimitive.Title>
-      <div className='relative min-h-0 flex-1'>
-        <MapPicker
-          start={point}
-          to={flyTo}
-          onSettle={(settled, byUser) => {
-            setPoint(settled)
-            if (byUser) {
-              setPinned(true)
-              setMoved(true)
-            }
-          }}
-          className='absolute inset-0 h-full rounded-none'
-        />
-        {/* Back, and a street named rather than found, on the map itself: the map flies there, and the pin is then put on the door */}
-        <div className='absolute inset-x-3 top-[max(0.75rem,env(safe-area-inset-top))] z-10 flex items-start gap-2'>
-          <button
-            type='button'
-            onClick={leavePin}
-            aria-label={t('back')}
-            className='bg-background text-foreground grid size-11 shrink-0 place-items-center rounded-full shadow-md'
-          >
-            <ArrowLeft className='size-5 rtl:rotate-180' />
-          </button>
-          <div className='min-w-0 flex-1'>
-          <AddressSearch
-            near={pointOf(branch)}
-            onPick={(place) => {
-              setFlyTo({ lat: place.lat, lng: place.lng })
-              setPinned(true)
-              setMoved(true)
-              if (!street.trim() && place.address) setStreet(place.address)
-            }}
-          />
-          </div>
-        </div>
-        {location.canLocate && (
-          <button
-            type='button'
-            onClick={() => {
-              setMoved(false)
-              // Back to the fix there is at once; a fresher one follows it
-              if (location.here) setFlyTo({ ...location.here })
-              location.locate()
-            }}
-            disabled={location.locating}
-            className='bg-background text-foreground absolute end-3 bottom-3 grid size-12 place-items-center rounded-full shadow-md'
-            aria-label={t('useMyLocation')}
-          >
-            {location.locating ? <Loader2 className='size-5 animate-spin' /> : <LocateFixed className='size-5' />}
-          </button>
-        )}
-      </div>
-      <div className='flex flex-col gap-3 px-4 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))]'>
-      {explain && !moved ? (
-        // Why the app would like the position, before the browser asks for it
-        <button
-          type='button'
-          onClick={() => location.locate()}
-          disabled={location.locating}
-          className='bg-primary/10 text-foreground -mt-1 flex items-center gap-3 rounded-2xl p-3 text-start text-caption'
-        >
-          {location.locating ? <Loader2 className='text-primary size-5 shrink-0 animate-spin' /> : <LocateFixed className='text-primary size-5 shrink-0' />}
-          <span className='flex flex-col gap-0.5'>
-            <span className='font-semibold'>{t('useMyLocation')}</span>
-            <span className='text-muted-foreground'>{t('deliveryPinWhy')}</span>
-          </span>
-        </button>
-      ) : (
-        <p role={pinTried && !pinned ? 'alert' : undefined} className={cn('-mt-1 px-1 text-caption', pinTried && !pinned ? 'text-destructive' : 'text-muted-foreground')}>
-          {pinTried && !pinned ? t('deliveryNeedPin') : t('deliveryMovePin')}
-        </p>
-      )}
-      {/* Outside the form in the page (a layer of its own), so it confirms by its own tap */}
-      <button type='button' onClick={confirmPin} className={cn(pillAction, 'h-14 text-body')}>
-        <Check className='size-4' strokeWidth={3} />
-        {t('deliveryConfirmPin')}
-      </button>
-      </div>
+              <div className='relative min-h-0 flex-1'>
+                <MapPicker
+                  start={point}
+                  to={flyTo}
+                  onSettle={(settled, byUser) => {
+                    setPoint(settled)
+                    if (byUser) {
+                      setPinned(true)
+                      setMoved(true)
+                    }
+                  }}
+                  className='absolute inset-0 h-full rounded-none'
+                />
+                {/* Back, and a street named rather than found, on the map itself: the map flies there, and the pin is then put on the door */}
+                <div className='absolute inset-x-3 top-[max(0.75rem,env(safe-area-inset-top))] z-10 flex items-start gap-2'>
+                  <button
+                    type='button'
+                    onClick={leavePin}
+                    aria-label={t('back')}
+                    className='bg-background text-foreground grid size-11 shrink-0 place-items-center rounded-full shadow-md'
+                  >
+                    <ArrowLeft className='size-5 rtl:rotate-180' />
+                  </button>
+                  <div className='min-w-0 flex-1'>
+                    <AddressSearch
+                      near={pointOf(branch)}
+                      onPick={(place) => {
+                        setFlyTo({ lat: place.lat, lng: place.lng })
+                        setPinned(true)
+                        setMoved(true)
+                        if (!street.trim() && place.address) setStreet(place.address)
+                      }}
+                    />
+                  </div>
+                </div>
+                {location.canLocate && (
+                  <button
+                    type='button'
+                    onClick={() => {
+                      setMoved(false)
+                      // Back to the fix there is at once; a fresher one follows it
+                      if (location.here) setFlyTo({ ...location.here })
+                      location.locate()
+                    }}
+                    disabled={location.locating}
+                    className='bg-background text-foreground absolute end-3 bottom-3 grid size-12 place-items-center rounded-full shadow-md'
+                    aria-label={t('useMyLocation')}
+                  >
+                    {location.locating ? (
+                      <Loader2 className='size-5 animate-spin' />
+                    ) : (
+                      <LocateFixed className='size-5' />
+                    )}
+                  </button>
+                )}
+              </div>
+              <div className='flex flex-col gap-3 px-4 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))]'>
+                {explain && !moved ? (
+                  // Why the app would like the position, before the browser asks for it
+                  <button
+                    type='button'
+                    onClick={() => location.locate()}
+                    disabled={location.locating}
+                    className='bg-primary/10 text-foreground text-caption -mt-1 flex items-center gap-3 rounded-2xl p-3 text-start'
+                  >
+                    {location.locating ? (
+                      <Loader2 className='text-primary size-5 shrink-0 animate-spin' />
+                    ) : (
+                      <LocateFixed className='text-primary size-5 shrink-0' />
+                    )}
+                    <span className='flex flex-col gap-0.5'>
+                      <span className='font-semibold'>{t('useMyLocation')}</span>
+                      <span className='text-muted-foreground'>{t('deliveryPinWhy')}</span>
+                    </span>
+                  </button>
+                ) : (
+                  <p
+                    role={pinTried && !pinned ? 'alert' : undefined}
+                    className={cn(
+                      'text-caption -mt-1 px-1',
+                      pinTried && !pinned ? 'text-destructive' : 'text-muted-foreground'
+                    )}
+                  >
+                    {pinTried && !pinned ? t('deliveryNeedPin') : t('deliveryMovePin')}
+                  </p>
+                )}
+                {/* Outside the form in the page (a layer of its own), so it confirms by its own tap */}
+                <button type='button' onClick={confirmPin} className={cn(pillAction, 'text-body h-14')}>
+                  <Check className='size-4' strokeWidth={3} />
+                  {t('deliveryConfirmPin')}
+                </button>
+              </div>
             </SheetPrimitive.Content>
           </SheetPrimitive.Portal>
         </SheetPrimitive.Root>
       ) : (
         <>
-      {/* Where the pin is, as a small map that stays still; a tap opens the whole map to move it */}
-      <button
-        type='button'
-        onClick={() => setStep('pin')}
-        aria-label={t('deliveryAdjustPin')}
-        className='relative block h-32 overflow-hidden rounded-[1.25rem] text-start'
-      >
-        <div className='pointer-events-none absolute inset-0' aria-hidden>
-          <MapPicker start={point} onSettle={() => {}} className='h-full' />
-        </div>
-        <span className='bg-background text-foreground absolute end-2 bottom-2 flex items-center gap-1.5 rounded-full px-3 py-1.5 text-caption font-semibold shadow-md'>
-          <MapPin className='size-3.5' />
-          {t('deliveryAdjustPin')}
-        </span>
-      </button>
-
-      <Input
-        value={street}
-        onChange={(e) => setStreet(e.target.value)}
-        placeholder={t('deliveryStreet')}
-        aria-label={t('deliveryStreet')}
-        aria-invalid={tried && !streetOk}
-        aria-describedby={tried && problem ? 'address-problem' : undefined}
-        maxLength={300}
-        autoComplete='street-address'
-      />
-      {/* The building, floor and apartment as chips, each added only if wanted, and a note for the rider under them */}
-      <DetailChips
-        title={t('deliveryDetails')}
-        optional={t('optional')}
-        details={[
-          { key: 'building', label: t('deliveryBuilding'), value: building, onChange: setBuilding, maxLength: 100 },
-          { key: 'floor', label: t('deliveryFloor'), value: floor, onChange: setFloor, numeric: true, maxLength: 50 },
-          { key: 'apartment', label: t('deliveryApartment'), value: apartment, onChange: setApartment, maxLength: 50 },
-        ]}
-        note={{ label: t('deliveryRiderNote'), value: directions, onChange: setDirections, maxLength: 500 }}
-      />
-      {isGuest && (
-        <Input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder={t('deliveryYourName')}
-          aria-label={t('deliveryYourName')}
-          aria-invalid={tried && !nameOk}
-          aria-describedby={tried && problem ? 'address-problem' : undefined}
-          maxLength={100}
-          autoComplete='name'
-        />
-      )}
-      {phoneField ? (
-        <Input
-          value={phone}
-          onChange={(e) => {
-            // Typing keeps the field: a number that turns valid mid-way does not fold it away
-            setEditPhone(true)
-            setPhone(e.target.value)
-          }}
-          placeholder={phonePlaceholder || t('deliveryPhone')}
-          aria-label={t('deliveryPhone')}
-          aria-invalid={tried && !phoneOk}
-          aria-describedby={tried && problem ? 'address-problem' : undefined}
-          type='tel'
-          inputMode='tel'
-          autoComplete='tel'
-          // The digits read left to right, but the field sits with the others: on the right in Arabic
-          dir='ltr'
-          className='rtl:text-right'
-        />
-      ) : (
-        phoneOk && (
-          <div className='flex min-h-11 items-center gap-3 px-1'>
-            <Phone className='text-muted-foreground size-4 shrink-0' />
-            <span className='flex min-w-0 flex-1 flex-col'>
-              <span className='text-muted-foreground text-caption'>{t('deliveryPhone')}</span>
-              <bdi dir='ltr' className='text-note font-semibold'>
-                {showPhone(phone)}
-              </bdi>
-            </span>
-            <button type='button' onClick={() => setEditPhone(true)} className='min-h-11 px-2 text-note font-semibold underline underline-offset-4'>
-              {t('deliveryChange')}
-            </button>
-          </div>
-        )
-      )}
-      {tried && problem && (
-        <p id='address-problem' role='alert' className='text-destructive px-1 text-caption'>
-          {problem}
-        </p>
-      )}
-
-      {auth.isAuthenticated && (
-        <div className='flex flex-wrap items-center gap-2' role='group' aria-label={t('deliveryLabel')}>
-          {(['home', 'work'] as const).map((k) => (
-            <button
-              key={k}
-              type='button'
-              aria-pressed={kind === k}
-              onClick={() => setKind(kind === k ? 'other' : k)}
-              className={cn('h-11 rounded-full px-4 text-note font-semibold', kind === k ? 'bg-primary text-primary-foreground' : 'bg-muted')}
-            >
-              {k === 'home' ? t('deliveryLabelHome') : t('deliveryLabelWork')}
-            </button>
-          ))}
-        </div>
-      )}
-
-      <button type='submit' disabled={busy} className={cn(pillAction, 'mt-1')}>
-        {busy ? <Loader2 className='size-4 animate-spin' /> : <Check className='size-4' strokeWidth={3} />}
-        {t('deliverySaveAddress')}
-      </button>
-      {initial?.id != null &&
-        (removing ? (
-          <div className='flex flex-col gap-2' role='group' aria-label={t('deliveryRemoveConfirm')}>
-            <p className='text-center text-note font-semibold'>{t('deliveryRemoveConfirm')}</p>
-            <div className='grid grid-cols-2 gap-2'>
-              <button type='button' onClick={() => setRemoving(false)} className='bg-muted h-11 rounded-full text-note font-semibold'>
-                {t('deliveryKeep')}
-              </button>
-              <button
-                type='button'
-                onClick={() => void forget()}
-                disabled={remove.isPending}
-                className='bg-destructive h-11 rounded-full text-note font-semibold text-white'
-              >
-                {t('deliveryRemoveYes')}
-              </button>
-            </div>
-          </div>
-        ) : (
+          {/* Where the pin is, as a small map that stays still; a tap opens the whole map to move it */}
           <button
             type='button'
-            onClick={() => setRemoving(true)}
-            className='text-destructive flex h-11 items-center justify-center gap-2 text-note font-semibold'
+            onClick={() => setStep('pin')}
+            aria-label={t('deliveryAdjustPin')}
+            className='relative block h-32 overflow-hidden rounded-[1.25rem] text-start'
           >
-            <Trash2 className='size-4' />
-            {t('deliveryRemoveAddress')}
+            <div className='pointer-events-none absolute inset-0' aria-hidden>
+              <MapPicker start={point} onSettle={() => {}} className='h-full' />
+            </div>
+            <span className='bg-background text-foreground text-caption absolute end-2 bottom-2 flex items-center gap-1.5 rounded-full px-3 py-1.5 font-semibold shadow-md'>
+              <MapPin className='size-3.5' />
+              {t('deliveryAdjustPin')}
+            </span>
           </button>
-        ))}
+
+          <Input
+            value={street}
+            onChange={(e) => setStreet(e.target.value)}
+            placeholder={t('deliveryStreet')}
+            aria-label={t('deliveryStreet')}
+            aria-invalid={tried && !streetOk}
+            aria-describedby={tried && problem ? 'address-problem' : undefined}
+            maxLength={300}
+            autoComplete='street-address'
+          />
+          {/* The building, floor and apartment as chips, each added only if wanted, and a note for the rider under them */}
+          <DetailChips
+            title={t('deliveryDetails')}
+            optional={t('optional')}
+            details={[
+              { key: 'building', label: t('deliveryBuilding'), value: building, onChange: setBuilding, maxLength: 100 },
+              {
+                key: 'floor',
+                label: t('deliveryFloor'),
+                value: floor,
+                onChange: setFloor,
+                numeric: true,
+                maxLength: 50,
+              },
+              {
+                key: 'apartment',
+                label: t('deliveryApartment'),
+                value: apartment,
+                onChange: setApartment,
+                maxLength: 50,
+              },
+            ]}
+            note={{ label: t('deliveryRiderNote'), value: directions, onChange: setDirections, maxLength: 500 }}
+          />
+          {isGuest && (
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder={t('deliveryYourName')}
+              aria-label={t('deliveryYourName')}
+              aria-invalid={tried && !nameOk}
+              aria-describedby={tried && problem ? 'address-problem' : undefined}
+              maxLength={100}
+              autoComplete='name'
+            />
+          )}
+          {phoneField ? (
+            <Input
+              value={phone}
+              onChange={(e) => {
+                // Typing keeps the field: a number that turns valid mid-way does not fold it away
+                setEditPhone(true)
+                setPhone(e.target.value)
+              }}
+              placeholder={phonePlaceholder || t('deliveryPhone')}
+              aria-label={t('deliveryPhone')}
+              aria-invalid={tried && !phoneOk}
+              aria-describedby={tried && problem ? 'address-problem' : undefined}
+              type='tel'
+              inputMode='tel'
+              autoComplete='tel'
+              // The digits read left to right, but the field sits with the others: on the right in Arabic
+              dir='ltr'
+              className='rtl:text-right'
+            />
+          ) : (
+            phoneOk && (
+              <div className='flex min-h-11 items-center gap-3 px-1'>
+                <Phone className='text-muted-foreground size-4 shrink-0' />
+                <span className='flex min-w-0 flex-1 flex-col'>
+                  <span className='text-muted-foreground text-caption'>{t('deliveryPhone')}</span>
+                  <bdi dir='ltr' className='text-note font-semibold'>
+                    {showPhone(phone)}
+                  </bdi>
+                </span>
+                <button
+                  type='button'
+                  onClick={() => setEditPhone(true)}
+                  className='text-note min-h-11 px-2 font-semibold underline underline-offset-4'
+                >
+                  {t('deliveryChange')}
+                </button>
+              </div>
+            )
+          )}
+          {tried && problem && (
+            <p id='address-problem' role='alert' className='text-destructive text-caption px-1'>
+              {problem}
+            </p>
+          )}
+
+          {auth.isAuthenticated && (
+            <div className='flex flex-wrap items-center gap-2' role='group' aria-label={t('deliveryLabel')}>
+              {(['home', 'work'] as const).map((k) => (
+                <button
+                  key={k}
+                  type='button'
+                  aria-pressed={kind === k}
+                  onClick={() => setKind(kind === k ? 'other' : k)}
+                  className={cn(
+                    'text-note h-11 rounded-full px-4 font-semibold',
+                    kind === k ? 'bg-primary text-primary-foreground' : 'bg-muted'
+                  )}
+                >
+                  {k === 'home' ? t('deliveryLabelHome') : t('deliveryLabelWork')}
+                </button>
+              ))}
+            </div>
+          )}
+
+          <button type='submit' disabled={busy} className={cn(pillAction, 'mt-1')}>
+            {busy ? <Loader2 className='size-4 animate-spin' /> : <Check className='size-4' strokeWidth={3} />}
+            {t('deliverySaveAddress')}
+          </button>
+          {initial?.id != null &&
+            (removing ? (
+              <div className='flex flex-col gap-2' role='group' aria-label={t('deliveryRemoveConfirm')}>
+                <p className='text-note text-center font-semibold'>{t('deliveryRemoveConfirm')}</p>
+                <div className='grid grid-cols-2 gap-2'>
+                  <button
+                    type='button'
+                    onClick={() => setRemoving(false)}
+                    className='bg-muted text-note h-11 rounded-full font-semibold'
+                  >
+                    {t('deliveryKeep')}
+                  </button>
+                  <button
+                    type='button'
+                    onClick={() => void forget()}
+                    disabled={remove.isPending}
+                    className='bg-destructive text-note h-11 rounded-full font-semibold text-white'
+                  >
+                    {t('deliveryRemoveYes')}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                type='button'
+                onClick={() => setRemoving(true)}
+                className='text-destructive text-note flex h-11 items-center justify-center gap-2 font-semibold'
+              >
+                <Trash2 className='size-4' />
+                {t('deliveryRemoveAddress')}
+              </button>
+            ))}
         </>
       )}
     </form>

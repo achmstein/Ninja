@@ -1,19 +1,7 @@
 import { useState } from 'react'
 import { getRouteApi, Link } from '@tanstack/react-router'
-import {
-  Armchair,
-  CalendarClock,
-  History,
-  MoreHorizontal,
-  Plus,
-  QrCode,
-} from 'lucide-react'
-import {
-  type PlaceViewModel,
-  type ReservationViewModel,
-  type StayViewModel,
-  type TariffViewModel,
-} from '@/api/spaces'
+import { Armchair, CalendarClock, History, MoreHorizontal, Plus, QrCode } from 'lucide-react'
+import { type PlaceViewModel, type ReservationViewModel, type StayViewModel, type TariffViewModel } from '@/api/spaces'
 import { useFeatures } from '@/lib/brand'
 import { useLocalized, useT, type TranslationKey } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
@@ -26,13 +14,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Switch } from '@/components/ui/switch'
 import { ConfirmDialog } from '@/components/confirm-dialog'
@@ -73,9 +55,7 @@ function placeSubline(
   stay: StayViewModel | undefined,
   reservation: ReservationViewModel | undefined,
   t: (key: TranslationKey, params?: Record<string, string | number>) => string,
-  localized: (
-    text: { en?: string | null; ar?: string | null } | null | undefined
-  ) => string
+  localized: (text: { en?: string | null; ar?: string | null } | null | undefined) => string
 ): string {
   if (isRunning(stay)) {
     const who = stay!.customerName || t('walkIn')
@@ -83,9 +63,7 @@ function placeSubline(
     return option ? `${who} · ${option}` : who
   }
   if (isHolding(reservation)) {
-    return reservation!.customerName
-      ? t('heldFor', { name: reservation!.customerName })
-      : t('held')
+    return reservation!.customerName ? t('heldFor', { name: reservation!.customerName }) : t('held')
   }
   if (Number(place.status) === PLACE_OUT_OF_SERVICE) return t('outOfService')
   return tariffLine(place, t, localized)
@@ -120,12 +98,9 @@ export function PlacesManagement() {
   } | null>(null)
 
   const selectedPlace = places.find((p) => Number(p.id) === search.place)
-  const select = (placeId: number | undefined) =>
-    navigate({ search: (prev) => ({ ...prev, place: placeId }) })
+  const select = (placeId: number | undefined) => navigate({ search: (prev) => ({ ...prev, place: placeId }) })
 
-  const visible = places.filter(
-    (place) => status === 'all' || Number(place.status) === Number(status)
-  )
+  const visible = places.filter((place) => status === 'all' || Number(place.status) === Number(status))
 
   return (
     <>
@@ -134,16 +109,9 @@ export function PlacesManagement() {
           {/* Master: the places, grouped by kind */}
           <div className='flex w-full flex-col gap-2 sm:w-64 lg:w-80 2xl:w-96'>
             <div className='flex items-start justify-between py-2'>
-              <h1 className='text-2xl font-bold tracking-tight'>
-                {t('placesNav')}
-              </h1>
+              <h1 className='text-2xl font-bold tracking-tight'>{t('placesNav')}</h1>
               <div className='flex items-center'>
-                <Button
-                  size='icon'
-                  variant='ghost'
-                  onClick={() => setAddOpen(true)}
-                  aria-label={t('newPlace')}
-                >
+                <Button size='icon' variant='ghost' onClick={() => setAddOpen(true)} aria-label={t('newPlace')}>
                   <Plus size={20} className='stroke-muted-foreground' />
                 </Button>
                 <Button size='icon' variant='ghost' asChild>
@@ -160,14 +128,8 @@ export function PlacesManagement() {
                 )}
                 {features.reservations && (
                   <Button size='icon' variant='ghost' asChild>
-                    <Link
-                      to='/places/reservations'
-                      aria-label={t('reservationHistory')}
-                    >
-                      <CalendarClock
-                        size={20}
-                        className='stroke-muted-foreground'
-                      />
+                    <Link to='/places/reservations' aria-label={t('reservationHistory')}>
+                      <CalendarClock size={20} className='stroke-muted-foreground' />
                     </Link>
                   </Button>
                 )}
@@ -176,21 +138,11 @@ export function PlacesManagement() {
 
             <Select value={status} onValueChange={setStatus}>
               <SelectTrigger size='sm' className='w-full'>
-                <SelectValue>
-                  {t(
-                    statusFilters.find((s) => s.value === status)?.key ??
-                      'allPlaces'
-                  )}
-                </SelectValue>
+                <SelectValue>{t(statusFilters.find((s) => s.value === status)?.key ?? 'allPlaces')}</SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {statusFilters
-                  .filter(
-                    (option) =>
-                      option.value !== '3' ||
-                      features.reservations ||
-                      status === '3'
-                  )
+                  .filter((option) => option.value !== '3' || features.reservations || status === '3')
                   .map((option) => (
                     <SelectItem key={option.value} value={option.value}>
                       {t(option.key)}
@@ -205,9 +157,7 @@ export function PlacesManagement() {
                 filter, so the last place is reachable */}
             <div className='-mx-3 min-h-0 flex-1 overflow-y-auto p-3 pb-10'>
               {isLoading ? (
-                [...Array(6)].map((_, i) => (
-                  <Skeleton key={i} className='mb-2 h-14 rounded-md' />
-                ))
+                [...Array(6)].map((_, i) => <Skeleton key={i} className='mb-2 h-14 rounded-md' />)
               ) : places.length === 0 ? (
                 <EmptyState
                   compact
@@ -222,24 +172,18 @@ export function PlacesManagement() {
                 />
               ) : (
                 placeKinds.map(({ kind, key }) => {
-                  const group = visible.filter(
-                    (place) => Number(place.kind) === kind
-                  )
+                  const group = visible.filter((place) => Number(place.kind) === kind)
                   if (group.length === 0) return null
                   return (
                     <div key={kind} className='mb-3'>
-                      <h2 className='text-muted-foreground px-2 pb-1 text-xs font-medium'>
-                        {t(key)}
-                      </h2>
+                      <h2 className='text-muted-foreground px-2 pb-1 text-xs font-medium'>{t(key)}</h2>
                       {group.map((place) => {
                         const stay = stayFor(place.id)
                         const reservation = reservationFor(place.id)
                         const orders = ordersAt(place)
                         const placeStatus =
-                          placeStatusConfig[Number(place.status ?? 0)] ??
-                          placeStatusConfig[PLACE_AVAILABLE]
-                        const outOfService =
-                          Number(place.status) === PLACE_OUT_OF_SERVICE
+                          placeStatusConfig[Number(place.status ?? 0)] ?? placeStatusConfig[PLACE_AVAILABLE]
+                        const outOfService = Number(place.status) === PLACE_OUT_OF_SERVICE
                         const selected = Number(place.id) === search.place
                         const busy = stay != null || isHolding(reservation)
                         return (
@@ -256,14 +200,10 @@ export function PlacesManagement() {
                               className='flex min-w-0 flex-1 items-center gap-3 py-1.5 text-start'
                               onClick={() => select(Number(place.id))}
                             >
-                              <span
-                                className={`h-2 w-2 shrink-0 rounded-full ${placeStatus.dotClass}`}
-                              />
+                              <span className={`h-2 w-2 shrink-0 rounded-full ${placeStatus.dotClass}`} />
                               <div className='min-w-0 flex-1'>
                                 <div className='flex items-center gap-2'>
-                                  <span className='truncate font-medium'>
-                                    {localized(place.name)}
-                                  </span>
+                                  <span className='truncate font-medium'>{localized(place.name)}</span>
                                   {orders.length > 0 && (
                                     <Badge className='h-5 min-w-5 rounded-full px-1.5 tabular-nums'>
                                       {orders.length}
@@ -271,19 +211,10 @@ export function PlacesManagement() {
                                   )}
                                 </div>
                                 <div className='text-muted-foreground truncate text-xs tabular-nums'>
-                                  {placeSubline(
-                                    place,
-                                    stay,
-                                    reservation,
-                                    t,
-                                    localized
-                                  )}
+                                  {placeSubline(place, stay, reservation, t, localized)}
                                 </div>
                               </div>
-                              <PlaceKindIcon
-                                kind={kind}
-                                className='text-muted-foreground size-4 shrink-0'
-                              />
+                              <PlaceKindIcon kind={kind} className='text-muted-foreground size-4 shrink-0' />
                             </button>
 
                             {/* Closed places keep their printed code but
@@ -292,44 +223,27 @@ export function PlacesManagement() {
                               aria-label={t('acceptingCustomers')}
                               checked={Boolean(place.isActive)}
                               disabled={actions.isBusy}
-                              onCheckedChange={(checked) =>
-                                actions.setActive(Number(place.id), checked)
-                              }
+                              onCheckedChange={(checked) => actions.setActive(Number(place.id), checked)}
                             />
 
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
-                                <Button
-                                  size='icon'
-                                  variant='ghost'
-                                  className='size-7'
-                                  aria-label={t('actions')}
-                                >
+                                <Button size='icon' variant='ghost' className='size-7' aria-label={t('actions')}>
                                   <MoreHorizontal className='h-4 w-4' />
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align='end'>
-                                <DropdownMenuItem
-                                  onClick={() => setEditPlace(place)}
-                                >
-                                  {t('edit')}
-                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => setEditPlace(place)}>{t('edit')}</DropdownMenuItem>
                                 <DropdownMenuItem
                                   disabled={busy || actions.isBusy}
                                   onClick={() =>
                                     actions.setStatus(
                                       Number(place.id),
-                                      outOfService
-                                        ? PLACE_PHYSICAL_AVAILABLE
-                                        : PLACE_PHYSICAL_OUT_OF_SERVICE
+                                      outOfService ? PLACE_PHYSICAL_AVAILABLE : PLACE_PHYSICAL_OUT_OF_SERVICE
                                     )
                                   }
                                 >
-                                  {t(
-                                    outOfService
-                                      ? 'backInService'
-                                      : 'outOfService'
-                                  )}
+                                  {t(outOfService ? 'backInService' : 'outOfService')}
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem
@@ -410,14 +324,7 @@ export function PlacesManagement() {
         }}
       />
 
-      {addOpen && (
-        <PlaceDialog
-          place={null}
-          places={places}
-          open
-          onOpenChange={setAddOpen}
-        />
-      )}
+      {addOpen && <PlaceDialog place={null} places={places} open onOpenChange={setAddOpen} />}
 
       {editPlace && (
         <PlaceDialog

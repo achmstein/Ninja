@@ -1,6 +1,6 @@
-import { useAllowedBranches } from '@/hooks/use-allowed-branches'
-import { useFeatures } from '@/lib/brand'
 import { useCallCentreStore } from '@/stores/call-centre-store'
+import { useFeatures } from '@/lib/brand'
+import { useAllowedBranches } from '@/hooks/use-allowed-branches'
 
 /**
  * Whether this till may work as the call centre (the business has it, and

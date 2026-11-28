@@ -2,15 +2,19 @@ import { useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useAuth } from 'react-oidc-context'
 import type { CustomerAddressView, DeliveringBranch, DeliveryView, LocalizedText } from '@/api/ordering'
-import { getDeliveryQuoteOptions, getMyAddressesOptions, resolveDeliveryBranchOptions } from '@/api/ordering/@tanstack/react-query.gen'
+import {
+  getDeliveryQuoteOptions,
+  getMyAddressesOptions,
+  resolveDeliveryBranchOptions,
+} from '@/api/ordering/@tanstack/react-query.gen'
 import type { BranchResponse } from '@/api/tenant'
-import { API_VERSION } from '@/lib/api-client'
-import { formatAddressLine, type AddressParts, type AddressWords } from '@/lib/address-line'
-import { useAtBranch } from '@/lib/at-branch'
-import { useFeatures } from '@/lib/brand'
-import { useBranches, useSelectedBranch } from '@/lib/branch'
-import type { OrderDestination } from '@/lib/order-destination'
 import { GUEST_OWNER, useDeliveryStore, type DeliveryAddress } from '@/stores/delivery-store'
+import { formatAddressLine, type AddressParts, type AddressWords } from '@/lib/address-line'
+import { API_VERSION } from '@/lib/api-client'
+import { useAtBranch } from '@/lib/at-branch'
+import { useBranches, useSelectedBranch } from '@/lib/branch'
+import { useFeatures } from '@/lib/brand'
+import type { OrderDestination } from '@/lib/order-destination'
 
 /** What stands in the way of a delivery, for the tray to say */
 export type DeliveryProblem = 'signIn' | 'address' | 'checking' | 'quoteFailed' | 'range' | 'areaOff' | 'minimum' | null
@@ -97,7 +101,10 @@ export function deliveryProblem(s: {
  * branch that has stopped delivering to the address's area for now is the
  * answer only when no other reaches it.
  */
-export function servingBranch(reaching: DeliveringBranch[], branches: BranchResponse[]): { branchId: number; meters: number } | null {
+export function servingBranch(
+  reaching: DeliveringBranch[],
+  branches: BranchResponse[]
+): { branchId: number; meters: number } | null {
   const open = reaching.filter((candidate) => {
     const branch = branches.find((b) => Number(b.id) === Number(candidate.branchId))
     return branch != null && branch.isActive !== false && branch.isOrderingEnabled !== false
@@ -138,7 +145,9 @@ export function useDelivery(destination: OrderDestination, subtotal: number): De
   // The business delivers (an add-on it bought, and on), and so does one of its branches: whichever
   // the order is at now, the address picks the one that brings it
   const offered =
-    delivers && !destination && branches.some((b) => b.isActive !== false && b.isDeliveryEnabled === true && b.isOrderingEnabled !== false)
+    delivers &&
+    !destination &&
+    branches.some((b) => b.isActive !== false && b.isDeliveryEnabled === true && b.isOrderingEnabled !== false)
   const active = offered && store.wanted
   // Delivery for signed-in customers only here: a guest is asked to sign in, and nothing is quoted
   const needsSignIn = active && !auth.isAuthenticated && branch?.requireSignInForDelivery === true
@@ -169,7 +178,8 @@ export function useDelivery(destination: OrderDestination, subtotal: number): De
 
   const quote = quoteQuery.data
   // While the order is on its way to the address's branch, this one's answer is not the one that counts
-  const quoted = quote != null && address != null && !(resolveQuery.isPending && resolveQuery.isFetching) && moveTo == null
+  const quoted =
+    quote != null && address != null && !(resolveQuery.isPending && resolveQuery.isFetching) && moveTo == null
   const inRange = quoted && quote.delivers && quote.inRange
   const fee = quoted ? Number(quote.fee) : 0
   const minimum = quoted ? Number(quote.minimumOrder) : 0

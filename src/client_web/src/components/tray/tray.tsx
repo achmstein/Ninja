@@ -1,33 +1,43 @@
 import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState, type RefObject } from 'react'
-import { animate, AnimatePresence, motion, useMotionValue, useMotionValueEvent, useReducedMotion, useTransform, type MotionValue, type PanInfo } from 'motion/react'
 import { Check, CreditCard, Loader2, LogIn, Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react'
+import {
+  animate,
+  AnimatePresence,
+  motion,
+  useMotionValue,
+  useMotionValueEvent,
+  useReducedMotion,
+  useTransform,
+  type MotionValue,
+  type PanInfo,
+} from 'motion/react'
+import type { StoredPlace } from '@/stores/place-store'
 import { lineKey, useCart, type CartLine } from '@/lib/cart'
+import type { DeliveryState } from '@/lib/delivery'
 import { useArabicStyle, useLanguage, useLocalized, usePrice, useT } from '@/lib/i18n'
 import { useDockOrder } from '@/lib/live-order'
+import { blurSwap, ease } from '@/lib/motion'
+import type { OrderDestination } from '@/lib/order-destination'
+import type { CheckoutBlock } from '@/lib/order-payload'
 import { STAGE_LABEL, words } from '@/lib/order-pill'
+import type { PayAhead } from '@/lib/pay-ahead'
 import { PlaceIcon } from '@/lib/places'
 import { toast } from '@/lib/toast'
-import { blurSwap, ease } from '@/lib/motion'
+import type { CheckoutExtras } from '@/lib/use-checkout-extras'
 import { usePullDown } from '@/lib/use-pull-down'
 import { cn } from '@/lib/utils'
-import type { CheckoutBlock } from '@/lib/order-payload'
-import type { DeliveryState } from '@/lib/delivery'
-import type { OrderDestination } from '@/lib/order-destination'
-import type { CheckoutExtras } from '@/lib/use-checkout-extras'
-import { TrayExtras } from './tray-extras'
-import { TrayNudge } from './tray-nudge'
-import type { StoredPlace } from '@/stores/place-store'
-import { ScanTableButton } from '@/components/places/table-scanner'
 import { DeliveryChoice, PickupFrom, showDeliveryNote } from '@/components/delivery/delivery-choice'
+import { DOCK_INSET, TABS_H } from '@/components/ninja/shell/chrome'
 import { PayChoice } from '@/components/pay/pay-choice'
-import type { PayAhead } from '@/lib/pay-ahead'
 import { StillHereCard } from '@/components/places/still-here'
-import { Odometer } from '../ninja/odometer'
+import { ScanTableButton } from '@/components/places/table-scanner'
 import { ItemPhoto } from '../menu/item-photo'
 import { HintBubble } from '../ninja/gestures/hint-bubble'
-import { DOCK_H, swipeRemoves, traySummary, trayOpensAfterDrag } from './tray-model'
-import { DOCK_INSET, TABS_H } from '@/components/ninja/shell/chrome'
 import { useHint, useTimeout } from '../ninja/gestures/use-hint'
+import { Odometer } from '../ninja/odometer'
+import { TrayExtras } from './tray-extras'
+import { DOCK_H, swipeRemoves, traySummary, trayOpensAfterDrag } from './tray-model'
+import { TrayNudge } from './tray-nudge'
 
 /** How long the first item's line about the order stays up, ms */
 const TRAY_CUE_MS = 4500
@@ -159,7 +169,9 @@ export function Tray({
     if (!sheet || !dock || reduced) return
     const clip = sheet.parentElement?.getBoundingClientRect()
     const dockThumbs = new Map<string, DOMRect>()
-    dock.querySelectorAll<HTMLElement>('[data-thumb]').forEach((el) => dockThumbs.set(el.dataset.thumb ?? '', el.getBoundingClientRect()))
+    dock
+      .querySelectorAll<HTMLElement>('[data-thumb]')
+      .forEach((el) => dockThumbs.set(el.dataset.thumb ?? '', el.getBoundingClientRect()))
     const stack = dockThumbs.values().next().value as DOMRect | undefined
     const offset = y.get()
     const next: Seat[] = []
@@ -171,7 +183,14 @@ export function Tray({
       if (clip && to.y + to.height > clip.bottom - 4) return
       const from = dockThumbs.get(key) ?? stack
       if (!from) return
-      next.push({ key, from: { x: from.left, y: from.top, width: from.width, height: from.height }, to, src: el.dataset.src || null, label: el.dataset.label ?? '', fromDock: dockThumbs.has(key) })
+      next.push({
+        key,
+        from: { x: from.left, y: from.top, width: from.width, height: from.height },
+        to,
+        src: el.dataset.src || null,
+        label: el.dataset.label ?? '',
+        fromDock: dockThumbs.has(key),
+      })
     })
     setSeats(next)
   }
@@ -199,7 +218,9 @@ export function Tray({
     return () => observer.disconnect()
     // The stack is a new element on every bump (its key), so the observer follows it
   }, [targetRef, openness, bump])
-  const thumbsSize = useTransform(openness, (v): number | string => (v <= 0.001 || !thumbsWidth.current ? 'auto' : thumbsWidth.current * (1 - v)))
+  const thumbsSize = useTransform(openness, (v): number | string =>
+    v <= 0.001 || !thumbsWidth.current ? 'auto' : thumbsWidth.current * (1 - v)
+  )
   // A little room past the stack at rest (its +N badge hangs over its end), closing up as the sheet opens
   const thumbsGap = useTransform(openness, (v) => 6 - 18 * v)
   const countOpacity = useTransform(openness, (v) => Math.max(0, 1 - v * 2.5))
@@ -289,7 +310,8 @@ export function Tray({
   usePullDown(sheetRef, sheetOn && expanded && !empty, {
     onStart: () => pan.start(),
     onMove: (offsetY) => pan.move('sheet', { offset: { x: 0, y: offsetY } } as PanInfo),
-    onEnd: (offsetY, velocityY) => pan.end('sheet', { offset: { x: 0, y: offsetY }, velocity: { x: 0, y: velocityY } } as PanInfo),
+    onEnd: (offsetY, velocityY) =>
+      pan.end('sheet', { offset: { x: 0, y: offsetY }, velocity: { x: 0, y: velocityY } } as PanInfo),
   })
 
   const action = (() => {
@@ -297,7 +319,11 @@ export function Tray({
     if (order.block === 'table' && !cloudKitchen) return <ScanTableButton className='h-12 rounded-full px-5' />
     if (order.block) {
       return (
-        <button type='button' onClick={onSignIn} className='bg-primary text-primary-foreground flex h-12 items-center gap-2 rounded-full px-5 text-note font-bold'>
+        <button
+          type='button'
+          onClick={onSignIn}
+          className='bg-primary text-primary-foreground text-note flex h-12 items-center gap-2 rounded-full px-5 font-bold'
+        >
           <LogIn className='size-4' />
           {t('signIn')}
         </button>
@@ -321,7 +347,10 @@ export function Tray({
   return (
     // Bare, it takes no room: its row stays drawn where it will be (anchored to the bottom, over the
     // menu, faded out) so an item flying in lands on its place while the row grows under it
-    <div className='relative z-10 shrink-0 transition-[height] duration-300 ease-out motion-reduce:transition-none' style={{ height: bare ? 0 : DOCK_H }}>
+    <div
+      className='relative z-10 shrink-0 transition-[height] duration-300 ease-out motion-reduce:transition-none'
+      style={{ height: bare ? 0 : DOCK_H }}
+    >
       <AnimatePresence>
         {hint.showing && !expanded && (
           <div key='drag-words' className='absolute inset-x-0 bottom-full z-20 mb-4 flex justify-center'>
@@ -340,7 +369,10 @@ export function Tray({
           // As tall as the order needs, up to nearly the whole screen: the dock and its tabs stay under it and a
           // strip of the menu over it. It was held to two thirds of the screen, so an order of five or six
           // items scrolled inside a sheet with room to spare above it
-          style={{ bottom: DOCK_H - TUCK, height: `calc(100svh - ${DOCK_H + TABS_H + DOCK_INSET}px - env(safe-area-inset-bottom) - 4.5rem)` }}
+          style={{
+            bottom: DOCK_H - TUCK,
+            height: `calc(100svh - ${DOCK_H + TABS_H + DOCK_INSET}px - env(safe-area-inset-bottom) - 4.5rem)`,
+          }}
         >
           <motion.div
             ref={sheetRef}
@@ -373,79 +405,79 @@ export function Tray({
         )}
         style={{ height: DOCK_H }}
       >
-              <motion.button
-                type='button'
-                // The dock pulls the order up; a tap opens it too
-                onPanStart={pan.start}
-                onPan={(_, info) => pan.move('dock', info)}
-                onPanEnd={(_, info) => pan.end('dock', info)}
-                onTap={() => !empty && onExpandedChange(!expanded)}
-                aria-expanded={expanded}
-                aria-label={t('ninjaYourOrder')}
-                disabled={empty}
-                className='flex min-w-0 flex-1 touch-none items-center gap-3 text-start'
-              >
-                {/* The dock's grab handle, always there: the open sheet shows none of its own, so there is only ever the one, and it goes up and down with the sheet */}
+        <motion.button
+          type='button'
+          // The dock pulls the order up; a tap opens it too
+          onPanStart={pan.start}
+          onPan={(_, info) => pan.move('dock', info)}
+          onPanEnd={(_, info) => pan.end('dock', info)}
+          onTap={() => !empty && onExpandedChange(!expanded)}
+          aria-expanded={expanded}
+          aria-label={t('ninjaYourOrder')}
+          disabled={empty}
+          className='flex min-w-0 flex-1 touch-none items-center gap-3 text-start'
+        >
+          {/* The dock's grab handle, always there: the open sheet shows none of its own, so there is only ever the one, and it goes up and down with the sheet */}
+          <motion.span
+            aria-hidden
+            className='bg-background/30 absolute left-1/2 h-1 w-9 -translate-x-1/2 rounded-full'
+            style={{ top: HANDLE_TOP, y: handleY }}
+          />
+          <motion.div
+            ref={targetRef}
+            key={bump}
+            initial={bump > 0 && !reduced ? { scale: 1.18 } : false}
+            animate={{ scale: 1 }}
+            transition={{ type: 'spring', stiffness: 500, damping: 14 }}
+            className='relative flex h-11 min-w-11 shrink-0 items-center'
+            style={reduced ? undefined : { width: thumbsSize, minWidth: thumbsSize, marginInlineEnd: thumbsGap }}
+          >
+            {empty ? (
+              <span className='border-background/30 grid size-11 place-items-center rounded-full border border-dashed'>
+                <ShoppingBag className='size-4 opacity-60' />
+              </span>
+            ) : (
+              <Thumbs summary={summary} shown={reduced ? (expanded ? 0 : 1) : dockThumbsShown} />
+            )}
+          </motion.div>
+          <span className='min-w-0 flex-1'>
+            {empty ? (
+              <span className='text-caption line-clamp-2 leading-snug opacity-70'>{t('ninjaEmptyTray')}</span>
+            ) : (
+              <>
                 <motion.span
-                  aria-hidden
-                  className='bg-background/30 absolute left-1/2 h-1 w-9 -translate-x-1/2 rounded-full'
-                  style={{ top: HANDLE_TOP, y: handleY }}
-                />
-                <motion.div
-                  ref={targetRef}
-                  key={bump}
-                  initial={bump > 0 && !reduced ? { scale: 1.18 } : false}
-                  animate={{ scale: 1 }}
-                  transition={{ type: 'spring', stiffness: 500, damping: 14 }}
-                  className='relative flex h-11 min-w-11 shrink-0 items-center'
-                  style={reduced ? undefined : { width: thumbsSize, minWidth: thumbsSize, marginInlineEnd: thumbsGap }}
+                  className='text-caption block truncate opacity-70'
+                  style={reduced ? undefined : { opacity: countOpacity, height: countHeight }}
                 >
-                  {empty ? (
-                    <span className='border-background/30 grid size-11 place-items-center rounded-full border border-dashed'>
-                      <ShoppingBag className='size-4 opacity-60' />
-                    </span>
-                  ) : (
-                    <Thumbs summary={summary} shown={reduced ? (expanded ? 0 : 1) : dockThumbsShown} />
+                  {t('itemCount', { count: summary.count })}
+                  <OrderOnItsWay />
+                </motion.span>
+                <motion.span
+                  className='block origin-[0%_50%] rtl:origin-[100%_50%]'
+                  style={reduced ? undefined : { scale: totalScale }}
+                >
+                  <Odometer value={price(total)} className='text-name @max-[21rem]:text-note font-bold' />
+                </motion.span>
+                {/* What the code and the points take off, under the total they took it from */}
+                <AnimatePresence initial={false}>
+                  {extras.promoDiscount + extras.pointsDiscount > 0 && (
+                    <motion.span
+                      key='saved'
+                      initial={{ opacity: 0, y: -4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -4 }}
+                      transition={SPRING}
+                      className='text-micro block font-semibold text-emerald-400 tabular-nums'
+                    >
+                      −{price(extras.promoDiscount + extras.pointsDiscount)}
+                    </motion.span>
                   )}
-                </motion.div>
-                <span className='min-w-0 flex-1'>
-                  {empty ? (
-                    <span className='line-clamp-2 text-caption leading-snug opacity-70'>{t('ninjaEmptyTray')}</span>
-                  ) : (
-                    <>
-                      <motion.span
-                        className='block truncate text-caption opacity-70'
-                        style={reduced ? undefined : { opacity: countOpacity, height: countHeight }}
-                      >
-                        {t('itemCount', { count: summary.count })}
-                        <OrderOnItsWay />
-                      </motion.span>
-                      <motion.span
-                        className='block origin-[0%_50%] rtl:origin-[100%_50%]'
-                        style={reduced ? undefined : { scale: totalScale }}
-                      >
-                        <Odometer value={price(total)} className='text-name font-bold @max-[21rem]:text-note' />
-                      </motion.span>
-                      {/* What the code and the points take off, under the total they took it from */}
-                      <AnimatePresence initial={false}>
-                        {extras.promoDiscount + extras.pointsDiscount > 0 && (
-                          <motion.span
-                            key='saved'
-                            initial={{ opacity: 0, y: -4 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -4 }}
-                            transition={SPRING}
-                            className='block text-micro font-semibold text-emerald-400 tabular-nums'
-                          >
-                            −{price(extras.promoDiscount + extras.pointsDiscount)}
-                          </motion.span>
-                        )}
-                      </AnimatePresence>
-                    </>
-                  )}
-                </span>
-              </motion.button>
-              {action}
+                </AnimatePresence>
+              </>
+            )}
+          </span>
+        </motion.button>
+        {action}
       </div>
     </div>
   )
@@ -456,12 +488,16 @@ function Thumbs({ summary, shown }: { summary: ReturnType<typeof traySummary>; s
     // space-x is logical in Tailwind v4: it overlaps the right way in Arabic without a reverse
     <motion.span className='relative flex items-center -space-x-3' style={{ opacity: shown }}>
       {summary.thumbs.map((thumb) => (
-        <span key={thumb.key} data-thumb={thumb.key} className='bg-background/15 ring-foreground relative size-11 shrink-0 overflow-hidden rounded-full ring-2'>
+        <span
+          key={thumb.key}
+          data-thumb={thumb.key}
+          className='bg-background/15 ring-foreground relative size-11 shrink-0 overflow-hidden rounded-full ring-2'
+        >
           <ItemPhoto src={thumb.pictureUrl} />
         </span>
       ))}
       {summary.more > 0 && (
-        <span className='bg-primary text-primary-foreground ring-foreground absolute -end-1.5 -bottom-1 z-10 grid h-5 min-w-5 place-items-center rounded-full px-1 text-micro font-bold ring-2'>
+        <span className='bg-primary text-primary-foreground ring-foreground text-micro absolute -end-1.5 -bottom-1 z-10 grid h-5 min-w-5 place-items-center rounded-full px-1 font-bold ring-2'>
           +{summary.more}
         </span>
       )}
@@ -498,7 +534,17 @@ function SeatFlights({ seats, openness }: { seats: Seat[]; openness: MotionValue
   )
 }
 
-function SeatFlight({ seat, openness, order, count }: { seat: Seat; openness: MotionValue<number>; order: number; count: number }) {
+function SeatFlight({
+  seat,
+  openness,
+  order,
+  count,
+}: {
+  seat: Seat
+  openness: MotionValue<number>
+  order: number
+  count: number
+}) {
   // Each circle leaves a touch after the one below it, so they fan out instead of moving as a block
   const lag = count > 1 ? ((count - 1 - order) / (count - 1)) * 0.25 : 0
   const progress = useTransform(openness, (v) => {
@@ -515,7 +561,7 @@ function SeatFlight({ seat, openness, order, count }: { seat: Seat; openness: Mo
   const opacity = useTransform(progress, (p) => (seat.fromDock ? 1 : Math.min(1, p * 3)))
   return (
     <motion.span
-      className='slab ring-foreground absolute top-0 left-0 grid place-items-center overflow-hidden text-note font-bold shadow-lg ring-2'
+      className='slab ring-foreground text-note absolute top-0 left-0 grid place-items-center overflow-hidden font-bold shadow-lg ring-2'
       // A circle the whole way, as in the dock and on the row: only its size changes
       style={{ x, y, width, height, borderRadius: '50%', opacity }}
     >
@@ -551,7 +597,17 @@ function SheetHandle({
   )
 }
 
-function OrderSheet({ order, extras, cloudKitchen, canOrder }: { order: TrayOrder; extras: CheckoutExtras; cloudKitchen: boolean; canOrder: boolean }) {
+function OrderSheet({
+  order,
+  extras,
+  cloudKitchen,
+  canOrder,
+}: {
+  order: TrayOrder
+  extras: CheckoutExtras
+  cloudKitchen: boolean
+  canOrder: boolean
+}) {
   const t = useT()
   const localized = useLocalized()
   const lines = useCart((s) => s.lines)
@@ -585,7 +641,7 @@ function OrderSheet({ order, extras, cloudKitchen, canOrder }: { order: TrayOrde
           <TrayExtras extras={extras} />
         </div>
         {/* Where the order goes, or why it cannot yet; nothing to say leaves no gap */}
-        <div className='mt-3 flex flex-col gap-2 px-2 text-note empty:hidden'>
+        <div className='text-note mt-3 flex flex-col gap-2 px-2 empty:hidden'>
           {order.tableUnconfirmed && order.activePlace ? (
             <div className='text-foreground rounded-2xl'>
               <StillHereCard place={order.activePlace} />
@@ -598,9 +654,15 @@ function OrderSheet({ order, extras, cloudKitchen, canOrder }: { order: TrayOrde
           ) : order.delivery.offered ? (
             <>
               <DeliveryChoice delivery={order.delivery} cloudKitchen={cloudKitchen} />
-              {order.block === 'table' && <p className='opacity-80'>{t(cloudKitchen ? 'signInToOrderPickup' : 'scanTableToOrder')}</p>}
+              {order.block === 'table' && (
+                <p className='opacity-80'>{t(cloudKitchen ? 'signInToOrderPickup' : 'scanTableToOrder')}</p>
+              )}
               {!order.block && order.payAhead.offered && (
-                <PayChoice payAhead={order.payAhead} delivering={order.delivery.active} fee={order.payAhead.feeFor(extras.total + order.delivery.fee)} />
+                <PayChoice
+                  payAhead={order.payAhead}
+                  delivering={order.delivery.active}
+                  fee={order.payAhead.feeFor(extras.total + order.delivery.fee)}
+                />
               )}
             </>
           ) : order.block === 'table' ? (
@@ -617,7 +679,9 @@ function OrderSheet({ order, extras, cloudKitchen, canOrder }: { order: TrayOrde
                   {t(cloudKitchen ? 'orderToCollect' : 'guestOrderToCollect')}
                 </div>
               )}
-              {order.payAhead.offered && <PayChoice payAhead={order.payAhead} delivering={false} fee={order.payAhead.feeFor(extras.total)} />}
+              {order.payAhead.offered && (
+                <PayChoice payAhead={order.payAhead} delivering={false} fee={order.payAhead.feeFor(extras.total)} />
+              )}
             </>
           )}
         </div>
@@ -670,7 +734,10 @@ function SwipeLine({ line }: { line: CartLine }) {
   const removed = () => {
     setQuantity(key, 0)
     // Gone with a flick is easy to regret: the toast puts it back
-    toast.info(t('ninjaRemoved', { name }), { action: { label: t('ninjaUndo'), onClick: () => add(line) }, duration: 5000 })
+    toast.info(t('ninjaRemoved', { name }), {
+      action: { label: t('ninjaUndo'), onClick: () => add(line) },
+      duration: 5000,
+    })
   }
 
   return (
@@ -678,10 +745,17 @@ function SwipeLine({ line }: { line: CartLine }) {
       layout='position'
       transition={SPRING}
       initial={false}
-      animate={folding ? { height: 0, opacity: 0, transition: { duration: FOLD_MS / 1000, ease: ease.exit } } : undefined}
+      animate={
+        folding ? { height: 0, opacity: 0, transition: { duration: FOLD_MS / 1000, ease: ease.exit } } : undefined
+      }
       className='relative overflow-hidden rounded-2xl'
     >
-      <motion.div aria-hidden style={{ opacity: warn }} className='bg-destructive absolute inset-0 flex items-center justify-between px-5 text-white' dir='ltr'>
+      <motion.div
+        aria-hidden
+        style={{ opacity: warn }}
+        className='bg-destructive absolute inset-0 flex items-center justify-between px-5 text-white'
+        dir='ltr'
+      >
         <motion.span style={{ opacity: binLeft }}>
           <Trash2 className='size-5' />
         </motion.span>
@@ -700,7 +774,8 @@ function SwipeLine({ line }: { line: CartLine }) {
         dragElastic={0.9}
         onDragEnd={(_, info) => {
           const width = row.current?.offsetWidth ?? 0
-          if (swipeRemoves(info.offset.x, width, info.velocity.x)) remove(Math.sign(info.offset.x || info.velocity.x) || 1)
+          if (swipeRemoves(info.offset.x, width, info.velocity.x))
+            remove(Math.sign(info.offset.x || info.velocity.x) || 1)
         }}
         className='bg-foreground relative flex touch-pan-y items-center gap-3 px-2 py-2.5'
       >
@@ -708,16 +783,18 @@ function SwipeLine({ line }: { line: CartLine }) {
           data-seat={key}
           data-src={line.pictureUrl ?? ''}
           data-label={name.charAt(0)}
-          className='bg-background/10 grid size-12 shrink-0 place-items-center overflow-hidden rounded-full text-name font-bold'
+          className='bg-background/10 text-name grid size-12 shrink-0 place-items-center overflow-hidden rounded-full font-bold'
           style={{ opacity: seatShown }}
         >
           <ItemPhoto src={line.pictureUrl} />
         </motion.span>
         <span className='min-w-0 flex-1'>
-          <span className='block truncate text-note font-semibold'>{name}</span>
-          {options && <span className='block truncate text-caption opacity-60'>{options}</span>}
-          {line.specialInstructions && <span className='block truncate text-caption italic opacity-60'>"{line.specialInstructions}"</span>}
-          <span className='block text-note font-bold tabular-nums'>{price(line.price * line.quantity)}</span>
+          <span className='text-note block truncate font-semibold'>{name}</span>
+          {options && <span className='text-caption block truncate opacity-60'>{options}</span>}
+          {line.specialInstructions && (
+            <span className='text-caption block truncate italic opacity-60'>"{line.specialInstructions}"</span>
+          )}
+          <span className='text-note block font-bold tabular-nums'>{price(line.price * line.quantity)}</span>
         </span>
         <span className='flex items-center gap-1'>
           <button
@@ -728,7 +805,7 @@ function SwipeLine({ line }: { line: CartLine }) {
           >
             {line.quantity === 1 ? <Trash2 className='size-3.5' /> : <Minus className='size-3.5' />}
           </button>
-          <span className='w-6 text-center text-note font-bold tabular-nums'>{line.quantity}</span>
+          <span className='text-note w-6 text-center font-bold tabular-nums'>{line.quantity}</span>
           <button
             type='button'
             aria-label={t('ninjaMore')}
@@ -791,7 +868,7 @@ function OrderButton({
       className={cn(
         'bg-primary text-primary-foreground text-body flex h-12 items-center gap-2 overflow-hidden px-5 font-bold whitespace-nowrap shadow-[0_8px_20px_-10px_rgb(0_0_0/0.45)] transition-[opacity,scale] active:scale-[0.97] disabled:opacity-60 motion-reduce:transform-none @max-[21rem]:h-11 @max-[21rem]:px-4',
         'shrink-0',
-        open && blocked && 'opacity-60',
+        open && blocked && 'opacity-60'
       )}
     >
       <AnimatePresence mode='popLayout' initial={false}>
@@ -832,7 +909,12 @@ function OrderOnItsWay() {
     <>
       {' · '}
       {words(STAGE_LABEL[stage], language, standard)}
-      {orderNumber != null && <span className='tabular-nums'>{' #\u200f'}{orderNumber}</span>}
+      {orderNumber != null && (
+        <span className='tabular-nums'>
+          {' #\u200f'}
+          {orderNumber}
+        </span>
+      )}
     </>
   )
 }

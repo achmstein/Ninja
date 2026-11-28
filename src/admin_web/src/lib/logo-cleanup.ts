@@ -25,10 +25,7 @@ const SNAP = 0.06
 /** Alpha (0–255) a pixel needs to count as part of the logo when cropping */
 const VISIBLE = 16
 
-export type Background =
-  | { kind: 'transparent' }
-  | { kind: 'solid'; color: Rgb }
-  | null
+export type Background = { kind: 'transparent' } | { kind: 'solid'; color: Rgb } | null
 
 /** The pixels around the edge, two deep: what the logo sits on. */
 function* borderIndexes({ width, height }: Pixels): Generator<number> {
@@ -75,8 +72,7 @@ export function detectBackground(px: Pixels): Background {
 
 /** How opaque a colour must be, over the background, to look like it: 0 is the background itself, 1 ink that owes it nothing. */
 function alphaAgainst(r: number, g: number, b: number, bg: Rgb): number {
-  const channel = (p: number, q: number) =>
-    p > q ? (p - q) / (255 - q) : p < q ? (q - p) / q : 0
+  const channel = (p: number, q: number) => (p > q ? (p - q) / (255 - q) : p < q ? (q - p) / q : 0)
   return Math.max(channel(r, bg.r), channel(g, bg.g), channel(b, bg.b))
 }
 
@@ -86,16 +82,11 @@ function alphaAgainst(r: number, g: number, b: number, bg: Rgb): number {
  * patch of the background colour, so the holes of an "o" go clear as well.
  * Returns a new image; `removed` is how many pixels lost some opacity.
  */
-export function removeBackground(
-  px: Pixels,
-  bg: Rgb,
-  inside: boolean
-): { pixels: Pixels; removed: number } {
+export function removeBackground(px: Pixels, bg: Rgb, inside: boolean): { pixels: Pixels; removed: number } {
   const { data, width, height } = px
   const count = width * height
   const alpha = new Float32Array(count)
-  for (let i = 0; i < count; i++)
-    alpha[i] = alphaAgainst(data[i * 4], data[i * 4 + 1], data[i * 4 + 2], bg)
+  for (let i = 0; i < count; i++) alpha[i] = alphaAgainst(data[i * 4], data[i * 4 + 1], data[i * 4 + 2], bg)
 
   // The background proper: every pixel near its colour, or only those joined to the edge
   const region = new Uint8Array(count)
@@ -137,8 +128,7 @@ export function removeBackground(
         for (let dx = -1; dx <= 1; dx++) {
           const nx = x + dx
           const ny = y + dy
-          if (nx >= 0 && ny >= 0 && nx < width && ny < height)
-            grown[ny * width + nx] = 1
+          if (nx >= 0 && ny >= 0 && nx < width && ny < height) grown[ny * width + nx] = 1
         }
       }
     }
@@ -168,9 +158,7 @@ export function removeBackground(
 }
 
 /** The smallest box holding every visible pixel, or null when nothing is. */
-export function contentBox(
-  px: Pixels
-): { x: number; y: number; width: number; height: number } | null {
+export function contentBox(px: Pixels): { x: number; y: number; width: number; height: number } | null {
   const { data, width, height } = px
   let minX = width
   let minY = height
@@ -185,15 +173,10 @@ export function contentBox(
       if (y > maxY) maxY = y
     }
   }
-  return maxX < 0
-    ? null
-    : { x: minX, y: minY, width: maxX - minX + 1, height: maxY - minY + 1 }
+  return maxX < 0 ? null : { x: minX, y: minY, width: maxX - minX + 1, height: maxY - minY + 1 }
 }
 
-export function crop(
-  px: Pixels,
-  box: { x: number; y: number; width: number; height: number }
-): Pixels {
+export function crop(px: Pixels, box: { x: number; y: number; width: number; height: number }): Pixels {
   const out = new Uint8ClampedArray(box.width * box.height * 4)
   for (let y = 0; y < box.height; y++) {
     const from = ((box.y + y) * px.width + box.x) * 4
@@ -226,10 +209,8 @@ const channel = (v: number) => {
   const c = v / 255
   return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4
 }
-const luminance = (r: number, g: number, b: number) =>
-  0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b)
-const contrastOf = (l1: number, l2: number) =>
-  (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05)
+const luminance = (r: number, g: number, b: number) => 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b)
+const contrastOf = (l1: number, l2: number) => (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05)
 
 /** How much of the logo, weighed by opacity, a surface would swallow (0–1). */
 export function lostOn(px: Pixels, surface: Rgb): number {
@@ -241,8 +222,7 @@ export function lostOn(px: Pixels, surface: Rgb): number {
     const a = data[i + 3] / 255
     if (a < VISIBLE / 255) continue
     seen += a
-    if (contrastOf(luminance(data[i], data[i + 1], data[i + 2]), ground) < LOST)
-      lost += a
+    if (contrastOf(luminance(data[i], data[i + 1], data[i + 2]), ground) < LOST) lost += a
   }
   return seen === 0 ? 0 : lost / seen
 }
@@ -257,12 +237,7 @@ function toHsl(r: number, g: number, b: number): [number, number, number] {
   if (max === min) return [0, 0, l]
   const d = max - min
   const s = l > 0.5 ? d / (2 - max - min) : d / (max + min)
-  const h =
-    max === R
-      ? (G - B) / d + (G < B ? 6 : 0)
-      : max === G
-        ? (B - R) / d + 2
-        : (R - G) / d + 4
+  const h = max === R ? (G - B) / d + (G < B ? 6 : 0) : max === G ? (B - R) / d + 2 : (R - G) / d + 4
   return [h / 6, s, l]
 }
 
@@ -286,10 +261,7 @@ function fromHsl(h: number, s: number, l: number): [number, number, number] {
  * swallow moved away from it, the rest as it was. Returns a new image and how
  * many pixels changed.
  */
-export function adaptTo(
-  px: Pixels,
-  surface: Rgb
-): { pixels: Pixels; changed: number } {
+export function adaptTo(px: Pixels, surface: Rgb): { pixels: Pixels; changed: number } {
   const { data, width, height } = px
   const ground = luminance(surface.r, surface.g, surface.b)
   const lighten = ground < 0.5
@@ -314,12 +286,7 @@ export function adaptTo(
       for (let step = 0; step < 50; step++) {
         l = lighten ? Math.min(0.97, l + 0.02) : Math.max(0.03, l - 0.02)
         ;[r, g, b] = fromHsl(h, s, l)
-        if (
-          contrastOf(luminance(r, g, b), ground) >= READS ||
-          l === 0.97 ||
-          l === 0.03
-        )
-          break
+        if (contrastOf(luminance(r, g, b), ground) >= READS || l === 0.97 || l === 0.03) break
       }
     }
     out[i] = r
@@ -331,8 +298,7 @@ export function adaptTo(
 }
 
 /** Whether a surface swallows enough of the logo to make it another for that surface. */
-export const needsAdapting = (px: Pixels, surface: Rgb) =>
-  lostOn(px, surface) > LOST_SHARE
+export const needsAdapting = (px: Pixels, surface: Rgb) => lostOn(px, surface) > LOST_SHARE
 
 // ---- In the browser ----
 
@@ -367,8 +333,7 @@ export type CleanedLogo = {
 export function releaseLogo(logo: CleanedLogo) {
   for (const choice of [logo.original, logo.outside, logo.inside]) {
     if (!choice) continue
-    for (const image of [choice, choice.onDark, choice.onLight])
-      if (image) URL.revokeObjectURL(image.url)
+    for (const image of [choice, choice.onDark, choice.onLight]) if (image) URL.revokeObjectURL(image.url)
   }
 }
 
@@ -422,11 +387,7 @@ async function loadImage(
   }
 }
 
-function readPixels(
-  source: CanvasImageSource,
-  width: number,
-  height: number
-): Pixels {
+function readPixels(source: CanvasImageSource, width: number, height: number): Pixels {
   const canvas = document.createElement('canvas')
   canvas.width = Math.max(1, Math.round(width))
   canvas.height = Math.max(1, Math.round(height))
@@ -440,16 +401,8 @@ async function toImage(px: Pixels, name: string): Promise<LogoImage> {
   const canvas = document.createElement('canvas')
   canvas.width = px.width
   canvas.height = px.height
-  canvas
-    .getContext('2d')!
-    .putImageData(
-      new ImageData(new Uint8ClampedArray(px.data), px.width, px.height),
-      0,
-      0
-    )
-  const blob = await new Promise<Blob | null>((resolve) =>
-    canvas.toBlob(resolve, 'image/png')
-  )
+  canvas.getContext('2d')!.putImageData(new ImageData(new Uint8ClampedArray(px.data), px.width, px.height), 0, 0)
+  const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'))
   if (!blob) throw new Error('The browser could not encode the image.')
   const file = new File([blob], name.replace(/\.[^.]+$/, '') + '.png', {
     type: 'image/png',
@@ -468,15 +421,9 @@ function cropped(px: Pixels): Pixels {
 }
 
 /** A cut-out logo, with what it becomes on each surface that would swallow it. */
-async function toChoice(
-  px: Pixels,
-  name: string,
-  image?: LogoImage
-): Promise<LogoChoice> {
+async function toChoice(px: Pixels, name: string, image?: LogoImage): Promise<LogoChoice> {
   const adapted = async (surface: Rgb) =>
-    needsAdapting(px, surface)
-      ? toImage(adaptTo(px, surface).pixels, name)
-      : null
+    needsAdapting(px, surface) ? toImage(adaptTo(px, surface).pixels, name) : null
   return {
     ...(image ?? (await toImage(px, name))),
     onDark: await adapted(DARK_SURFACE),
@@ -489,18 +436,11 @@ async function toChoice(
  * `maxSide` is the most the server keeps for the slot: anything larger is
  * drawn down to it first, which keeps the work quick.
  */
-export async function cleanLogo(
-  file: File,
-  maxSide: number
-): Promise<CleanedLogo> {
+export async function cleanLogo(file: File, maxSide: number): Promise<CleanedLogo> {
   const image = await loadImage(file, maxSide)
   try {
     const scale = Math.min(1, maxSide / Math.max(image.width, image.height))
-    const px = readPixels(
-      image.source,
-      image.width * scale,
-      image.height * scale
-    )
+    const px = readPixels(image.source, image.width * scale, image.height * scale)
     const isSvg = file.type === 'image/svg+xml' || /\.svg$/i.test(file.name)
 
     const background = detectBackground(px)

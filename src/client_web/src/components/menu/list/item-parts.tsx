@@ -1,6 +1,6 @@
 import type { ReactNode, RefObject } from 'react'
-import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { ChevronRight, Minus, Plus, UtensilsCrossed } from 'lucide-react'
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import type { CatalogItemDto } from '@/api/catalog'
 import { lineKey, useCart } from '@/lib/cart'
 import { useLocalized, useT } from '@/lib/i18n'
@@ -46,7 +46,15 @@ export function ItemPhotoBox({
     >
       {itemState.hasPhoto ? (
         <div className='bg-muted absolute inset-0'>
-          <img src={itemPictureUrl(item, 640)} alt='' loading='lazy' decoding='async' draggable={false} onError={itemState.fail} className='size-full object-cover' />
+          <img
+            src={itemPictureUrl(item, 640)}
+            alt=''
+            loading='lazy'
+            decoding='async'
+            draggable={false}
+            onError={itemState.fail}
+            className='size-full object-cover'
+          />
         </div>
       ) : (
         <div className='absolute inset-0 grid place-items-center'>
@@ -85,14 +93,21 @@ export function ItemPhotoBox({
 /** "Sold out" on an item's photo, dark and quiet over the greyed picture */
 export function SoldOutBadge() {
   const t = useT()
-  return <span className='rounded-full bg-black/70 px-3 py-1 text-caption font-semibold text-white'>{t('soldOut')}</span>
+  return (
+    <span className='text-caption rounded-full bg-black/70 px-3 py-1 font-semibold text-white'>{t('soldOut')}</span>
+  )
 }
 
 /** Where an item's add button stands, when there is none to add: says it is sold out */
 export function SoldOutTag({ className }: { className?: string }) {
   const t = useT()
   return (
-    <span className={cn('bg-muted text-muted-foreground inline-flex h-9 shrink-0 items-center rounded-full px-3 text-caption font-semibold', className)}>
+    <span
+      className={cn(
+        'bg-muted text-muted-foreground text-caption inline-flex h-9 shrink-0 items-center rounded-full px-3 font-semibold',
+        className
+      )}
+    >
       {t('soldOut')}
     </span>
   )
@@ -129,7 +144,9 @@ export function RowAction({
   const swap = blurSwap(useReducedMotion())
   // How many of this item are in the tray, as a number: every row on the menu has one of these, and
   // following the whole cart re-rendered them all on each line added anywhere
-  const count = useCart((s) => s.lines.reduce((sum, l) => (l.productId === Number(item.id) ? sum + l.quantity : sum), 0))
+  const count = useCart((s) =>
+    s.lines.reduce((sum, l) => (l.productId === Number(item.id) ? sum + l.quantity : sum), 0)
+  )
   const setQuantity = useCart((s) => s.setQuantity)
   const fill = 'bg-primary text-primary-foreground shadow-[0_8px_20px_-10px_rgb(0_0_0/0.45)]'
   const round = small ? "relative size-10 before:absolute before:-inset-0.5 before:content-['']" : 'size-11'
@@ -140,7 +157,11 @@ export function RowAction({
         type='button'
         aria-label={localized(item.name)}
         onClick={onOpen}
-        className={cn('grid shrink-0 place-items-center rounded-full transition-transform active:scale-90 motion-reduce:transform-none', round, fill)}
+        className={cn(
+          'grid shrink-0 place-items-center rounded-full transition-transform active:scale-90 motion-reduce:transform-none',
+          round,
+          fill
+        )}
       >
         <ChevronRight className='size-5 rtl:rotate-180' strokeWidth={2.5} />
       </button>
@@ -163,17 +184,35 @@ export function RowAction({
           aria-label={t('addToCart')}
           onClick={onAdd}
           {...swap}
-          className={cn('grid shrink-0 place-items-center rounded-full active:scale-90 motion-reduce:transform-none', round, fill)}
+          className={cn(
+            'grid shrink-0 place-items-center rounded-full active:scale-90 motion-reduce:transform-none',
+            round,
+            fill
+          )}
         >
           <Plus className='size-5' strokeWidth={2.5} />
         </motion.button>
       ) : (
-        <motion.div key='step' {...swap} className={cn('flex shrink-0 items-center gap-0.5 rounded-full', small ? 'h-10 px-0.5' : 'h-11 px-1', fill)}>
-          <button type='button' aria-label={t('ninjaLess')} onClick={less} className='grid size-9 place-items-center rounded-full active:bg-primary-foreground/15'>
+        <motion.div
+          key='step'
+          {...swap}
+          className={cn('flex shrink-0 items-center gap-0.5 rounded-full', small ? 'h-10 px-0.5' : 'h-11 px-1', fill)}
+        >
+          <button
+            type='button'
+            aria-label={t('ninjaLess')}
+            onClick={less}
+            className='active:bg-primary-foreground/15 grid size-9 place-items-center rounded-full'
+          >
             <Minus className='size-4' strokeWidth={2.5} />
           </button>
-          <Odometer value={String(count)} className='min-w-5 text-center text-note font-bold' />
-          <button type='button' aria-label={t('ninjaMore')} onClick={onAdd} className='grid size-9 place-items-center rounded-full active:bg-primary-foreground/15'>
+          <Odometer value={String(count)} className='text-note min-w-5 text-center font-bold' />
+          <button
+            type='button'
+            aria-label={t('ninjaMore')}
+            onClick={onAdd}
+            className='active:bg-primary-foreground/15 grid size-9 place-items-center rounded-full'
+          >
             <Plus className='size-4' strokeWidth={2.5} />
           </button>
         </motion.div>
@@ -181,4 +220,3 @@ export function RowAction({
     </AnimatePresence>
   )
 }
-

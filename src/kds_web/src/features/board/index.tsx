@@ -22,10 +22,7 @@ export function Board() {
   const { setReady, actingOrderNumber } = useReady()
   const { stationId } = useStation()
 
-  const open = useMemo(
-    () => orders.filter((order) => order.readyAt == null),
-    [orders]
-  )
+  const open = useMemo(() => orders.filter((order) => order.readyAt == null), [orders])
 
   return (
     // The header is 4rem; the rest of the viewport is the board, which

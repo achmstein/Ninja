@@ -1,13 +1,13 @@
 import { useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { ArrowLeft, ArrowRight, Banknote, Loader2, RefreshCw } from 'lucide-react'
-import { useQueryClient } from '@tanstack/react-query'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { useFeatures } from '@/lib/brand'
 import { useLanguage, useT } from '@/lib/i18n'
 import { toNumber, useMoney } from '@/lib/money'
 import { cn } from '@/lib/utils'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { BOARD_LANES, byLane, byRider, type BoardLane, type RiderGroup } from './delivery-board'
 import { DeliveryCard } from './delivery-card'
 import { DeliveryOrderDialog } from './delivery-order-dialog'
@@ -38,7 +38,8 @@ export function DeliveriesBoard() {
   const lanes = byLane(deliveries)
   const total = BOARD_LANES.reduce((sum, lane) => sum + lanes[lane].length, 0)
   // The narrow board opens on the lane the cashier most likely came for
-  const shown = picked ?? (['cashDue', 'waiting', 'comingBack'] as const).find((l) => lanes[l].length > 0) ?? 'withRiders'
+  const shown =
+    picked ?? (['cashDue', 'waiting', 'comingBack'] as const).find((l) => lanes[l].length > 0) ?? 'withRiders'
   // The dialog follows the board, so a move made elsewhere shows in it at once
   const selected = deliveries.find((d) => toNumber(d.orderNumber) === open) ?? null
   const BackIcon = rtl ? ArrowRight : ArrowLeft
@@ -59,7 +60,13 @@ export function DeliveriesBoard() {
     // The screen under the header, as the sale pad takes it: the lanes reach the bottom and scroll there
     <div className='flex h-[calc(100svh-4rem)] min-h-0 flex-col gap-4 p-4'>
       <div className='flex items-center gap-2'>
-        <Button variant='ghost' size='icon' className='size-12' onClick={() => navigate({ to: '/' })} aria-label={t('goBack')}>
+        <Button
+          variant='ghost'
+          size='icon'
+          className='size-12'
+          onClick={() => navigate({ to: '/' })}
+          aria-label={t('goBack')}
+        >
           <BackIcon className='size-6' />
         </Button>
         <h1 className='type-title'>{t('deliveries')}</h1>
@@ -86,7 +93,9 @@ export function DeliveriesBoard() {
       ) : (
         <>
           {/* Four columns where they fit */}
-          <div className='hidden min-h-0 flex-1 grid-cols-4 gap-3 lg:grid'>{BOARD_LANES.map((lane) => column(lane, true))}</div>
+          <div className='hidden min-h-0 flex-1 grid-cols-4 gap-3 lg:grid'>
+            {BOARD_LANES.map((lane) => column(lane, true))}
+          </div>
           {/* One at a time on a narrow till */}
           <div className='flex min-h-0 flex-1 flex-col gap-3 lg:hidden'>
             <div className='no-scrollbar flex gap-2 overflow-x-auto pb-1' role='tablist'>
@@ -154,11 +163,11 @@ function Column({
       {header && (
         <div className='flex items-center gap-2 px-3.5 pt-3.5 pb-2.5'>
           <Icon className={cn('size-[18px] shrink-0', meta.ink)} aria-hidden />
-          <h2 className='min-w-0 flex-1 truncate type-heading'>{t(meta.label)}</h2>
+          <h2 className='type-heading min-w-0 flex-1 truncate'>{t(meta.label)}</h2>
           <span
             className={cn(
-              'inline-flex h-6 min-w-6 items-center justify-center rounded-full px-2 type-detail font-semibold tabular-nums',
-              orders.length > 0 && meta.tint ? meta.tint : 'bg-background',
+              'type-detail inline-flex h-6 min-w-6 items-center justify-center rounded-full px-2 font-semibold tabular-nums',
+              orders.length > 0 && meta.tint ? meta.tint : 'bg-background'
             )}
           >
             {orders.length}
@@ -166,7 +175,7 @@ function Column({
         </div>
       )}
       {orders.length === 0 ? (
-        <p className='text-muted-foreground m-auto p-6 type-detail'>{t('laneEmpty')}</p>
+        <p className='text-muted-foreground type-detail m-auto p-6'>{t('laneEmpty')}</p>
       ) : (
         <div className={cn('flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-2.5 pb-2.5', !header && 'pt-2.5')}>
           {!grouped
@@ -179,15 +188,18 @@ function Column({
                   // and a rule between riders
                   <div key={group.riderUserId ?? ''} className={cn('flex flex-col gap-2', i > 0 && 'border-t pt-3')}>
                     <div className='flex items-center gap-2.5 px-0.5'>
-                      <span className='bg-background grid size-9 shrink-0 place-items-center rounded-full border type-detail font-semibold' aria-hidden>
+                      <span
+                        className='bg-background type-detail grid size-9 shrink-0 place-items-center rounded-full border font-semibold'
+                        aria-hidden
+                      >
                         {[...name][0]?.toUpperCase()}
                       </span>
                       {/* The name in an isolate inside a line of the page's direction: it starts where the line does */}
                       <span className='min-w-0 flex-1'>
-                        <span className='block truncate type-heading'>
+                        <span className='type-heading block truncate'>
                           <bdi>{name}</bdi>
                         </span>
-                        <span className='text-muted-foreground block type-detail tabular-nums'>
+                        <span className='text-muted-foreground type-detail block tabular-nums'>
                           {t('riderOrders', { count: group.orders.length })}
                           {lane === 'cashDue' && <> · {money(owed)}</>}
                         </span>

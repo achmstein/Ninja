@@ -9,9 +9,7 @@ export const Route = createFileRoute('/_authenticated/orders/history')({
     ...rangeSearch,
     status: z.array(z.string()).optional(),
     q: z.string().optional(),
-    sort: z
-      .enum(['date_desc', 'date_asc', 'total_desc', 'total_asc'])
-      .optional(),
+    sort: z.enum(['date_desc', 'date_asc', 'total_desc', 'total_asc']).optional(),
   }),
   beforeLoad: ({ search }) => {
     throw redirect({ to: '/orders', search })

@@ -131,13 +131,8 @@ export const emptyDelivery: SaleDelivery = {
  * A line's unit price before its options. The line's `price` has them in it
  * (what the pad shows); Ordering adds them itself, so this is what it is sent.
  */
-export function basePrice(
-  line: Pick<SaleLine, 'price' | 'customizations'>
-): number {
-  return (
-    line.price -
-    line.customizations.reduce((sum, c) => sum + c.priceAdjustment, 0)
-  )
+export function basePrice(line: Pick<SaleLine, 'price' | 'customizations'>): number {
+  return line.price - line.customizations.reduce((sum, c) => sum + c.priceAdjustment, 0)
 }
 
 /**
@@ -148,7 +143,7 @@ export function basePrice(
 export function tillSuggestions(
   last: CatalogItemDto | null,
   items: readonly CatalogItemDto[],
-  lines: readonly Pick<SaleLine, 'productId'>[],
+  lines: readonly Pick<SaleLine, 'productId'>[]
 ): CatalogItemDto[] {
   if (!last) return []
   const byId = new Map(items.map((item) => [String(item.id), item]))
@@ -157,10 +152,7 @@ export function tillSuggestions(
     .map((id) => byId.get(String(id)))
     .filter(
       (item): item is CatalogItemDto =>
-        !!item &&
-        item.isAvailable !== false &&
-        String(item.id) !== String(last.id) &&
-        !onSale.has(Number(item.id)),
+        !!item && item.isAvailable !== false && String(item.id) !== String(last.id) && !onSale.has(Number(item.id))
     )
 }
 
@@ -170,9 +162,7 @@ export function samePerson(a: SaleCustomer | null | undefined, b: SaleCustomer |
   return a.id || b.id ? a.id === b.id : a.name.trim() === b.name.trim()
 }
 
-export function lineKey(
-  line: Pick<SaleLine, 'productId' | 'customizations' | 'specialInstructions' | 'who'>
-): string {
+export function lineKey(line: Pick<SaleLine, 'productId' | 'customizations' | 'specialInstructions' | 'who'>): string {
   const options = line.customizations
     .map((c) => c.optionId)
     .sort((a, b) => a - b)
@@ -229,9 +219,7 @@ export const useSale = create<SaleState>()(
       target: null,
       setTarget: (target) =>
         set((state) =>
-          state.target === target
-            ? {}
-            : { target, lines: [], note: '', customer: null, delivery: null }
+          state.target === target ? {} : { target, lines: [], note: '', customer: null, delivery: null }
         ),
       add: (line) =>
         set((state) => {
@@ -239,11 +227,7 @@ export const useSale = create<SaleState>()(
           const existing = state.lines.find((l) => lineKey(l) === key)
           if (existing) {
             return {
-              lines: state.lines.map((l) =>
-                lineKey(l) === key
-                  ? { ...l, quantity: l.quantity + line.quantity }
-                  : l
-              ),
+              lines: state.lines.map((l) => (lineKey(l) === key ? { ...l, quantity: l.quantity + line.quantity } : l)),
             }
           }
           return { lines: [...state.lines, line] }
@@ -253,9 +237,7 @@ export const useSale = create<SaleState>()(
           lines:
             quantity <= 0
               ? state.lines.filter((l) => lineKey(l) !== key)
-              : state.lines.map((l) =>
-                  lineKey(l) === key ? { ...l, quantity } : l
-                ),
+              : state.lines.map((l) => (lineKey(l) === key ? { ...l, quantity } : l)),
         })),
       removeLines: (keys) =>
         set((state) => {

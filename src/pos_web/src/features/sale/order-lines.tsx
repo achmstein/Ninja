@@ -1,16 +1,16 @@
 import type { ReactNode } from 'react'
 import { Check, Minus, Plus, Trash2 } from 'lucide-react'
 import type { TicketLineView } from '@/api/sales/types.gen'
-import { Button } from '@/components/ui/button'
-import { CancelledNote, mergeIdenticalLines, PAID_DIM, PaidTag } from '@/features/ticket/bill-lines'
 import { useLanguage, useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
+import { CancelledNote, mergeIdenticalLines, PAID_DIM, PaidTag } from '@/features/ticket/bill-lines'
 import { lineKey, type SaleLine } from './cart'
 
 /** A quiet heading over a part of the order: what is new, what was sent */
 export function SectionLabel({ children }: { children: ReactNode }) {
-  return <div className='text-muted-foreground px-3 pt-3 pb-1 type-label'>{children}</div>
+  return <div className='text-muted-foreground type-label px-3 pt-3 pb-1'>{children}</div>
 }
 
 /**
@@ -38,7 +38,12 @@ export function NewLineRow({
     .join(' · ')
 
   return (
-    <div className={cn('flex items-start gap-2 px-3 py-2', marked && 'border-primary bg-primary/5 border-s-[3px] ps-[calc(0.75rem-3px)]')}>
+    <div
+      className={cn(
+        'flex items-start gap-2 px-3 py-2',
+        marked && 'border-primary bg-primary/5 border-s-[3px] ps-[calc(0.75rem-3px)]'
+      )}
+    >
       <div className='min-w-0 flex-1'>
         <div className='type-detail truncate font-medium'>{name}</div>
         {options && <div className='text-muted-foreground type-caption truncate'>{options}</div>}
@@ -79,7 +84,8 @@ export function NewLineRow({
 
 /** Who a sent line was for, as the bill keeps them apart: an account, else the name told, else nobody */
 const whoKey = (line: TicketLineView) =>
-  (line.customerId ? `id:${line.customerId}` : line.customerName ? `name:${line.customerName}` : '') + (line.paid ? '|paid' : '')
+  (line.customerId ? `id:${line.customerId}` : line.customerName ? `name:${line.customerName}` : '') +
+  (line.paid ? '|paid' : '')
 
 /** The lines being picked, to move to another bill or to name: which, and the tap that picks one */
 export type LineSelection = { chosen: ReadonlySet<number>; onToggle: (lineId: number) => void }
@@ -106,7 +112,9 @@ export function SentLines({
 
   // Merged person by person, so one person's two coffees add up without taking another's with them
   const keys = [...new Set(lines.map(whoKey))]
-  const shown = selection ? lines : keys.flatMap((key) => mergeIdenticalLines(lines.filter((line) => whoKey(line) === key)))
+  const shown = selection
+    ? lines
+    : keys.flatMap((key) => mergeIdenticalLines(lines.filter((line) => whoKey(line) === key)))
 
   // One column for the whole list, as wide as its widest count: a room's hours
   // (1.25×) are wider than a whole count, and the names still start in one line
@@ -130,20 +138,35 @@ export function SentLines({
                 className={cn(
                   'flex size-6 shrink-0 items-center justify-center rounded-md border',
                   !pickable && 'invisible',
-                  picked ? 'border-primary bg-primary text-primary-foreground' : 'border-muted-foreground/50',
+                  picked ? 'border-primary bg-primary text-primary-foreground' : 'border-muted-foreground/50'
                 )}
               >
                 {picked && <Check className='size-4' />}
               </span>
             )}
-            <span style={{ width: countWidth }} className={cn('shrink-0 font-medium whitespace-nowrap tabular-nums', line.paid && PAID_DIM, gone && 'font-normal line-through opacity-60')}>
+            <span
+              style={{ width: countWidth }}
+              className={cn(
+                'shrink-0 font-medium whitespace-nowrap tabular-nums',
+                line.paid && PAID_DIM,
+                gone && 'font-normal line-through opacity-60'
+              )}
+            >
               {gone ? cancelled : toNumber(line.qty)}×
             </span>
             <span className={cn('min-w-0 flex-1', line.paid && PAID_DIM)}>
-              <span className={cn('block truncate', negative && 'text-emerald-600 dark:text-emerald-400', gone && 'line-through opacity-60')}>
+              <span
+                className={cn(
+                  'block truncate',
+                  negative && 'text-emerald-600 dark:text-emerald-400',
+                  gone && 'line-through opacity-60'
+                )}
+              >
                 {localized(line.description)}
               </span>
-              {localized(line.details) && <span className='type-caption block truncate'>{localized(line.details)}</span>}
+              {localized(line.details) && (
+                <span className='type-caption block truncate'>{localized(line.details)}</span>
+              )}
               {line.customerName && (
                 <span className='text-foreground/70 type-caption block truncate font-medium'>
                   <bdi>{line.customerName}</bdi>
@@ -152,7 +175,14 @@ export function SentLines({
               {cancelled > 0 && <CancelledNote line={line} />}
             </span>
             {line.paid && <PaidTag />}
-            <span className={cn('w-20 shrink-0 text-end tabular-nums', negative && 'text-emerald-600 dark:text-emerald-400', line.paid && PAID_DIM, gone && 'line-through opacity-60')}>
+            <span
+              className={cn(
+                'w-20 shrink-0 text-end tabular-nums',
+                negative && 'text-emerald-600 dark:text-emerald-400',
+                line.paid && PAID_DIM,
+                gone && 'line-through opacity-60'
+              )}
+            >
               {money(gone ? toNumber(line.cancelledQty) * toNumber(line.unitPrice) : line.total)}
             </span>
           </>
@@ -161,7 +191,7 @@ export function SentLines({
           'text-muted-foreground flex min-h-11 w-full items-center gap-2 px-3 py-2 type-detail text-start',
           // Just in from the server: a soft tint behind it fades out
           landed.includes(toNumber(line.orderId)) && 'animate-landed',
-          picked && 'bg-accent',
+          picked && 'bg-accent'
         )
         return pickable ? (
           <button

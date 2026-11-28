@@ -1,5 +1,4 @@
 import { Check, ChefHat, ChevronsUpDown, LayoutGrid } from 'lucide-react'
-import { useStation } from '@/features/board/use-station'
 import { useLocalized, useT } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
 import {
@@ -10,6 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { useStation } from '@/features/board/use-station'
 
 /**
  * Which station this screen is: the grill sees the grill's lines, the bar
@@ -36,13 +36,8 @@ export function StationSwitcher() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align='start' className='min-w-56 rounded-lg'>
-        <DropdownMenuLabel className='text-muted-foreground type-caption'>
-          {t('station')}
-        </DropdownMenuLabel>
-        <DropdownMenuItem
-          className='type-body min-h-12 gap-2 p-3'
-          onSelect={() => setStationId(null)}
-        >
+        <DropdownMenuLabel className='text-muted-foreground type-caption'>{t('station')}</DropdownMenuLabel>
+        <DropdownMenuItem className='type-body min-h-12 gap-2 p-3' onSelect={() => setStationId(null)}>
           <LayoutGrid className='size-5' />
           <span className='flex-1'>{t('allStations')}</span>
           {station == null && <Check className='size-5' />}

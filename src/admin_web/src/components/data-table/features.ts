@@ -29,8 +29,7 @@ import {
 // selected set. (The built-in arrIncludesSome expects the ROW value to be an
 // array, which silently filters everything out for scalar columns.)
 const filterFn_inArray = constructFilterFn({
-  filter: (dataValue, filterValue) =>
-    Array.isArray(filterValue) && filterValue.includes(dataValue),
+  filter: (dataValue, filterValue) => Array.isArray(filterValue) && filterValue.includes(dataValue),
   autoRemove: (value) => !Array.isArray(value) || value.length === 0,
 })
 
@@ -77,15 +76,8 @@ type DataTableFeatures = typeof dataTableFeatures
 
 // The React-side table (adds reactive `.state`); tables are created without a
 // selector so `.state` carries the full table state.
-export type AppTable<TData extends RowData> = ReactTable<
-  DataTableFeatures,
-  TData
->
-export type AppColumn<TData extends RowData, TValue = unknown> = Column<
-  DataTableFeatures,
-  TData,
-  TValue
->
+export type AppTable<TData extends RowData> = ReactTable<DataTableFeatures, TData>
+export type AppColumn<TData extends RowData, TValue = unknown> = Column<DataTableFeatures, TData, TValue>
 export type AppRow<TData extends RowData> = Row<DataTableFeatures, TData>
 
 // Column helper pre-bound to the shared feature set

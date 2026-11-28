@@ -1,20 +1,10 @@
 import { useRef } from 'react'
 import { ChevronDown, ImagePlus, X } from 'lucide-react'
+import { MAIN_SLOTS, VARIANT_SLOTS, isMark, isPhoto, type ImageSlot } from '@/lib/brand-slots'
 import { useT, type TranslationKey } from '@/lib/i18n'
-import {
-  MAIN_SLOTS,
-  VARIANT_SLOTS,
-  isMark,
-  isPhoto,
-  type ImageSlot,
-} from '@/lib/brand-slots'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { Label } from '@/components/ui/label'
 import { Spinner } from '@/components/ui/spinner'
 
@@ -77,7 +67,14 @@ export function ImageSlotField({ slot, src, busy, onUpload, onRemove, hint }: Im
             {t('uploadImage')}
           </Button>
           {src && (
-            <Button type='button' variant='ghost' size='sm' className='text-destructive' disabled={busy} onClick={onRemove}>
+            <Button
+              type='button'
+              variant='ghost'
+              size='sm'
+              className='text-destructive'
+              disabled={busy}
+              onClick={onRemove}
+            >
               <X className='me-1 size-3.5' />
               {t('removeImage')}
             </Button>
@@ -141,9 +138,7 @@ export function ImageSlotGrid({ srcOf, busySlot, onUpload, onRemove, defaultOpen
             {t('brandVariants')}
           </Button>
         </CollapsibleTrigger>
-        <CollapsibleContent className='grid gap-6 pt-4 sm:grid-cols-2'>
-          {VARIANT_SLOTS.map(field)}
-        </CollapsibleContent>
+        <CollapsibleContent className='grid gap-6 pt-4 sm:grid-cols-2'>{VARIANT_SLOTS.map(field)}</CollapsibleContent>
       </Collapsible>
     </div>
   )

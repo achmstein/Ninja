@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { listPlacesOptions } from '@/api/spaces/@tanstack/react-query.gen'
-import { bilingual, useT } from '@/lib/i18n'
 import { useCustomerOrigin } from '@/lib/brand'
+import { bilingual, useT } from '@/lib/i18n'
 import { placeQrUrl } from '@/lib/qr'
 import { QrSheet } from '@/components/qr-sheet'
 import { comparePlaces } from './status'

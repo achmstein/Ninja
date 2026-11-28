@@ -59,7 +59,14 @@ export const STYLES: Record<StyleKey, StylePreset> = {
   // options in place, the order in a tray. The web customer app draws its own page and
   // bars for it; these parts are what the rest (the previews, the phone app) wear
   ninja: {
-    layout: { menuItem: 'hero', categories: 'tabs', header: 'left', buttons: 'pill', surface: 'shadow', density: 'comfortable' },
+    layout: {
+      menuItem: 'hero',
+      categories: 'tabs',
+      header: 'left',
+      buttons: 'pill',
+      surface: 'shadow',
+      density: 'comfortable',
+    },
     headings: { font: null, weight: 800, scale: 1.1, uppercase: false, tracking: -0.02 },
     defaults: { radius: 'xl', fontLatin: 'Plus Jakarta Sans', fontArabic: 'IBM Plex Sans Arabic' },
     forceDark: false,
@@ -80,7 +87,13 @@ export function presetOf(theme: { style?: string | null } | null | undefined): S
   return STYLES[styleOf(theme)]
 }
 
-type Seeds = { style?: string | null; radius?: string | null; fontLatin?: string | null; fontArabic?: string | null; headerSize?: string | null }
+type Seeds = {
+  style?: string | null
+  radius?: string | null
+  fontLatin?: string | null
+  fontArabic?: string | null
+  headerSize?: string | null
+}
 
 /**
  * The seeds a theme paints with once its style's defaults fill what the

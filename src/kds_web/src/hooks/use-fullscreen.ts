@@ -11,8 +11,7 @@ export function useFullscreen() {
   )
 
   useEffect(() => {
-    const handleChange = () =>
-      setIsFullscreen(document.fullscreenElement != null)
+    const handleChange = () => setIsFullscreen(document.fullscreenElement != null)
     document.addEventListener('fullscreenchange', handleChange)
     return () => document.removeEventListener('fullscreenchange', handleChange)
   }, [])
@@ -30,9 +29,7 @@ export function useFullscreen() {
     }
   }, [])
 
-  const supported =
-    typeof document !== 'undefined' &&
-    typeof document.documentElement.requestFullscreen === 'function'
+  const supported = typeof document !== 'undefined' && typeof document.documentElement.requestFullscreen === 'function'
 
   return { isFullscreen, toggle, supported }
 }

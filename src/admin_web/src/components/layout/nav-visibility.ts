@@ -8,9 +8,7 @@ import { type NavGroup, type NavItem } from './types'
 export type NavContext = {
   isOwner: boolean
   modules: Modules
-  entitled: (
-    key: NonNullable<Extract<NavItem, { url: unknown }>['entitled']>
-  ) => boolean
+  entitled: (key: NonNullable<Extract<NavItem, { url: unknown }>['entitled']>) => boolean
 }
 
 export function useNavContext(): NavContext {
@@ -48,10 +46,7 @@ export function visibleNav(groups: NavGroup[], ctx: NavContext): NavGroup[] {
     .map((group) => ({
       ...group,
       items: group.items.filter(
-        (item) =>
-          item.items != null ||
-          (shownBy(item, ctx) &&
-            (!item.entitled || ctx.entitled(item.entitled)))
+        (item) => item.items != null || (shownBy(item, ctx) && (!item.entitled || ctx.entitled(item.entitled)))
       ),
     }))
     .filter((group) => group.items.length > 0)

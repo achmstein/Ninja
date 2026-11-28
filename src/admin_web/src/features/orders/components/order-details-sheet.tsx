@@ -15,17 +15,8 @@ import { EntitySheet } from '@/components/entity-sheet'
 import { ImageWithFallback } from '@/components/image-fallback'
 import { StatusChip } from '@/components/status-chip'
 import { PlaceKindIcon } from '@/features/places/components/place-kind-icon'
-import {
-  defaultPlatformRejectReason,
-  formatEgp,
-  getOrderStatus,
-  isSubmitted,
-} from '../status'
-import {
-  PlatformBadge,
-  PlatformHandover,
-  PlatformRejectReasonPicker,
-} from './platform-badge'
+import { defaultPlatformRejectReason, formatEgp, getOrderStatus, isSubmitted } from '../status'
+import { PlatformBadge, PlatformHandover, PlatformRejectReasonPicker } from './platform-badge'
 import { TakenBy } from './taken-by'
 
 type OrderDetailsSheetProps = {
@@ -37,13 +28,7 @@ type OrderDetailsSheetProps = {
   isActing: boolean
 }
 
-export function OrderDetailsSheet({
-  orderId,
-  onOpenChange,
-  onConfirm,
-  onCancel,
-  isActing,
-}: OrderDetailsSheetProps) {
+export function OrderDetailsSheet({ orderId, onOpenChange, onConfirm, onCancel, isActing }: OrderDetailsSheetProps) {
   const t = useT()
   const locale = useLocale()
   const localized = useLocalized()
@@ -61,14 +46,12 @@ export function OrderDetailsSheet({
     orderId: number | null
     reason: string
   } | null>(null)
-  const cancelReason =
-    picked?.orderId === orderId ? picked.reason : defaultPlatformRejectReason
+  const cancelReason = picked?.orderId === orderId ? picked.reason : defaultPlatformRejectReason
   const setCancelReason = (reason: string) => setPicked({ orderId, reason })
 
   const status = getOrderStatus(order?.status)
   const StatusIcon = status?.icon
-  const actionable =
-    order != null && isSubmitted(order.status) && orderId != null
+  const actionable = order != null && isSubmitted(order.status) && orderId != null
 
   return (
     <EntitySheet
@@ -82,9 +65,7 @@ export function OrderDetailsSheet({
           </StatusChip>
         )
       }
-      subtitle={
-        order?.date ? formatWhen(order.date, 'dateTime', locale, t) : undefined
-      }
+      subtitle={order?.date ? formatWhen(order.date, 'dateTime', locale, t) : undefined}
       // What the order comes to, at a glance before its lines
       figures={
         order
@@ -92,10 +73,7 @@ export function OrderDetailsSheet({
               { label: t('total'), value: formatEgp(order.total) },
               {
                 label: t('items'),
-                value: (order.orderItems ?? []).reduce(
-                  (sum, item) => sum + Number(item.units ?? 0),
-                  0
-                ),
+                value: (order.orderItems ?? []).reduce((sum, item) => sum + Number(item.units ?? 0), 0),
               },
               {
                 label: t('placed'),
@@ -110,9 +88,7 @@ export function OrderDetailsSheet({
             variant='ghost'
             className='text-destructive hover:text-destructive'
             disabled={isActing}
-            onClick={() =>
-              onCancel(orderId, order.platform ? cancelReason : undefined)
-            }
+            onClick={() => onCancel(orderId, order.platform ? cancelReason : undefined)}
           >
             <X />
             {t('cancelOrderButton')}
@@ -167,15 +143,11 @@ export function OrderDetailsSheet({
               {/* It couldn't be delivered, or it came back: said in words */}
               {(order.delivery.failedAt || order.delivery.returnedAt) && (
                 <div className='font-medium text-amber-700 dark:text-amber-400'>
-                  {order.delivery.returnedAt
-                    ? t('deliveryReturnedLabel')
-                    : t('deliveryFailedLabel')}
+                  {order.delivery.returnedAt ? t('deliveryReturnedLabel') : t('deliveryFailedLabel')}
                 </div>
               )}
               {order.delivery.directions && (
-                <div className='text-muted-foreground italic'>
-                  "{order.delivery.directions}"
-                </div>
+                <div className='text-muted-foreground italic'>"{order.delivery.directions}"</div>
               )}
               <div className='text-muted-foreground flex flex-wrap gap-x-3'>
                 <span dir='ltr'>{showPhone(order.delivery.phone)}</span>
@@ -202,10 +174,7 @@ export function OrderDetailsSheet({
             <div className='flex flex-col gap-2'>
               {localized(order.placeName) && (
                 <div className='flex items-center gap-2 text-sm'>
-                  <PlaceKindIcon
-                    kind={order.placeKind}
-                    className='text-muted-foreground h-4 w-4'
-                  />
+                  <PlaceKindIcon kind={order.placeKind} className='text-muted-foreground h-4 w-4' />
                   <span>{localized(order.placeName)}</span>
                 </div>
               )}
@@ -227,28 +196,20 @@ export function OrderDetailsSheet({
                 <ImageWithFallback
                   src={item.pictureUrl}
                   className='h-12 w-12 shrink-0 rounded-md'
-                  fallbackIcon={
-                    <Coffee className='text-muted-foreground h-4 w-4' />
-                  }
+                  fallbackIcon={<Coffee className='text-muted-foreground h-4 w-4' />}
                 />
                 <div className='min-w-0 flex-1'>
                   <div className='flex items-baseline justify-between gap-2'>
-                    <span className='truncate text-sm font-medium'>
-                      {localized(item.productName) || '—'}
-                    </span>
+                    <span className='truncate text-sm font-medium'>{localized(item.productName) || '—'}</span>
                     <span className='text-sm tabular-nums'>
                       {Number(item.units ?? 0)} × {formatEgp(item.unitPrice)}
                     </span>
                   </div>
                   {localized(item.customizationsDescription) && (
-                    <div className='text-muted-foreground text-xs'>
-                      {localized(item.customizationsDescription)}
-                    </div>
+                    <div className='text-muted-foreground text-xs'>{localized(item.customizationsDescription)}</div>
                   )}
                   {item.specialInstructions && (
-                    <div className='text-muted-foreground text-xs italic'>
-                      "{item.specialInstructions}"
-                    </div>
+                    <div className='text-muted-foreground text-xs italic'>"{item.specialInstructions}"</div>
                   )}
                 </div>
               </div>
@@ -268,9 +229,7 @@ export function OrderDetailsSheet({
                   })}
                   )
                 </span>
-                <span className='tabular-nums'>
-                  −{formatEgp(order.loyaltyDiscount)}
-                </span>
+                <span className='tabular-nums'>−{formatEgp(order.loyaltyDiscount)}</span>
               </div>
             )}
             <div className='flex justify-between font-medium'>
@@ -285,15 +244,9 @@ export function OrderDetailsSheet({
               <div className='space-y-1 text-sm'>
                 <div className='flex items-center gap-2'>
                   <span className='font-medium'>{t('rating')}</span>
-                  <span className='text-amber-500'>
-                    {'★'.repeat(Number(order.rating.ratingValue))}
-                  </span>
+                  <span className='text-amber-500'>{'★'.repeat(Number(order.rating.ratingValue))}</span>
                 </div>
-                {order.rating.comment && (
-                  <p className='text-muted-foreground'>
-                    "{order.rating.comment}"
-                  </p>
-                )}
+                {order.rating.comment && <p className='text-muted-foreground'>"{order.rating.comment}"</p>}
               </div>
             </>
           )}
@@ -303,10 +256,7 @@ export function OrderDetailsSheet({
           {order.platform && isSubmitted(order.status) && (
             <>
               <Separator />
-              <PlatformRejectReasonPicker
-                value={cancelReason}
-                onChange={setCancelReason}
-              />
+              <PlatformRejectReasonPicker value={cancelReason} onChange={setCancelReason} />
             </>
           )}
         </>

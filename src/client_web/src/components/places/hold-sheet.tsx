@@ -10,18 +10,25 @@ import { TariffLine } from './place-card'
  * top of the sheet, and the same booking that slides in under a card on the
  * tab. It closes itself once the hold went through or was turned down.
  */
-export function HoldSheet({ place, onOpenChange }: { place: PlaceViewModel | null; onOpenChange: (open: boolean) => void }) {
+export function HoldSheet({
+  place,
+  onOpenChange,
+}: {
+  place: PlaceViewModel | null
+  onOpenChange: (open: boolean) => void
+}) {
   const t = useT()
   const localized = useLocalized()
   if (!place) return null
 
   return (
     <Sheet open={!!place} onOpenChange={onOpenChange}>
-      <SheetContent
-        className='gap-0 px-2 pb-2'
-      >
+      <SheetContent className='gap-0 px-2 pb-2'>
         <SheetHeader className='bg-foreground/[0.07] relative isolate overflow-hidden rounded-[1.4rem] p-5 text-start'>
-          <PlaceIcon kind={Number(place.kind)} className='pointer-events-none absolute -end-6 -bottom-8 -z-10 size-40 -rotate-12 opacity-[0.12]' />
+          <PlaceIcon
+            kind={Number(place.kind)}
+            className='pointer-events-none absolute -end-6 -bottom-8 -z-10 size-40 -rotate-12 opacity-[0.12]'
+          />
           <SheetTitle className='heading text-headline pe-8'>
             {t('reserveRoomName', { roomName: localized(place.name) })}
           </SheetTitle>

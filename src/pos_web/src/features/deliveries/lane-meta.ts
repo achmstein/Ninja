@@ -7,7 +7,10 @@ import type { BoardLane } from './delivery-board'
  * and its tint where someone is waiting on the cashier (waiting, coming back,
  * cash to take in)
  */
-export const LANE_META: Record<BoardLane, { label: TranslationKey; icon: LucideIcon; tint: string | null; ink: string }> = {
+export const LANE_META: Record<
+  BoardLane,
+  { label: TranslationKey; icon: LucideIcon; tint: string | null; ink: string }
+> = {
   waiting: {
     label: 'laneWaiting',
     icon: Clock,

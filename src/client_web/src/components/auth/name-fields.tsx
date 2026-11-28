@@ -21,11 +21,21 @@ export function NameFields({
     <div className='grid grid-cols-2 gap-3'>
       <div className='space-y-2'>
         <Label htmlFor={`${idPrefix}First`}>{t('firstName')}</Label>
-        <Input id={`${idPrefix}First`} autoComplete='given-name' value={first} onChange={(e) => onFirst(e.target.value)} />
+        <Input
+          id={`${idPrefix}First`}
+          autoComplete='given-name'
+          value={first}
+          onChange={(e) => onFirst(e.target.value)}
+        />
       </div>
       <div className='space-y-2'>
         <Label htmlFor={`${idPrefix}Last`}>{t('lastName')}</Label>
-        <Input id={`${idPrefix}Last`} autoComplete='family-name' value={last} onChange={(e) => onLast(e.target.value)} />
+        <Input
+          id={`${idPrefix}Last`}
+          autoComplete='family-name'
+          value={last}
+          onChange={(e) => onLast(e.target.value)}
+        />
       </div>
     </div>
   )

@@ -11,13 +11,7 @@ const platformLogos: Record<string, string> = {
 }
 
 /** One tap picks why a platform's order is turned down. */
-export function PlatformRejectReasonPicker({
-  value,
-  onChange,
-}: {
-  value: string
-  onChange: (value: string) => void
-}) {
+export function PlatformRejectReasonPicker({ value, onChange }: { value: string; onChange: (value: string) => void }) {
   const t = useT()
   return (
     <div className='flex flex-col gap-2'>
@@ -45,13 +39,7 @@ export function PlatformRejectReasonPicker({
  * logo (so it is never mistaken for one of ours), the code its rider asks
  * for, and how the order leaves.
  */
-export function PlatformBadge({
-  platform,
-  className,
-}: {
-  platform: PlatformOrderView
-  className?: string
-}) {
+export function PlatformBadge({ platform, className }: { platform: PlatformOrderView; className?: string }) {
   const t = useT()
   const logo = platformLogos[platform.name ?? '']
   return (

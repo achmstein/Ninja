@@ -4,14 +4,7 @@ import { motion } from 'motion/react'
 import { useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { type AppRow, type AppTable } from './features'
 
 type DataTableProps<TData extends RowData> = {
@@ -51,18 +44,11 @@ export function DataTable<TData extends RowData>({
   className,
 }: DataTableProps<TData>) {
   const t = useT()
-  const visibleColumns = table
-    .getAllColumns()
-    .filter((column) => column.getIsVisible())
+  const visibleColumns = table.getAllColumns().filter((column) => column.getIsVisible())
   const rows = table.getRowModel().rows
 
   const list = mobileRow && (
-    <div
-      className={cn(
-        'bg-card overflow-hidden rounded-xl shadow-sm @2xl/content:hidden',
-        className
-      )}
-    >
+    <div className={cn('bg-card overflow-hidden rounded-xl shadow-sm @2xl/content:hidden', className)}>
       {isLoading ? (
         <ul className='divide-y'>
           {Array.from({ length: 5 }, (_, index) => (
@@ -79,8 +65,7 @@ export function DataTable<TData extends RowData>({
         <ul className='divide-y'>
           {rows.map((row, index) => {
             const group = groupBy?.key(row.original)
-            const previous =
-              index > 0 ? groupBy?.key(rows[index - 1].original) : undefined
+            const previous = index > 0 ? groupBy?.key(rows[index - 1].original) : undefined
             return (
               <Fragment key={row.id}>
                 {groupBy && group !== previous && (
@@ -109,9 +94,7 @@ export function DataTable<TData extends RowData>({
           })}
         </ul>
       ) : (
-        <div className='text-muted-foreground px-4 py-10 text-center text-sm'>
-          {emptyMessage ?? t('noResults')}
-        </div>
+        <div className='text-muted-foreground px-4 py-10 text-center text-sm'>{emptyMessage ?? t('noResults')}</div>
       )}
     </div>
   )
@@ -137,18 +120,12 @@ export function DataTable<TData extends RowData>({
                     colSpan={header.colSpan}
                     className={cn(
                       'group-hover/row:bg-transparent',
-                      header.column.columnDef.meta?.align === 'end' &&
-                        'text-end [&>div]:justify-end',
+                      header.column.columnDef.meta?.align === 'end' && 'text-end [&>div]:justify-end',
                       header.column.columnDef.meta?.className,
                       header.column.columnDef.meta?.thClassName
                     )}
                   >
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
+                    {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
                   </TableHead>
                 ))}
               </TableRow>
@@ -168,8 +145,7 @@ export function DataTable<TData extends RowData>({
             ) : rows.length ? (
               rows.map((row, index) => {
                 const group = groupBy?.key(row.original)
-                const previous =
-                  index > 0 ? groupBy?.key(rows[index - 1].original) : undefined
+                const previous = index > 0 ? groupBy?.key(rows[index - 1].original) : undefined
                 return (
                   <Fragment key={row.id}>
                     {groupBy && group !== previous && (
@@ -184,10 +160,7 @@ export function DataTable<TData extends RowData>({
                     )}
                     <TableRow
                       data-state={row.getIsSelected() && 'selected'}
-                      className={cn(
-                        'group/row',
-                        onRowClick && 'cursor-pointer'
-                      )}
+                      className={cn('group/row', onRowClick && 'cursor-pointer')}
                       onClick={onRowClick ? () => onRowClick(row) : undefined}
                     >
                       {row.getVisibleCells().map((cell) => (
@@ -195,20 +168,14 @@ export function DataTable<TData extends RowData>({
                           key={cell.id}
                           className={cn(
                             'group-hover/row:bg-muted/40',
-                            cell.column.columnDef.meta?.align === 'end' &&
-                              'text-end tabular-nums',
-                            cell.column.columnDef.meta?.emphasis ===
-                              'primary' && 'font-medium',
-                            cell.column.columnDef.meta?.emphasis === 'muted' &&
-                              'text-muted-foreground',
+                            cell.column.columnDef.meta?.align === 'end' && 'text-end tabular-nums',
+                            cell.column.columnDef.meta?.emphasis === 'primary' && 'font-medium',
+                            cell.column.columnDef.meta?.emphasis === 'muted' && 'text-muted-foreground',
                             cell.column.columnDef.meta?.className,
                             cell.column.columnDef.meta?.tdClassName
                           )}
                         >
-                          {flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext()
-                          )}
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
                         </TableCell>
                       ))}
                     </TableRow>
@@ -217,10 +184,7 @@ export function DataTable<TData extends RowData>({
               })
             ) : (
               <TableRow>
-                <TableCell
-                  colSpan={visibleColumns.length}
-                  className='h-24 text-center'
-                >
+                <TableCell colSpan={visibleColumns.length} className='h-24 text-center'>
                   {emptyMessage ?? t('noResults')}
                 </TableCell>
               </TableRow>

@@ -1,15 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { useAuth } from 'react-oidc-context'
-import {
-  getMyReservationsOptions,
-  getMyStaysOptions,
-} from '@/api/spaces/@tanstack/react-query.gen'
-import {
-  RESERVATION_CONFIRMED,
-  RESERVATION_REQUESTED,
-  RESERVATION_SEATED,
-  STAY_RUNNING,
-} from '@/lib/places'
+import { getMyReservationsOptions, getMyStaysOptions } from '@/api/spaces/@tanstack/react-query.gen'
+import { RESERVATION_CONFIRMED, RESERVATION_REQUESTED, RESERVATION_SEATED, STAY_RUNNING } from '@/lib/places'
 
 export { STAY_RUNNING } from '@/lib/places'
 
@@ -42,9 +34,7 @@ export function useActiveStay() {
  *  not yet cleared by the staff */
 export function useSeatedReservation() {
   const { data: reservations = [] } = useMyReservations()
-  return reservations.find(
-    (r) => Number(r.status) === RESERVATION_SEATED && r.stayId == null,
-  )
+  return reservations.find((r) => Number(r.status) === RESERVATION_SEATED && r.stayId == null)
 }
 
 /** The customer's pending reservation, if any: requested or confirmed, not yet seated */

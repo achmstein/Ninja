@@ -1,20 +1,9 @@
 import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
-import {
-  AlertTriangle,
-  CookingPot,
-  Info,
-  MoreHorizontal,
-  Package,
-  X,
-} from 'lucide-react'
+import { AlertTriangle, CookingPot, Info, MoreHorizontal, Package, X } from 'lucide-react'
 import { type CatalogItemDto } from '@/api/catalog'
-import {
-  type RecipesProposal,
-  type RecipeView,
-  type StockItemView,
-} from '@/api/inventory'
+import { type RecipesProposal, type RecipeView, type StockItemView } from '@/api/inventory'
 import {
   getRecipeCostsOptions,
   getRecipesOptions,
@@ -34,11 +23,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
 import { AiButton } from '@/components/ai-button'
@@ -50,30 +35,15 @@ import { assistErrorMessage } from '@/features/assist/errors'
 import { useAiAvailable } from '@/features/assist/use-ai-available'
 import { formatQuantity } from '@/features/inventory/format'
 import { stockItemsQueryOptions } from '@/features/inventory/queries'
-import {
-  choiceDeltas,
-  standardBreakdown,
-  standardChoiceNames,
-  standardCost,
-} from '@/features/inventory/recipe-cost'
-import {
-  draftLines,
-  fromApi,
-  toApi,
-  validateDraft,
-  type RecipeDraft,
-} from '@/features/inventory/recipe-model'
+import { choiceDeltas, standardBreakdown, standardChoiceNames, standardCost } from '@/features/inventory/recipe-cost'
+import { draftLines, fromApi, toApi, validateDraft, type RecipeDraft } from '@/features/inventory/recipe-model'
 import { isUnitRecipe } from '@/features/inventory/stock-rules'
 import { useInventoryActions } from '@/features/inventory/use-inventory-actions'
 import { menuOptionsOf, type MenuOptions } from '../menu-options'
 import { toMenuItemToTrack } from '../track-items'
 import { RecipeBriefSheet } from './recipe-brief-sheet'
 import { RecipeBuilder } from './recipe-builder'
-import {
-  DeductionPreview,
-  type IngredientOption,
-  type StockInfo,
-} from './recipe-editor'
+import { DeductionPreview, type IngredientOption, type StockInfo } from './recipe-editor'
 import { RecipeReviewSheet } from './recipe-review-sheet'
 import { RecipeSummary } from './recipe-summary'
 
@@ -98,21 +68,14 @@ export function StockRuleSection({ item }: StockRuleSectionProps) {
   const [editing, setEditing] = useState(false)
   const [stopOpen, setStopOpen] = useState(false)
 
-  const recipes = useQuery(
-    getRecipesOptions({ query: { 'api-version': API_VERSION } })
-  )
+  const recipes = useQuery(getRecipesOptions({ query: { 'api-version': API_VERSION } }))
   const stockItems = useQuery(stockItemsQueryOptions())
-  const recipe = recipes.data?.find(
-    (r) => toNumber(r.catalogItemId) === catalogItemId
-  )
+  const recipe = recipes.data?.find((r) => toNumber(r.catalogItemId) === catalogItemId)
   const menu = useMemo(() => menuOptionsOf(item, localized), [item, localized])
   const stock = useMemo(
     () =>
       new Map<string, StockInfo>(
-        (stockItems.data ?? []).map((i) => [
-          String(i.id),
-          { label: localized(i.name), unit: i.unit ?? '' },
-        ])
+        (stockItems.data ?? []).map((i) => [String(i.id), { label: localized(i.name), unit: i.unit ?? '' }])
       ),
     [stockItems.data, localized]
   )
@@ -273,31 +236,19 @@ export function StockRuleSection({ item }: StockRuleSectionProps) {
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button
-                type='button'
-                variant='ghost'
-                size='icon'
-                className='size-9'
-                aria-label={t('moreActions')}
-              >
+              <Button type='button' variant='ghost' size='icon' className='size-9' aria-label={t('moreActions')}>
                 <MoreHorizontal className='h-4 w-4' />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align='end'>
               <DropdownMenuGroup>
                 {assistAvailable && (
-                  <DropdownMenuItem
-                    disabled={propose.isPending}
-                    onSelect={() => setBriefOpen(true)}
-                  >
+                  <DropdownMenuItem disabled={propose.isPending} onSelect={() => setBriefOpen(true)}>
                     <NinjaMark />
                     {t('proposeRecipe')}
                   </DropdownMenuItem>
                 )}
-                <DropdownMenuItem
-                  variant='destructive'
-                  onSelect={() => setStopOpen(true)}
-                >
+                <DropdownMenuItem variant='destructive' onSelect={() => setStopOpen(true)}>
                   <X />
                   {t('stopTracking')}
                 </DropdownMenuItem>
@@ -356,13 +307,9 @@ function RecipeEditorForm({
     value: String(i.id),
     label: localized(i.name),
     unit: i.unit ?? '',
-    names: [i.name?.en, i.name?.ar].filter(
-      (n): n is string => !!n && n.trim() !== ''
-    ),
+    names: [i.name?.en, i.name?.ar].filter((n): n is string => !!n && n.trim() !== ''),
   }))
-  const stock = new Map<string, StockInfo>(
-    ingredients.map((i) => [i.value, { label: i.label, unit: i.unit }])
-  )
+  const stock = new Map<string, StockInfo>(ingredients.map((i) => [i.value, { label: i.label, unit: i.unit }]))
 
   const [draft, setDraft] = useState<RecipeDraft>(() =>
     fromApi(
@@ -394,12 +341,7 @@ function RecipeEditorForm({
 
   return (
     <form id={RECIPE_FORM_ID} onSubmit={save} className='space-y-4'>
-      <RecipeBuilder
-        draft={draft}
-        onChange={setDraft}
-        menu={menu}
-        ingredients={ingredients}
-      />
+      <RecipeBuilder draft={draft} onChange={setDraft} menu={menu} ingredients={ingredients} />
 
       <DeductionPreview lines={preview} menu={menu} stock={stock} />
 
@@ -408,12 +350,7 @@ function RecipeEditorForm({
         <Button type='button' variant='outline' size='sm' onClick={onDone}>
           {t('cancel')}
         </Button>
-        <Button
-          type='submit'
-          form={RECIPE_FORM_ID}
-          size='sm'
-          disabled={isPending}
-        >
+        <Button type='submit' form={RECIPE_FORM_ID} size='sm' disabled={isPending}>
           {isPending && <Spinner />}
           {t('save')}
         </Button>
@@ -431,12 +368,8 @@ function RecipeEditorForm({
 function CostAndMargin({ item }: { item: CatalogItemDto }) {
   const t = useT()
   const localized = useLocalized()
-  const costs = useQuery(
-    getRecipeCostsOptions({ query: { 'api-version': API_VERSION } })
-  )
-  const cost = costs.data?.find(
-    (c) => toNumber(c.catalogItemId) === toNumber(item.id)
-  )
+  const costs = useQuery(getRecipeCostsOptions({ query: { 'api-version': API_VERSION } }))
+  const cost = costs.data?.find((c) => toNumber(c.catalogItemId) === toNumber(item.id))
   if (costs.isLoading) return <Skeleton className='h-24' />
   if (!cost) return null
 
@@ -449,27 +382,20 @@ function CostAndMargin({ item }: { item: CatalogItemDto }) {
   // The ingredients priced at nothing, by name, so the owner knows what to receive
   const uncostedNames = Array.from(
     new Set(
-      cost.uncosted.map((id) =>
-        localized(
-          cost.lines.find((l) => toNumber(l.stockItemId) === toNumber(id))?.name
-        )
-      )
+      cost.uncosted.map((id) => localized(cost.lines.find((l) => toNumber(l.stockItemId) === toNumber(id))?.name))
     )
   ).filter(Boolean)
   const choices = standardChoiceNames(item, localized)
   const breakdown = standardBreakdown(cost, item)
   const groups = choiceDeltas(cost, item)
-  const perUnit = (value: number) =>
-    value.toLocaleString(undefined, { maximumFractionDigits: 3 })
+  const perUnit = (value: number) => value.toLocaleString(undefined, { maximumFractionDigits: 3 })
 
   return (
     <div className='rounded-lg border'>
       <div className='flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 border-b px-3 py-2'>
         <span className='text-sm font-medium'>{t('costOfOneSale')}</span>
         <span className='text-muted-foreground text-xs'>
-          {choices.length > 0
-            ? t('withStandardChoices', { choices: choices.join(' · ') })
-            : t('noChoicesAffectCost')}
+          {choices.length > 0 ? t('withStandardChoices', { choices: choices.join(' · ') }) : t('noChoicesAffectCost')}
         </span>
       </div>
 
@@ -490,25 +416,13 @@ function CostAndMargin({ item }: { item: CatalogItemDto }) {
         </div>
         <div className='px-2'>
           <dt className='text-muted-foreground text-xs'>{t('margin')}</dt>
-          <dd
-            className={cn(
-              'text-lg font-semibold tabular-nums',
-              margin < 0 && 'text-destructive'
-            )}
-          >
+          <dd className={cn('text-lg font-semibold tabular-nums', margin < 0 && 'text-destructive')}>
             {price > 0 ? formatEgp(margin) : '—'}
           </dd>
         </div>
         <div className='px-2'>
-          <dt className='text-muted-foreground text-xs'>
-            {t('foodCostPercent')}
-          </dt>
-          <dd
-            className={cn(
-              'text-lg font-semibold tabular-nums',
-              over && 'text-destructive'
-            )}
-          >
+          <dt className='text-muted-foreground text-xs'>{t('foodCostPercent')}</dt>
+          <dd className={cn('text-lg font-semibold tabular-nums', over && 'text-destructive')}>
             {foodCost === null ? '—' : `${foodCost}%`}
           </dd>
           {foodCost !== null && (
@@ -525,15 +439,10 @@ function CostAndMargin({ item }: { item: CatalogItemDto }) {
       {/* How the figure adds up: what the standard choice takes, priced line by line */}
       {breakdown.length > 0 && (
         <div className='border-t px-3 py-1.5 text-xs'>
-          <div className='text-muted-foreground mb-0.5'>
-            {t('howCostAddsUp')}
-          </div>
+          <div className='text-muted-foreground mb-0.5'>{t('howCostAddsUp')}</div>
           <ul className='space-y-0.5'>
             {breakdown.map((line) => (
-              <li
-                key={line.stockItemId}
-                className='flex items-baseline justify-between gap-3'
-              >
+              <li key={line.stockItemId} className='flex items-baseline justify-between gap-3'>
                 <span className='min-w-0 truncate'>
                   {localized(line.name)}
                   <span className='text-muted-foreground'>
@@ -542,15 +451,10 @@ function CostAndMargin({ item }: { item: CatalogItemDto }) {
                   </span>
                 </span>
                 {line.uncosted ? (
-                  <span className='text-warning shrink-0'>
-                    {t('countsAsFree')}
-                  </span>
+                  <span className='text-warning shrink-0'>{t('countsAsFree')}</span>
                 ) : (
                   <span className='text-muted-foreground shrink-0 tabular-nums'>
-                    × {perUnit(line.unitCost)} ={' '}
-                    <span className='text-foreground'>
-                      {formatEgp(line.cost)}
-                    </span>
+                    × {perUnit(line.unitCost)} = <span className='text-foreground'>{formatEgp(line.cost)}</span>
                   </span>
                 )}
               </li>
@@ -562,9 +466,7 @@ function CostAndMargin({ item }: { item: CatalogItemDto }) {
       {incomplete && (
         <div className='text-warning flex items-start gap-1.5 border-t px-3 py-1.5 text-xs'>
           <AlertTriangle className='mt-0.5 size-3 shrink-0' aria-hidden />
-          <span className='min-w-0 flex-1'>
-            {t('costIncompleteHint', { count: cost.uncosted.length })}
-          </span>
+          <span className='min-w-0 flex-1'>{t('costIncompleteHint', { count: cost.uncosted.length })}</span>
           {uncostedNames.length > 0 && (
             // The names behind an icon: the drawer is crowded enough
             <Popover>
@@ -598,35 +500,21 @@ function CostAndMargin({ item }: { item: CatalogItemDto }) {
         <div className='space-y-1.5 border-t px-3 py-2'>
           <div className='text-muted-foreground text-xs'>{t('byChoice')}</div>
           {groups.map((group) => (
-            <div
-              key={group.id}
-              className='flex flex-wrap items-center gap-x-2 gap-y-1 text-sm'
-            >
-              <span className='text-muted-foreground min-w-16'>
-                {localized(group.name)}
-              </span>
+            <div key={group.id} className='flex flex-wrap items-center gap-x-2 gap-y-1 text-sm'>
+              <span className='text-muted-foreground min-w-16'>{localized(group.name)}</span>
               {group.options.map((option) => (
                 <span
                   key={option.id}
                   className={cn(
                     'inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-xs tabular-nums',
-                    option.isDefault
-                      ? 'bg-muted/60'
-                      : option.delta === 0 && 'text-muted-foreground'
+                    option.isDefault ? 'bg-muted/60' : option.delta === 0 && 'text-muted-foreground'
                   )}
                 >
                   {localized(option.name)}
                   {option.isDefault ? (
-                    <span className='text-muted-foreground'>
-                      · {t('standardChoice')}
-                    </span>
+                    <span className='text-muted-foreground'>· {t('standardChoice')}</span>
                   ) : (
-                    <span
-                      className={cn(
-                        option.delta > 0 && 'text-destructive/80',
-                        option.delta < 0 && 'text-success'
-                      )}
-                    >
+                    <span className={cn(option.delta > 0 && 'text-destructive/80', option.delta < 0 && 'text-success')}>
                       {option.delta > 0 ? '+' : ''}
                       {formatEgp(option.delta)}
                     </span>

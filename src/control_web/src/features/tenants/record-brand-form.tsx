@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import type { TenantDetail } from '@/api/control'
+import { useT } from '@/lib/i18n'
+import { isHexColor } from '@/lib/tenant'
 import { ColorField } from '@/components/brand/color-field'
 import { DockField, dockOf, type Dock } from '@/components/brand/dock-field'
 import { fromLocalizedValue, isBlank, LocalizedInput, toLocalizedValue } from '@/components/localized-input'
-import { useT } from '@/lib/i18n'
-import { isHexColor } from '@/lib/tenant'
 import { DefaultThemeField, type DefaultTheme } from './new-tenant-business'
 import { useRecordSave } from './record-save'
 import { Section } from './tabs/business'
@@ -21,7 +21,8 @@ export function RecordBrandForm({ tenant }: { tenant: TenantDetail }) {
   const [name, setName] = useState(toLocalizedValue({ en: tenant.nameEn, ar: tenant.nameAr }))
   const [color, setColor] = useState(tenant.primaryColor ?? '')
   const [dock, setDock] = useState<Dock>(dockOf(tenant.slab))
-  const savedMode: DefaultTheme = tenant.defaultTheme === 'light' || tenant.defaultTheme === 'dark' ? tenant.defaultTheme : 'device'
+  const savedMode: DefaultTheme =
+    tenant.defaultTheme === 'light' || tenant.defaultTheme === 'dark' ? tenant.defaultTheme : 'device'
   const [mode, setMode] = useState<DefaultTheme>(savedMode)
   const localized = fromLocalizedValue(name)
   const dirty =

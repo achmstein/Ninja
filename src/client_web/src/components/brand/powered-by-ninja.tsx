@@ -41,7 +41,12 @@ export function PoweredByNinja({ className }: { className?: string }) {
       {/* A Latin wordmark keeps its own direction on an Arabic page */}
       <span dir='ltr'>
         {appsUrl ? (
-          <a href={platformLink(appsUrl, window.location.hostname)} target='_blank' rel='noreferrer' className='hover:opacity-80'>
+          <a
+            href={platformLink(appsUrl, window.location.hostname)}
+            target='_blank'
+            rel='noreferrer'
+            className='hover:opacity-80'
+          >
             {wordmark}
           </a>
         ) : (

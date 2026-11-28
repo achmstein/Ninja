@@ -1,12 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import {
-  APILoadingStatus,
-  APIProvider,
-  Circle,
-  Map,
-  useApiLoadingStatus,
-  useMap,
-} from '@vis.gl/react-google-maps'
+import { APILoadingStatus, APIProvider, Circle, Map, useApiLoadingStatus, useMap } from '@vis.gl/react-google-maps'
 import { Loader2 } from 'lucide-react'
 import type { LatLng } from '@/lib/address-search'
 import { CentrePin } from './branch-map'
@@ -36,12 +29,7 @@ export default function BranchGoogleMap({
   onFail: () => void
 }) {
   return (
-    <APIProvider
-      apiKey={apiKey}
-      language={language}
-      region={region}
-      onError={props.onFail}
-    >
+    <APIProvider apiKey={apiKey} language={language} region={region} onError={props.onFail}>
       <PinnedMap {...props} />
     </APIProvider>
   )
@@ -75,11 +63,7 @@ function PinnedMap({
   }, [onFail])
 
   useEffect(() => {
-    if (
-      status === APILoadingStatus.FAILED ||
-      status === APILoadingStatus.AUTH_FAILURE
-    )
-      fail.current()
+    if (status === APILoadingStatus.FAILED || status === APILoadingStatus.AUTH_FAILURE) fail.current()
   }, [status])
 
   useEffect(() => {

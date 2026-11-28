@@ -2,34 +2,16 @@ import { useEffect, useMemo, useState } from 'react'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { getRouteApi } from '@tanstack/react-router'
 import { useTable } from '@tanstack/react-table'
-import {
-  getOpenTicketsOptions,
-  getTicketHistoryOptions,
-} from '@/api/sales/@tanstack/react-query.gen'
+import { getOpenTicketsOptions, getTicketHistoryOptions } from '@/api/sales/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
-import {
-  useLanguage,
-  useLocale,
-  useLocalized,
-  useT,
-  type TranslationKey,
-} from '@/lib/i18n'
+import { useLanguage, useLocale, useLocalized, useT, type TranslationKey } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { dayHeading, dayKey } from '@/lib/when'
 import { useTableUrlState } from '@/hooks/use-table-url-state'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
-import {
-  DataTable,
-  DataTablePagination,
-  dataTableFeatures,
-} from '@/components/data-table'
+import { DataTable, DataTablePagination, dataTableFeatures } from '@/components/data-table'
 import { ErrorState } from '@/components/error-state'
-import {
-  getHistoryColumns,
-  getOpenColumns,
-  HistoryListRow,
-  OpenListRow,
-} from '../ticket-columns'
+import { getHistoryColumns, getOpenColumns, HistoryListRow, OpenListRow } from '../ticket-columns'
 import { useTillWindow } from '../use-till-window'
 import { TICKET_STATUS_SETTLED, TICKET_STATUS_VOIDED } from './tender'
 import { TicketSheet } from './ticket-sheet'
@@ -50,11 +32,7 @@ const tabs: { value: TicketTab; key: TranslationKey }[] = [
  * window (or one bill by receipt number), and the ones still open on the
  * floor with how long they have sat. Read-only — a row opens the ticket.
  */
-export function TicketsList({
-  from = '/_authenticated/till/',
-}: {
-  from?: TicketsListRoute
-}) {
+export function TicketsList({ from = '/_authenticated/till/' }: { from?: TicketsListRoute }) {
   const route = getRouteApi(from)
   const t = useT()
   const locale = useLocale()
@@ -74,13 +52,12 @@ export function TicketsList({
     return () => clearInterval(timer)
   }, [])
 
-  const { pagination, onPaginationChange, ensurePageInRange } =
-    useTableUrlState({
-      search,
-      navigate,
-      pagination: { defaultPageSize: 20 },
-      globalFilter: { enabled: false },
-    })
+  const { pagination, onPaginationChange, ensurePageInRange } = useTableUrlState({
+    search,
+    navigate,
+    pagination: { defaultPageSize: 20 },
+    globalFilter: { enabled: false },
+  })
 
   const historyQuery = useQuery({
     ...getTicketHistoryOptions({
@@ -164,57 +141,30 @@ export function TicketsList({
     <>
       <div className='flex flex-col gap-4'>
         <div className='flex flex-wrap items-center gap-3'>
-          <ToggleGroup
-            type='single'
-            variant='outline'
-            size='sm'
-            value={tab}
-            onValueChange={switchTab}
-          >
+          <ToggleGroup type='single' variant='outline' size='sm' value={tab} onValueChange={switchTab}>
             {tabs.map((item) => (
-              <ToggleGroupItem
-                key={item.value}
-                value={item.value}
-                className='gap-1.5 px-3'
-              >
+              <ToggleGroupItem key={item.value} value={item.value} className='gap-1.5 px-3'>
                 {t(item.key)}
                 {item.value === 'open' && openQuery.data && (
-                  <span className='text-muted-foreground tabular-nums'>
-                    {openQuery.data.length}
-                  </span>
+                  <span className='text-muted-foreground tabular-nums'>{openQuery.data.length}</span>
                 )}
               </ToggleGroupItem>
             ))}
           </ToggleGroup>
 
           {/* The receipt box lives in the page header; a match ignores the range */}
-          {byReceipt && (
-            <span className='text-muted-foreground text-xs'>
-              {t('receiptIgnoresRange')}
-            </span>
-          )}
+          {byReceipt && <span className='text-muted-foreground text-xs'>{t('receiptIgnoresRange')}</span>}
         </div>
 
         {activeQuery.isError ? (
-          <ErrorState
-            error={activeQuery.error}
-            onRetry={() => activeQuery.refetch()}
-          />
+          <ErrorState error={activeQuery.error} onRetry={() => activeQuery.refetch()} />
         ) : tab === 'open' ? (
           <DataTable
             table={openTable}
             isLoading={openQuery.isLoading}
             emptyMessage={t('noOpenTickets')}
             onRowClick={(row) => setSelectedTicketId(toNumber(row.original.id))}
-            mobileRow={(row) => (
-              <OpenListRow
-                row={row}
-                t={t}
-                localized={localized}
-                locale={locale}
-                nowMs={nowMs}
-              />
-            )}
+            mobileRow={(row) => <OpenListRow row={row} t={t} localized={localized} locale={locale} nowMs={nowMs} />}
           />
         ) : (
           <>
@@ -222,21 +172,12 @@ export function TicketsList({
               table={historyTable}
               isLoading={historyQuery.isLoading}
               emptyMessage={byReceipt ? t('noResults') : t('noTicketsInRange')}
-              onRowClick={(row) =>
-                setSelectedTicketId(toNumber(row.original.id))
-              }
+              onRowClick={(row) => setSelectedTicketId(toNumber(row.original.id))}
               groupBy={{
                 key: (row) => dayKey(row.closedAt),
                 label: (key) => dayHeading(key, locale, t),
               }}
-              mobileRow={(row) => (
-                <HistoryListRow
-                  row={row}
-                  t={t}
-                  localized={localized}
-                  voided={tab === 'voided'}
-                />
-              )}
+              mobileRow={(row) => <HistoryListRow row={row} t={t} localized={localized} voided={tab === 'voided'} />}
             />
             <DataTablePagination table={historyTable} />
           </>

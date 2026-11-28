@@ -103,10 +103,7 @@ function TalabatSettings({ status }: { status: TalabatStatusView }) {
     save.mutate({ ...talabatQuery, body: { branchIds, syncOpenClose } })
 
   const toggleBranch = (id: number, on: boolean) =>
-    saveWith(
-      on ? [...onTalabat, id] : onTalabat.filter((b) => b !== id),
-      status.syncOpenClose
-    )
+    saveWith(on ? [...onTalabat, id] : onTalabat.filter((b) => b !== id), status.syncOpenClose)
 
   // The api client stamps the current branch on every call, so each branch
   // on Talabat is sent by name: the owner means all of them
@@ -130,13 +127,10 @@ function TalabatSettings({ status }: { status: TalabatStatusView }) {
     }
   }
 
-  const when = (value?: string | null) =>
-    value ? formatWhen(value, 'relative', locale, t) : null
+  const when = (value?: string | null) => (value ? formatWhen(value, 'relative', locale, t) : null)
   const pending = Number(status.pending ?? 0)
   const changedSinceSent =
-    status.menuChangedAt &&
-    (!status.menuSentAt ||
-      new Date(status.menuChangedAt) > new Date(status.menuSentAt))
+    status.menuChangedAt && (!status.menuSentAt || new Date(status.menuChangedAt) > new Date(status.menuSentAt))
   const waiting = Boolean(changedSinceSent) && onTalabat.length > 0
   const menuNotes = status.lastMenuResult || waiting || pending > 0
 
@@ -151,10 +145,7 @@ function TalabatSettings({ status }: { status: TalabatStatusView }) {
       )}
 
       {/* Where the business sells on Talabat */}
-      <SettingsCard
-        title={t('talabatBranches')}
-        description={t('talabatBranchesHint')}
-      >
+      <SettingsCard title={t('talabatBranches')} description={t('talabatBranchesHint')}>
         {branchesLoading ? (
           <div className='px-5 py-4'>
             <Skeleton className='h-20 w-full' />
@@ -196,22 +187,14 @@ function TalabatSettings({ status }: { status: TalabatStatusView }) {
       <SettingsCard title={t('talabatMenu')} description={t('talabatMenuHint')}>
         <SettingRow
           title={
-            status.menuSentAt
-              ? t('talabatMenuSent', { time: when(status.menuSentAt)! })
-              : t('talabatMenuNeverSent')
+            status.menuSentAt ? t('talabatMenuSent', { time: when(status.menuSentAt)! }) : t('talabatMenuNeverSent')
           }
           description={
             menuNotes ? (
               <span className='grid gap-0.5'>
-                {status.lastMenuResult && (
-                  <span>
-                    {t('talabatMenuResult', { result: status.lastMenuResult })}
-                  </span>
-                )}
+                {status.lastMenuResult && <span>{t('talabatMenuResult', { result: status.lastMenuResult })}</span>}
                 {waiting && <span>{t('talabatMenuWaiting')}</span>}
-                {pending > 0 && (
-                  <span>{t('talabatPending', { count: pending })}</span>
-                )}
+                {pending > 0 && <span>{t('talabatPending', { count: pending })}</span>}
               </span>
             ) : undefined
           }
@@ -235,32 +218,21 @@ function TalabatSettings({ status }: { status: TalabatStatusView }) {
         <SettingsCard title={t('talabatRefusals')}>
           {status.failed.map((f, i) => {
             const kind = REFUSAL_KINDS[f.kind]
-            const branch = branches.find(
-              (b) => Number(b.id) === Number(f.branchId)
-            )
+            const branch = branches.find((b) => Number(b.id) === Number(f.branchId))
             return (
               <div key={i} className='space-y-1 px-5 py-3 text-sm'>
                 <div className='flex flex-wrap items-center gap-2'>
                   <Badge variant='outline'>{kind ? t(kind) : f.kind}</Badge>
                   {branch && <span>{localized(branch.name)}</span>}
                   {f.code && (
-                    <span
-                      className='text-muted-foreground font-mono text-xs'
-                      dir='ltr'
-                    >
+                    <span className='text-muted-foreground font-mono text-xs' dir='ltr'>
                       {f.code}
                     </span>
                   )}
-                  <When
-                    value={f.at}
-                    className='text-muted-foreground ms-auto text-xs'
-                  />
+                  <When value={f.at} className='text-muted-foreground ms-auto text-xs' />
                 </div>
                 {f.error && (
-                  <p
-                    className='text-muted-foreground font-mono text-xs break-all'
-                    dir='ltr'
-                  >
+                  <p className='text-muted-foreground font-mono text-xs break-all' dir='ltr'>
                     {f.error}
                   </p>
                 )}
@@ -279,12 +251,8 @@ type CatalogItem = { type?: string }
 function MenuPreview({ branchId }: { branchId: number }) {
   const t = useT()
   const [open, setOpen] = useState(false)
-  const preview = useQuery(
-    previewTalabatMenuOptions({ ...talabatQuery, path: { branchId } })
-  )
-  const items = (
-    preview.data as { items?: Record<string, CatalogItem> } | undefined
-  )?.items
+  const preview = useQuery(previewTalabatMenuOptions({ ...talabatQuery, path: { branchId } }))
+  const items = (preview.data as { items?: Record<string, CatalogItem> } | undefined)?.items
   if (!items) return null
 
   const all = Object.entries(items)
@@ -305,21 +273,13 @@ function MenuPreview({ branchId }: { branchId: number }) {
             })}
           </div>
         </div>
-        <Button
-          type='button'
-          variant='ghost'
-          size='sm'
-          onClick={() => setOpen((v) => !v)}
-        >
+        <Button type='button' variant='ghost' size='sm' onClick={() => setOpen((v) => !v)}>
           {open ? t('talabatPreviewHide') : t('talabatPreviewShow')}
           <ChevronDown className={open ? 'rotate-180' : undefined} />
         </Button>
       </div>
       {open && (
-        <pre
-          dir='ltr'
-          className='bg-muted max-h-96 overflow-auto rounded-md p-3 text-xs'
-        >
+        <pre dir='ltr' className='bg-muted max-h-96 overflow-auto rounded-md p-3 text-xs'>
           {JSON.stringify(preview.data, null, 2)}
         </pre>
       )}

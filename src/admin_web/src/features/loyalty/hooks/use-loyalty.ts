@@ -8,13 +8,11 @@ import type { EarnPointsRequest, AdjustPointsRequest } from '../types'
 export const loyaltyKeys = {
   all: ['loyalty'] as const,
   accounts: () => [...loyaltyKeys.all, 'accounts'] as const,
-  accountsList: (first?: number, max?: number) =>
-    [...loyaltyKeys.accounts(), { first, max }] as const,
+  accountsList: (first?: number, max?: number) => [...loyaltyKeys.accounts(), { first, max }] as const,
   account: (userId: string) => [...loyaltyKeys.all, 'account', userId] as const,
   stats: () => [...loyaltyKeys.all, 'stats'] as const,
   tiers: () => [...loyaltyKeys.all, 'tiers'] as const,
-  transactions: (userId: string) =>
-    [...loyaltyKeys.all, 'transactions', userId] as const,
+  transactions: (userId: string) => [...loyaltyKeys.all, 'transactions', userId] as const,
 }
 
 // Nothing is asked of Loyalty while the module is off: the lists stay empty
@@ -71,8 +69,7 @@ export function useAdjustPoints() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (data: AdjustPointsRequest) =>
-      loyaltyService.adjustPoints(data),
+    mutationFn: (data: AdjustPointsRequest) => loyaltyService.adjustPoints(data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: loyaltyKeys.accounts() })
       queryClient.invalidateQueries({

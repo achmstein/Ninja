@@ -7,24 +7,17 @@ import {
   getPlatformBackupsOptions,
   getPlatformBackupsQueryKey,
 } from '@/api/control/@tanstack/react-query.gen'
-import { Button } from '@/components/ui/button'
-import { Empty, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty'
-import { Skeleton } from '@/components/ui/skeleton'
-import { Spinner } from '@/components/ui/spinner'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { apiClient } from '@/lib/api-client'
 import { bytes, useFormat } from '@/lib/format'
 import { useT } from '@/lib/i18n'
 import { problemDetail } from '@/lib/problem'
 import { toast } from '@/lib/toast'
+import { Button } from '@/components/ui/button'
+import { Empty, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Spinner } from '@/components/ui/spinner'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 
 /**
  * The platform's own backups: controldb and keycloak, nightly before the
@@ -52,10 +45,9 @@ export function PlatformBackups() {
   const download = async (backup: BackupInfo) => {
     setDownloading(backup.id)
     try {
-      const res = await apiClient.get<Blob>(
-        `/api/control/platform/backups/${encodeURIComponent(backup.id)}/download`,
-        { responseType: 'blob' }
-      )
+      const res = await apiClient.get<Blob>(`/api/control/platform/backups/${encodeURIComponent(backup.id)}/download`, {
+        responseType: 'blob',
+      })
       const url = URL.createObjectURL(res.data)
       const a = document.createElement('a')
       a.href = url
@@ -127,9 +119,7 @@ export function PlatformBackups() {
                       {b.id} · {b.databases.join(', ')}
                     </div>
                   </TableCell>
-                  <TableCell className='text-end tabular-nums'>
-                    {bytes(Number(b.sizeBytes))}
-                  </TableCell>
+                  <TableCell className='text-end tabular-nums'>{bytes(Number(b.sizeBytes))}</TableCell>
                   <TableCell>
                     <OffsiteCell at={b.offsiteAt} />
                   </TableCell>

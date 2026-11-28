@@ -2,25 +2,15 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { RefreshCw } from 'lucide-react'
 import type { CapacityResponse } from '@/api/control'
-import {
-  getPlatformCapacityOptions,
-  getPlatformCapacityQueryKey,
-} from '@/api/control/@tanstack/react-query.gen'
+import { getPlatformCapacityOptions, getPlatformCapacityQueryKey } from '@/api/control/@tanstack/react-query.gen'
+import { megabytes, percent, useFormat } from '@/lib/format'
+import { useT } from '@/lib/i18n'
+import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { Skeleton } from '@/components/ui/skeleton'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import { megabytes, percent, useFormat } from '@/lib/format'
-import { useT } from '@/lib/i18n'
-import { cn } from '@/lib/utils'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 
 type CapacityTableProps = {
   capacity: CapacityResponse | undefined
@@ -43,10 +33,7 @@ export function CapacityTable({ capacity, loading }: CapacityTableProps) {
         ...getPlatformCapacityOptions({ query: { refresh: true } }),
         staleTime: 0,
       })
-      queryClient.setQueryData(
-        getPlatformCapacityQueryKey({ query: { refresh: false } }),
-        fresh
-      )
+      queryClient.setQueryData(getPlatformCapacityQueryKey({ query: { refresh: false } }), fresh)
       await queryClient.invalidateQueries({
         queryKey: getPlatformCapacityQueryKey(),
       })
@@ -62,19 +49,13 @@ export function CapacityTable({ capacity, loading }: CapacityTableProps) {
         {capacity && (
           <>
             <span>
-              {t('takenAt')}{' '}
-              <span className='text-foreground'>
-                {format.dateTime(capacity.at)}
-              </span>
+              {t('takenAt')} <span className='text-foreground'>{format.dateTime(capacity.at)}</span>
             </span>
             <span>
               {t('dockerUsed')}{' '}
-              <span className='text-foreground tabular-nums'>
-                {megabytes(Number(capacity.dockerUsedMb))}
-              </span>
+              <span className='text-foreground tabular-nums'>{megabytes(Number(capacity.dockerUsedMb))}</span>
               <span className='ms-1'>
-                ({megabytes(Number(capacity.dockerReclaimableMb))}{' '}
-                {t('reclaimable')})
+                ({megabytes(Number(capacity.dockerReclaimableMb))} {t('reclaimable')})
               </span>
             </span>
           </>
@@ -87,9 +68,7 @@ export function CapacityTable({ capacity, loading }: CapacityTableProps) {
           disabled={refresh.isPending}
           aria-label={t('refresh')}
         >
-          <RefreshCw
-            className={cn('size-4', refresh.isPending && 'animate-spin')}
-          />
+          <RefreshCw className={cn('size-4', refresh.isPending && 'animate-spin')} />
           {t('refresh')}
         </Button>
       </div>
@@ -115,10 +94,7 @@ export function CapacityTable({ capacity, loading }: CapacityTableProps) {
               ))}
             {!loading && rows.length === 0 && (
               <TableRow>
-                <TableCell
-                  colSpan={4}
-                  className='text-muted-foreground h-24 text-center'
-                >
+                <TableCell colSpan={4} className='text-muted-foreground h-24 text-center'>
                   {t('none')}
                 </TableCell>
               </TableRow>
@@ -129,11 +105,7 @@ export function CapacityTable({ capacity, loading }: CapacityTableProps) {
                 <TableRow key={usage.project}>
                   <TableCell className='font-medium'>
                     {usage.slug ? (
-                      <Link
-                        to='/t/$slug'
-                        params={{ slug: usage.slug }}
-                        className='hover:underline'
-                      >
+                      <Link to='/t/$slug' params={{ slug: usage.slug }} className='hover:underline'>
                         {usage.project}
                       </Link>
                     ) : (
@@ -148,18 +120,11 @@ export function CapacityTable({ capacity, loading }: CapacityTableProps) {
                   </TableCell>
                   <TableCell>
                     <div className='flex items-center gap-2'>
-                      <span className='w-16 tabular-nums'>
-                        {megabytes(memory)}
-                      </span>
-                      <Progress
-                        value={percent(memory, footprint)}
-                        className='h-1.5 w-24 rtl:-scale-x-100'
-                      />
+                      <span className='w-16 tabular-nums'>{megabytes(memory)}</span>
+                      <Progress value={percent(memory, footprint)} className='h-1.5 w-24 rtl:-scale-x-100' />
                     </div>
                   </TableCell>
-                  <TableCell className='tabular-nums'>
-                    {Number(usage.cpuPercent).toFixed(1)}%
-                  </TableCell>
+                  <TableCell className='tabular-nums'>{Number(usage.cpuPercent).toFixed(1)}%</TableCell>
                 </TableRow>
               )
             })}

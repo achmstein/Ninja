@@ -1,15 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { getRouteApi, Link } from '@tanstack/react-router'
-import {
-  BellRing,
-  Check,
-  CheckCircle2,
-  CreditCard,
-  Gamepad2,
-  User,
-  Users,
-} from 'lucide-react'
+import { BellRing, Check, CheckCircle2, CreditCard, Gamepad2, User, Users } from 'lucide-react'
 import { useLocale, useLocalized, useT, type TranslationKey } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
 import { Badge } from '@/components/ui/badge'
@@ -21,12 +13,8 @@ import { EmptyState } from '@/components/empty-state'
 import { ErrorState } from '@/components/error-state'
 import { Main } from '@/components/layout/main'
 import { PageHeader } from '@/components/page-header'
+import { QueueCard, urgencyFor, urgencyTextClass } from '@/components/queue-card'
 import { LiveTabs } from '@/features/orders/components/live-tabs'
-import {
-  QueueCard,
-  urgencyFor,
-  urgencyTextClass,
-} from '@/components/queue-card'
 import { relativeTime } from '@/features/orders/status'
 import {
   REQUEST_CALL_WAITER,
@@ -41,10 +29,7 @@ import {
 
 const route = getRouteApi('/_authenticated/requests/')
 
-const typeMeta: Record<
-  number,
-  { key: TranslationKey; icon: React.ComponentType<{ className?: string }> }
-> = {
+const typeMeta: Record<number, { key: TranslationKey; icon: React.ComponentType<{ className?: string }> }> = {
   [REQUEST_CALL_WAITER]: { key: 'callWaiter', icon: BellRing },
   [REQUEST_CONTROLLER_CHANGE]: { key: 'controllerChange', icon: Gamepad2 },
   [REQUEST_RECEIPT_TO_PAY]: { key: 'receiptToPay', icon: CreditCard },
@@ -83,8 +68,7 @@ export function ServiceRequests() {
     refetchInterval: 30_000,
   })
 
-  const invalidate = () =>
-    queryClient.invalidateQueries({ queryKey: ['service-requests'] })
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: ['service-requests'] })
 
   const acknowledge = useMutation({
     mutationFn: (id: number) => serviceRequestsService.acknowledge(id),
@@ -105,9 +89,7 @@ export function ServiceRequests() {
   for (const request of all) {
     counts.set(request.requestType, (counts.get(request.requestType) ?? 0) + 1)
   }
-  const visible = search.type
-    ? all.filter((request) => request.requestType === search.type)
-    : all
+  const visible = search.type ? all.filter((request) => request.requestType === search.type) : all
   const types = Object.keys(typeMeta)
     .map(Number)
     .filter((type) => (counts.get(type) ?? 0) > 0 || type === search.type)
@@ -149,16 +131,10 @@ export function ServiceRequests() {
             {types.map((type) => {
               const Icon = typeMeta[type].icon
               return (
-                <ToggleGroupItem
-                  key={type}
-                  value={String(type)}
-                  className='gap-1.5 px-3'
-                >
+                <ToggleGroupItem key={type} value={String(type)} className='gap-1.5 px-3'>
                   <Icon className='size-3.5' />
                   {t(typeMeta[type].key)}
-                  <span className='text-muted-foreground tabular-nums'>
-                    {counts.get(type) ?? 0}
-                  </span>
+                  <span className='text-muted-foreground tabular-nums'>{counts.get(type) ?? 0}</span>
                 </ToggleGroupItem>
               )
             })}
@@ -167,10 +143,7 @@ export function ServiceRequests() {
       </PageHeader>
 
       {requestsQuery.isError ? (
-        <ErrorState
-          error={requestsQuery.error}
-          onRetry={() => requestsQuery.refetch()}
-        />
+        <ErrorState error={requestsQuery.error} onRetry={() => requestsQuery.refetch()} />
       ) : requestsQuery.isLoading ? (
         <div className='grid gap-4 md:grid-cols-2 xl:grid-cols-3'>
           {[...Array(3)].map((_, i) => (
@@ -187,12 +160,8 @@ export function ServiceRequests() {
               request={request}
               nowMs={now}
               // Scope busy state to the card being acted on
-              acknowledging={
-                acknowledge.isPending && acknowledge.variables === request.id
-              }
-              completing={
-                complete.isPending && complete.variables === request.id
-              }
+              acknowledging={acknowledge.isPending && acknowledge.variables === request.id}
+              completing={complete.isPending && complete.variables === request.id}
               onAcknowledge={() => acknowledge.mutate(request.id)}
               onComplete={() => complete.mutate(request.id)}
               placeName={localized(request.placeName)}
@@ -228,12 +197,7 @@ function RequestCard({
   const meta = typeMeta[request.requestType]
   const Icon = meta?.icon ?? BellRing
   const isPending = request.status === REQUEST_STATUS_PENDING
-  const urgency = urgencyFor(
-    request.createdAt,
-    nowMs,
-    WARN_AFTER_MINUTES,
-    DELAYED_AFTER_MINUTES
-  )
+  const urgency = urgencyFor(request.createdAt, nowMs, WARN_AFTER_MINUTES, DELAYED_AFTER_MINUTES)
   const acting = acknowledging || completing
 
   return (
@@ -252,17 +216,13 @@ function RequestCard({
       <div className='mt-2 flex items-center gap-2'>
         <span
           className={`flex size-8 shrink-0 items-center justify-center rounded-md ${
-            isPending
-              ? 'bg-destructive/10 text-destructive'
-              : 'bg-muted text-muted-foreground'
+            isPending ? 'bg-destructive/10 text-destructive' : 'bg-muted text-muted-foreground'
           }`}
         >
           <Icon className='size-4' />
         </span>
         <div className='min-w-0'>
-          <div className='font-medium'>
-            {meta ? t(meta.key) : String(request.requestType)}
-          </div>
+          <div className='font-medium'>{meta ? t(meta.key) : String(request.requestType)}</div>
           <div className='text-muted-foreground truncate text-sm'>
             {request.userName || t('guest')}
             {!isPending && ` · ${t('inProgress')}`}
@@ -272,26 +232,13 @@ function RequestCard({
 
       <div className='mt-4 flex gap-2'>
         {isPending && (
-          <Button
-            variant='outline'
-            className='flex-1'
-            disabled={acting}
-            onClick={onAcknowledge}
-          >
-            {acknowledging ? (
-              <Spinner />
-            ) : (
-              <Check />
-            )}
+          <Button variant='outline' className='flex-1' disabled={acting} onClick={onAcknowledge}>
+            {acknowledging ? <Spinner /> : <Check />}
             {t('onIt')}
           </Button>
         )}
         <Button className='flex-1' disabled={acting} onClick={onComplete}>
-          {completing ? (
-            <Spinner />
-          ) : (
-            <CheckCircle2 />
-          )}
+          {completing ? <Spinner /> : <CheckCircle2 />}
           {t('done')}
         </Button>
       </div>

@@ -10,7 +10,7 @@ import { samePerson, type SaleCustomer } from './cart'
 export function billPeople(
   roster: readonly { id: string; name: string }[],
   lines: readonly Pick<TicketLineView, 'customerId' | 'customerName'>[],
-  extra: readonly SaleCustomer[] = [],
+  extra: readonly SaleCustomer[] = []
 ): SaleCustomer[] {
   const people: SaleCustomer[] = []
   const add = (person: SaleCustomer) => {

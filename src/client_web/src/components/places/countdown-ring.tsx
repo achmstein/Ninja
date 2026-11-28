@@ -40,8 +40,22 @@ export function CountdownRing({
 
   return (
     <div className='relative grid place-items-center' style={{ width: SIZE, height: SIZE }}>
-      <svg width={SIZE} height={SIZE} viewBox={`0 0 ${SIZE} ${SIZE}`} className='absolute inset-0 -rotate-90' aria-hidden>
-        <circle cx={SIZE / 2} cy={SIZE / 2} r={R} fill='none' stroke='currentColor' strokeOpacity={0.12} strokeWidth={STROKE} />
+      <svg
+        width={SIZE}
+        height={SIZE}
+        viewBox={`0 0 ${SIZE} ${SIZE}`}
+        className='absolute inset-0 -rotate-90'
+        aria-hidden
+      >
+        <circle
+          cx={SIZE / 2}
+          cy={SIZE / 2}
+          r={R}
+          fill='none'
+          stroke='currentColor'
+          strokeOpacity={0.12}
+          strokeWidth={STROKE}
+        />
         <motion.circle
           cx={SIZE / 2}
           cy={SIZE / 2}
@@ -54,7 +68,14 @@ export function CountdownRing({
           style={{ pathLength }}
         />
       </svg>
-      <Odometer clock value={formatClock(left)} className={cn('text-[3.25rem] font-extrabold tracking-tight transition-colors duration-300', hurry && 'text-destructive')} />
+      <Odometer
+        clock
+        value={formatClock(left)}
+        className={cn(
+          'text-[3.25rem] font-extrabold tracking-tight transition-colors duration-300',
+          hurry && 'text-destructive'
+        )}
+      />
     </div>
   )
 }

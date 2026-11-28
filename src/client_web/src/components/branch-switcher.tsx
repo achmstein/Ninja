@@ -1,12 +1,12 @@
-import { motion } from 'motion/react'
 import { Check, LocateFixed, Loader2, MapPin, Navigation } from 'lucide-react'
+import { motion } from 'motion/react'
 import { type BranchResponse } from '@/api/tenant'
+import { useBranchStore } from '@/stores/branch-store'
 import { branchState, type BranchState } from '@/lib/branch'
 import { directionsUrl, pointOf, useDistance, type useMyLocation } from '@/lib/geo'
-import { useBranchesByDistance, useBranchSwitch } from '@/lib/use-branch-switch'
-import { useBranchStore } from '@/stores/branch-store'
 import { useLocalized, useT, type TranslationKey } from '@/lib/i18n'
 import { springOpen } from '@/lib/motion'
+import { useBranchesByDistance, useBranchSwitch } from '@/lib/use-branch-switch'
 import { cn } from '@/lib/utils'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 
@@ -17,12 +17,20 @@ const STATE_META: Record<BranchState, { key: TranslationKey; dot: string }> = {
 }
 
 /** A branch's quiet facts on one line: open or not, and how far */
-export function BranchFacts({ branch, meters, className }: { branch: BranchResponse; meters: number | null; className?: string }) {
+export function BranchFacts({
+  branch,
+  meters,
+  className,
+}: {
+  branch: BranchResponse
+  meters: number | null
+  className?: string
+}) {
   const t = useT()
   const distance = useDistance()
   const state = STATE_META[branchState(branch)]
   return (
-    <span className={cn('text-muted-foreground flex items-center gap-1.5 text-caption', className)}>
+    <span className={cn('text-muted-foreground text-caption flex items-center gap-1.5', className)}>
       <span className={cn('size-1.5 shrink-0 rounded-full', state.dot)} aria-hidden />
       <span>{t(state.key)}</span>
       {meters != null && (
@@ -48,7 +56,10 @@ export function DirectionsLink({ branch, className }: { branch: BranchResponse; 
       target='_blank'
       rel='noopener noreferrer'
       onClick={(e) => e.stopPropagation()}
-      className={cn('bg-muted active:bg-muted/70 inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full px-3 text-caption font-semibold transition-colors', className)}
+      className={cn(
+        'bg-muted active:bg-muted/70 text-caption inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full px-3 font-semibold transition-colors',
+        className
+      )}
     >
       <Navigation className='size-3.5' />
       {t('directions')}
@@ -57,12 +68,18 @@ export function DirectionsLink({ branch, className }: { branch: BranchResponse; 
 }
 
 /** "Use my location", quiet, for a customer who said no or was not asked: a tap asks then */
-export function UseMyLocation({ location, className }: { location: ReturnType<typeof useMyLocation>; className?: string }) {
+export function UseMyLocation({
+  location,
+  className,
+}: {
+  location: ReturnType<typeof useMyLocation>
+  className?: string
+}) {
   const t = useT()
   if (location.here) return null
   if (location.locating) {
     return (
-      <span className={cn('text-muted-foreground inline-flex items-center gap-1.5 text-caption', className)}>
+      <span className={cn('text-muted-foreground text-caption inline-flex items-center gap-1.5', className)}>
         <Loader2 className='size-3.5 animate-spin' />
         {t('locating')}
       </span>
@@ -73,7 +90,10 @@ export function UseMyLocation({ location, className }: { location: ReturnType<ty
     <button
       type='button'
       onClick={location.locate}
-      className={cn('text-muted-foreground active:text-foreground inline-flex items-center gap-1.5 text-caption font-semibold transition-colors', className)}
+      className={cn(
+        'text-muted-foreground active:text-foreground text-caption inline-flex items-center gap-1.5 font-semibold transition-colors',
+        className
+      )}
     >
       <LocateFixed className='size-3.5' />
       {t('useMyLocation')}
@@ -108,7 +128,10 @@ export function BranchSheet({ open, onOpenChange }: { open: boolean; onOpenChang
               const id = Number(branch.id)
               const on = id === branchId
               return (
-                <div key={String(branch.id)} className='relative flex min-h-16 items-center gap-2 rounded-[1.25rem] pe-2'>
+                <div
+                  key={String(branch.id)}
+                  className='relative flex min-h-16 items-center gap-2 rounded-[1.25rem] pe-2'
+                >
                   {on && (
                     <motion.span
                       layoutId='branch-on'
@@ -132,11 +155,13 @@ export function BranchSheet({ open, onOpenChange }: { open: boolean; onOpenChang
                       <MapPin className='size-5' />
                     </span>
                     <span className='relative flex min-w-0 flex-1 flex-col'>
-                      <span className='flex items-center gap-1.5 text-body font-semibold'>
+                      <span className='text-body flex items-center gap-1.5 font-semibold'>
                         <span className='truncate'>{localized(branch.name)}</span>
                         {on && <Check className='size-4 shrink-0' />}
                       </span>
-                      {localized(branch.address) && <span className='text-muted-foreground truncate text-caption'>{localized(branch.address)}</span>}
+                      {localized(branch.address) && (
+                        <span className='text-muted-foreground text-caption truncate'>{localized(branch.address)}</span>
+                      )}
                       <BranchFacts branch={branch} meters={meters} />
                     </span>
                   </button>

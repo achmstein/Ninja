@@ -1,10 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { getRouteApi } from '@tanstack/react-router'
 import { Download } from 'lucide-react'
-import {
-  getProfitOptions,
-  getProfitTrendOptions,
-} from '@/api/finance/@tanstack/react-query.gen'
+import { getProfitOptions, getProfitTrendOptions } from '@/api/finance/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useFeatures } from '@/lib/brand'
 import { useBusinessTimeZone } from '@/lib/business-clock'
@@ -15,12 +12,7 @@ import { cn } from '@/lib/utils'
 import { zonedParts } from '@/lib/zoned-time'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ErrorState } from '@/components/error-state'
 import { InfoTip } from '@/components/info-tip'
@@ -30,12 +22,7 @@ import { PageHeader } from '@/components/page-header'
 import { Stat, StatStrip } from '@/components/stat-strip'
 import { ProfitTrend } from './components/profit-trend'
 import { ProfitWaterfall } from './components/profit-waterfall'
-import {
-  formatShare,
-  profitBase,
-  profitStatement,
-  shareOf,
-} from './profit-math'
+import { formatShare, profitBase, profitStatement, shareOf } from './profit-math'
 
 const route = getRouteApi('/_authenticated/finance/profit')
 
@@ -62,21 +49,15 @@ export function Profit() {
   const [year, month] = (search.month ?? today).split('-').map(Number)
   const monthKey = `${year}-${String(month).padStart(2, '0')}`
   const monthName = (y: number, m: number) =>
-    new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' }).format(
-      new Date(y, m - 1, 1)
-    )
+    new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' }).format(new Date(y, m - 1, 1))
   const percent = new Intl.NumberFormat(locale, {
     style: 'percent',
     maximumFractionDigits: 0,
   })
   const share = (value: number) => formatShare(shareOf(value, base), locale)
 
-  const profit = useQuery(
-    getProfitOptions({ query: { 'api-version': API_VERSION, year, month } })
-  )
-  const trend = useQuery(
-    getProfitTrendOptions({ query: { 'api-version': API_VERSION, months: 6 } })
-  )
+  const profit = useQuery(getProfitOptions({ query: { 'api-version': API_VERSION, year, month } }))
+  const trend = useQuery(getProfitTrendOptions({ query: { 'api-version': API_VERSION, months: 6 } }))
 
   const p = profit.data
   // What profit and every percentage on the page is on: net sales ex VAT
@@ -86,18 +67,11 @@ export function Profit() {
   // Goods are inventory's and labour payroll's: each where its module runs, or it carries an amount
   const months = trend.data ?? []
   const showGoods =
-    features.inventory === true ||
-    toNumber(p?.goods) !== 0 ||
-    months.some((m) => toNumber(m.goods) !== 0)
+    features.inventory === true || toNumber(p?.goods) !== 0 || months.some((m) => toNumber(m.goods) !== 0)
   const showLabour =
-    features.payroll === true ||
-    toNumber(p?.labour) !== 0 ||
-    months.some((m) => toNumber(m.labour) !== 0)
+    features.payroll === true || toNumber(p?.labour) !== 0 || months.some((m) => toNumber(m.labour) !== 0)
   const partnerShares = p?.partnerShares ?? []
-  const sharesTotal = partnerShares.reduce(
-    (sum, s) => sum + toNumber(s.percent),
-    0
-  )
+  const sharesTotal = partnerShares.reduce((sum, s) => sum + toNumber(s.percent), 0)
 
   // The month as one column of numbers, the way an accountant reads it
   const exportMonth = () => {
@@ -177,9 +151,7 @@ export function Profit() {
         {opts.sign === '+' && value > 0 ? '+ ' : ''}
         {formatEgp(value)}
         {!opts.indent && share(value) != null && (
-          <span className='text-muted-foreground ms-2 text-xs'>
-            {share(value)}
-          </span>
+          <span className='text-muted-foreground ms-2 text-xs'>{share(value)}</span>
         )}
       </span>
     </div>
@@ -201,10 +173,7 @@ export function Profit() {
               <DropdownMenuItem onClick={exportMonth}>
                 {t('exportThisMonth', { month: monthName(year, month) })}
               </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={exportTrend}
-                disabled={(trend.data?.length ?? 0) === 0}
-              >
+              <DropdownMenuItem onClick={exportTrend} disabled={(trend.data?.length ?? 0) === 0}>
                 {t('exportTrend')}
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -213,9 +182,7 @@ export function Profit() {
       >
         <MonthSwitcher
           monthKey={monthKey}
-          onChange={(next) =>
-            navigate({ search: (prev) => ({ ...prev, month: next }) })
-          }
+          onChange={(next) => navigate({ search: (prev) => ({ ...prev, month: next }) })}
         />
       </PageHeader>
 
@@ -230,20 +197,12 @@ export function Profit() {
               label={t('profitLabel')}
               value={formatEgp(p.profit)}
               tone={toNumber(p.profit) < 0 ? 'negative' : 'positive'}
-              hint={
-                p.margin != null
-                  ? percent.format(toNumber(p.margin))
-                  : undefined
-              }
+              hint={p.margin != null ? percent.format(toNumber(p.margin)) : undefined}
             />
             <Stat
               label={t('netSalesExVat')}
               value={formatEgp(base)}
-              hint={
-                toNumber(p.netSales) !== base
-                  ? `${t('netSales')} ${formatEgp(p.netSales)}`
-                  : undefined
-              }
+              hint={toNumber(p.netSales) !== base ? `${t('netSales')} ${formatEgp(p.netSales)}` : undefined}
             />
             {/* Goods and wages over sales: nothing to say without inventory or payroll */}
             {(showGoods || showLabour) && (
@@ -254,16 +213,8 @@ export function Profit() {
                     <InfoTip>{t('primeCostHint')}</InfoTip>
                   </span>
                 }
-                value={
-                  p.primeCostRatio != null
-                    ? percent.format(toNumber(p.primeCostRatio))
-                    : '—'
-                }
-                tone={
-                  p.primeCostRatio != null && toNumber(p.primeCostRatio) > 0.65
-                    ? 'warning'
-                    : 'default'
-                }
+                value={p.primeCostRatio != null ? percent.format(toNumber(p.primeCostRatio)) : '—'}
+                tone={p.primeCostRatio != null && toNumber(p.primeCostRatio) > 0.65 ? 'warning' : 'default'}
               />
             )}
           </StatStrip>
@@ -293,8 +244,7 @@ export function Profit() {
               .map((l) => (
                 <div key={l.key}>
                   {line(t(l.labelKey), l.amount, {
-                    sign:
-                      l.sign === '−' ? '−' : l.sign === '+' ? '+' : undefined,
+                    sign: l.sign === '−' ? '−' : l.sign === '+' ? '+' : undefined,
                     strong: l.sign === '=',
                     muted: l.key === 'refunds' || l.key === 'vat',
                   })}
@@ -322,9 +272,7 @@ export function Profit() {
           </div>
 
           {toNumber(p.netVat ?? p.vat) > 0 && (
-            <p className='text-muted-foreground text-xs'>
-              {t('vatNote', { amount: formatEgp(p.netVat ?? p.vat) })}
-            </p>
+            <p className='text-muted-foreground text-xs'>{t('vatNote', { amount: formatEgp(p.netVat ?? p.vat) })}</p>
           )}
 
           {/* How the month falls to the owners, by the shares set on them */}
@@ -333,10 +281,7 @@ export function Profit() {
               <h3 className='text-sm font-medium'>{t('partnersShare')}</h3>
               <div className='divide-y rounded-lg border px-4 text-sm'>
                 {partnerShares.map((s) => (
-                  <div
-                    key={String(s.partnerId)}
-                    className='flex items-baseline justify-between gap-4 py-1.5'
-                  >
+                  <div key={String(s.partnerId)} className='flex items-baseline justify-between gap-4 py-1.5'>
                     {/* Each in its own isolate: an Arabic name beside "50%"
                         in an English page otherwise takes the figure into
                         itself, the 50 on one side and the % on the other */}
@@ -346,21 +291,14 @@ export function Profit() {
                         {percent.format(toNumber(s.percent) / 100)}
                       </bdi>
                     </span>
-                    <span
-                      className={cn(
-                        'tabular-nums',
-                        toNumber(s.amount) < 0 && 'text-destructive'
-                      )}
-                    >
+                    <span className={cn('tabular-nums', toNumber(s.amount) < 0 && 'text-destructive')}>
                       {formatEgp(s.amount)}
                     </span>
                   </div>
                 ))}
               </div>
               {Math.abs(sharesTotal - 100) > 0.01 && (
-                <p className='text-warning text-xs'>
-                  {t('sharesNotWhole', { pct: String(sharesTotal) })}
-                </p>
+                <p className='text-warning text-xs'>{t('sharesNotWhole', { pct: String(sharesTotal) })}</p>
               )}
             </div>
           )}
@@ -373,9 +311,7 @@ export function Profit() {
           showLabour={showLabour}
           months={trend.data}
           selected={monthKey}
-          onSelect={(next) =>
-            navigate({ search: (prev) => ({ ...prev, month: next }) })
-          }
+          onSelect={(next) => navigate({ search: (prev) => ({ ...prev, month: next }) })}
         />
       )}
     </Main>

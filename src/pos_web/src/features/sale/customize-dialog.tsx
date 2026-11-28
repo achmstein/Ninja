@@ -1,39 +1,26 @@
 import { useEffect, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Minus, Plus, Sparkles } from 'lucide-react'
-import type {
-  CatalogItemDto,
-  ItemCustomizationDto,
-  UserItemPreferenceDto,
-} from '@/api/catalog/types.gen'
+import type { CatalogItemDto, ItemCustomizationDto, UserItemPreferenceDto } from '@/api/catalog/types.gen'
 import { apiClient } from '@/lib/api-client'
-import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
-import { itemPictureUrl } from './item-picture'
+import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import type { SaleCustomization, SaleLine } from './cart'
+import { itemPictureUrl } from './item-picture'
 
 type Selections = Record<string, number[]>
 
 // Item defaults only — the cashier is signed in, not the customer, so the
 // saved-preference lookup client_web does would fetch the wrong person's
 // choices.
-function defaultSelections(
-  customizations: ItemCustomizationDto[] | undefined
-): Selections {
+function defaultSelections(customizations: ItemCustomizationDto[] | undefined): Selections {
   const result: Selections = {}
   for (const customization of customizations ?? []) {
-    result[String(customization.id)] = (customization.options ?? [])
-      .filter((o) => o.isDefault)
-      .map((o) => Number(o.id))
+    result[String(customization.id)] = (customization.options ?? []).filter((o) => o.isDefault).map((o) => Number(o.id))
   }
   return result
 }
@@ -53,9 +40,7 @@ function preferenceSelections(
     const saved = preference.selectedOptions
       .filter((o) => Number(o.customizationId) === Number(customization.id))
       .map((o) => Number(o.optionId))
-      .filter((optionId) =>
-        (customization.options ?? []).some((o) => Number(o.id) === optionId)
-      )
+      .filter((optionId) => (customization.options ?? []).some((o) => Number(o.id) === optionId))
     if (saved.length > 0) {
       result[String(customization.id)] = saved
     }
@@ -66,26 +51,18 @@ function preferenceSelections(
 // A sold-out option is never selected, whatever put it there: an item
 // default, the customer's saved preference, or a pick made before the
 // option ran out and the menu refetched.
-function withoutOutOfStock(
-  customizations: ItemCustomizationDto[] | undefined,
-  selections: Selections
-): Selections {
+function withoutOutOfStock(customizations: ItemCustomizationDto[] | undefined, selections: Selections): Selections {
   const result: Selections = {}
   for (const customization of customizations ?? []) {
     const key = String(customization.id)
     result[key] = (selections[key] ?? []).filter((optionId) =>
-      (customization.options ?? []).some(
-        (o) => Number(o.id) === optionId && !o.isOutOfStock
-      )
+      (customization.options ?? []).some((o) => Number(o.id) === optionId && !o.isOutOfStock)
     )
   }
   return result
 }
 
-function selectionsToCustomizations(
-  item: CatalogItemDto,
-  selections: Selections
-): SaleCustomization[] {
+function selectionsToCustomizations(item: CatalogItemDto, selections: Selections): SaleCustomization[] {
   return (item.customizations ?? []).flatMap((customization) => {
     const selected = selections[String(customization.id)] ?? []
     return (customization.options ?? [])
@@ -117,23 +94,13 @@ type CustomizeDialogProps = {
  * as client_web's item form — required single-choice groups cannot be
  * cleared, optional ones toggle off, allowMultiple groups multi-select.
  */
-export function CustomizeDialog({
-  item,
-  customerId,
-  onOpenChange,
-  onAdd,
-}: CustomizeDialogProps) {
+export function CustomizeDialog({ item, customerId, onOpenChange, onAdd }: CustomizeDialogProps) {
   return (
     <Dialog open={!!item} onOpenChange={onOpenChange}>
       <DialogContent className='max-h-[95svh] gap-4'>
         {item && (
           // Keyed on item + customer so switching either resets the form state
-          <CustomizeForm
-            key={`${item.id}:${customerId ?? ''}`}
-            item={item}
-            customerId={customerId}
-            onAdd={onAdd}
-          />
+          <CustomizeForm key={`${item.id}:${customerId ?? ''}`} item={item} customerId={customerId} onAdd={onAdd} />
         )}
       </DialogContent>
     </Dialog>
@@ -155,9 +122,7 @@ function CustomizeForm({
 
   const [quantity, setQuantity] = useState(1)
   const [instructions, setInstructions] = useState('')
-  const [rawSelections, setSelections] = useState<Selections>(() =>
-    defaultSelections(item.customizations)
-  )
+  const [rawSelections, setSelections] = useState<Selections>(() => defaultSelections(item.customizations))
   const selections = withoutOutOfStock(item.customizations, rawSelections)
 
   // The attached customer's saved choices for this item. A miss (404) just
@@ -191,33 +156,25 @@ function CustomizeForm({
   }, [preference, item.customizations])
 
   const chosen = selectionsToCustomizations(item, selections)
-  const unitPrice =
-    toNumber(item.effectivePrice ?? item.price) +
-    chosen.reduce((sum, c) => sum + c.priceAdjustment, 0)
+  const unitPrice = toNumber(item.effectivePrice ?? item.price) + chosen.reduce((sum, c) => sum + c.priceAdjustment, 0)
 
   const missingRequired = (item.customizations ?? []).some(
     (c) => c.isRequired && (selections[String(c.id)] ?? []).length === 0
   )
 
-  const toggleOption = (
-    customization: ItemCustomizationDto,
-    optionId: number
-  ) => {
+  const toggleOption = (customization: ItemCustomizationDto, optionId: number) => {
     touched.current = true
     const key = String(customization.id)
     const current = selections[key] ?? []
     if (customization.allowMultiple) {
       setSelections({
         ...selections,
-        [key]: current.includes(optionId)
-          ? current.filter((id) => id !== optionId)
-          : [...current, optionId],
+        [key]: current.includes(optionId) ? current.filter((id) => id !== optionId) : [...current, optionId],
       })
       return
     }
     // Single-choice: tap again to clear only when the group is optional
-    const next =
-      current.includes(optionId) && !customization.isRequired ? [] : [optionId]
+    const next = current.includes(optionId) && !customization.isRequired ? [] : [optionId]
     setSelections({ ...selections, [key]: next })
   }
 
@@ -236,14 +193,10 @@ function CustomizeForm({
   return (
     <>
       <DialogHeader>
-        <DialogTitle className='flex items-center gap-2 type-title'>
+        <DialogTitle className='type-title flex items-center gap-2'>
           {localized(item.name)}
           {prefApplied && (
-            <span
-              title={t('preferenceLoaded')}
-              aria-label={t('preferenceLoaded')}
-              className='text-primary inline-flex'
-            >
+            <span title={t('preferenceLoaded')} aria-label={t('preferenceLoaded')} className='text-primary inline-flex'>
               <Sparkles className='size-4' />
             </span>
           )}
@@ -252,30 +205,19 @@ function CustomizeForm({
 
       {(item.customizations ?? [])
         .slice()
-        .sort(
-          (a, b) => Number(a.displayOrder ?? 0) - Number(b.displayOrder ?? 0)
-        )
+        .sort((a, b) => Number(a.displayOrder ?? 0) - Number(b.displayOrder ?? 0))
         .map((customization) => {
           const selected = selections[String(customization.id)] ?? []
           return (
             <div key={String(customization.id)} className='flex flex-col gap-2'>
               <div className='flex items-baseline gap-2'>
-                <span className='type-heading'>
-                  {localized(customization.name)}
-                </span>
-                {customization.isRequired && (
-                  <span className='text-destructive type-caption'>
-                    {t('required')}
-                  </span>
-                )}
+                <span className='type-heading'>{localized(customization.name)}</span>
+                {customization.isRequired && <span className='text-destructive type-caption'>{t('required')}</span>}
               </div>
               <div className='flex flex-wrap gap-2'>
                 {(customization.options ?? [])
                   .slice()
-                  .sort(
-                    (a, b) =>
-                      Number(a.displayOrder ?? 0) - Number(b.displayOrder ?? 0)
-                  )
+                  .sort((a, b) => Number(a.displayOrder ?? 0) - Number(b.displayOrder ?? 0))
                   .map((option) => {
                     const optionId = Number(option.id)
                     const isSelected = selected.includes(optionId)
@@ -291,15 +233,9 @@ function CustomizeForm({
                       >
                         {localized(option.name)}
                         {outOfStock ? (
-                          <span className='text-muted-foreground type-caption'>
-                            {t('outOfStock')}
-                          </span>
+                          <span className='text-muted-foreground type-caption'>{t('outOfStock')}</span>
                         ) : (
-                          adjustment > 0 && (
-                            <span className='type-caption opacity-70'>
-                              +{adjustment}
-                            </span>
-                          )
+                          adjustment > 0 && <span className='type-caption opacity-70'>+{adjustment}</span>
                         )}
                       </Button>
                     )
@@ -321,9 +257,7 @@ function CustomizeForm({
           >
             <Minus className='size-5' />
           </Button>
-          <span className='w-8 text-center type-heading tabular-nums'>
-            {quantity}
-          </span>
+          <span className='type-heading w-8 text-center tabular-nums'>{quantity}</span>
           <Button
             variant='outline'
             size='icon'
@@ -337,9 +271,7 @@ function CustomizeForm({
       </div>
 
       <div className='grid gap-1.5'>
-        <Label htmlFor='sale-special-instructions'>
-          {t('specialInstructionsOptional')}
-        </Label>
+        <Label htmlFor='sale-special-instructions'>{t('specialInstructionsOptional')}</Label>
         <Input
           id='sale-special-instructions'
           value={instructions}

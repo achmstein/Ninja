@@ -22,13 +22,7 @@ import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Spinner } from '@/components/ui/spinner'
 import { AiButton } from '@/components/ai-button'
 import { SheetActions } from '@/components/entity-sheet'
@@ -49,17 +43,9 @@ import { NinjaMark } from '@/components/ninja-mark'
 import { ToggleChip } from '@/components/toggle-chip'
 import { halfFilled, hasText } from '@/features/assist/helpers'
 import { useCustomizationsAssist } from '@/features/assist/use-customizations-assist'
-import {
-  LOCALIZE_MENU_ITEM,
-  useLocalizeAssist,
-} from '@/features/assist/use-localize-assist'
+import { LOCALIZE_MENU_ITEM, useLocalizeAssist } from '@/features/assist/use-localize-assist'
 import { itemPictureUrl } from '../pictures'
-import {
-  bodyFromDraft,
-  DraftCard,
-  fromProposal,
-  type DraftGroup,
-} from './customization-draft'
+import { bodyFromDraft, DraftCard, fromProposal, type DraftGroup } from './customization-draft'
 import { PhotoStudio } from './photo-studio'
 
 /** What the assistant filled in and the user has not edited since */
@@ -104,11 +90,7 @@ const FORM_ID = 'item-details-form'
  * empty, since the user may have typed meanwhile — and the category when
  * one was wanted.
  */
-function withLocalized(
-  prev: FormState,
-  result: LocalizeResponse,
-  wantCategory: boolean
-): FormState {
+function withLocalized(prev: FormState, result: LocalizeResponse, wantCategory: boolean): FormState {
   const filled = new Set(result.filled)
   const next = {
     ...prev,
@@ -123,11 +105,7 @@ function withLocalized(
       next.description[l] = result.description?.[l] ?? ''
     }
   }
-  if (
-    wantCategory &&
-    filled.has('catalogTypeId') &&
-    result.suggestedCatalogTypeId != null
-  ) {
+  if (wantCategory && filled.has('catalogTypeId') && result.suggestedCatalogTypeId != null) {
     next.catalogTypeId = Number(result.suggestedCatalogTypeId)
   }
   return next
@@ -150,20 +128,12 @@ type ItemDetailsFormProps = {
  * chain-wide ones (`base` when the active branch overrides the price), so
  * editing here never writes a branch price into the menu.
  */
-export function ItemDetailsForm({
-  item,
-  categories,
-  defaultCategoryId,
-  onSaved,
-  onCancel,
-}: ItemDetailsFormProps) {
+export function ItemDetailsForm({ item, categories, defaultCategoryId, onSaved, onCancel }: ItemDetailsFormProps) {
   const t = useT()
   const currency = useCurrencyLabel()
   const locale = useLocale()
   const weekdayName = (day: number) =>
-    new Intl.DateTimeFormat(locale, { weekday: 'short' }).format(
-      new Date(A_SUNDAY + day * 86_400_000)
-    )
+    new Intl.DateTimeFormat(locale, { weekday: 'short' }).format(new Date(A_SUNDAY + day * 86_400_000))
   const localized = useLocalized()
   const queryClient = useQueryClient()
   const isEditing = !!item
@@ -174,26 +144,19 @@ export function ItemDetailsForm({
     name: toLocalizedValue(item?.name),
     description: toLocalizedValue(item?.description),
     price: base?.price != null ? String(Number(base.price)) : '',
-    catalogTypeId: Number(
-      item?.catalogTypeId ?? defaultCategoryId ?? categories[0]?.id ?? 0
-    ),
+    catalogTypeId: Number(item?.catalogTypeId ?? defaultCategoryId ?? categories[0]?.id ?? 0),
     isPopular: item?.isPopular ?? false,
     isOnOffer: base?.isOnOffer ?? false,
     offerPrice: base?.offerPrice != null ? String(Number(base.offerPrice)) : '',
     offerWeekdays: Number(base?.offerWeekdays ?? 0),
     offerFrom: base?.offerFrom ?? '',
     offerTo: base?.offerTo ?? '',
-    preparationTimeMinutes:
-      item?.preparationTimeMinutes != null
-        ? String(Number(item.preparationTimeMinutes))
-        : '',
+    preparationTimeMinutes: item?.preparationTimeMinutes != null ? String(Number(item.preparationTimeMinutes)) : '',
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
   // A picked file waits for Save; `remove` deletes the stored photo on Save
   const [picture, setPicture] = useState<
-    | { kind: 'keep' }
-    | { kind: 'file'; file: File; url: string }
-    | { kind: 'remove' }
+    { kind: 'keep' } | { kind: 'file'; file: File; url: string } | { kind: 'remove' }
   >({ kind: 'keep' })
 
   // One button asks the assistant for everything the item is missing: the
@@ -209,21 +172,17 @@ export function ItemDetailsForm({
   const [suggested, setSuggested] = useState<Suggested>(nothingSuggested)
   const [categoryTouched, setCategoryTouched] = useState(false)
   const [proposals, setProposals] = useState<DraftGroup[]>([])
-  const wantCategory =
-    !isEditing && defaultCategoryId == null && !categoryTouched
+  const wantCategory = !isEditing && defaultCategoryId == null && !categoryTouched
   const nameTyped = hasText(form.name.en) || hasText(form.name.ar)
   // A business in one language has no name to translate, only its description to write
   const wantsLocalize = only
     ? !hasText(form.description[only]) || wantCategory
-    : !!halfFilled(form.name) ||
-      !(hasText(form.description.en) && hasText(form.description.ar)) ||
-      wantCategory
-  const fillBlocker: 'assistNeedsName' | 'assistNothingMissing' | null =
-    !nameTyped
-      ? 'assistNeedsName'
-      : isEditing && !wantsLocalize
-        ? 'assistNothingMissing'
-        : null
+    : !!halfFilled(form.name) || !(hasText(form.description.en) && hasText(form.description.ar)) || wantCategory
+  const fillBlocker: 'assistNeedsName' | 'assistNothingMissing' | null = !nameTyped
+    ? 'assistNeedsName'
+    : isEditing && !wantsLocalize
+      ? 'assistNothingMissing'
+      : null
   const filling = assist.isPending || customizations.isPending
 
   const fillWithAssistant = async () => {
@@ -283,18 +242,10 @@ export function ItemDetailsForm({
     uploadPicture.isPending ||
     deletePicture.isPending
 
-  const storedUrl = item?.pictureUri
-    ? itemPictureUrl(item.id, item.pictureUri, 320)
-    : null
-  const preview =
-    picture.kind === 'file'
-      ? picture.url
-      : picture.kind === 'remove'
-        ? null
-        : storedUrl
+  const storedUrl = item?.pictureUri ? itemPictureUrl(item.id, item.pictureUri, 320) : null
+  const preview = picture.kind === 'file' ? picture.url : picture.kind === 'remove' ? null : storedUrl
 
-  const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
-    setForm((prev) => ({ ...prev, [key]: value }))
+  const set = <K extends keyof FormState>(key: K, value: FormState[K]) => setForm((prev) => ({ ...prev, [key]: value }))
 
   const validate = (): boolean => {
     const next: Record<string, string> = {}
@@ -326,9 +277,7 @@ export function ItemDetailsForm({
       offerWeekdays: form.offerWeekdays || null,
       offerFrom: form.offerFrom && form.offerTo ? form.offerFrom : null,
       offerTo: form.offerFrom && form.offerTo ? form.offerTo : null,
-      preparationTimeMinutes: form.preparationTimeMinutes
-        ? parseInt(form.preparationTimeMinutes)
-        : null,
+      preparationTimeMinutes: form.preparationTimeMinutes ? parseInt(form.preparationTimeMinutes) : null,
     }
 
     let itemId = Number(item?.id ?? 0)
@@ -353,8 +302,7 @@ export function ItemDetailsForm({
 
     // The item is saved at this point — a problem with its option groups or
     // its photo must not read as a failed save.
-    const invalidate = () =>
-      queryClient.invalidateQueries({ queryKey: [{ _id: 'listItems' }] })
+    const invalidate = () => queryClient.invalidateQueries({ queryKey: [{ _id: 'listItems' }] })
     if (proposals.length > 0) {
       try {
         if (!itemId) throw new Error('no item id')
@@ -396,15 +344,9 @@ export function ItemDetailsForm({
           })
         }
       } catch (error) {
-        const detail =
-          isAxiosError(error) &&
-          (error.response?.data as { detail?: string } | undefined)?.detail
+        const detail = isAxiosError(error) && (error.response?.data as { detail?: string } | undefined)?.detail
         invalidate()
-        toast.error(
-          detail
-            ? t('itemSavedPhotoRejected', { detail })
-            : t('itemSavedPhotoUploadFailed')
-        )
+        toast.error(detail ? t('itemSavedPhotoRejected', { detail }) : t('itemSavedPhotoUploadFailed'))
         onSaved(itemId)
         return
       }
@@ -426,21 +368,11 @@ export function ItemDetailsForm({
           hint={t('photoHint')}
           shape='square'
           removeLabel={t('removePhoto')}
-          onFile={(file) =>
-            setPicture({ kind: 'file', file, url: URL.createObjectURL(file) })
-          }
-          onRemove={() =>
-            setPicture(
-              picture.kind === 'file' ? { kind: 'keep' } : { kind: 'remove' }
-            )
-          }
+          onFile={(file) => setPicture({ kind: 'file', file, url: URL.createObjectURL(file) })}
+          onRemove={() => setPicture(picture.kind === 'file' ? { kind: 'keep' } : { kind: 'remove' })}
           assist={
             assist.available && (
-              <AiButton
-                onClick={() => setStudioOpen(true)}
-                disabled={!nameForStudio}
-                why={t('studioNameFirst')}
-              >
+              <AiButton onClick={() => setStudioOpen(true)} disabled={!nameForStudio} why={t('studioNameFirst')}>
                 {t('studioOpen')}
               </AiButton>
             )
@@ -453,14 +385,9 @@ export function ItemDetailsForm({
             item={{
               nameEn: form.name.en?.trim() || undefined,
               nameAr: form.name.ar?.trim() || undefined,
-              description:
-                form.description.en?.trim() ||
-                form.description.ar?.trim() ||
-                undefined,
+              description: form.description.en?.trim() || form.description.ar?.trim() || undefined,
               category: (() => {
-                const category = categories.find(
-                  (c) => Number(c.id) === form.catalogTypeId
-                )
+                const category = categories.find((c) => Number(c.id) === form.catalogTypeId)
                 return category?.name?.en || category?.name?.ar || undefined
               })(),
             }}
@@ -509,11 +436,7 @@ export function ItemDetailsForm({
         />
 
         <FieldGrid cols={3}>
-          <Field
-            label={`${t('price')} (${currency})`}
-            htmlFor='item-price'
-            error={errors.price}
-          >
+          <Field label={`${t('price')} (${currency})`} htmlFor='item-price' error={errors.price}>
             <Input
               id='item-price'
               type='number'
@@ -534,13 +457,8 @@ export function ItemDetailsForm({
             >
               <SelectTrigger
                 id='item-category'
-                className={cn(
-                  'w-full',
-                  suggested.category && 'border-primary ring-primary/20 ring-2'
-                )}
-                title={
-                  suggested.category ? t('assistCategorySuggested') : undefined
-                }
+                className={cn('w-full', suggested.category && 'border-primary ring-primary/20 ring-2')}
+                title={suggested.category ? t('assistCategorySuggested') : undefined}
               >
                 <SelectValue placeholder={t('selectCategory')} />
               </SelectTrigger>
@@ -585,11 +503,7 @@ export function ItemDetailsForm({
             />
             {form.isOnOffer && (
               <div className='space-y-3'>
-                <Field
-                  label={`${t('offerPrice')} (${currency})`}
-                  htmlFor='item-offerPrice'
-                  error={errors.offerPrice}
-                >
+                <Field label={`${t('offerPrice')} (${currency})`} htmlFor='item-offerPrice' error={errors.offerPrice}>
                   <Input
                     id='item-offerPrice'
                     type='number'
@@ -605,9 +519,7 @@ export function ItemDetailsForm({
                 <div className='flex flex-wrap gap-1'>
                   {WEEKDAYS.map((day) => {
                     const bit = 1 << day
-                    const on =
-                      form.offerWeekdays === 0 ||
-                      (form.offerWeekdays & bit) !== 0
+                    const on = form.offerWeekdays === 0 || (form.offerWeekdays & bit) !== 0
                     return (
                       <ToggleChip
                         key={day}
@@ -616,13 +528,9 @@ export function ItemDetailsForm({
                         className='w-11'
                         onToggle={() => {
                           const all = 127
-                          const current =
-                            form.offerWeekdays === 0 ? all : form.offerWeekdays
+                          const current = form.offerWeekdays === 0 ? all : form.offerWeekdays
                           const next = current ^ bit
-                          set(
-                            'offerWeekdays',
-                            next === all || next === 0 ? 0 : next
-                          )
+                          set('offerWeekdays', next === all || next === 0 ? 0 : next)
                         }}
                       >
                         {weekdayName(day)}
@@ -680,9 +588,7 @@ export function ItemDetailsForm({
                     size='icon'
                     className='hover:text-destructive size-7'
                     aria-label={`${t('discard')} ${localized(draft.name)}`}
-                    onClick={() =>
-                      setProposals((prev) => prev.filter((_, i) => i !== index))
-                    }
+                    onClick={() => setProposals((prev) => prev.filter((_, i) => i !== index))}
                   >
                     <X className='h-3.5 w-3.5' />
                   </Button>
@@ -695,12 +601,7 @@ export function ItemDetailsForm({
         {/* In the sheet's footer; `form` ties Save back to this form */}
         <SheetActions>
           {onCancel && (
-            <Button
-              type='button'
-              variant='outline'
-              size='sm'
-              onClick={onCancel}
-            >
+            <Button type='button' variant='outline' size='sm' onClick={onCancel}>
               {t('cancel')}
             </Button>
           )}

@@ -22,9 +22,7 @@ export function OverShortBadge({ value }: { value: number }) {
     <Badge
       className={cn(
         'border-transparent tabular-nums',
-        value >= 0
-          ? 'bg-success/15 text-success'
-          : 'bg-destructive/15 text-destructive'
+        value >= 0 ? 'bg-success/15 text-success' : 'bg-destructive/15 text-destructive'
       )}
     >
       {value === 0
@@ -47,13 +45,10 @@ export function ShiftReport({ shift }: { shift: ShiftView }) {
   const t = useT()
   // Tabs off: no tab payment line of its own, unless some came in while it was on
   const showTabs =
-    useFeatures().tabs === true ||
-    toNumber(shift.tabPaymentsTotal) !== 0 ||
-    toNumber(shift.cashTabPayments) !== 0
+    useFeatures().tabs === true || toNumber(shift.tabPaymentsTotal) !== 0 || toNumber(shift.cashTabPayments) !== 0
   const locale = useLocale()
 
-  const formatAt = (value: string | null | undefined) =>
-    value ? formatWhen(value, 'dateTime', locale, t) : ''
+  const formatAt = (value: string | null | undefined) => (value ? formatWhen(value, 'dateTime', locale, t) : '')
 
   const closed = shift.status === 'Closed'
   const overShort = toNumber(shift.overShort)
@@ -64,49 +59,33 @@ export function ShiftReport({ shift }: { shift: ShiftView }) {
   const drawer = drawerSum(shift)
   const lateCash = toNumber(shift.lateCash)
   const gross = toNumber(shift.grossSales ?? shift.salesTotal)
-  const net =
-    shift.netSales != null
-      ? toNumber(shift.netSales)
-      : gross - toNumber(shift.refundsTotal)
+  const net = shift.netSales != null ? toNumber(shift.netSales) : gross - toNumber(shift.refundsTotal)
 
   return (
     <div className='flex flex-col gap-5'>
       {closed ? (
         <StatStrip>
-          <Stat
-            label={t('expected')}
-            value={formatEgp(shift.expectedCash ?? shift.expectedInDrawer)}
-          />
+          <Stat label={t('expected')} value={formatEgp(shift.expectedCash ?? shift.expectedInDrawer)} />
           <Stat label={t('counted')} value={formatEgp(shift.closingCount)} />
           <Stat
             label={t('overShort')}
             value={
-              overShort === 0
-                ? t('drawerBalanced')
-                : `${overShort > 0 ? '+' : '−'}${formatEgp(Math.abs(overShort))}`
+              overShort === 0 ? t('drawerBalanced') : `${overShort > 0 ? '+' : '−'}${formatEgp(Math.abs(overShort))}`
             }
             tone={overShort >= 0 ? 'positive' : 'negative'}
           />
           {/* An offline sale's cash that reached the shift after it closed */}
-          {lateCash !== 0 && (
-            <Stat label={t('lateCash')} value={formatEgp(lateCash)} />
-          )}
+          {lateCash !== 0 && <Stat label={t('lateCash')} value={formatEgp(lateCash)} />}
           {lateCash !== 0 && shift.adjustedOverShort != null && (
             <Stat
               label={t('adjustedOverShort')}
               value={`${toNumber(shift.adjustedOverShort) >= 0 ? '+' : '−'}${formatEgp(Math.abs(toNumber(shift.adjustedOverShort)))}`}
-              tone={
-                toNumber(shift.adjustedOverShort) >= 0 ? 'positive' : 'negative'
-              }
+              tone={toNumber(shift.adjustedOverShort) >= 0 ? 'positive' : 'negative'}
             />
           )}
         </StatStrip>
       ) : (
-        <Stat
-          size='hero'
-          label={t('expectedInDrawer')}
-          value={formatEgp(shift.expectedInDrawer)}
-        />
+        <Stat size='hero' label={t('expectedInDrawer')} value={formatEgp(shift.expectedInDrawer)} />
       )}
 
       <div className='text-sm'>
@@ -114,9 +93,7 @@ export function ShiftReport({ shift }: { shift: ShiftView }) {
           <span className='text-muted-foreground'>{t('openedAt')}</span>
           <span className='text-end'>
             <span className='tabular-nums'>{formatAt(shift.openedAt)}</span>
-            {shift.openedBy && (
-              <span className='text-muted-foreground'> · {shift.openedBy}</span>
-            )}
+            {shift.openedBy && <span className='text-muted-foreground'> · {shift.openedBy}</span>}
           </span>
         </div>
         {closed && (
@@ -124,41 +101,20 @@ export function ShiftReport({ shift }: { shift: ShiftView }) {
             <span className='text-muted-foreground'>{t('closedAt')}</span>
             <span className='text-end'>
               <span className='tabular-nums'>{formatAt(shift.closedAt)}</span>
-              {shift.closedBy && (
-                <span className='text-muted-foreground'>
-                  {' '}
-                  · {shift.closedBy}
-                </span>
-              )}
+              {shift.closedBy && <span className='text-muted-foreground'> · {shift.closedBy}</span>}
             </span>
           </div>
         )}
       </div>
 
       <StatStrip>
-        <Stat
-          label={t('posTicketsSettled')}
-          value={String(toNumber(shift.ticketsSettled))}
-        />
+        <Stat label={t('posTicketsSettled')} value={String(toNumber(shift.ticketsSettled))} />
         <Stat label={t('grossSalesBeforeRefunds')} value={formatEgp(gross)} />
-        {toNumber(shift.discounts) > 0 && (
-          <Stat
-            label={t('discountsTotal')}
-            value={formatEgp(shift.discounts)}
-          />
-        )}
-        <Stat
-          label={t('refundsAllTenders')}
-          value={formatEgp(shift.refundsTotal)}
-        />
+        {toNumber(shift.discounts) > 0 && <Stat label={t('discountsTotal')} value={formatEgp(shift.discounts)} />}
+        <Stat label={t('refundsAllTenders')} value={formatEgp(shift.refundsTotal)} />
         <Stat label={t('netSalesAfterRefunds')} value={formatEgp(net)} />
         <Stat label={t('changeGiven')} value={formatEgp(shift.changeGiven)} />
-        {showTabs && (
-          <Stat
-            label={t('tabPayments')}
-            value={formatEgp(shift.tabPaymentsTotal)}
-          />
-        )}
+        {showTabs && <Stat label={t('tabPayments')} value={formatEgp(shift.tabPaymentsTotal)} />}
       </StatStrip>
 
       {/* The drawer, term by term, adding up to what should be in it */}
@@ -168,10 +124,7 @@ export function ShiftReport({ shift }: { shift: ShiftView }) {
           {drawer.terms
             .filter((term) => term.key !== 'tabs' || showTabs)
             .map((term, index) => (
-              <div
-                key={term.key}
-                className='flex items-center justify-between gap-4 py-1'
-              >
+              <div key={term.key} className='flex items-center justify-between gap-4 py-1'>
                 <dt className='text-muted-foreground'>{t(term.labelKey)}</dt>
                 <dd className='tabular-nums'>
                   {index === 0 ? '' : term.sign > 0 ? '+ ' : '− '}
@@ -182,11 +135,7 @@ export function ShiftReport({ shift }: { shift: ShiftView }) {
           <div className='flex items-center justify-between gap-4 border-t pt-2 font-semibold'>
             <dt>{t(closed ? 'expected' : 'expectedInDrawer')}</dt>
             <dd className='tabular-nums'>
-              {formatEgp(
-                closed
-                  ? (shift.expectedCash ?? shift.expectedInDrawer)
-                  : shift.expectedInDrawer
-              )}
+              {formatEgp(closed ? (shift.expectedCash ?? shift.expectedInDrawer) : shift.expectedInDrawer)}
             </dd>
           </div>
         </dl>
@@ -199,20 +148,12 @@ export function ShiftReport({ shift }: { shift: ShiftView }) {
             {tenders.map((total) => {
               const key = tenderLabelKey(total.tender)
               return (
-                <li
-                  key={total.tender}
-                  className='flex items-center justify-between gap-4 py-2'
-                >
+                <li key={total.tender} className='flex items-center justify-between gap-4 py-2'>
                   <span>
                     {key ? t(key) : total.tender}
-                    <span className='text-muted-foreground tabular-nums'>
-                      {' '}
-                      × {toNumber(total.count)}
-                    </span>
+                    <span className='text-muted-foreground tabular-nums'> × {toNumber(total.count)}</span>
                   </span>
-                  <span className='font-semibold tabular-nums'>
-                    {formatEgp(total.amount)}
-                  </span>
+                  <span className='font-semibold tabular-nums'>{formatEgp(total.amount)}</span>
                 </li>
               )
             })}
@@ -229,20 +170,12 @@ export function ShiftReport({ shift }: { shift: ShiftView }) {
               {tabTenders.map((total) => {
                 const key = tenderLabelKey(total.tender)
                 return (
-                  <li
-                    key={total.tender}
-                    className='flex items-center justify-between gap-4 py-2'
-                  >
+                  <li key={total.tender} className='flex items-center justify-between gap-4 py-2'>
                     <span>
                       {key ? t(key) : total.tender}
-                      <span className='text-muted-foreground tabular-nums'>
-                        {' '}
-                        × {toNumber(total.count)}
-                      </span>
+                      <span className='text-muted-foreground tabular-nums'> × {toNumber(total.count)}</span>
                     </span>
-                    <span className='font-semibold tabular-nums'>
-                      {formatEgp(total.amount)}
-                    </span>
+                    <span className='font-semibold tabular-nums'>{formatEgp(total.amount)}</span>
                   </li>
                 )
               })}
@@ -253,21 +186,14 @@ export function ShiftReport({ shift }: { shift: ShiftView }) {
               <Separator className='my-2' />
               <ul className='divide-y text-sm'>
                 {tabPayments.map((payment) => (
-                  <li
-                    key={String(payment.id)}
-                    className='flex items-center justify-between gap-3 py-2'
-                  >
+                  <li key={String(payment.id)} className='flex items-center justify-between gap-3 py-2'>
                     <div className='flex min-w-0 items-center gap-2'>
                       <TenderBadge tender={payment.tender} />
                       {payment.customerName && (
-                        <span className='text-muted-foreground truncate text-xs'>
-                          {payment.customerName}
-                        </span>
+                        <span className='text-muted-foreground truncate text-xs'>{payment.customerName}</span>
                       )}
                     </div>
-                    <span className='font-medium tabular-nums'>
-                      {formatEgp(payment.amount)}
-                    </span>
+                    <span className='font-medium tabular-nums'>{formatEgp(payment.amount)}</span>
                   </li>
                 ))}
               </ul>
@@ -279,18 +205,13 @@ export function ShiftReport({ shift }: { shift: ShiftView }) {
       <section>
         <h4 className='mb-1 text-sm font-medium'>{t('drawerMovements')}</h4>
         {movements.length === 0 ? (
-          <p className='text-muted-foreground py-2 text-sm'>
-            {t('noMovements')}
-          </p>
+          <p className='text-muted-foreground py-2 text-sm'>{t('noMovements')}</p>
         ) : (
           <ul className='divide-y text-sm'>
             {movements.map((movement, index) => {
               const isOut = movement.type === 'PayOut'
               return (
-                <li
-                  key={index}
-                  className='flex items-center justify-between gap-4 py-2'
-                >
+                <li key={index} className='flex items-center justify-between gap-4 py-2'>
                   <div className='min-w-0'>
                     <div className='truncate'>{movement.reason}</div>
                     <div className='text-muted-foreground truncate text-xs'>
@@ -304,10 +225,7 @@ export function ShiftReport({ shift }: { shift: ShiftView }) {
                     </div>
                   </div>
                   <span
-                    className={cn(
-                      'shrink-0 font-semibold tabular-nums',
-                      isOut ? 'text-destructive' : 'text-success'
-                    )}
+                    className={cn('shrink-0 font-semibold tabular-nums', isOut ? 'text-destructive' : 'text-success')}
                   >
                     {isOut ? '−' : '+'}
                     {formatEgp(movement.amount)}

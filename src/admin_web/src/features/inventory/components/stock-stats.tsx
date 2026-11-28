@@ -12,11 +12,7 @@ import { formatEgp, toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
 import { useAllowedBranches } from '@/hooks/use-allowed-branches'
 import { Button } from '@/components/ui/button'
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { Skeleton } from '@/components/ui/skeleton'
 
 type StockStatsProps = {
@@ -99,39 +95,21 @@ export function StockStats({ levels }: StockStatsProps) {
       <CollapsibleTrigger asChild>
         <Button variant='ghost' size='sm' className='-ms-2 h-8 gap-1.5'>
           {t('stats')}
-          <ChevronDown
-            className={cn('h-4 w-4 transition-transform', open && 'rotate-180')}
-          />
+          <ChevronDown className={cn('h-4 w-4 transition-transform', open && 'rotate-180')} />
         </Button>
       </CollapsibleTrigger>
       <CollapsibleContent>
         <div className='flex flex-wrap items-end gap-x-8 gap-y-4 pt-2 pb-1'>
           {groups.map((group, index) => (
-            <div
-              key={index}
-              className='flex flex-wrap items-end gap-x-8 gap-y-3'
-            >
+            <div key={index} className='flex flex-wrap items-end gap-x-8 gap-y-3'>
               {group.title && (
-                <div className='text-muted-foreground border-s ps-6 text-sm font-medium'>
-                  {group.title}
-                </div>
+                <div className='text-muted-foreground border-s ps-6 text-sm font-medium'>{group.title}</div>
               )}
               {group.stats.map((stat) => (
                 <div key={stat.label} className='min-w-0'>
-                  <div className='text-muted-foreground text-xs'>
-                    {stat.label}
-                  </div>
-                  <div
-                    className={cn(
-                      'text-lg font-semibold tabular-nums',
-                      stat.tone
-                    )}
-                  >
-                    {stat.value === null ? (
-                      <Skeleton className='mt-1 h-5 w-20' />
-                    ) : (
-                      stat.value
-                    )}
+                  <div className='text-muted-foreground text-xs'>{stat.label}</div>
+                  <div className={cn('text-lg font-semibold tabular-nums', stat.tone)}>
+                    {stat.value === null ? <Skeleton className='mt-1 h-5 w-20' /> : stat.value}
                   </div>
                 </div>
               ))}

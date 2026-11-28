@@ -47,8 +47,8 @@ export const useSessionPlaceStore = create<SessionPlaceState>()(
     {
       name: 'ninja-place-session',
       storage: createJSONStorage(() => sessionStorage),
-    },
-  ),
+    }
+  )
 )
 
 /**
@@ -70,25 +70,19 @@ export const usePlaceStore = create<PlaceState>()(
     }),
     // A new storage key: what was stored before the Places remodel carried
     // the printed sticker's id, which is not the place id
-    { name: 'ninja-place' },
-  ),
+    { name: 'ninja-place' }
+  )
 )
 
 /** A stored place counts while the customer is browsing its branch and the
  *  business has not closed since they scanned it. */
-function isUsable(
-  place: StoredPlace | null,
-  branchId: number,
-  dayStartedAt: number | null,
-): place is StoredPlace {
+function isUsable(place: StoredPlace | null, branchId: number, dayStartedAt: number | null): place is StoredPlace {
   if (place == null || place.branchId !== branchId) return false
   return dayStartedAt == null || place.scannedAt >= dayStartedAt
 }
 
 // Outside the hooks: reading the clock during render is impure
-function currentDayStart(
-  branch: ReturnType<typeof useSelectedBranch>,
-): number | null {
+function currentDayStart(branch: ReturnType<typeof useSelectedBranch>): number | null {
   return branch ? businessDayStart(branch).getTime() : null
 }
 

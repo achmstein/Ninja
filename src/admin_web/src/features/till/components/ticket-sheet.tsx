@@ -17,8 +17,7 @@ import { ticketStatusKey, ticketTypeKey } from './tender'
 import { TenderBadge } from './tender-badge'
 import { ticketTitle } from './ticket-title'
 
-const percent = (rate: number | string | null | undefined) =>
-  Math.round(toNumber(rate) * 10000) / 100
+const percent = (rate: number | string | null | undefined) => Math.round(toNumber(rate) * 10000) / 100
 
 type LineGroup = {
   key: string | null
@@ -67,13 +66,9 @@ function LineRow({ line }: { line: TicketLineView }) {
   return (
     <div className='flex items-start gap-3 py-2'>
       <div className='min-w-0 flex-1'>
-        <div className={cn('truncate text-sm font-medium', credit)}>
-          {localized(line.description)}
-        </div>
+        <div className={cn('truncate text-sm font-medium', credit)}>{localized(line.description)}</div>
         {localized(line.details) && (
-          <div className='text-muted-foreground truncate text-xs'>
-            {localized(line.details)}
-          </div>
+          <div className='text-muted-foreground truncate text-xs'>{localized(line.details)}</div>
         )}
         <div className='text-muted-foreground text-xs tabular-nums'>
           {toNumber(line.qty)} × {formatEgp(line.unitPrice)}
@@ -83,29 +78,15 @@ function LineRow({ line }: { line: TicketLineView }) {
               − {formatEgp(discount)} ({t('discount')})
             </span>
           )}
-          {line.orderId != null && (
-            <span> · {t('orderNumber', { id: toNumber(line.orderId) })}</span>
-          )}
+          {line.orderId != null && <span> · {t('orderNumber', { id: toNumber(line.orderId) })}</span>}
         </div>
       </div>
-      <div
-        className={cn('shrink-0 text-sm font-semibold tabular-nums', credit)}
-      >
-        {formatEgp(line.total)}
-      </div>
+      <div className={cn('shrink-0 text-sm font-semibold tabular-nums', credit)}>{formatEgp(line.total)}</div>
     </div>
   )
 }
 
-function BillRow({
-  label,
-  value,
-  emphasis,
-}: {
-  label: string
-  value: string
-  emphasis?: 'muted' | 'bold' | 'credit'
-}) {
+function BillRow({ label, value, emphasis }: { label: string; value: string; emphasis?: 'muted' | 'bold' | 'credit' }) {
   return (
     <div
       className={cn(
@@ -143,8 +124,7 @@ export function TicketSheet({ ticketId, onOpenChange }: TicketSheetProps) {
     enabled: ticketId != null,
   })
 
-  const formatAt = (value: string | null | undefined) =>
-    value ? formatWhen(value, 'dateTime', locale, t) : ''
+  const formatAt = (value: string | null | undefined) => (value ? formatWhen(value, 'dateTime', locale, t) : '')
 
   const isSettled = ticket?.status === 'Settled'
   // Keyed on voidedAt rather than the status string so a voided ticket
@@ -168,9 +148,7 @@ export function TicketSheet({ ticketId, onOpenChange }: TicketSheetProps) {
   const meta = ticket
     ? [
         typeKey ? t(typeKey) : ticket.type,
-        ticket.receiptNumber != null
-          ? t('receiptNumber', { number: toNumber(ticket.receiptNumber) })
-          : null,
+        ticket.receiptNumber != null ? t('receiptNumber', { number: toNumber(ticket.receiptNumber) }) : null,
         ticket.settledAt
           ? `${t('settledAtLabel')} ${formatAt(ticket.settledAt)}${ticket.settledBy ? ` · ${ticket.settledBy}` : ''}`
           : `${t('openedAt')} ${formatAt(ticket.openedAt)}`,
@@ -186,11 +164,7 @@ export function TicketSheet({ ticketId, onOpenChange }: TicketSheetProps) {
       onOpenChange={onOpenChange}
       title={<span className='block truncate'>{title}</span>}
       status={
-        statusKey && (
-          <StatusChip tone={isVoided ? 'danger' : isSettled ? 'muted' : 'info'}>
-            {t(statusKey)}
-          </StatusChip>
-        )
+        statusKey && <StatusChip tone={isVoided ? 'danger' : isSettled ? 'muted' : 'info'}>{t(statusKey)}</StatusChip>
       }
       subtitle={meta}
     >
@@ -212,12 +186,7 @@ export function TicketSheet({ ticketId, onOpenChange }: TicketSheetProps) {
               </div>
               {ticket.voidReason && <p className='mt-1'>{ticket.voidReason}</p>}
               <p className='text-muted-foreground mt-1 text-xs'>
-                {[
-                  ticket.voidedBy
-                    ? `${t('voidedBy')} ${ticket.voidedBy}`
-                    : null,
-                  formatAt(ticket.voidedAt),
-                ]
+                {[ticket.voidedBy ? `${t('voidedBy')} ${ticket.voidedBy}` : null, formatAt(ticket.voidedAt)]
                   .filter(Boolean)
                   .join(' · ')}
               </p>
@@ -243,13 +212,9 @@ export function TicketSheet({ ticketId, onOpenChange }: TicketSheetProps) {
                     <div className='bg-muted/50 flex items-center justify-between gap-2 rounded-lg px-3 py-1.5 text-sm'>
                       <span className='flex min-w-0 items-center gap-2 font-medium'>
                         <User className='h-4 w-4 shrink-0' />
-                        <span className='truncate'>
-                          {group.name ?? (group.key ? t('guest') : title)}
-                        </span>
+                        <span className='truncate'>{group.name ?? (group.key ? t('guest') : title)}</span>
                       </span>
-                      <span className='shrink-0 tabular-nums'>
-                        {formatEgp(group.total)}
-                      </span>
+                      <span className='shrink-0 tabular-nums'>{formatEgp(group.total)}</span>
                     </div>
                     <div className='divide-y px-3'>
                       {group.lines.map((line) => (
@@ -268,19 +233,11 @@ export function TicketSheet({ ticketId, onOpenChange }: TicketSheetProps) {
                   them; VAT shown out of an inclusive price, or added on top */}
           <div className='space-y-1 text-sm'>
             {(discount > 0 || service > 0 || vat > 0) && (
-              <BillRow
-                label={t('subtotal')}
-                value={formatEgp(ticket.subtotal)}
-                emphasis='muted'
-              />
+              <BillRow label={t('subtotal')} value={formatEgp(ticket.subtotal)} emphasis='muted' />
             )}
             {discount > 0 && (
               <BillRow
-                label={
-                  ticket.discountReason
-                    ? `${t('discount')} · ${ticket.discountReason}`
-                    : t('discount')
-                }
+                label={ticket.discountReason ? `${t('discount')} · ${ticket.discountReason}` : t('discount')}
                 value={`−${formatEgp(discount)}`}
                 emphasis='muted'
               />
@@ -301,11 +258,7 @@ export function TicketSheet({ ticketId, onOpenChange }: TicketSheetProps) {
                 emphasis='muted'
               />
             )}
-            <BillRow
-              label={t('total')}
-              value={formatEgp(ticket.total)}
-              emphasis='bold'
-            />
+            <BillRow label={t('total')} value={formatEgp(ticket.total)} emphasis='bold' />
             {vat > 0 && ticket.vatIncluded && (
               <BillRow
                 label={t('vatIncludedRate', {
@@ -315,20 +268,8 @@ export function TicketSheet({ ticketId, onOpenChange }: TicketSheetProps) {
                 emphasis='muted'
               />
             )}
-            {change > 0 && (
-              <BillRow
-                label={t('changeDue')}
-                value={formatEgp(change)}
-                emphasis='muted'
-              />
-            )}
-            {refunded > 0 && (
-              <BillRow
-                label={t('refunded')}
-                value={`−${formatEgp(refunded)}`}
-                emphasis='credit'
-              />
-            )}
+            {change > 0 && <BillRow label={t('changeDue')} value={formatEgp(change)} emphasis='muted' />}
+            {refunded > 0 && <BillRow label={t('refunded')} value={`−${formatEgp(refunded)}`} emphasis='credit' />}
           </div>
 
           {payments.length > 0 && (
@@ -337,21 +278,14 @@ export function TicketSheet({ ticketId, onOpenChange }: TicketSheetProps) {
               <div className='space-y-2'>
                 <h4 className='text-sm font-medium'>{t('tillPayments')}</h4>
                 {payments.map((payment, index) => (
-                  <div
-                    key={index}
-                    className='flex items-center justify-between gap-3 text-sm'
-                  >
+                  <div key={index} className='flex items-center justify-between gap-3 text-sm'>
                     <div className='flex min-w-0 items-center gap-2'>
                       <TenderBadge tender={payment.tender} />
                       <span className='text-muted-foreground truncate text-xs'>
-                        {[payment.customerName, formatAt(payment.recordedAt)]
-                          .filter(Boolean)
-                          .join(' · ')}
+                        {[payment.customerName, formatAt(payment.recordedAt)].filter(Boolean).join(' · ')}
                       </span>
                     </div>
-                    <span className='font-medium tabular-nums'>
-                      {formatEgp(payment.amount)}
-                    </span>
+                    <span className='font-medium tabular-nums'>{formatEgp(payment.amount)}</span>
                   </div>
                 ))}
               </div>
@@ -378,19 +312,13 @@ export function TicketSheet({ ticketId, onOpenChange }: TicketSheetProps) {
                             number: toNumber(refund.number),
                           })}
                         </span>
-                        <span className='text-destructive font-semibold tabular-nums'>
-                          −{formatEgp(refund.amount)}
-                        </span>
+                        <span className='text-destructive font-semibold tabular-nums'>−{formatEgp(refund.amount)}</span>
                       </div>
                       <p className='mt-1'>{refund.reason}</p>
                       <div className='text-muted-foreground mt-1 flex flex-wrap items-center gap-x-2 text-xs'>
                         <TenderBadge tender={refund.tender} />
                         <span>
-                          {[
-                            refund.customerName,
-                            refund.refundedBy,
-                            formatAt(refund.refundedAt),
-                          ]
+                          {[refund.customerName, refund.refundedBy, formatAt(refund.refundedAt)]
                             .filter(Boolean)
                             .join(' · ')}
                         </span>
@@ -398,17 +326,11 @@ export function TicketSheet({ ticketId, onOpenChange }: TicketSheetProps) {
                       {refundLines.length > 0 && (
                         <div className='mt-2 divide-y border-t'>
                           {refundLines.map((line, index) => (
-                            <div
-                              key={index}
-                              className='flex justify-between gap-2 py-1 text-xs'
-                            >
+                            <div key={index} className='flex justify-between gap-2 py-1 text-xs'>
                               <span className='truncate'>
-                                {localized(line.description)} ×{' '}
-                                {toNumber(line.qty)}
+                                {localized(line.description)} × {toNumber(line.qty)}
                               </span>
-                              <span className='tabular-nums'>
-                                −{formatEgp(line.amount)}
-                              </span>
+                              <span className='tabular-nums'>−{formatEgp(line.amount)}</span>
                             </div>
                           ))}
                         </div>

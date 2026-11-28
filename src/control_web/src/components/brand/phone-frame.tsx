@@ -16,13 +16,24 @@ const BEZEL = 7
  * screen is scaled to a phone's size on the page, so text and spacing read
  * as they do in the hand rather than at desktop size.
  */
-export function PhoneFrame({ children, scheme, className }: { children: React.ReactNode; scheme: Scheme; className?: string }) {
+export function PhoneFrame({
+  children,
+  scheme,
+  className,
+}: {
+  children: React.ReactNode
+  scheme: Scheme
+  className?: string
+}) {
   const scale = SCREEN_WIDTH / PHONE.width
   const dark = scheme === 'dark'
 
   return (
     <div
-      className={cn('mx-auto shrink-0 rounded-[2.9rem] bg-zinc-900 shadow-xl ring-1 ring-black/40 dark:bg-zinc-800 dark:ring-white/10', className)}
+      className={cn(
+        'mx-auto shrink-0 rounded-[2.9rem] bg-zinc-900 shadow-xl ring-1 ring-black/40 dark:bg-zinc-800 dark:ring-white/10',
+        className
+      )}
       style={{ width: SCREEN_WIDTH + BEZEL * 2, padding: BEZEL }}
     >
       <div

@@ -1,17 +1,11 @@
-import type {
-  PaymentSettingsRequest,
-  PaymentSettingsView,
-} from '@/api/sales/types.gen'
+import type { PaymentSettingsRequest, PaymentSettingsView } from '@/api/sales/types.gen'
 
 /**
  * A secret as the owner edits it. The server never sends one back, only
  * whether it is set: so the field is kept as it is, replaced with what is
  * typed, or removed.
  */
-export type SecretEdit =
-  | { mode: 'keep' }
-  | { mode: 'replace'; value: string }
-  | { mode: 'remove' }
+export type SecretEdit = { mode: 'keep' } | { mode: 'replace'; value: string } | { mode: 'remove' }
 
 /** Fee mode as Sales.Domain numbers it: the business absorbs it, or the guest pays it on top. */
 export const FEE_BUSINESS = 0
@@ -35,8 +29,7 @@ export type PaymentsForm = {
   allowCustom: boolean
 }
 
-const text = (v: number | string | null | undefined) =>
-  v == null ? '' : String(v)
+const text = (v: number | string | null | undefined) => (v == null ? '' : String(v))
 
 export function toForm(view: PaymentSettingsView): PaymentsForm {
   return {
@@ -50,9 +43,7 @@ export function toForm(view: PaymentSettingsView): PaymentsForm {
     walletIntegrationId: text(view.walletIntegrationId),
     applePayIntegrationId: text(view.applePayIntegrationId),
     // A number on the wire today; the name too, should enums ever be spelled
-    feeMode: ['1', 'Guest'].includes(String(view.feeMode))
-      ? FEE_GUEST
-      : FEE_BUSINESS,
+    feeMode: ['1', 'Guest'].includes(String(view.feeMode)) ? FEE_GUEST : FEE_BUSINESS,
     feePercent: text(view.feePercent),
     feeFixed: text(view.feeFixed),
     allowItems: view.allowItems,
@@ -85,9 +76,7 @@ const amount = (v: string): number | undefined => {
 }
 
 /** The request the form saves as, or the first thing wrong with it. */
-export function toRequest(
-  form: PaymentsForm
-): { request: PaymentSettingsRequest } | { problem: FormProblem } {
+export function toRequest(form: PaymentsForm): { request: PaymentSettingsRequest } | { problem: FormProblem } {
   const currency = form.currency.trim().toUpperCase()
   if (!/^[A-Z]{3}$/.test(currency)) return { problem: 'currency' }
 
@@ -100,8 +89,7 @@ export function toRequest(
 
   const feePercent = amount(form.feePercent)
   const feeFixed = amount(form.feeFixed)
-  if (feePercent === undefined || feeFixed === undefined || feePercent > 100)
-    return { problem: 'fee' }
+  if (feePercent === undefined || feeFixed === undefined || feePercent > 100) return { problem: 'fee' }
 
   return {
     request: {

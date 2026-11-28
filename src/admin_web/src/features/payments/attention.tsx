@@ -121,9 +121,7 @@ function AttentionRow({ row }: { row: PaymentAttentionView }) {
       <ListRow
         title={
           <span className='flex items-center gap-2'>
-            <StatusChip tone={owed ? 'warning' : 'info'}>
-              {t(MOVES[row.move] ?? 'payMoveNone')}
-            </StatusChip>
+            <StatusChip tone={owed ? 'warning' : 'info'}>{t(MOVES[row.move] ?? 'payMoveNone')}</StatusChip>
             <span className='truncate'>{what}</span>
           </span>
         }
@@ -162,39 +160,20 @@ function AttentionRow({ row }: { row: PaymentAttentionView }) {
         }
         trailing={<Money value={row.charged} />}
       />
-      {row.problem && (
-        <p className='bg-muted/60 rounded-md px-3 py-2 text-sm'>{row.problem}</p>
-      )}
+      {row.problem && <p className='bg-muted/60 rounded-md px-3 py-2 text-sm'>{row.problem}</p>}
       <div className='flex flex-wrap justify-end gap-2'>
         {owed ? (
           <>
-            <Button
-              type='button'
-              variant='outline'
-              size='sm'
-              disabled={busy}
-              onClick={() => setConfirmDone(true)}
-            >
+            <Button type='button' variant='outline' size='sm' disabled={busy} onClick={() => setConfirmDone(true)}>
               {t('payMarkDone')}
             </Button>
-            <Button
-              type='button'
-              size='sm'
-              disabled={busy}
-              onClick={() => retry.mutate(path)}
-            >
+            <Button type='button' size='sm' disabled={busy} onClick={() => retry.mutate(path)}>
               {retry.isPending && <Spinner />}
               {t('payRetryNow')}
             </Button>
           </>
         ) : (
-          <Button
-            type='button'
-            variant='outline'
-            size='sm'
-            disabled={busy}
-            onClick={() => dismiss.mutate(path)}
-          >
+          <Button type='button' variant='outline' size='sm' disabled={busy} onClick={() => dismiss.mutate(path)}>
             {dismiss.isPending && <Spinner />}
             {t('payDismiss')}
           </Button>

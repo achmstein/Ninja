@@ -1,11 +1,11 @@
-import { useAuth } from 'react-oidc-context'
 import { Mail, UserPlus } from 'lucide-react'
+import { useAuth } from 'react-oidc-context'
+import { useGuestStore } from '@/stores/guest-store'
 import { useBrand } from '@/lib/brand'
 import { useLanguage, useT } from '@/lib/i18n'
 import { loginPageParams } from '@/lib/oidc'
 import { guestDetailsParams } from '@/lib/services/identity'
 import { cn } from '@/lib/utils'
-import { useGuestStore } from '@/stores/guest-store'
 import { useTheme } from '@/context/theme-provider'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -13,12 +13,18 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 export function GoogleIcon() {
   return (
     <svg className='h-4 w-4' viewBox='0 0 24 24' aria-hidden='true'>
-      <path fill='#4285F4' d='M23.52 12.27c0-.85-.08-1.66-.22-2.45H12v4.64h6.46a5.53 5.53 0 0 1-2.4 3.62v3h3.88c2.26-2.09 3.58-5.17 3.58-8.81Z' />
+      <path
+        fill='#4285F4'
+        d='M23.52 12.27c0-.85-.08-1.66-.22-2.45H12v4.64h6.46a5.53 5.53 0 0 1-2.4 3.62v3h3.88c2.26-2.09 3.58-5.17 3.58-8.81Z'
+      />
       <path
         fill='#34A853'
         d='M12 24c3.24 0 5.96-1.07 7.94-2.91l-3.88-3.01c-1.07.72-2.45 1.15-4.06 1.15-3.13 0-5.78-2.11-6.72-4.95H1.27v3.11A12 12 0 0 0 12 24Z'
       />
-      <path fill='#FBBC05' d='M5.28 14.28A7.2 7.2 0 0 1 4.9 12c0-.79.14-1.56.38-2.28V6.61H1.27a12 12 0 0 0 0 10.78l4.01-3.11Z' />
+      <path
+        fill='#FBBC05'
+        d='M5.28 14.28A7.2 7.2 0 0 1 4.9 12c0-.79.14-1.56.38-2.28V6.61H1.27a12 12 0 0 0 0 10.78l4.01-3.11Z'
+      />
       <path
         fill='#EA4335'
         d='M12 4.77c1.76 0 3.34.61 4.59 1.8l3.44-3.44A11.98 11.98 0 0 0 12 0 12 12 0 0 0 1.27 6.61l4.01 3.11C6.22 6.88 8.87 4.77 12 4.77Z'
@@ -89,25 +95,34 @@ export function SignInOptions({ onCard = false }: { onCard?: boolean }) {
   return (
     <div className={cn('flex w-full flex-col gap-2.5', !onCard && 'mx-auto max-w-xs')}>
       {google && (
-        <Button size='lg' variant='outline' className='w-full rounded-pill' onClick={() => signIn(google.hint)}>
+        <Button size='lg' variant='outline' className='rounded-pill w-full' onClick={() => signIn(google.hint)}>
           <GoogleIcon />
           {t('continueWithGoogle')}
         </Button>
       )}
       {apple && (
-        <Button size='lg' className='bg-foreground text-background hover:bg-foreground/90 w-full rounded-pill' onClick={() => signIn(apple.hint)}>
+        <Button
+          size='lg'
+          className='bg-foreground text-background hover:bg-foreground/90 rounded-pill w-full'
+          onClick={() => signIn(apple.hint)}
+        >
           <AppleIcon />
           {t('continueWithApple')}
         </Button>
       )}
       {(google || apple) && (
-        <div className='text-muted-foreground flex items-center gap-3 px-2 text-caption'>
+        <div className='text-muted-foreground text-caption flex items-center gap-3 px-2'>
           <div className='bg-border h-px flex-1' />
           {t('orContinueWith')}
           <div className='bg-border h-px flex-1' />
         </div>
       )}
-      <Button size='lg' variant='secondary' className={cn('w-full rounded-pill', onCard && 'bg-background hover:bg-background/80')} onClick={() => signIn()}>
+      <Button
+        size='lg'
+        variant='secondary'
+        className={cn('rounded-pill w-full', onCard && 'bg-background hover:bg-background/80')}
+        onClick={() => signIn()}
+      >
         <Mail className='h-4 w-4' />
         {t('continueWithEmail')}
       </Button>
@@ -126,7 +141,7 @@ export function GuestSignInChoices() {
   const signIn = useSignIn()
   return (
     <div className='flex flex-col gap-2.5'>
-      <div className='text-muted-foreground flex items-center gap-3 text-caption'>
+      <div className='text-muted-foreground text-caption flex items-center gap-3'>
         <div className='bg-border h-px flex-1' />
         {t('guestSignInPrompt')}
         <div className='bg-border h-px flex-1' />
@@ -140,7 +155,10 @@ export function GuestSignInChoices() {
             </Button>
           )}
           {apple && (
-            <Button className='bg-foreground text-background hover:bg-foreground/90 rounded-pill' onClick={() => signIn(apple.hint)}>
+            <Button
+              className='bg-foreground text-background hover:bg-foreground/90 rounded-pill'
+              onClick={() => signIn(apple.hint)}
+            >
               <AppleIcon />
               {t('apple')}
             </Button>

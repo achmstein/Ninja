@@ -33,12 +33,7 @@ export type CartLine = {
   suggestion?: 'Pairing' | 'CartNudge'
 }
 
-function lineKey(
-  line: Pick<
-    CartLine,
-    'productId' | 'customizations' | 'specialInstructions'
-  >
-): string {
+function lineKey(line: Pick<CartLine, 'productId' | 'customizations' | 'specialInstructions'>): string {
   const options = line.customizations
     .map((c) => c.optionId)
     .sort((a, b) => a - b)
@@ -66,11 +61,7 @@ export const useCart = create<CartState>()(
           const existing = state.lines.find((l) => lineKey(l) === key)
           if (existing) {
             return {
-              lines: state.lines.map((l) =>
-                lineKey(l) === key
-                  ? { ...l, quantity: l.quantity + line.quantity }
-                  : l
-              ),
+              lines: state.lines.map((l) => (lineKey(l) === key ? { ...l, quantity: l.quantity + line.quantity } : l)),
             }
           }
           return { lines: [...state.lines, line] }
@@ -80,9 +71,7 @@ export const useCart = create<CartState>()(
           lines:
             quantity <= 0
               ? state.lines.filter((l) => lineKey(l) !== key)
-              : state.lines.map((l) =>
-                  lineKey(l) === key ? { ...l, quantity } : l
-                ),
+              : state.lines.map((l) => (lineKey(l) === key ? { ...l, quantity } : l)),
         })),
       remove: (key) =>
         set((state) => ({

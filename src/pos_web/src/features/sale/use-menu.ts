@@ -86,7 +86,8 @@ export function useMenu({
   }
   const visibleItems = needle
     ? items.filter(
-        (item) => (item.name?.en ?? '').toLowerCase().includes(needle) || (item.name?.ar ?? '').toLowerCase().includes(needle),
+        (item) =>
+          (item.name?.en ?? '').toLowerCase().includes(needle) || (item.name?.ar ?? '').toLowerCase().includes(needle)
       )
     : activeCategoryId === USUALS_CATEGORY
       ? usualItems

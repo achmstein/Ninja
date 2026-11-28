@@ -1,11 +1,11 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { PosOrderRequest } from '@/api/ordering/types.gen'
-import type { SaleCustomer, SaleLine } from '@/features/sale/cart'
 import { API_VERSION, apiClient } from '@/lib/api-client'
 import { translate } from '@/lib/i18n'
 import { isConnectionError } from '@/lib/network-status'
 import { problemMessage } from '@/lib/problem'
+import type { SaleCustomer, SaleLine } from '@/features/sale/cart'
 
 /** How long a charge waits for the server before it is called not sent */
 const SEND_TIMEOUT_MS = 20_000
@@ -64,7 +64,7 @@ export const useSending = create<SendingState>()(
   persist(() => ({ sends: [] as Sending[], landed: [] as number[] }), {
     name: 'ninja-pos-sending',
     partialize: (s) => ({ sends: s.sends }),
-  }),
+  })
 )
 
 const patch = (requestId: string, change: Partial<Sending>) =>
@@ -85,10 +85,7 @@ export function landSend(requestId: string, orderId: number) {
     sends: s.sends.filter((x) => x.requestId !== requestId),
     landed: [...s.landed, orderId],
   }))
-  setTimeout(
-    () => useSending.setState((s) => ({ landed: s.landed.filter((id) => id !== orderId) })),
-    LANDED_MS,
-  )
+  setTimeout(() => useSending.setState((s) => ({ landed: s.landed.filter((id) => id !== orderId) })), LANDED_MS)
 }
 
 /**
@@ -128,7 +125,7 @@ export function saveCustomerPreferences(customerId: string, lines: SaleLine[]) {
       line.customizations.map((c) => ({
         customizationId: c.customizationId,
         optionId: c.optionId,
-      })),
+      }))
     )
   }
   if (byProduct.size === 0) return
@@ -136,16 +133,11 @@ export function saveCustomerPreferences(customerId: string, lines: SaleLine[]) {
     catalogItemId,
     selectedOptions,
   }))
-  apiClient
-    .post(`/api/catalog/customers/${customerId}/preferences`, { items })
-    .catch(() => {})
+  apiClient.post(`/api/catalog/customers/${customerId}/preferences`, { items }).catch(() => {})
 }
 
 /** What happened to one attempt; the store already says so too */
-export type SendOutcome =
-  | { kind: 'placed'; orderId: number }
-  | { kind: 'alreadyPlaced' }
-  | { kind: 'failed' }
+export type SendOutcome = { kind: 'placed'; orderId: number } | { kind: 'alreadyPlaced' } | { kind: 'failed' }
 
 /** Sends (or sends again) one charge, keeping its state in the store as it goes */
 export async function sendOrder(requestId: string): Promise<SendOutcome> {
@@ -153,18 +145,14 @@ export async function sendOrder(requestId: string): Promise<SendOutcome> {
   if (!send) return { kind: 'failed' }
   patch(requestId, { status: 'sending', error: null, offline: false })
   try {
-    const { data } = await apiClient.post<{ orderId: number | string }>(
-      '/api/orders/pos',
-      send.body,
-      {
-        params: { 'api-version': API_VERSION },
-        headers: {
-          'x-requestid': send.requestId,
-          ...(send.branchId != null ? { 'X-Branch-Id': String(send.branchId) } : {}),
-        },
-        timeout: SEND_TIMEOUT_MS,
+    const { data } = await apiClient.post<{ orderId: number | string }>('/api/orders/pos', send.body, {
+      params: { 'api-version': API_VERSION },
+      headers: {
+        'x-requestid': send.requestId,
+        ...(send.branchId != null ? { 'X-Branch-Id': String(send.branchId) } : {}),
       },
-    )
+      timeout: SEND_TIMEOUT_MS,
+    })
     const orderId = Number(data.orderId)
     if (send.customer?.id) saveCustomerPreferences(send.customer.id, send.lines)
     // 0 is a repeat the server recognised: an earlier attempt went in, and
@@ -180,9 +168,7 @@ export async function sendOrder(requestId: string): Promise<SendOutcome> {
     patch(requestId, {
       status: 'failed',
       offline,
-      error: offline
-        ? translate('sendNoConnection')
-        : problemMessage(error, translate, 'somethingWentWrong'),
+      error: offline ? translate('sendNoConnection') : problemMessage(error, translate, 'somethingWentWrong'),
     })
     return { kind: 'failed' }
   }
@@ -200,5 +186,4 @@ export function startSend(send: Omit<Sending, 'status' | 'orderId' | 'error' | '
 }
 
 /** The sends for this bill, oldest first */
-export const sendsFor = (sends: Sending[], ticketId: number) =>
-  sends.filter((x) => x.ticketId === ticketId)
+export const sendsFor = (sends: Sending[], ticketId: number) => sends.filter((x) => x.ticketId === ticketId)

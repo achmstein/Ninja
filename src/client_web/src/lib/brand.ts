@@ -1,12 +1,12 @@
-import { useBusinessTheme } from '@/context/theme-provider'
 import { useEffect } from 'react'
-import { create } from 'zustand'
 import { useQuery, type QueryClient } from '@tanstack/react-query'
+import { create } from 'zustand'
 import { type TenantFeatures, type TenantResponse, type TenantWordmark } from '@/api/tenant'
 import { getTenantOptions } from '@/api/tenant/@tanstack/react-query.gen'
-import { useTheme, type ResolvedTheme } from '@/context/theme-provider'
 import { useCurrency } from '@/lib/currency'
 import { useArabicStyle, useLanguage, type Language } from '@/lib/i18n'
+import { useBusinessTheme } from '@/context/theme-provider'
+import { useTheme, type ResolvedTheme } from '@/context/theme-provider'
 import { applyBrandTheme, type BrandThemeInput } from './brand-theme'
 import { formatPhone, telHref } from './phone'
 import { draftedTheme, onDraftedTheme } from './preview'
@@ -89,8 +89,7 @@ export const usePhoneRule = create<{
 }>((set) => ({
   country: '',
   placeholder: '',
-  set: (country, placeholder) =>
-    set({ country: country ?? '', placeholder: placeholder ?? '' }),
+  set: (country, placeholder) => set({ country: country ?? '', placeholder: placeholder ?? '' }),
 }))
 
 /**
@@ -104,8 +103,7 @@ export const showPhone = (stored: string | null | undefined): string => {
 }
 
 /** The tel: link that dials a kept number. */
-export const callHref = (stored: string | null | undefined): string =>
-  telHref(stored, usePhoneRule.getState().country)
+export const callHref = (stored: string | null | undefined): string => telHref(stored, usePhoneRule.getState().country)
 
 export const usePaused = create<{ paused: boolean; set: (paused: boolean) => void }>((set) => ({
   paused: false,
@@ -147,27 +145,22 @@ export async function bootBrand(queryClient: QueryClient) {
   // useBrandEffects after the first render: the OIDC config reads the
   // tenant's authority from there before anything mounts, so a first visit
   // must not fall back to the build's realm.
-  const fetching = queryClient
-    .prefetchQuery({ ...brandQueryOptions(), staleTime: 0 })
-    .then(() => {
-      // prefetchQuery never throws: a failure sits on the query's state
-      const error = queryClient.getQueryState(brandQueryKey())?.error
-      if (error) {
-        if (pausedBy(error)) usePaused.getState().set(true)
-        return
-      }
-      const fresh = queryClient.getQueryData<Brand>(brandQueryKey())
-      if (fresh) {
-        writeCachedBrand(fresh)
-        // A first visit waits for this: the business's language before the first render
-        useLanguage.getState().followBusiness(fresh.locale)
-      }
-    })
+  const fetching = queryClient.prefetchQuery({ ...brandQueryOptions(), staleTime: 0 }).then(() => {
+    // prefetchQuery never throws: a failure sits on the query's state
+    const error = queryClient.getQueryState(brandQueryKey())?.error
+    if (error) {
+      if (pausedBy(error)) usePaused.getState().set(true)
+      return
+    }
+    const fresh = queryClient.getQueryData<Brand>(brandQueryKey())
+    if (fresh) {
+      writeCachedBrand(fresh)
+      // A first visit waits for this: the business's language before the first render
+      useLanguage.getState().followBusiness(fresh.locale)
+    }
+  })
   if (!cached) {
-    await Promise.race([
-      fetching,
-      new Promise((resolve) => setTimeout(resolve, BOOT_TIMEOUT_MS)),
-    ])
+    await Promise.race([fetching, new Promise((resolve) => setTimeout(resolve, BOOT_TIMEOUT_MS))])
   }
 }
 

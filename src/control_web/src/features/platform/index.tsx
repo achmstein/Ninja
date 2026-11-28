@@ -2,8 +2,6 @@ import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { getRouteApi, Link } from '@tanstack/react-router'
 import { AlertTriangle, ArrowUpCircle, Mail, MailX, Plus } from 'lucide-react'
-import { Switch } from '@/components/ui/switch'
-import { Label } from '@/components/ui/label'
 import type { TenantSummary, TenantUsage } from '@/api/control'
 import {
   fleetUpgradeMutation,
@@ -16,52 +14,41 @@ import {
   listTenantsOptions,
   listTenantsQueryKey,
 } from '@/api/control/@tanstack/react-query.gen'
-import { FleetUpgradeDialog } from '@/features/tenants/dialogs'
+import { megabytes, useFormat } from '@/lib/format'
+import { useT } from '@/lib/i18n'
 import { problemDetail } from '@/lib/problem'
+import { billingStanding, isBusy, needsPayment, planLabelKey, tenantStatus, type BillingTone } from '@/lib/tenant'
 import { toast } from '@/lib/toast'
+import { cn } from '@/lib/utils'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Empty, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
+import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+import { Switch } from '@/components/ui/switch'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { PageHeader } from '@/components/page-header'
 import { KindBadge, StatusBadge, SubscriptionBadge, UpdateBadge } from '@/components/tenant-badges'
-import { megabytes, useFormat } from '@/lib/format'
-import { useT } from '@/lib/i18n'
-import {
-  billingStanding,
-  isBusy,
-  needsPayment,
-  planLabelKey,
-  tenantStatus,
-  type BillingTone,
-} from '@/lib/tenant'
-import { cn } from '@/lib/utils'
+import { FleetUpgradeDialog } from '@/features/tenants/dialogs'
 import { AiSettings } from './ai-settings'
 import { AuditTable } from './audit-table'
 import { CapacityStrip } from './capacity-strip'
 import { CapacityTable } from './capacity-table'
-import { NodesTable } from './nodes-table'
-import { MapsSettings } from './maps-settings'
 import { FirebaseSettings } from './firebase-settings'
 import { LeadsTable, waitingLeads } from './leads-table'
+import { MapsSettings } from './maps-settings'
+import { NodesTable } from './nodes-table'
 import { PlatformBackups } from './platform-backups'
 import { QueueSummary, QueueTable } from './queue-table'
 import { TeamTable } from './team-table'
 
 const route = getRouteApi('/_authenticated/')
 
-type Tab = 'tenants' | 'requests' | 'queue' | 'capacity' | 'nodes' | 'backups' | 'audit' | 'team' | 'ai' | 'maps' | 'firebase'
+type Tab =
+  'tenants' | 'requests' | 'queue' | 'capacity' | 'nodes' | 'backups' | 'audit' | 'team' | 'ai' | 'maps' | 'firebase'
 
 /**
  * The platform in one page: the box's headroom always in view, then the
@@ -101,10 +88,7 @@ export function PlatformPage() {
   // it is as static as the platform is.
   const tenants = useQuery({
     ...listTenantsOptions(),
-    refetchInterval: (query) =>
-      query.state.data?.some((x) => isBusy(tenantStatus(x.status)))
-        ? 10_000
-        : false,
+    refetchInterval: (query) => (query.state.data?.some((x) => isBusy(tenantStatus(x.status))) ? 10_000 : false),
   })
 
   // Only the count is read here: who is still waiting for an answer
@@ -115,7 +99,8 @@ export function PlatformPage() {
   // Destroyed tenants are history: off the list unless asked for
   const [showDestroyed, setShowDestroyed] = useState(false)
   const listed = (tenants.data ?? []).filter((x) => showDestroyed || tenantStatus(x.status) !== 'Destroyed')
-  const destroyedCount = (tenants.data ?? []).length - (tenants.data ?? []).filter((x) => tenantStatus(x.status) !== 'Destroyed').length
+  const destroyedCount =
+    (tenants.data ?? []).length - (tenants.data ?? []).filter((x) => tenantStatus(x.status) !== 'Destroyed').length
   const behindCount = (tenants.data ?? []).filter((x) => x.update?.behind).length
   // Money that wants chasing today; a destroyed stack owes nobody anything
   const needsPaymentCount = (tenants.data ?? []).filter(
@@ -150,16 +135,20 @@ export function PlatformPage() {
         }
         actions={
           <>
-          <Button variant='outline' onClick={() => setFleet(true)} disabled={!tenants.data?.some((x) => tenantStatus(x.status) === 'Running')}>
-            <ArrowUpCircle className='size-4' />
-            {t('upgradeAll')}
-          </Button>
-          <Button asChild>
-            <Link to='/new'>
-              <Plus className='size-4' />
-              {t('newTenant')}
-            </Link>
-          </Button>
+            <Button
+              variant='outline'
+              onClick={() => setFleet(true)}
+              disabled={!tenants.data?.some((x) => tenantStatus(x.status) === 'Running')}
+            >
+              <ArrowUpCircle className='size-4' />
+              {t('upgradeAll')}
+            </Button>
+            <Button asChild>
+              <Link to='/new'>
+                <Plus className='size-4' />
+                {t('newTenant')}
+              </Link>
+            </Button>
           </>
         }
       />
@@ -187,7 +176,11 @@ export function PlatformPage() {
             <>
               <span>{t('mailConfigured', { host: mail.data.host ?? '' })}</span>
               <span>·</span>
-              <span>{mail.data.lastSentAt ? t('lastSent', { time: format.dateTime(mail.data.lastSentAt) }) : t('nothingSentYet')}</span>
+              <span>
+                {mail.data.lastSentAt
+                  ? t('lastSent', { time: format.dateTime(mail.data.lastSentAt) })
+                  : t('nothingSentYet')}
+              </span>
               {mail.data.lastError && <span className='text-destructive'>· {mail.data.lastError}</span>}
             </>
           ) : (
@@ -219,22 +212,20 @@ export function PlatformPage() {
         </Alert>
       )}
 
-      <Tabs
-        value={tab}
-        onValueChange={(v) =>
-          navigate({ search: { tab: v as Tab }, replace: true })
-        }
-      >
+      <Tabs value={tab} onValueChange={(v) => navigate({ search: { tab: v as Tab }, replace: true })}>
         {/* Nine tabs are wider than a phone: the list scrolls sideways in
             its own box rather than pushing the page past the screen, as the
             tenant page's tabs do */}
-        <div className='max-w-full overflow-x-auto overflow-y-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden'>
+        <div className='max-w-full [scrollbar-width:none] overflow-x-auto overflow-y-hidden [&::-webkit-scrollbar]:hidden'>
           <TabsList>
             <TabsTrigger value='tenants'>{t('tabTenants')}</TabsTrigger>
             <TabsTrigger value='requests'>
               {t('tabRequests')}
               {waiting > 0 && (
-                <Badge variant='outline' className='border-transparent bg-sky-500/15 px-1.5 text-sky-700 tabular-nums dark:text-sky-400'>
+                <Badge
+                  variant='outline'
+                  className='border-transparent bg-sky-500/15 px-1.5 text-sky-700 tabular-nums dark:text-sky-400'
+                >
                   {waiting}
                 </Badge>
               )}
@@ -259,11 +250,7 @@ export function PlatformPage() {
               </Label>
             </div>
           )}
-          <TenantsTable
-            tenants={listed}
-            usage={capacity.data?.tenants ?? []}
-            loading={tenants.isLoading}
-          />
+          <TenantsTable tenants={listed} usage={capacity.data?.tenants ?? []} loading={tenants.isLoading} />
         </TabsContent>
         <TabsContent value='requests'>
           <LeadsTable />
@@ -272,10 +259,7 @@ export function PlatformPage() {
           <QueueTable />
         </TabsContent>
         <TabsContent value='capacity'>
-          <CapacityTable
-            capacity={capacity.data}
-            loading={capacity.isLoading}
-          />
+          <CapacityTable capacity={capacity.data} loading={capacity.isLoading} />
         </TabsContent>
         <TabsContent value='nodes'>
           <NodesTable />
@@ -334,11 +318,7 @@ function DueCell({ tenant }: { tenant: TenantSummary }) {
       <span className='text-muted-foreground'>{format.date(due)}</span>
       {loud && (
         <span className={cn('tabular-nums', dueToneClass[tone])}>
-          {days < 0
-            ? t('overdueDays', { count: -days })
-            : days === 0
-              ? t('dueToday')
-              : t('dueInDays', { count: days })}
+          {days < 0 ? t('overdueDays', { count: -days }) : days === 0 ? t('dueToday') : t('dueInDays', { count: days })}
         </span>
       )}
     </div>
@@ -356,9 +336,7 @@ type TenantsTableProps = {
 function TenantsTable({ tenants, usage, loading }: TenantsTableProps) {
   const t = useT()
 
-  const memoryBySlug = new Map(
-    usage.filter((u) => u.slug).map((u) => [u.slug, Number(u.memoryMb)])
-  )
+  const memoryBySlug = new Map(usage.filter((u) => u.slug).map((u) => [u.slug, Number(u.memoryMb)]))
 
   if (!loading && tenants.length === 0) {
     return (
@@ -409,29 +387,27 @@ function TenantsTable({ tenants, usage, loading }: TenantsTableProps) {
                     className='inline-flex items-center gap-2 hover:underline'
                   >
                     {/* The business's mark on a white tile, the way its app icon is cut; the initial until a stack serves one */}
-                    <Avatar className='rounded-md bg-white ring-1 ring-border'>
+                    <Avatar className='ring-border rounded-md bg-white ring-1'>
                       <AvatarImage src={tenant.logoUrl ?? undefined} alt='' className='object-contain p-0.5' />
-                      <AvatarFallback className='rounded-md bg-muted font-semibold'>
+                      <AvatarFallback className='bg-muted rounded-md font-semibold'>
                         {name.trim().charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     {name}
                   </Link>
                 </TableCell>
-                <TableCell className='text-muted-foreground font-mono text-xs'>
-                  {tenant.slug}
-                </TableCell>
+                <TableCell className='text-muted-foreground font-mono text-xs'>{tenant.slug}</TableCell>
                 <TableCell>
                   <KindBadge kind={tenant.kind} isDrill={tenant.isDrill} />
                 </TableCell>
-                <TableCell className='text-xs'>
-                  {t(planLabelKey[tenant.plan])}
-                </TableCell>
+                <TableCell className='text-xs'>{t(planLabelKey[tenant.plan])}</TableCell>
                 {/* What the stack is doing */}
                 <TableCell>
                   <div className='flex flex-wrap gap-1'>
                     <StatusBadge status={tenant.status} />
-                    {tenant.update?.behind && <UpdateBadge services={tenant.update.services} newerTag={tenant.update.newerTag} />}
+                    {tenant.update?.behind && (
+                      <UpdateBadge services={tenant.update.services} newerTag={tenant.update.newerTag} />
+                    )}
                   </div>
                 </TableCell>
                 {/* Where it stands on money, its own column so it reads down the page */}
@@ -454,10 +430,7 @@ function TenantsTable({ tenants, usage, loading }: TenantsTableProps) {
                     {tenant.customerUrl.replace(/^https?:\/\//, '')}
                   </a>
                 </TableCell>
-                <TableCell
-                  className='text-destructive max-w-64 truncate text-xs'
-                  title={tenant.lastError ?? undefined}
-                >
+                <TableCell className='text-destructive max-w-64 truncate text-xs' title={tenant.lastError ?? undefined}>
                   {tenant.lastError}
                 </TableCell>
               </TableRow>

@@ -31,12 +31,12 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { ProviderLogo } from '@/components/provider-logo'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { ProviderLogo } from '@/components/provider-logo'
 
 /** The roles the services ask for, in the order they matter, with what each is for */
 const ROLES: { role: string; label: TranslationKey; hint: TranslationKey }[] = [

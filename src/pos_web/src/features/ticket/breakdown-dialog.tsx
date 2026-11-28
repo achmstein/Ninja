@@ -1,13 +1,8 @@
 import type { TicketDetail } from '@/api/sales/types.gen'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
 import { useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 
 type Row = { label: string; value: string; strong?: boolean; negative?: boolean }
 
@@ -23,12 +18,7 @@ type BreakdownDialogProps = {
  * menu money, the discount, service, VAT (out of the price or on top), and
  * what has already gone back. The bar itself shows the total only.
  */
-export function BreakdownDialog({
-  ticket,
-  open,
-  onOpenChange,
-  percent,
-}: BreakdownDialogProps) {
+export function BreakdownDialog({ ticket, open, onOpenChange, percent }: BreakdownDialogProps) {
   const t = useT()
   const money = useMoney()
   const discount = toNumber(ticket.discount)
@@ -38,9 +28,7 @@ export function BreakdownDialog({
 
   const rows: Row[] = [
     { label: t('subtotal'), value: money(ticket.subtotal) },
-    ...(discount > 0
-      ? [{ label: t('discount'), value: `−${money(ticket.discount)}`, negative: true }]
-      : []),
+    ...(discount > 0 ? [{ label: t('discount'), value: `−${money(ticket.discount)}`, negative: true }] : []),
     ...(service > 0
       ? [
           {
@@ -60,9 +48,7 @@ export function BreakdownDialog({
         ]
       : []),
     { label: t('total'), value: money(ticket.total), strong: true },
-    ...(refunded > 0
-      ? [{ label: t('refundedSoFar'), value: `−${money(ticket.refundedTotal)}`, negative: true }]
-      : []),
+    ...(refunded > 0 ? [{ label: t('refundedSoFar'), value: `−${money(ticket.refundedTotal)}`, negative: true }] : []),
   ]
 
   return (
@@ -71,19 +57,14 @@ export function BreakdownDialog({
         <DialogHeader>
           <DialogTitle className='type-title'>{t('breakdown')}</DialogTitle>
         </DialogHeader>
-        <div className='divide-y rounded-lg border type-body'>
+        <div className='type-body divide-y rounded-lg border'>
           {rows.map((row) => (
             <div
               key={row.label}
-              className={cn(
-                'flex items-baseline justify-between gap-4 px-3 py-2',
-                row.strong && 'font-semibold'
-              )}
+              className={cn('flex items-baseline justify-between gap-4 px-3 py-2', row.strong && 'font-semibold')}
             >
               <span className={cn(!row.strong && 'text-muted-foreground')}>{row.label}</span>
-              <span className={cn('tabular-nums', row.negative && 'text-destructive')}>
-                {row.value}
-              </span>
+              <span className={cn('tabular-nums', row.negative && 'text-destructive')}>{row.value}</span>
             </div>
           ))}
         </div>

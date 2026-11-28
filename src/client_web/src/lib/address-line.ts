@@ -19,10 +19,14 @@ type ListFormatLike = { formatToParts(list: string[]): { type: string; value: st
  */
 export function listSeparator(locale: string): string {
   // Intl.ListFormat is ES2021, newer than this app's TypeScript lib: typed here, and a browser without it gets ", "
-  const ListFormat = (Intl as unknown as { ListFormat?: new (locale: string, options: object) => ListFormatLike }).ListFormat
+  const ListFormat = (Intl as unknown as { ListFormat?: new (locale: string, options: object) => ListFormatLike })
+    .ListFormat
   if (!ListFormat) return ', '
   try {
-    const literal = new ListFormat(locale, { type: 'unit', style: 'short' }).formatToParts(['a', 'b', 'c']).find((p) => p.type === 'literal')?.value ?? ', '
+    const literal =
+      new ListFormat(locale, { type: 'unit', style: 'short' })
+        .formatToParts(['a', 'b', 'c'])
+        .find((p) => p.type === 'literal')?.value ?? ', '
     // Some locales' unit lists say "and" between every item (Arabic's "، و"): keep the punctuation only
     const separator = literal.replace(/\p{L}+\s*$/u, '')
     return separator.trim() ? separator.replace(/\s*$/, ' ') : ', '
@@ -50,7 +54,12 @@ export function formatAddressLine(parts: AddressParts, words: AddressWords, loca
  * and over nothing when it has none of them: the street was once said on
  * both lines, the row reading "Abu Dahshan St / Abu Dahshan St".
  */
-export function addressRow(parts: AddressParts, name: string | null | undefined, words: AddressWords, locale: string): { title: string; line: string } {
+export function addressRow(
+  parts: AddressParts,
+  name: string | null | undefined,
+  words: AddressWords,
+  locale: string
+): { title: string; line: string } {
   if (name?.trim()) return { title: name.trim(), line: formatAddressLine(parts, words, locale) }
   return { title: parts.address?.trim() ?? '', line: formatAddressLine({ ...parts, address: '' }, words, locale) }
 }

@@ -9,13 +9,7 @@ import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Spinner } from '@/components/ui/spinner'
 import { AiButton } from '@/components/ai-button'
 import { DatePicker } from '@/components/date-picker'
@@ -36,13 +30,7 @@ import { useFinanceActions } from '../use-finance-actions'
  * partner's account as a contribution. With a bill photo attached, the
  * sparkle asks the assistant to read it into the fields still empty.
  */
-export function ExpenseDialog({
-  open,
-  onOpenChange,
-}: {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-}) {
+export function ExpenseDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
   const t = useT()
   // The form owns its fields; its "Fill in with AI" is drawn into the header
   const [fillSlot, setFillSlot] = useState<HTMLElement | null>(null)
@@ -54,9 +42,7 @@ export function ExpenseDialog({
       headerAction={<div ref={setFillSlot} className='contents' />}
     >
       {/* Keyed on open so each opening starts clean */}
-      {open && (
-        <ExpenseForm onDone={() => onOpenChange(false)} fillSlot={fillSlot} />
-      )}
+      {open && <ExpenseForm onDone={() => onOpenChange(false)} fillSlot={fillSlot} />}
     </EntitySheet>
   )
 }
@@ -96,10 +82,7 @@ function ExpenseForm({
   const [fromBill, setFromBill] = useState(false)
 
   const fromPartner = Number(paidFrom) === PAID_FROM.partner
-  const canSubmit =
-    categoryId !== '' &&
-    parseFloat(amount) > 0 &&
-    (!fromPartner || partnerId !== '')
+  const canSubmit = categoryId !== '' && parseFloat(amount) > 0 && (!fromPartner || partnerId !== '')
 
   const edited = (field: BillField) =>
     setSuggested((prev) => {
@@ -175,9 +158,7 @@ function ExpenseForm({
 
   const applyFill = (filled: Record<string, string>) => {
     const wrote = new Set<BillField>()
-    const known = (categories.data ?? []).some(
-      (c) => String(c.id) === filled.category
-    )
+    const known = (categories.data ?? []).some((c) => String(c.id) === filled.category)
     if (filled.category && known && categoryId === '') {
       setCategoryId(filled.category)
       wrote.add('category')
@@ -222,11 +203,7 @@ function ExpenseForm({
     <form id='expense-form' onSubmit={submit} className='space-y-4'>
       {fillSlot &&
         createPortal(
-          <FormFillButton
-            form='an expense of a caf� or restaurant'
-            fields={fillFields}
-            onFilled={applyFill}
-          />,
+          <FormFillButton form='an expense of a caf� or restaurant' fields={fillFields} onFilled={applyFill} />,
           fillSlot
         )}
       <FieldGrid>
@@ -286,13 +263,11 @@ function ExpenseForm({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {[PAID_FROM.drawer, PAID_FROM.bank, PAID_FROM.partner].map(
-                (v) => (
-                  <SelectItem key={v} value={String(v)}>
-                    {paidFromLabel(v, t)}
-                  </SelectItem>
-                )
-              )}
+              {[PAID_FROM.drawer, PAID_FROM.bank, PAID_FROM.partner].map((v) => (
+                <SelectItem key={v} value={String(v)}>
+                  {paidFromLabel(v, t)}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </Field>
@@ -337,12 +312,7 @@ function ExpenseForm({
         </Field>
         <Field label={t('receiptPhoto')} className='sm:col-span-2'>
           <div className='flex flex-wrap items-center gap-2'>
-            <Button
-              type='button'
-              variant='outline'
-              size='sm'
-              onClick={() => fileInput.current?.click()}
-            >
+            <Button type='button' variant='outline' size='sm' onClick={() => fileInput.current?.click()}>
               <Paperclip />
               {receipt ? t('replaceReceipt') : t('attachReceipt')}
             </Button>
@@ -395,11 +365,7 @@ function ExpenseForm({
         <Button type='button' variant='outline' onClick={onDone}>
           {t('cancel')}
         </Button>
-        <Button
-          type='submit'
-          form='expense-form'
-          disabled={!canSubmit || isPending}
-        >
+        <Button type='submit' form='expense-form' disabled={!canSubmit || isPending}>
           {isPending && <Spinner />}
           {t('save')}
         </Button>

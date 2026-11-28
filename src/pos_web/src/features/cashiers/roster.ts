@@ -35,7 +35,7 @@ export function cashiersOf(staff: StaffUser[], branchId: number | null): Cashier
       (user) =>
         user.allBranches ||
         (user.realmRoles ?? []).includes('Owner') ||
-        (branchId != null && (user.branches ?? []).includes(branchId)),
+        (branchId != null && (user.branches ?? []).includes(branchId))
     )
     .flatMap((user) => {
       const username = (user.username || user.email || '').trim()
@@ -56,10 +56,7 @@ export function readCashierRoster(): Cashier[] {
     const raw = localStorage.getItem(ROSTER_KEY)
     const parsed = raw ? (JSON.parse(raw) as unknown) : []
     return Array.isArray(parsed)
-      ? parsed.filter(
-          (c): c is Cashier =>
-            typeof c?.username === 'string' && typeof c?.name === 'string',
-        )
+      ? parsed.filter((c): c is Cashier => typeof c?.username === 'string' && typeof c?.name === 'string')
       : []
   } catch {
     return []
@@ -94,11 +91,9 @@ export function pickedSomeoneElse(signedIn: { preferred_username?: string; email
 
 export function isSomeoneElse(
   picked: string | null,
-  signedIn: { preferred_username?: string; email?: string } | undefined,
+  signedIn: { preferred_username?: string; email?: string } | undefined
 ): boolean {
   if (!picked || !signedIn) return false
   const wanted = picked.trim().toLowerCase()
-  return ![signedIn.preferred_username, signedIn.email].some(
-    (name) => name?.trim().toLowerCase() === wanted,
-  )
+  return ![signedIn.preferred_username, signedIn.email].some((name) => name?.trim().toLowerCase() === wanted)
 }

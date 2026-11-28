@@ -10,7 +10,11 @@ import { recede } from '@/lib/motion'
  */
 export function Recede({ gone, children }: { gone: boolean; children: ReactNode }) {
   return (
-    <motion.div initial={false} animate={{ opacity: gone ? 0 : 1, scale: gone ? 0.96 : 1 }} transition={gone ? recede.go : recede.back}>
+    <motion.div
+      initial={false}
+      animate={{ opacity: gone ? 0 : 1, scale: gone ? 0.96 : 1 }}
+      transition={gone ? recede.go : recede.back}
+    >
       {children}
     </motion.div>
   )

@@ -15,26 +15,9 @@ type WordmarkProps = {
  */
 export function Wordmark({ size = 'sm', className }: WordmarkProps) {
   return (
-    <span
-      dir='ltr'
-      className={cn(
-        'inline-flex items-center',
-        size === 'lg' ? 'gap-4' : 'gap-3',
-        className
-      )}
-    >
-      <span
-        className={cn(
-          'font-display leading-none',
-          size === 'lg' ? 'text-5xl' : 'text-[22px]'
-        )}
-      >
-        ninja
-      </span>
-      <span
-        aria-hidden
-        className={cn('bg-border w-px', size === 'lg' ? 'h-7' : 'h-4')}
-      />
+    <span dir='ltr' className={cn('inline-flex items-center', size === 'lg' ? 'gap-4' : 'gap-3', className)}>
+      <span className={cn('font-display leading-none', size === 'lg' ? 'text-5xl' : 'text-[22px]')}>ninja</span>
+      <span aria-hidden className={cn('bg-border w-px', size === 'lg' ? 'h-7' : 'h-4')} />
       <span
         className={cn(
           'text-muted-foreground font-medium uppercase',

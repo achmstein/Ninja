@@ -11,13 +11,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Spinner } from '@/components/ui/spinner'
 import { EntitySheet } from '@/components/entity-sheet'
 import { LocalizedFields, LocalizedInput } from '@/components/localized-input'
@@ -48,33 +42,19 @@ type MenuReviewSheetProps = {
  * Confirming saves it all in one import: all of it or none of it, so a
  * failure leaves the sheet open and a retry never makes anything twice.
  */
-export function MenuReviewSheet({
-  proposal,
-  categories,
-  onOpenChange,
-}: MenuReviewSheetProps) {
+export function MenuReviewSheet({ proposal, categories, onOpenChange }: MenuReviewSheetProps) {
   const t = useT()
   const localized = useLocalized()
   const queryClient = useQueryClient()
   const importMenu = useMutation(importMenuMutation())
 
-  const [sections, setSections] = useState<ReviewCategory[]>(() =>
-    toReviewCategories(proposal)
-  )
+  const [sections, setSections] = useState<ReviewCategory[]>(() => toReviewCategories(proposal))
   const creating = importMenu.isPending
 
   const updateSection = (key: number, patch: Partial<ReviewCategory>) =>
-    setSections((prev) =>
-      prev.map((section) =>
-        section.key === key ? { ...section, ...patch } : section
-      )
-    )
+    setSections((prev) => prev.map((section) => (section.key === key ? { ...section, ...patch } : section)))
 
-  const updateOption = (
-    itemKey: number,
-    optionKey: number,
-    patch: Partial<ReviewChoiceOption>
-  ) =>
+  const updateOption = (itemKey: number, optionKey: number, patch: Partial<ReviewChoiceOption>) =>
     setSections((prev) =>
       prev.map((section) => ({
         ...section,
@@ -98,9 +78,7 @@ export function MenuReviewSheet({
     setSections((prev) =>
       prev.map((section) => ({
         ...section,
-        items: section.items.map((item) =>
-          item.key === key ? { ...item, ...patch } : item
-        ),
+        items: section.items.map((item) => (item.key === key ? { ...item, ...patch } : item)),
       }))
     )
 
@@ -151,12 +129,7 @@ export function MenuReviewSheet({
       footerNote={creating ? t('savingMenu') : t('itemsSelected', { count })}
       actions={
         <>
-          <Button
-            type='button'
-            variant='outline'
-            disabled={!!creating}
-            onClick={() => onOpenChange(false)}
-          >
+          <Button type='button' variant='outline' disabled={!!creating} onClick={() => onOpenChange(false)}>
             {t('cancel')}
           </Button>
           <Button type='button' disabled={!!creating} onClick={confirm}>
@@ -189,13 +162,7 @@ export function MenuReviewSheet({
               <div className='bg-muted/40 flex flex-wrap items-center gap-2 border-b p-3'>
                 <Checkbox
                   aria-label={t('selectAll')}
-                  checked={
-                    ticked === 0
-                      ? false
-                      : ticked === section.items.length
-                        ? true
-                        : 'indeterminate'
-                  }
+                  checked={ticked === 0 ? false : ticked === section.items.length ? true : 'indeterminate'}
                   onCheckedChange={(checked) =>
                     updateSection(section.key, {
                       items: section.items.map((item) => ({
@@ -214,25 +181,15 @@ export function MenuReviewSheet({
                 />
                 <Select
                   value={section.catalogTypeId}
-                  onValueChange={(catalogTypeId) =>
-                    updateSection(section.key, { catalogTypeId })
-                  }
+                  onValueChange={(catalogTypeId) => updateSection(section.key, { catalogTypeId })}
                 >
-                  <SelectTrigger
-                    className='h-8 w-52'
-                    aria-label={t('category')}
-                  >
+                  <SelectTrigger className='h-8 w-52' aria-label={t('category')}>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value={NEW_CATEGORY}>
-                      {t('newCategoryFromScan')}
-                    </SelectItem>
+                    <SelectItem value={NEW_CATEGORY}>{t('newCategoryFromScan')}</SelectItem>
                     {categories.map((category) => (
-                      <SelectItem
-                        key={String(category.id)}
-                        value={String(category.id)}
-                      >
+                      <SelectItem key={String(category.id)} value={String(category.id)}>
                         {localized(category.name)}
                       </SelectItem>
                     ))}
@@ -242,17 +199,12 @@ export function MenuReviewSheet({
 
               <div className='divide-y'>
                 {section.items.map((item) => (
-                  <div
-                    key={item.key}
-                    className='grid grid-cols-[auto_1fr_6rem] items-start gap-2 p-3'
-                  >
+                  <div key={item.key} className='grid grid-cols-[auto_1fr_6rem] items-start gap-2 p-3'>
                     <Checkbox
                       className='mt-2'
                       aria-label={t('includeLine')}
                       checked={item.include}
-                      onCheckedChange={(checked) =>
-                        updateItem(item.key, { include: checked === true })
-                      }
+                      onCheckedChange={(checked) => updateItem(item.key, { include: checked === true })}
                     />
                     <div className='min-w-0 space-y-1.5'>
                       <LocalizedInput
@@ -261,22 +213,16 @@ export function MenuReviewSheet({
                         onChange={(name) => updateItem(item.key, { name })}
                         compact
                       />
-                      {(hasText(item.description.en) ||
-                        hasText(item.description.ar)) && (
+                      {(hasText(item.description.en) || hasText(item.description.ar)) && (
                         <LocalizedInput
                           ariaLabel={t('description')}
                           value={item.description}
-                          onChange={(description) =>
-                            updateItem(item.key, { description })
-                          }
+                          onChange={(description) => updateItem(item.key, { description })}
                           compact
                         />
                       )}
                       <div className='flex flex-wrap items-center gap-2'>
-                        <p
-                          className='text-muted-foreground min-w-0 truncate text-xs'
-                          dir='auto'
-                        >
+                        <p className='text-muted-foreground min-w-0 truncate text-xs' dir='auto'>
                           {t('onThePhoto', { text: item.rawText })}
                         </p>
                         {item.existingItemId != null && (
@@ -316,10 +262,7 @@ export function MenuReviewSheet({
                             </Button>
                           </div>
                           {item.choice.options.map((option) => (
-                            <div
-                              key={option.key}
-                              className='grid grid-cols-[1fr_6rem] gap-2'
-                            >
+                            <div key={option.key} className='grid grid-cols-[1fr_6rem] gap-2'>
                               <LocalizedInput
                                 ariaLabel={t('name')}
                                 value={option.name}
@@ -356,14 +299,8 @@ export function MenuReviewSheet({
                       aria-label={t('price')}
                       className='h-8 tabular-nums'
                       disabled={!!item.choice}
-                      value={
-                        item.choice
-                          ? String(reviewItemPrice(item) ?? '')
-                          : item.price
-                      }
-                      onChange={(e) =>
-                        updateItem(item.key, { price: e.target.value })
-                      }
+                      value={item.choice ? String(reviewItemPrice(item) ?? '') : item.price}
+                      onChange={(e) => updateItem(item.key, { price: e.target.value })}
                     />
                   </div>
                 ))}

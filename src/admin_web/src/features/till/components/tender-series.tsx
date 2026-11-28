@@ -20,11 +20,7 @@ type TenderSeriesViewProps = {
  * accounts, which is not a sale. The dashboard and the till page both show
  * this, the same way.
  */
-export function TenderSeriesView({
-  report,
-  billsSearch,
-  tabsSearch,
-}: TenderSeriesViewProps) {
+export function TenderSeriesView({ report, billsSearch, tabsSearch }: TenderSeriesViewProps) {
   const t = useT()
   const modules = useModules()
   const series = tenderSeries(report, modules)
@@ -34,9 +30,7 @@ export function TenderSeriesView({
     <div className='flex flex-col gap-4'>
       <div className='flex flex-col gap-2'>
         <div className='flex items-baseline justify-between gap-2 text-xs'>
-          <span className='text-muted-foreground font-medium'>
-            {t('billsByTender')}
-          </span>
+          <span className='text-muted-foreground font-medium'>{t('billsByTender')}</span>
           <span className='tabular-nums'>{formatEgp(series.billsTotal)}</span>
         </div>
         <SegmentedBar
@@ -61,9 +55,7 @@ export function TenderSeriesView({
       {series.tabs.length > 0 && (
         <div className='flex flex-col gap-2'>
           <div className='flex items-baseline justify-between gap-2 text-xs'>
-            <span className='text-muted-foreground font-medium'>
-              {t('tabPaymentsByTender')}
-            </span>
+            <span className='text-muted-foreground font-medium'>{t('tabPaymentsByTender')}</span>
             <span className='tabular-nums'>{formatEgp(series.tabsTotal)}</span>
           </div>
           <SegmentedBar

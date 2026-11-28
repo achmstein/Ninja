@@ -5,11 +5,7 @@ export function useFormat() {
   const locale = useLocale()
   return {
     date: (value: string | null | undefined) =>
-      value
-        ? new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }).format(
-            new Date(value)
-          )
-        : '',
+      value ? new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }).format(new Date(value)) : '',
     dateTime: (value: string | null | undefined) =>
       value
         ? new Intl.DateTimeFormat(locale, {
@@ -58,11 +54,7 @@ export function percent(part: number, whole: number): number {
 }
 
 /** "3s", "1m 12s", "2h 05m": the span between two instants, or until now. */
-export function duration(
-  from: string | null | undefined,
-  to: string | null | undefined,
-  nowMs = Date.now()
-): string {
+export function duration(from: string | null | undefined, to: string | null | undefined, nowMs = Date.now()): string {
   if (!from) return ''
   const start = new Date(from).getTime()
   const end = to ? new Date(to).getTime() : nowMs

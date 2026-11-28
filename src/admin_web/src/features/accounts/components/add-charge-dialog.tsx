@@ -3,13 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Spinner } from '@/components/ui/spinner'
@@ -23,11 +17,7 @@ interface AddChargeDialogProps {
   customer: KeycloakUser | null
 }
 
-export function AddChargeDialog({
-  open,
-  onOpenChange,
-  customer,
-}: AddChargeDialogProps) {
+export function AddChargeDialog({ open, onOpenChange, customer }: AddChargeDialogProps) {
   const t = useT()
   const queryClient = useQueryClient()
   const [amount, setAmount] = useState('')
@@ -36,9 +26,7 @@ export function AddChargeDialog({
   const addChargeMutation = useMutation({
     mutationFn: async () => {
       if (!customer) return
-      const customerName =
-        [customer.firstName, customer.lastName].filter(Boolean).join(' ') ||
-        customer.username
+      const customerName = [customer.firstName, customer.lastName].filter(Boolean).join(' ') || customer.username
       await accountsService.addCharge(customer.id, {
         amount: parseFloat(amount),
         description: description || undefined,

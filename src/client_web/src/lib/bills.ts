@@ -4,8 +4,8 @@ import { useAuth } from 'react-oidc-context'
 import { type BillLineView, type BillView } from '@/api/sales'
 import { getMyBillsOptions } from '@/api/sales/@tanstack/react-query.gen'
 import { type StayViewModel } from '@/api/spaces'
-import { API_VERSION } from './api-client'
 import { useGuestStore } from '@/stores/guest-store'
+import { API_VERSION } from './api-client'
 import { useSelectedBranch } from './branch'
 import { businessDayStart } from './business-day'
 import { serverNow } from './clock'
@@ -48,8 +48,7 @@ export function useMyBills() {
     enabled: auth.isAuthenticated || guestId != null,
     // A friend's round landing on the same bill sends this browser no
     // event, so an open bill is re-read now and then as well
-    refetchInterval: (query) =>
-      query.state.data?.some(isOpen) ? 30_000 : false,
+    refetchInterval: (query) => (query.state.data?.some(isOpen) ? 30_000 : false),
   })
   return { ...query, dayStart }
 }
@@ -85,11 +84,7 @@ export type RunningTime = {
  * each rate, rounded to the tariff's step, times that rate. Only for the
  * stay this customer is in — anyone else's clock is not theirs to see.
  */
-export function runningTime(
-  bill: BillView,
-  stay: StayViewModel | undefined,
-  now: number,
-): RunningTime | null {
+export function runningTime(bill: BillView, stay: StayViewModel | undefined, now: number): RunningTime | null {
   if (
     !isOpen(bill) ||
     bill.sessionId == null ||
@@ -112,10 +107,7 @@ export function runningTime(
   for (const segment of stay.segments ?? []) {
     if (!segment.startTime) continue
     const end = segment.endTime ? new Date(segment.endTime).getTime() : now
-    const minutes = Math.max(
-      0,
-      (end - new Date(segment.startTime).getTime()) / 60_000,
-    )
+    const minutes = Math.max(0, (end - new Date(segment.startTime).getTime()) / 60_000)
     const code = segment.optionCode ?? ''
     const part = byOption.get(code) ?? {
       optionName: segment.optionName,
@@ -135,10 +127,7 @@ export function runningTime(
       cost: hours * part.rate,
     }
   })
-  const minutes = Math.max(
-    0,
-    (now - new Date(stay.startedAt).getTime()) / 60_000,
-  )
+  const minutes = Math.max(0, (now - new Date(stay.startedAt).getTime()) / 60_000)
   const cost = parts.reduce((sum, part) => sum + part.cost, 0)
 
   // As the till bills it: the discount thins it, VAT goes on top unless
@@ -150,10 +139,10 @@ export function runningTime(
 }
 
 /** Hours as a bill prints them: to two places, no trailing zeros ("0.83", "1.5", "2"), never the float's sixteen digits */
-export const hoursLabel = (hours: number | string | null | undefined) => String(Math.round(Number(hours ?? 0) * 100) / 100)
+export const hoursLabel = (hours: number | string | null | undefined) =>
+  String(Math.round(Number(hours ?? 0) * 100) / 100)
 
-export const percent = (rate: number | string | null | undefined) =>
-  Math.round(Number(rate ?? 0) * 100)
+export const percent = (rate: number | string | null | undefined) => Math.round(Number(rate ?? 0) * 100)
 
 export const isTimeLine = (line: BillLineView) => line.source === 'SessionTime'
 
@@ -161,12 +150,10 @@ export const isTimeLine = (line: BillLineView) => line.source === 'SessionTime'
  *  line it has not named yet. Not the customer's, but not anyone else's
  *  either, so it is on the tile with theirs rather than hidden behind the
  *  total. */
-export const isUnassigned = (line: BillLineView) =>
-  !line.isMine && !line.customerName && !isTimeLine(line)
+export const isUnassigned = (line: BillLineView) => !line.isMine && !line.customerName && !isTimeLine(line)
 
 /** A round the till named for somebody else on the bill. */
-export const isOthers = (line: BillLineView) =>
-  !line.isMine && !!line.customerName && !isTimeLine(line)
+export const isOthers = (line: BillLineView) => !line.isMine && !!line.customerName && !isTimeLine(line)
 
 export type Parts = {
   /** What the customer's own rounds come to, at menu prices */
@@ -189,20 +176,13 @@ export type Parts = {
  * never splits it. A bill with nobody else on it is simply the total.
  * The roster is the stay's, as Spaces reports it to its members.
  */
-export function billParts(
-  bill: BillView,
-  running: RunningTime | null,
-  stay: StayViewModel | undefined,
-): Parts {
+export function billParts(bill: BillView, running: RunningTime | null, stay: StayViewModel | undefined): Parts {
   const lines = bill.lines ?? []
   const ownLines = lines
     .filter((line) => line.isMine && !isTimeLine(line))
     .reduce((sum, line) => sum + Number(line.total ?? 0), 0)
-  const runningCost =
-    running?.parts.reduce((sum, part) => sum + part.cost, 0) ?? 0
-  const time =
-    lines.filter(isTimeLine).reduce((sum, line) => sum + Number(line.total ?? 0), 0) +
-    runningCost
+  const runningCost = running?.parts.reduce((sum, part) => sum + part.cost, 0) ?? 0
+  const time = lines.filter(isTimeLine).reduce((sum, line) => sum + Number(line.total ?? 0), 0) + runningCost
   const others = lines.some(isOthers)
   const members = stay?.members?.length ?? 0
   return {

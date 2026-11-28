@@ -19,13 +19,7 @@ type LedgerLine = {
  * where it came from (the till, a receipt, a repeat; a line keyed in by
  * hand says nothing more), and the signed amount on the end.
  */
-export function LedgerList({
-  lines,
-  emptyMessage,
-}: {
-  lines: LedgerLine[]
-  emptyMessage: string
-}) {
+export function LedgerList({ lines, emptyMessage }: { lines: LedgerLine[]; emptyMessage: string }) {
   const t = useT()
 
   if (lines.length === 0) {
@@ -36,36 +30,20 @@ export function LedgerList({
     <ul className='divide-y text-sm'>
       {lines.map((line) => {
         const signed = toNumber(line.signed)
-        const from =
-          toNumber(line.source) === FINANCE_SOURCE.manual
-            ? ''
-            : sourceLabel(line.source, line.recordedBy, t)
+        const from = toNumber(line.source) === FINANCE_SOURCE.manual ? '' : sourceLabel(line.source, line.recordedBy, t)
         return (
-          <li
-            key={String(line.id)}
-            className='flex items-start justify-between gap-3 py-2'
-          >
+          <li key={String(line.id)} className='flex items-start justify-between gap-3 py-2'>
             <div className='min-w-0'>
               <div className='font-medium'>
                 {line.label}
-                {line.note && (
-                  <span className='text-muted-foreground font-normal'>
-                    {' '}
-                    · {line.note}
-                  </span>
-                )}
+                {line.note && <span className='text-muted-foreground font-normal'> · {line.note}</span>}
               </div>
               <div className='text-muted-foreground text-xs'>
                 <When value={line.date} mode='date' />
                 {from && ` · ${from}`}
               </div>
             </div>
-            <span
-              className={cn(
-                'shrink-0 tabular-nums',
-                signed > 0 ? 'text-success' : 'text-muted-foreground'
-              )}
-            >
+            <span className={cn('shrink-0 tabular-nums', signed > 0 ? 'text-success' : 'text-muted-foreground')}>
               {signed > 0 ? '+' : signed < 0 ? '−' : ''}
               {formatEgp(Math.abs(signed))}
             </span>

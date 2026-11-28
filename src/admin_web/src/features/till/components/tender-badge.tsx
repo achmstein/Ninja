@@ -5,9 +5,5 @@ import { tenderLabelKey } from './tender'
 export function TenderBadge({ tender }: { tender: string | null | undefined }) {
   const t = useT()
   const key = tenderLabelKey(tender)
-  return (
-    <Badge variant={tender === 'Cash' ? 'secondary' : 'outline'}>
-      {key ? t(key) : tender || '—'}
-    </Badge>
-  )
+  return <Badge variant={tender === 'Cash' ? 'secondary' : 'outline'}>{key ? t(key) : tender || '—'}</Badge>
 }

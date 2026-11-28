@@ -1,8 +1,14 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
+import { getRealmRoles } from '@/config/oidc-config'
 import { ArrowRightLeft, Loader2, UserPlus, X } from 'lucide-react'
 import { useAuth } from 'react-oidc-context'
-import { getRealmRoles } from '@/config/oidc-config'
+import { useTillItems } from '@/lib/brand'
+import { handleServerError } from '@/lib/handle-server-error'
+import { useLocalized, useT } from '@/lib/i18n'
+import { useMoney, toNumber } from '@/lib/money'
+import { toast } from '@/lib/toast'
+import { useIsMobile } from '@/hooks/use-is-mobile'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet'
 import { CustomerSearch } from '@/features/customer/customer-search'
@@ -11,12 +17,6 @@ import { PhoneDeliveryForm } from '@/features/deliveries/phone-delivery-form'
 import { totalWith } from '@/features/sending/bill'
 import { CancelLinesDialog, isCancellable } from '@/features/ticket/cancel-lines-dialog'
 import { MoveTargetDialog, type MoveTarget } from '@/features/ticket/move-target-dialog'
-import { useIsMobile } from '@/hooks/use-is-mobile'
-import { useTillItems } from '@/lib/brand'
-import { handleServerError } from '@/lib/handle-server-error'
-import { useLocalized, useT } from '@/lib/i18n'
-import { useMoney, toNumber } from '@/lib/money'
-import { toast } from '@/lib/toast'
 import { BillPayment } from './bill-payment'
 import { BillPersonCard } from './bill-people-row'
 import { lineKey, roundsByPerson, saleCount, saleTotal, useSale, type SaleLine } from './cart'
@@ -132,7 +132,7 @@ export function SalePad({
     setRungUp((r) => ({ ...r, [key]: (r[key] ?? 0) + 1 }))
     // Two frames: the row is rendered by the first, laid out by the second
     requestAnimationFrame(() =>
-      requestAnimationFrame(() => rowRefs.current.get(key)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })),
+      requestAnimationFrame(() => rowRefs.current.get(key)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }))
     )
   }
   // Whose the items are brings their usuals and how they take them: a new
@@ -227,7 +227,8 @@ export function SalePad({
         label: saleDelivery.delivering ? t('deliverySend') : t('chargeAction'),
         amount: total,
         // A delivery waits for its terms rather than going out as a counter sale
-        disabled: lines.length === 0 || order.pending || (saleDelivery.delivering && saleDelivery.readiness !== 'ready'),
+        disabled:
+          lines.length === 0 || order.pending || (saleDelivery.delivering && saleDelivery.readiness !== 'ready'),
         onClick: order.charge,
       }
     : lines.length > 0
@@ -296,11 +297,20 @@ export function SalePad({
             </div>
             {/* Two things can be done with them: say whose they are, or move them (one list of every place they can go) */}
             <div className='grid grid-cols-2 gap-2'>
-              <Button variant='outline' className='h-14 min-w-0 gap-2 text-base' disabled={picked.size === 0 || billLines.assigning} onClick={() => setNaming(true)}>
+              <Button
+                variant='outline'
+                className='h-14 min-w-0 gap-2 text-base'
+                disabled={picked.size === 0 || billLines.assigning}
+                onClick={() => setNaming(true)}
+              >
                 <UserPlus className='size-5 shrink-0' />
                 {t('assignCustomer')}
               </Button>
-              <Button className='h-14 min-w-0 gap-2 text-base' disabled={picked.size === 0 || billLines.moving} onClick={() => setMoving(true)}>
+              <Button
+                className='h-14 min-w-0 gap-2 text-base'
+                disabled={picked.size === 0 || billLines.moving}
+                onClick={() => setMoving(true)}
+              >
                 <ArrowRightLeft className='size-5 shrink-0' />
                 {t('moveItems')}
               </Button>
@@ -314,7 +324,9 @@ export function SalePad({
                 onClick={() => setCancelling(true)}
               >
                 <X className='size-5 shrink-0' />
-                {picked.size > 0 ? t('cancelItemsCount', { count: pickedLines.reduce((n, line) => n + toNumber(line.qty), 0) }) : t('cancelItems')}
+                {picked.size > 0
+                  ? t('cancelItemsCount', { count: pickedLines.reduce((n, line) => n + toNumber(line.qty), 0) })
+                  : t('cancelItems')}
               </Button>
             )}
           </div>
@@ -334,7 +346,11 @@ export function SalePad({
           // reading what is new in it and what it comes to
           isMobile && (
             <div className='border-t p-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))]'>
-              <Button size='lg' className='h-14 w-full justify-between gap-3 px-4 text-base' onClick={() => setOrderOpen(true)}>
+              <Button
+                size='lg'
+                className='h-14 w-full justify-between gap-3 px-4 text-base'
+                onClick={() => setOrderOpen(true)}
+              >
                 <span className='flex min-w-0 items-center gap-2'>
                   {count > 0 && (
                     <span className='bg-primary-foreground text-primary flex h-7 min-w-7 shrink-0 items-center justify-center rounded-full px-2 text-sm font-bold tabular-nums'>
@@ -470,7 +486,9 @@ export function SalePad({
             onOpenChange={setPaying}
             // A part split off for one person: back to the bill it came from, for the rest
             onPaid={() =>
-              backTo ? navigate({ to: '/order/$ticketId', params: { ticketId: String(backTo) } }) : navigate({ to: '/' })
+              backTo
+                ? navigate({ to: '/order/$ticketId', params: { ticketId: String(backTo) } })
+                : navigate({ to: '/' })
             }
           />
         </>

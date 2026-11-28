@@ -56,11 +56,8 @@ export function PromotionsManagement() {
   const [editing, setEditing] = useState<PromotionDto | null>(null)
   const [deleting, setDeleting] = useState<PromotionDto | null>(null)
 
-  const query = useQuery(
-    listPromotionsOptions({ query: { 'api-version': API_VERSION } })
-  )
-  const invalidate = () =>
-    queryClient.invalidateQueries({ queryKey: [{ _id: 'listPromotions' }] })
+  const query = useQuery(listPromotionsOptions({ query: { 'api-version': API_VERSION } }))
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: [{ _id: 'listPromotions' }] })
 
   const toggle = useMutation({
     ...updatePromotionMutation(),
@@ -78,14 +75,11 @@ export function PromotionsManagement() {
   })
 
   const stateOf = (p: PromotionDto) => {
-    if (!p.isActive)
-      return <StatusChip tone='muted'>{t('promotionOff')}</StatusChip>
-    if (p.endsAt && new Date(p.endsAt).getTime() <= now)
-      return <StatusChip tone='muted'>{t('promoEnded')}</StatusChip>
+    if (!p.isActive) return <StatusChip tone='muted'>{t('promotionOff')}</StatusChip>
+    if (p.endsAt && new Date(p.endsAt).getTime() <= now) return <StatusChip tone='muted'>{t('promoEnded')}</StatusChip>
     if (p.startsAt && new Date(p.startsAt).getTime() > now)
       return <StatusChip tone='info'>{t('promoScheduled')}</StatusChip>
-    if (p.isLive)
-      return <StatusChip tone='success'>{t('promotionLive')}</StatusChip>
+    if (p.isLive) return <StatusChip tone='success'>{t('promotionLive')}</StatusChip>
     return <StatusChip tone='muted'>{t('promotionResting')}</StatusChip>
   }
 
@@ -124,9 +118,7 @@ export function PromotionsManagement() {
           <div className='flex flex-col items-center gap-3 rounded-2xl border border-dashed px-6 py-14 text-center'>
             <Megaphone className='text-muted-foreground size-8' />
             <p className='font-medium'>{t('noPromotions')}</p>
-            <p className='text-muted-foreground max-w-sm text-sm'>
-              {t('noPromotionsHint')}
-            </p>
+            <p className='text-muted-foreground max-w-sm text-sm'>{t('noPromotionsHint')}</p>
             <Button
               size='sm'
               onClick={() => {
@@ -164,19 +156,13 @@ export function PromotionsManagement() {
                 </button>
                 <div className='flex items-center gap-2'>
                   <div className='min-w-0 flex-1'>
-                    <p className='truncate text-sm font-medium'>
-                      {localized(p.headline)}
-                    </p>
+                    <p className='truncate text-sm font-medium'>{localized(p.headline)}</p>
                     {/* Its state under the picture, not on it: the design's own headline is where a chip would sit */}
                     <div className='mt-1 flex min-w-0 items-center gap-1.5'>
                       {stateOf(p)}
                       <p className='text-muted-foreground truncate text-xs'>
                         {p.startsAt || p.endsAt
-                          ? [p.startsAt, p.endsAt]
-                              .map((d) =>
-                                d ? formatWhen(d, 'date', locale, t) : ''
-                              )
-                              .join(' – ')
+                          ? [p.startsAt, p.endsAt].map((d) => (d ? formatWhen(d, 'date', locale, t) : '')).join(' – ')
                           : t('always')}
                       </p>
                     </div>

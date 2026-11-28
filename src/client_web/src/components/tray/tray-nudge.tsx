@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { AnimatePresence, motion } from 'motion/react'
 import { Plus, X } from 'lucide-react'
+import { AnimatePresence, motion } from 'motion/react'
 import { create } from 'zustand'
 import { listItemsOptions } from '@/api/catalog/@tanstack/react-query.gen'
 import { useBranchScope } from '@/lib/branch'
@@ -9,9 +9,9 @@ import { useCart } from '@/lib/cart'
 import { useLocalized, usePrice, useT } from '@/lib/i18n'
 import { useItemPreferences } from '../menu/data/use-item-preferences'
 import { quickAddChoice } from '../menu/deck/deck-model'
+import { effectiveBasePrice } from '../menu/item-form'
 import { ItemPhoto } from '../menu/item-photo'
 import { itemPictureUrl } from '../menu/item-picture'
-import { effectiveBasePrice } from '../menu/item-form'
 import { cartNudge, menuById } from '../menu/paired-items'
 
 /** The customer said "not now": nothing more is suggested until the order is sent or emptied; kept while the tray opens and shuts */
@@ -62,8 +62,10 @@ export function TrayNudge() {
               <ItemPhoto src={offer.pictureUri ? itemPictureUrl(offer, 320) : null} />
             </span>
             <span className='min-w-0 flex-1'>
-              <span className='block truncate text-note font-semibold'>{t('addSuggestion', { name: localized(offer.name) })}</span>
-              <span className='block text-caption tabular-nums opacity-60'>{price(effectiveBasePrice(offer))}</span>
+              <span className='text-note block truncate font-semibold'>
+                {t('addSuggestion', { name: localized(offer.name) })}
+              </span>
+              <span className='text-caption block tabular-nums opacity-60'>{price(effectiveBasePrice(offer))}</span>
             </span>
             <button
               type='button'

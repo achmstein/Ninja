@@ -2,19 +2,19 @@ import { useRef, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { createPosOrderMutation } from '@/api/ordering/@tanstack/react-query.gen'
-import { useBranchName } from '@/features/branch/use-branch-name'
-import { customerName, ensureCounterCustomer } from '@/features/customer/counter-customers'
-import { useDeliveryActions } from '@/features/deliveries/use-deliveries'
-import { useOfflineCharge } from '@/features/offline/offline-charge'
-import { saveCustomerPreferences, startSend } from '@/features/sending/sending'
-import { useCallCentre } from '@/hooks/use-call-centre'
+import { getActiveBranchId } from '@/stores/branch-store'
 import { API_VERSION } from '@/lib/api-client'
 import { handleServerError } from '@/lib/handle-server-error'
 import { useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { isConnectionError, useNetworkStatus } from '@/lib/network-status'
 import { toast } from '@/lib/toast'
-import { getActiveBranchId } from '@/stores/branch-store'
+import { useCallCentre } from '@/hooks/use-call-centre'
+import { useBranchName } from '@/features/branch/use-branch-name'
+import { customerName, ensureCounterCustomer } from '@/features/customer/counter-customers'
+import { useDeliveryActions } from '@/features/deliveries/use-deliveries'
+import { useOfflineCharge } from '@/features/offline/offline-charge'
+import { saveCustomerPreferences, startSend } from '@/features/sending/sending'
 import { toBasketItems } from './basket-items'
 import { lineKey, useSale, type SaleCustomer, type SaleLine } from './cart'
 import { sendToBranchId, toPosDeliveryRequest } from './sale-delivery'
@@ -172,7 +172,7 @@ export function usePlaceOrder({
               ? t('deliverySentTo', { branch: branchName(sendTo), orderId })
               : rider
                 ? t('deliveryPlacedRider', { name: rider.name })
-                : t('deliveryPlaced'),
+                : t('deliveryPlaced')
         )
         navigate({ to: '/' })
         return
@@ -184,7 +184,9 @@ export function usePlaceOrder({
         clear()
         queryClient.invalidateQueries({ queryKey: [{ _id: 'getOpenTickets' }] })
         toast.success(
-          again ? t('orderAlreadyPlaced') : t('callCentrePickupPlaced', { branch: branchName(getActiveBranchId()), orderId }),
+          again
+            ? t('orderAlreadyPlaced')
+            : t('callCentrePickupPlaced', { branch: branchName(getActiveBranchId()), orderId })
         )
         navigate({ to: '/' })
       }
@@ -199,12 +201,18 @@ export function usePlaceOrder({
     // A walk-in's new bill shows the lines at once, faded until the server
     // has them, on the way to its payment (features/sending)
     if (!delivering && !callCentre) {
-      void startSend({ requestId, ticketId: null, branchId: getActiveBranchId(), lines: toSend, note, customer, body }).then(
-        (outcome) => {
-          if (outcome.kind === 'alreadyPlaced') toast.info(t('orderAlreadyPlaced'))
-          if (outcome.kind !== 'failed') landed()
-        },
-      )
+      void startSend({
+        requestId,
+        ticketId: null,
+        branchId: getActiveBranchId(),
+        lines: toSend,
+        note,
+        customer,
+        body,
+      }).then((outcome) => {
+        if (outcome.kind === 'alreadyPlaced') toast.info(t('orderAlreadyPlaced'))
+        if (outcome.kind !== 'failed') landed()
+      })
       requestIdRef.current = null
       clear()
       navigate({ to: '/ticket/sending/$requestId', params: { requestId } })

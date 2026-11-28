@@ -49,14 +49,7 @@ const clearHole = {
  *  shell, the toasts and the devtools all live in there, and so does the scroll
  *  container whose scrollbar was being painted onto the paper. SVG rather than
  *  canvas keeps the codes sharp at any paper size. */
-export function QrSheet({
-  backTo,
-  subtitle,
-  caption,
-  cards,
-  isLoading,
-  emptyText,
-}: QrSheetProps) {
+export function QrSheet({ backTo, subtitle, caption, cards, isLoading, emptyText }: QrSheetProps) {
   const t = useT()
   const brand = useBrand()
   const brandName = useBrandName()
@@ -120,29 +113,17 @@ export function QrSheet({
                 className='qr-sheet-card flex min-w-0 break-inside-avoid flex-col items-center gap-4 rounded-2xl border-2 border-black bg-white p-6 text-center text-black'
               >
                 {wordmark ? (
-                  <img
-                    src={wordmark.url}
-                    alt=''
-                    className='h-8 w-auto max-w-[70%] object-contain'
-                  />
+                  <img src={wordmark.url} alt='' className='h-8 w-auto max-w-[70%] object-contain' />
                 ) : logo ? (
-                  <img
-                    src={logo}
-                    alt=''
-                    className='size-10 rounded-[22%] object-cover'
-                  />
+                  <img src={logo} alt='' className='size-10 rounded-[22%] object-cover' />
                 ) : (
-                  <div className='text-base font-bold tracking-tight'>
-                    {brandName}
-                  </div>
+                  <div className='text-base font-bold tracking-tight'>{brandName}</div>
                 )}
 
                 {/* Both languages on the card - staff and customers read either */}
                 <div className='leading-tight'>
                   {/* A place named in one language shows that name once */}
-                  <div className='text-2xl font-bold'>
-                    {card.name?.en || card.name?.ar}
-                  </div>
+                  <div className='text-2xl font-bold'>{card.name?.en || card.name?.ar}</div>
                   {card.name?.en && card.name?.ar && (
                     <div className='text-xl font-semibold' dir='rtl'>
                       {card.name.ar}
@@ -174,11 +155,7 @@ export function QrSheet({
                           height: `${(TILE / QR_SIZE) * 100}%`,
                         }}
                       >
-                        <img
-                          src={logo}
-                          alt=''
-                          className='size-full rounded-[18%] object-contain'
-                        />
+                        <img src={logo} alt='' className='size-full rounded-[18%] object-contain' />
                       </div>
                     )}
                   </div>
@@ -192,9 +169,7 @@ export function QrSheet({
                 </div>
 
                 {/* Typed by hand when a camera will not cooperate */}
-                <div className='text-[11px] tracking-[0.2em] text-black/60 uppercase'>
-                  {customerHost}
-                </div>
+                <div className='text-[11px] tracking-[0.2em] text-black/60 uppercase'>{customerHost}</div>
               </div>
             ))}
           </div>

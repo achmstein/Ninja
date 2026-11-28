@@ -1,12 +1,7 @@
 import { type RangeReport, type TenderTotal } from '@/api/sales'
 import { type TranslationKey } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
-import {
-  TENDERS,
-  tendersFor,
-  type TenderModules,
-  type TenderName,
-} from './components/tender'
+import { TENDERS, tendersFor, type TenderModules, type TenderName } from './components/tender'
 
 /**
  * One line of the statement under the till report. `sign` says how it
@@ -55,9 +50,7 @@ export function netStatement(report: RangeReport | undefined): StatementLine[] {
   const refundVat = toNumber(report?.refundVat)
   const exVat = toNumber(report?.netSalesExVat)
 
-  const lines: StatementLine[] = [
-    { key: 'subtotal', labelKey: 'lineTotals', amount: subtotal, sign: '' },
-  ]
+  const lines: StatementLine[] = [{ key: 'subtotal', labelKey: 'lineTotals', amount: subtotal, sign: '' }]
   if (lineDiscounts > 0)
     lines.push({
       key: 'lineDiscounts',
@@ -101,9 +94,7 @@ export function netStatement(report: RangeReport | undefined): StatementLine[] {
       sign: '+',
     })
 
-  const rounding = cents(
-    gross - (subtotal - billDiscounts + service + vatAdded)
-  )
+  const rounding = cents(gross - (subtotal - billDiscounts + service + vatAdded))
   if (rounding !== 0)
     lines.push({
       key: 'rounding',
@@ -175,16 +166,10 @@ function rowsOf(totals: TenderTotal[] | undefined) {
  * ones too, so the bar reads the same every day; tab payments only those
  * that took some.
  */
-export function tenderSeries(
-  report: RangeReport | undefined,
-  modules: TenderModules
-): TenderSeries {
+export function tenderSeries(report: RangeReport | undefined, modules: TenderModules): TenderSeries {
   const bills = rowsOf(report?.tenderTotals)
   const tabs = rowsOf(report?.tabPaymentTenderTotals)
-  const row = (
-    tender: (typeof TENDERS)[number],
-    from: Map<string, TenderTotal>
-  ): TenderRow => ({
+  const row = (tender: (typeof TENDERS)[number], from: Map<string, TenderTotal>): TenderRow => ({
     ...tender,
     amount: toNumber(from.get(tender.name)?.amount),
     count: toNumber(from.get(tender.name)?.count),
@@ -199,11 +184,8 @@ export function tenderSeries(
       return toNumber(total?.amount) !== 0 || toNumber(total?.count) > 0
     }).map((tender) => tender.name)
   ).map((tender) => row(tender, bills))
-  const tabRows = TENDERS.map((tender) => row(tender, tabs)).filter(
-    (r) => r.amount !== 0 || r.count > 0
-  )
-  const sum = (rows: TenderRow[]) =>
-    cents(rows.reduce((s, r) => s + r.amount, 0))
+  const tabRows = TENDERS.map((tender) => row(tender, tabs)).filter((r) => r.amount !== 0 || r.count > 0)
+  const sum = (rows: TenderRow[]) => cents(rows.reduce((s, r) => s + r.amount, 0))
   return {
     bills: billRows,
     billsTotal: sum(billRows),

@@ -1,13 +1,7 @@
 import { useState } from 'react'
-import { Input } from '@/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { useT } from '@/lib/i18n'
+import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 const TAG = /^[A-Za-z0-9._-]{1,64}$/
 

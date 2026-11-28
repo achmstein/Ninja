@@ -14,13 +14,7 @@ export function initialsOf(name: string): string {
  * partners, a payslip's employee. Quiet slate, never a colour of its own;
  * the name beside it is what is read.
  */
-export function EntityAvatar({
-  name,
-  className,
-}: {
-  name: string
-  className?: string
-}) {
+export function EntityAvatar({ name, className }: { name: string; className?: string }) {
   return (
     <span
       aria-hidden

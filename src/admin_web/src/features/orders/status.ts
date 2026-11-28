@@ -1,10 +1,6 @@
 import { CheckCircle, Clock, XCircle } from 'lucide-react'
 import { formatMoney, useCurrency } from '@/lib/currency'
-import {
-  useLanguage,
-  type TranslateParams,
-  type TranslationKey,
-} from '@/lib/i18n'
+import { useLanguage, type TranslateParams, type TranslationKey } from '@/lib/i18n'
 import { formatWhen } from '@/lib/when'
 import { urgencyFor, type Urgency } from '@/components/queue-card'
 
@@ -59,12 +55,8 @@ export const orderSourceKeys: Record<string, TranslationKey> = {
  * The word for where an order came from. A delivery says so whoever placed
  * it: a guest's is not a QR at a table, and the till's was taken by phone.
  */
-export function orderSourceKey(order: {
-  source?: string | null
-  delivery?: unknown
-}): TranslationKey | undefined {
-  if (order.delivery)
-    return order.source === 'Pos' ? 'sourcePhoneDelivery' : 'sourceDelivery'
+export function orderSourceKey(order: { source?: string | null; delivery?: unknown }): TranslationKey | undefined {
+  if (order.delivery) return order.source === 'Pos' ? 'sourcePhoneDelivery' : 'sourceDelivery'
   return order.source ? orderSourceKeys[order.source] : undefined
 }
 
@@ -104,16 +96,8 @@ export function orderPlace(order: {
 // Localized currency suffix (EGP / ج.م). Callers all live inside components
 // that re-render on language change, so reading the store here stays fresh.
 /** A price in the business's currency: `12.50 EGP` / `12.50 ج.م`. */
-export function formatEgp(
-  value: number | string | undefined | null,
-  signed = false
-): string {
-  return formatMoney(
-    value,
-    useCurrency.getState().code,
-    useLanguage.getState().language,
-    signed
-  )
+export function formatEgp(value: number | string | undefined | null, signed = false): string {
+  return formatMoney(value, useCurrency.getState().code, useLanguage.getState().language, signed)
 }
 
 /** How long ago, said the admin's one way (lib/when.ts): "5m ago", "Yesterday 14:32", "Fri 3 Oct" */
@@ -135,9 +119,6 @@ export const DELAYED_AFTER_MINUTES = 3
 
 type OrderUrgency = Urgency
 
-export function orderUrgency(
-  value: string | undefined,
-  nowMs: number
-): OrderUrgency {
+export function orderUrgency(value: string | undefined, nowMs: number): OrderUrgency {
   return urgencyFor(value, nowMs, WARN_AFTER_MINUTES, DELAYED_AFTER_MINUTES)
 }

@@ -41,14 +41,8 @@ export function getCountColumns({ t }: CountColumnsContext) {
               off > 0 ? 'text-destructive' : 'text-success'
             )}
           >
-            {off > 0 ? (
-              <TriangleAlert className='h-4 w-4' />
-            ) : (
-              <CircleCheck className='h-4 w-4' />
-            )}
-            {off > 0
-              ? t('countOffSummary', { off, total })
-              : t('countAllMatched', { total })}
+            {off > 0 ? <TriangleAlert className='h-4 w-4' /> : <CircleCheck className='h-4 w-4' />}
+            {off > 0 ? t('countOffSummary', { off, total }) : t('countAllMatched', { total })}
           </span>
         )
       },
@@ -56,9 +50,7 @@ export function getCountColumns({ t }: CountColumnsContext) {
     columnHelper.accessor('note', {
       id: 'note',
       header: t('note'),
-      cell: (info) => (
-        <span className='text-muted-foreground'>{info.getValue()}</span>
-      ),
+      cell: (info) => <span className='text-muted-foreground'>{info.getValue()}</span>,
     }),
   ])
 }

@@ -25,9 +25,7 @@ function ErrorPage({ code, title }: ErrorPageProps) {
       home={!outage}
       actions={
         outage ? (
-          <Button onClick={() => window.location.reload()}>
-            {t('reloadPage')}
-          </Button>
+          <Button onClick={() => window.location.reload()}>{t('reloadPage')}</Button>
         ) : (
           <Button variant='outline' onClick={() => history.go(-1)}>
             {t('goBack')}

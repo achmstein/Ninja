@@ -1,6 +1,6 @@
+import { useActivePlace } from '@/stores/place-store'
 import { type LiveBills } from '@/lib/live-bills'
 import { useDockOrder } from '@/lib/live-order'
-import { useActivePlace } from '@/stores/place-store'
 import { useActiveStay } from '@/lib/stays'
 import { hasLiveBill } from '@/components/bills/open-bills'
 

@@ -45,11 +45,15 @@ export function beginPlacing(): (orderId?: number) => void {
 export async function isOwnOrder(orderId: number): Promise<boolean> {
   if (own.has(orderId)) return true
   if (placing === 0) return false
-  await Promise.race([new Promise<void>((resolve) => settled.push(resolve)), new Promise<void>((resolve) => setTimeout(resolve, WAIT_MS))])
+  await Promise.race([
+    new Promise<void>((resolve) => settled.push(resolve)),
+    new Promise<void>((resolve) => setTimeout(resolve, WAIT_MS)),
+  ])
   return own.has(orderId)
 }
 
-const isPosOrder = (method?: string, url?: string) => method?.toLowerCase() === 'post' && (url ?? '').split('?')[0].endsWith('/api/orders/pos')
+const isPosOrder = (method?: string, url?: string) =>
+  method?.toLowerCase() === 'post' && (url ?? '').split('?')[0].endsWith('/api/orders/pos')
 
 /** Every sale the till sends goes through one client: watched here, whichever screen rang it up */
 export function trackOwnOrders(client: AxiosInstance) {
@@ -66,6 +70,6 @@ export function trackOwnOrders(client: AxiosInstance) {
     (error) => {
       if (error?.config) open.get(error.config)?.()
       return Promise.reject(error)
-    },
+    }
   )
 }

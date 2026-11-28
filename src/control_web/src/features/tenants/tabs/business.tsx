@@ -1,5 +1,8 @@
 import { useMemo, useState, type ReactNode } from 'react'
 import type { BusinessType, TenantDetail } from '@/api/control'
+import { useT } from '@/lib/i18n'
+import { allTimeZones, COUNTRIES, countryOf, CURRENCIES } from '@/lib/locale'
+import { seedLabelKey } from '@/lib/tenant'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -7,9 +10,6 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Spinner } from '@/components/ui/spinner'
 import { Textarea } from '@/components/ui/textarea'
-import { useT } from '@/lib/i18n'
-import { allTimeZones, COUNTRIES, countryOf, CURRENCIES } from '@/lib/locale'
-import { seedLabelKey } from '@/lib/tenant'
 import { BusinessPicker, ArabicStyleField, type ArabicStyle } from '../new-tenant-business'
 import { ContentLanguagesField, contentLanguagesFrom } from '../new-tenant-locale'
 import { useRecordSave } from '../record-save'
@@ -23,7 +23,10 @@ export function BusinessTab({ tenant }: { tenant: TenantDetail }) {
   return (
     <div className='grid items-start gap-4 lg:grid-cols-2'>
       <div className='flex flex-col gap-4'>
-        <ContactCard key={`contact-${tenant.record.contactName}-${tenant.record.phone}-${tenant.record.address}-${tenant.record.notes}`} tenant={tenant} />
+        <ContactCard
+          key={`contact-${tenant.record.contactName}-${tenant.record.phone}-${tenant.record.address}-${tenant.record.notes}`}
+          tenant={tenant}
+        />
         <KindCard key={`kind-${tenant.businessType}`} tenant={tenant} />
       </div>
       <LocaleCard key={`locale-${JSON.stringify(tenant.locale)}`} tenant={tenant} />

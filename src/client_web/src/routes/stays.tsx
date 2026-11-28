@@ -3,14 +3,14 @@ import { Gamepad2 } from 'lucide-react'
 import { type StayViewModel } from '@/api/spaces'
 import { useSelectedBranch } from '@/lib/branch'
 import { businessDayDate } from '@/lib/business-day'
-import { useMyStays } from '@/lib/stays'
 import { useLanguage, useT } from '@/lib/i18n'
+import { useMyStays } from '@/lib/stays'
+import { Skeleton } from '@/components/ui/skeleton'
+import { RequireAuth } from '@/components/auth/require-auth'
 import { NinjaPage, Rise, RiseItem } from '@/components/ninja/page/page'
 import { Empty, SectionLabel } from '@/components/ninja/page/parts'
 import { StayCard } from '@/components/places/stay-card'
-import { RequireAuth } from '@/components/auth/require-auth'
 import { RequireFeature } from '@/components/require-feature'
-import { Skeleton } from '@/components/ui/skeleton'
 
 export const Route = createFileRoute('/stays')({
   component: () => (

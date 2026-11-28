@@ -48,9 +48,11 @@ describe('counterBill', () => {
 
 describe('toPricingRules', () => {
   it('reads the server pricing view, numbers as strings included', () => {
-    expect(
-      toPricingRules({ vatRate: '0.14', pricesIncludeVat: true, serviceChargeRate: 0.1 }),
-    ).toEqual({ vatRate: 0.14, pricesIncludeVat: true, serviceChargeRate: 0.1 })
+    expect(toPricingRules({ vatRate: '0.14', pricesIncludeVat: true, serviceChargeRate: 0.1 })).toEqual({
+      vatRate: 0.14,
+      pricesIncludeVat: true,
+      serviceChargeRate: 0.1,
+    })
   })
 
   it('falls back to no rules', () => {

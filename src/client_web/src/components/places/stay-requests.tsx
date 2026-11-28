@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { ArrowLeftRight, Bell, Check, Gamepad2, Hourglass, Receipt } from 'lucide-react'
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { type StayViewModel } from '@/api/spaces'
 import { useLocalized, usePrice, useT } from '@/lib/i18n'
 import { blurSwap } from '@/lib/motion'
@@ -28,7 +28,10 @@ export function StayRequests({ stay }: { stay: StayViewModel }) {
     sessionId: Number(stay.id),
   })
   const busy = requests.pending != null
-  const tile = (type: typeof SERVICE_REQUEST.callWaiter | typeof SERVICE_REQUEST.receiptToPay | typeof SERVICE_REQUEST.controllerChange) => ({
+  const tile = (
+    type:
+      typeof SERVICE_REQUEST.callWaiter | typeof SERVICE_REQUEST.receiptToPay | typeof SERVICE_REQUEST.controllerChange
+  ) => ({
     state: requests.stateOf(type),
     busy,
     onTap: () => void requests.tap(type),
@@ -104,19 +107,31 @@ function RateSwitch({ stay, requests }: { stay: StayViewModel; requests: ReturnT
               <span
                 className={cn(
                   'grid size-10 shrink-0 place-items-center rounded-full transition-colors duration-300',
-                  phase === 'onTheWay' ? 'bg-emerald-500 text-white' : phase === 'sent' ? 'bg-primary text-primary-foreground' : 'bg-muted'
+                  phase === 'onTheWay'
+                    ? 'bg-emerald-500 text-white'
+                    : phase === 'sent'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted'
                 )}
               >
                 <AnimatePresence mode='popLayout' initial={false}>
                   <motion.span key={phase} {...swap} className='grid place-items-center'>
-                    {phase === 'onTheWay' ? <Check className='size-5' /> : phase === 'sent' ? <Hourglass className='size-5' /> : <ArrowLeftRight className='size-5' />}
+                    {phase === 'onTheWay' ? (
+                      <Check className='size-5' />
+                    ) : phase === 'sent' ? (
+                      <Hourglass className='size-5' />
+                    ) : (
+                      <ArrowLeftRight className='size-5' />
+                    )}
                   </motion.span>
                 </AnimatePresence>
               </span>
               <span className='flex min-w-0 flex-1 flex-col'>
-                <span className='text-note font-semibold'>{t(phase === 'idle' ? 'switchToOption' : 'ninjaSwitchingTo', { option: name })}</span>
+                <span className='text-note font-semibold'>
+                  {t(phase === 'idle' ? 'switchToOption' : 'ninjaSwitchingTo', { option: name })}
+                </span>
                 <AnimatePresence mode='popLayout' initial={false}>
-                  <motion.span key={note} {...swap} className='text-muted-foreground truncate text-caption'>
+                  <motion.span key={note} {...swap} className='text-muted-foreground text-caption truncate'>
                     {note}
                   </motion.span>
                 </AnimatePresence>

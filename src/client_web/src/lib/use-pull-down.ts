@@ -78,7 +78,8 @@ export function usePullDown(sheet: RefObject<HTMLElement | null>, on: boolean, p
     const touchMove = (e: TouchEvent) => {
       if (!e.cancelable || !start) return
       const touch = e.touches[0]
-      if (pulling || (touch && touch.clientY > start.y && touch.clientY - start.y >= Math.abs(touch.clientX - start.x))) e.preventDefault()
+      if (pulling || (touch && touch.clientY > start.y && touch.clientY - start.y >= Math.abs(touch.clientX - start.x)))
+        e.preventDefault()
     }
 
     el.addEventListener('pointerdown', down, { passive: true })
@@ -98,7 +99,11 @@ export function usePullDown(sheet: RefObject<HTMLElement | null>, on: boolean, p
 
 /** Nothing between the finger and the sheet is scrolled down (a list at its top, a text field, or nothing that scrolls) */
 function atTop(target: EventTarget | null, sheet: HTMLElement): boolean {
-  for (let node = target instanceof Element ? target : null; node && node !== sheet.parentElement; node = node.parentElement) {
+  for (
+    let node = target instanceof Element ? target : null;
+    node && node !== sheet.parentElement;
+    node = node.parentElement
+  ) {
     if (node instanceof HTMLElement && node.scrollTop > 0) return false
     // A handle drags the sheet itself (`data-pull-handle`)
     if (node instanceof HTMLElement && node.dataset.pullHandle != null) return false

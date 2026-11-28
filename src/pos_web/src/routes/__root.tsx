@@ -1,16 +1,12 @@
 import { useLayoutEffect } from 'react'
 import { type QueryClient } from '@tanstack/react-query'
-import {
-  createRootRouteWithContext,
-  Link,
-  Outlet,
-} from '@tanstack/react-router'
+import { createRootRouteWithContext, Link, Outlet } from '@tanstack/react-router'
 import { Toaster } from 'sileo'
-import { Button } from '@/components/ui/button'
 import { useBrandEffects } from '@/lib/brand'
-import { isStaleBuildError, reloadForNewBuild } from '@/lib/stale-build'
 import { useT } from '@/lib/i18n'
+import { isStaleBuildError, reloadForNewBuild } from '@/lib/stale-build'
 import { useTheme } from '@/context/theme-provider'
+import { Button } from '@/components/ui/button'
 
 // Sileo only paints the pill background when it knows the theme (otherwise
 // it falls back to a white fill that vanishes on light pages), and autopilot
@@ -69,7 +65,7 @@ function GeneralError({ error }: { error: unknown }) {
       {/* What went wrong, in the browser's own words: the one thing whoever
           looks into it needs, and a till has no console to read it from */}
       {detail && (
-        <p dir='ltr' className='text-muted-foreground max-w-full px-6 text-center type-caption break-words select-text'>
+        <p dir='ltr' className='text-muted-foreground type-caption max-w-full px-6 text-center break-words select-text'>
           {detail}
         </p>
       )}

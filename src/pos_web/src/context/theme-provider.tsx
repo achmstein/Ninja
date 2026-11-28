@@ -37,12 +37,13 @@ const ThemeContext = createContext<ThemeProviderState>(initialState)
  * The business's starting theme, from its brand: what a person who never
  * chose sees. Null follows the app's own default.
  */
-export const useBusinessTheme = create<{ mode: ResolvedTheme | null; set: (mode: string | null | undefined) => void }>()(
-  (set) => ({
-    mode: null,
-    set: (mode) => set({ mode: mode === 'light' || mode === 'dark' ? mode : null }),
-  })
-)
+export const useBusinessTheme = create<{
+  mode: ResolvedTheme | null
+  set: (mode: string | null | undefined) => void
+}>()((set) => ({
+  mode: null,
+  set: (mode) => set({ mode: mode === 'light' || mode === 'dark' ? mode : null }),
+}))
 
 export function ThemeProvider({
   children,
@@ -51,18 +52,14 @@ export function ThemeProvider({
   ...props
 }: ThemeProviderProps) {
   // Null until the person picks: then the business's starting theme stands in
-  const [chosen, _setTheme] = useState<Theme | null>(
-    () => (getCookie(storageKey) as Theme) || null
-  )
+  const [chosen, _setTheme] = useState<Theme | null>(() => (getCookie(storageKey) as Theme) || null)
   const business = useBusinessTheme((s) => s.mode)
   const theme: Theme = chosen ?? business ?? defaultTheme
 
   // Optimized: Memoize the resolved theme calculation to prevent unnecessary re-computations
   const resolvedTheme = useMemo((): ResolvedTheme => {
     if (theme === 'system') {
-      return window.matchMedia('(prefers-color-scheme: dark)').matches
-        ? 'dark'
-        : 'light'
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
     }
     return theme as ResolvedTheme
   }, [theme])

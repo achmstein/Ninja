@@ -24,9 +24,7 @@ export function NinjaWordmark({ className }: { className?: string }) {
 export function PoweredBy({ className }: { className?: string }) {
   const t = useT()
   return (
-    <span
-      className={cn('text-muted-foreground inline-flex items-center gap-1.5 text-[11px]', className)}
-    >
+    <span className={cn('text-muted-foreground inline-flex items-center gap-1.5 text-[11px]', className)}>
       {t('poweredBy')}
       <NinjaWordmark className='h-3 opacity-80' />
     </span>

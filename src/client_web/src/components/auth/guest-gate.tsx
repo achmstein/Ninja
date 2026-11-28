@@ -1,8 +1,9 @@
-import { usePhoneRule } from '@/lib/brand'
-import { formatPhone, isValidPhone, normalizePhone } from '@/lib/phone'
 import { useRef, useState } from 'react'
 import { useGuestStore, type GuestContact } from '@/stores/guest-store'
+import { usePhoneRule } from '@/lib/brand'
 import { useT } from '@/lib/i18n'
+import { formatPhone, isValidPhone, normalizePhone } from '@/lib/phone'
+import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -11,7 +12,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { GuestSignInChoices } from './sign-in-options'
@@ -126,11 +126,7 @@ function GuestGateDialog({
         <div className='flex flex-col gap-4'>
           <div className='space-y-2'>
             <Label htmlFor='guestName'>{t('name')}</Label>
-            <Input
-              id='guestName'
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
+            <Input id='guestName' value={name} onChange={(e) => setName(e.target.value)} />
           </div>
           <div className='space-y-2'>
             <Label htmlFor='guestPhone'>{t('phoneNumber')}</Label>

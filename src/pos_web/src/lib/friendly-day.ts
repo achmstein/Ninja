@@ -10,7 +10,12 @@ export function dayKey(date: Date): string {
   return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`
 }
 
-export function friendlyDay(date: Date, locale: string, words: { today: string; yesterday: string }, now: Date = new Date()): string {
+export function friendlyDay(
+  date: Date,
+  locale: string,
+  words: { today: string; yesterday: string },
+  now: Date = new Date()
+): string {
   if (dayKey(date) === dayKey(now)) return words.today
   const before = new Date(now)
   before.setDate(now.getDate() - 1)

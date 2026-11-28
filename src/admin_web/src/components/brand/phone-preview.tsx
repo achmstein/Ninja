@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react'
 import { Home, Moon, Receipt, Search, Sun, User } from 'lucide-react'
-import { useLanguage, useT, type Language } from '@/lib/i18n'
 import type { Brand } from '@/lib/brand'
 import { logoFor, wordmarkFor, type Scheme } from '@/lib/brand-slots'
 import { brandTokens, ensureFontsLoaded, type BrandThemeInput } from '@/lib/brand-theme'
 import { formatMoney } from '@/lib/currency'
-import { useTheme } from '@/context/theme-provider'
+import { useLanguage, useT, type Language } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
+import { useTheme } from '@/context/theme-provider'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -35,13 +35,35 @@ export function PreviewToggles({
   const t = useT()
   return (
     <div className='flex items-center justify-center gap-2'>
-      <ToggleGroup type='single' variant='outline' size='sm' value={language} onValueChange={(v) => v && onLanguage(v as Language)} aria-label={t('language')}>
-        <ToggleGroupItem value='en' aria-label={t('english')}>EN</ToggleGroupItem>
-        <ToggleGroupItem value='ar' aria-label={t('arabic')}>ع</ToggleGroupItem>
+      <ToggleGroup
+        type='single'
+        variant='outline'
+        size='sm'
+        value={language}
+        onValueChange={(v) => v && onLanguage(v as Language)}
+        aria-label={t('language')}
+      >
+        <ToggleGroupItem value='en' aria-label={t('english')}>
+          EN
+        </ToggleGroupItem>
+        <ToggleGroupItem value='ar' aria-label={t('arabic')}>
+          ع
+        </ToggleGroupItem>
       </ToggleGroup>
-      <ToggleGroup type='single' variant='outline' size='sm' value={scheme} onValueChange={(v) => v && onScheme(v as Scheme)} aria-label={t('theme')}>
-        <ToggleGroupItem value='light' aria-label={t('light')}><Sun /></ToggleGroupItem>
-        <ToggleGroupItem value='dark' aria-label={t('dark')}><Moon /></ToggleGroupItem>
+      <ToggleGroup
+        type='single'
+        variant='outline'
+        size='sm'
+        value={scheme}
+        onValueChange={(v) => v && onScheme(v as Scheme)}
+        aria-label={t('theme')}
+      >
+        <ToggleGroupItem value='light' aria-label={t('light')}>
+          <Sun />
+        </ToggleGroupItem>
+        <ToggleGroupItem value='dark' aria-label={t('dark')}>
+          <Moon />
+        </ToggleGroupItem>
       </ToggleGroup>
     </div>
   )
@@ -75,7 +97,10 @@ export function PhonePreview({
 }) {
   const t = useT()
   const tokens = brandTokens(draft)
-  useEffect(() => ensureFontsLoaded({ latin: tokens.fontLatin, arabic: tokens.fontArabic }), [tokens.fontLatin, tokens.fontArabic])
+  useEffect(
+    () => ensureFontsLoaded({ latin: tokens.fontLatin, arabic: tokens.fontArabic }),
+    [tokens.fontLatin, tokens.fontArabic]
+  )
 
   const name = (language === 'ar' ? draft.name.ar : draft.name.en) || draft.name.en || draft.name.ar || ''
   const wordmark = wordmarkFor(draft.brand, language, scheme)
@@ -100,9 +125,20 @@ export function PhonePreview({
         style={style}
         className={cn('bg-background text-foreground flex h-full flex-col', scheme === 'dark' && 'dark')}
       >
-        <div className='flex items-center gap-2 border-b px-4' style={{ height: 'calc(var(--header-h, 3.5rem) * 0.8)' }}>
+        <div
+          className='flex items-center gap-2 border-b px-4'
+          style={{ height: 'calc(var(--header-h, 3.5rem) * 0.8)' }}
+        >
           {wordmark ? (
-            <img src={wordmark.url} alt='' style={{ aspectRatio: `${wordmark.width} / ${wordmark.height}`, height: 'calc(var(--wordmark-h, 1.75rem) * 0.8)' }} className='w-auto max-w-[60%] object-contain' />
+            <img
+              src={wordmark.url}
+              alt=''
+              style={{
+                aspectRatio: `${wordmark.width} / ${wordmark.height}`,
+                height: 'calc(var(--wordmark-h, 1.75rem) * 0.8)',
+              }}
+              className='w-auto max-w-[60%] object-contain'
+            />
           ) : (
             <>
               {logo ? (
@@ -115,7 +151,9 @@ export function PhonePreview({
               <span className='truncate font-semibold'>{name}</span>
             </>
           )}
-          <Badge variant='secondary' className='ms-auto'>{t('initialBranches')}</Badge>
+          <Badge variant='secondary' className='ms-auto'>
+            {t('initialBranches')}
+          </Badge>
         </div>
         <div className='flex-1 space-y-3 overflow-hidden p-4'>
           <div className='flex gap-2'>
@@ -131,15 +169,29 @@ export function PhonePreview({
                 <div className='truncate text-sm font-medium'>{item.name}</div>
                 <div className='text-muted-foreground text-xs'>{formatMoney(item.price, draft.currency, language)}</div>
               </div>
-              <Button type='button' size='sm'>{t('previewAdd')}</Button>
+              <Button type='button' size='sm'>
+                {t('previewAdd')}
+              </Button>
             </Card>
           ))}
         </div>
         <div className='bg-card text-muted-foreground flex items-center justify-around border-t px-2 py-2 text-[10px]'>
-          <span className='text-primary flex flex-col items-center gap-0.5'><Home className='size-4' />{t('previewHome')}</span>
-          <span className='flex flex-col items-center gap-0.5'><Search className='size-4' />{t('previewPopular')}</span>
-          <span className='flex flex-col items-center gap-0.5'><Receipt className='size-4' />{t('previewOrders')}</span>
-          <span className='flex flex-col items-center gap-0.5'><User className='size-4' />{t('previewProfile')}</span>
+          <span className='text-primary flex flex-col items-center gap-0.5'>
+            <Home className='size-4' />
+            {t('previewHome')}
+          </span>
+          <span className='flex flex-col items-center gap-0.5'>
+            <Search className='size-4' />
+            {t('previewPopular')}
+          </span>
+          <span className='flex flex-col items-center gap-0.5'>
+            <Receipt className='size-4' />
+            {t('previewOrders')}
+          </span>
+          <span className='flex flex-col items-center gap-0.5'>
+            <User className='size-4' />
+            {t('previewProfile')}
+          </span>
         </div>
       </div>
     </PhoneFrame>

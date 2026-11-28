@@ -1,12 +1,12 @@
 import type { CatalogItemDto, ItemCustomizationDto, UserItemPreferenceDto } from '@/api/catalog'
 import type { CartCustomization } from '@/lib/cart'
+import { posterTone, type MenuSectionData, type PosterTone, type SectionKind } from '@/components/menu/data/sections'
 import {
   effectiveBasePrice,
   preferenceSelections,
   selectionsToCustomizations,
   withoutOutOfStock,
 } from '@/components/menu/item-form'
-import { posterTone, type MenuSectionData, type PosterTone, type SectionKind } from '@/components/menu/data/sections'
 
 /**
  * The Ninja style's deck: one column of big cards per category, side by side.
@@ -43,7 +43,10 @@ export function pickUsual(columns: DeckColumn[]): CatalogItemDto | null {
 }
 
 /** Where an item sits in the deck, preferring its own category over the usuals. */
-export function positionOf(columns: DeckColumn[], itemId: number | string | undefined): { column: number; row: number } | null {
+export function positionOf(
+  columns: DeckColumn[],
+  itemId: number | string | undefined
+): { column: number; row: number } | null {
   let fallback: { column: number; row: number } | null = null
   for (let column = 0; column < columns.length; column++) {
     const row = columns[column].items.findIndex((i) => String(i.id) === String(itemId))
@@ -79,7 +82,10 @@ export function canQuickAdd(item: CatalogItemDto, preference?: UserItemPreferenc
 }
 
 /** The line a quick add puts in: the customer's saved way (else the business's defaults), nothing sold out, one of it. */
-export function quickAddChoice(item: CatalogItemDto, preference?: UserItemPreferenceDto): { customizations: CartCustomization[]; unitPrice: number } {
+export function quickAddChoice(
+  item: CatalogItemDto,
+  preference?: UserItemPreferenceDto
+): { customizations: CartCustomization[]; unitPrice: number } {
   const selections = quickSelections(item, preference)
   const customizations = selectionsToCustomizations(item, selections)
   return {

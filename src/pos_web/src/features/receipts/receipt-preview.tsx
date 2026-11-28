@@ -1,24 +1,24 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { useAuth } from 'react-oidc-context'
+import { getRealmRoles } from '@/config/oidc-config'
 import { Banknote, Check, ChevronDown, Loader2, Minus, Plus, Printer, Undo2, User, X } from 'lucide-react'
+import { useAuth } from 'react-oidc-context'
 import type { TicketDetail } from '@/api/sales'
 import { getTicketOptions } from '@/api/sales/@tanstack/react-query.gen'
+import { API_VERSION } from '@/lib/api-client'
+import { friendlyDay, friendlyTime } from '@/lib/friendly-day'
+import { useLocale, useLocalized, useT } from '@/lib/i18n'
+import { useMoney, toNumber } from '@/lib/money'
+import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
-import { getRealmRoles } from '@/config/oidc-config'
 import { useTakenByText } from '@/features/branch/use-branch-name'
 import { printSheets } from '@/features/printing/print-sheets'
 import { ReceiptSheet } from '@/features/receipt/receipt-sheet'
 import { ChangeTenderDialog, CORRECTABLE_TENDERS, type TenderFix } from '@/features/ticket/change-tender-dialog'
 import { tenderLabelKey } from '@/features/ticket/tenders'
 import { useRefund } from '@/features/ticket/use-refund'
-import { API_VERSION } from '@/lib/api-client'
-import { friendlyDay, friendlyTime } from '@/lib/friendly-day'
-import { useLocale, useLocalized, useT } from '@/lib/i18n'
-import { useMoney, toNumber } from '@/lib/money'
-import { cn } from '@/lib/utils'
 
 const percent = (rate: number | string | undefined) => Math.round(toNumber(rate) * 10000) / 100
 
@@ -144,7 +144,14 @@ function Receipt({ ticket, title }: { ticket: TicketDetail; title: React.ReactNo
       {refunding ? (
         <>
           <h2 className='type-title min-w-0 flex-1 truncate tabular-nums'>{t('refundTitle', { number })}</h2>
-          <Button variant='ghost' size='icon' className='size-12 shrink-0' aria-label={t('cancel')} disabled={making.pending} onClick={leave}>
+          <Button
+            variant='ghost'
+            size='icon'
+            className='size-12 shrink-0'
+            aria-label={t('cancel')}
+            disabled={making.pending}
+            onClick={leave}
+          >
             <X className='size-5' />
           </Button>
         </>
@@ -154,7 +161,9 @@ function Receipt({ ticket, title }: { ticket: TicketDetail; title: React.ReactNo
           <h2 className='type-title break-words'>{title}</h2>
           <p className='text-muted-foreground type-detail tabular-nums'>
             {[
-              ticket.receiptNumber != null ? t('receiptNumber', { number }) : t('ticketNumber', { id: toNumber(ticket.id) }),
+              ticket.receiptNumber != null
+                ? t('receiptNumber', { number })
+                : t('ticketNumber', { id: toNumber(ticket.id) }),
               when(ticket.settledAt),
               ticket.settledBy,
               takenBy,
@@ -184,7 +193,11 @@ function Receipt({ ticket, title }: { ticket: TicketDetail; title: React.ReactNo
         <div className='flex flex-col gap-1.5 sm:min-w-64'>
           {payments.map((payment, i) => {
             // A cash, card or InstaPay payment can be put right, until money has gone back against the bill
-            const canFix = !isVoided && payment.id != null && refunds.length === 0 && CORRECTABLE_TENDERS.includes(payment.tender ?? '')
+            const canFix =
+              !isVoided &&
+              payment.id != null &&
+              refunds.length === 0 &&
+              CORRECTABLE_TENDERS.includes(payment.tender ?? '')
             return (
               <div key={String(payment.id ?? i)}>
                 <div className='flex items-center gap-3'>
@@ -197,7 +210,13 @@ function Receipt({ ticket, title }: { ticket: TicketDetail; title: React.ReactNo
                       variant='outline'
                       className='h-11 gap-2 font-semibold'
                       aria-label={`${tenderLabel(payment.tender)}: ${t('changeTender')}`}
-                      onClick={() => setTenderFix({ paymentId: toNumber(payment.id), tender: payment.tender ?? '', amount: money(payment.amount) })}
+                      onClick={() =>
+                        setTenderFix({
+                          paymentId: toNumber(payment.id),
+                          tender: payment.tender ?? '',
+                          amount: money(payment.amount),
+                        })
+                      }
                     >
                       {tenderLabel(payment.tender)}
                       <ChevronDown className='text-muted-foreground size-4' />
@@ -241,7 +260,12 @@ function Receipt({ ticket, title }: { ticket: TicketDetail; title: React.ReactNo
           const allBack = back >= toNumber(line.qty)
           return (
             <li key={String(line.id)} className='flex min-h-14 items-center gap-3 py-2'>
-              <span className={cn('text-muted-foreground min-w-10 shrink-0 whitespace-nowrap tabular-nums', allBack && 'opacity-50')}>
+              <span
+                className={cn(
+                  'text-muted-foreground min-w-10 shrink-0 whitespace-nowrap tabular-nums',
+                  allBack && 'opacity-50'
+                )}
+              >
                 {toNumber(line.qty)}×
               </span>
               <span className={cn('min-w-0 flex-1', allBack && 'opacity-50')}>
@@ -265,7 +289,9 @@ function Receipt({ ticket, title }: { ticket: TicketDetail; title: React.ReactNo
                   {t('refundedSoFar')} {back}
                 </span>
               )}
-              <span className={cn('type-body shrink-0 font-medium tabular-nums', allBack && 'opacity-50')}>{money(line.total)}</span>
+              <span className={cn('type-body shrink-0 font-medium tabular-nums', allBack && 'opacity-50')}>
+                {money(line.total)}
+              </span>
             </li>
           )
         })}
@@ -278,11 +304,17 @@ function Receipt({ ticket, title }: { ticket: TicketDetail; title: React.ReactNo
             <>
               <Row label={t('subtotal')} value={money(subtotal)} />
               {discount > 0 && <Row label={t('discount')} value={`−${money(discount)}`} />}
-              {service > 0 && <Row label={t('serviceCharge', { rate: percent(ticket.serviceChargeRate) })} value={money(service)} />}
-              {vat > 0 && !ticket.vatIncluded && <Row label={t('vat', { rate: percent(ticket.vatRate) })} value={money(vat)} />}
+              {service > 0 && (
+                <Row label={t('serviceCharge', { rate: percent(ticket.serviceChargeRate) })} value={money(service)} />
+              )}
+              {vat > 0 && !ticket.vatIncluded && (
+                <Row label={t('vat', { rate: percent(ticket.vatRate) })} value={money(vat)} />
+              )}
             </>
           )}
-          {vat > 0 && ticket.vatIncluded && <Row label={t('vatIncluded', { rate: percent(ticket.vatRate) })} value={money(vat)} />}
+          {vat > 0 && ticket.vatIncluded && (
+            <Row label={t('vatIncluded', { rate: percent(ticket.vatRate) })} value={money(vat)} />
+          )}
         </dl>
       )}
 
@@ -294,10 +326,17 @@ function Receipt({ ticket, title }: { ticket: TicketDetail; title: React.ReactNo
               <span className='tabular-nums'>{t('creditNote', { number: toNumber(refund.number) })}</span>
               {refund.reason && ` · ${refund.reason}`}
             </span>
-            <span className='text-destructive type-body shrink-0 font-semibold tabular-nums'>−{money(refund.amount)}</span>
+            <span className='text-destructive type-body shrink-0 font-semibold tabular-nums'>
+              −{money(refund.amount)}
+            </span>
           </div>
           <p className='text-muted-foreground type-caption tabular-nums'>
-            {[refund.tender === 'Account' ? t('account') : t('cash'), refund.customerName, refund.refundedBy, when(refund.refundedAt)]
+            {[
+              refund.tender === 'Account' ? t('account') : t('cash'),
+              refund.customerName,
+              refund.refundedBy,
+              when(refund.refundedAt),
+            ]
               .filter(Boolean)
               .join(' · ')}
           </p>
@@ -311,7 +350,12 @@ function Receipt({ ticket, title }: { ticket: TicketDetail; title: React.ReactNo
     <>
       <div className='flex min-h-14 items-center justify-between gap-3'>
         <span className='text-muted-foreground type-body'>{t('refundHint', { amount: money(making.remainder) })}</span>
-        <Button variant='outline' className='h-11' disabled={making.everythingPicked || making.lines.length === 0} onClick={making.pickEverything}>
+        <Button
+          variant='outline'
+          className='h-11'
+          disabled={making.everythingPicked || making.lines.length === 0}
+          onClick={making.pickEverything}
+        >
           {t('refundEverything')}
         </Button>
       </div>
@@ -338,7 +382,7 @@ function Receipt({ ticket, title }: { ticket: TicketDetail; title: React.ReactNo
                     aria-hidden
                     className={cn(
                       'flex size-6 shrink-0 items-center justify-center rounded-md border',
-                      picked ? 'border-primary bg-primary text-primary-foreground' : 'border-muted-foreground/50',
+                      picked ? 'border-primary bg-primary text-primary-foreground' : 'border-muted-foreground/50'
                     )}
                   >
                     {picked && <Check className='size-4' />}
@@ -352,11 +396,25 @@ function Receipt({ ticket, title }: { ticket: TicketDetail; title: React.ReactNo
                 </button>
                 {picked && several && (
                   <span className='flex shrink-0 items-center gap-1 pe-2'>
-                    <Button variant='outline' size='icon' className='size-11 rounded-full' disabled={making.pending} aria-label={t('decrease')} onClick={() => making.step(entry, -1)}>
+                    <Button
+                      variant='outline'
+                      size='icon'
+                      className='size-11 rounded-full'
+                      disabled={making.pending}
+                      aria-label={t('decrease')}
+                      onClick={() => making.step(entry, -1)}
+                    >
                       <Minus className='size-4' />
                     </Button>
                     <span className='type-body w-10 text-center font-semibold tabular-nums'>{entry.picked}</span>
-                    <Button variant='outline' size='icon' className='size-11 rounded-full' disabled={making.pending || entry.picked >= entry.left} aria-label={t('increase')} onClick={() => making.step(entry, 1)}>
+                    <Button
+                      variant='outline'
+                      size='icon'
+                      className='size-11 rounded-full'
+                      disabled={making.pending || entry.picked >= entry.left}
+                      aria-label={t('increase')}
+                      onClick={() => making.step(entry, 1)}
+                    >
                       <Plus className='size-4' />
                     </Button>
                   </span>
@@ -371,7 +429,12 @@ function Receipt({ ticket, title }: { ticket: TicketDetail; title: React.ReactNo
       <h3 className={label}>{t('reason')}</h3>
       <div className='flex flex-wrap gap-2'>
         {quickReasons.map((why) => (
-          <Button key={why} variant={making.reason === why ? 'default' : 'outline'} className='h-11' onClick={() => making.setReason(why)}>
+          <Button
+            key={why}
+            variant={making.reason === why ? 'default' : 'outline'}
+            className='h-11'
+            onClick={() => making.setReason(why)}
+          >
             {why}
           </Button>
         ))}
@@ -387,7 +450,11 @@ function Receipt({ ticket, title }: { ticket: TicketDetail; title: React.ReactNo
       {/* Where the money goes back: the drawer, or a tab that paid */}
       <h3 className={label}>{t('refundGoesTo')}</h3>
       <div className={cn('grid gap-2', making.offerAccount && 'grid-cols-2')}>
-        <Button variant={making.tender === 'Cash' ? 'default' : 'outline'} className='h-12 text-base' onClick={() => making.setTender('Cash')}>
+        <Button
+          variant={making.tender === 'Cash' ? 'default' : 'outline'}
+          className='h-12 text-base'
+          onClick={() => making.setTender('Cash')}
+        >
           <Banknote className='size-5' />
           {t('cash')}
         </Button>
@@ -406,7 +473,12 @@ function Receipt({ ticket, title }: { ticket: TicketDetail; title: React.ReactNo
       {making.tender === 'Account' && making.holders.length > 1 && (
         <div className='mt-2 flex flex-wrap gap-2'>
           {making.holders.map((h) => (
-            <Button key={h.id} variant={making.holder?.id === h.id ? 'default' : 'outline'} className='h-11' onClick={() => making.setHolderId(h.id)}>
+            <Button
+              key={h.id}
+              variant={making.holder?.id === h.id ? 'default' : 'outline'}
+              className='h-11'
+              onClick={() => making.setHolderId(h.id)}
+            >
               {h.name || h.id}
             </Button>
           ))}
@@ -426,13 +498,19 @@ function Receipt({ ticket, title }: { ticket: TicketDetail; title: React.ReactNo
       <div className='flex shrink-0 items-center gap-2 border-t px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] max-sm:flex-col max-sm:items-stretch'>
         {refunding ? (
           <>
-            <Button variant='outline' size='lg' className='h-14 min-w-32 text-base' disabled={making.pending} onClick={leave}>
+            <Button
+              variant='outline'
+              size='lg'
+              className='h-14 min-w-32 text-base'
+              disabled={making.pending}
+              onClick={leave}
+            >
               {t('goBack')}
             </Button>
             <Button
               variant='destructive'
               size='lg'
-              className='h-14 min-w-72 justify-between gap-4 px-6 text-lg font-semibold sm:ms-auto max-sm:min-w-0'
+              className='h-14 min-w-72 justify-between gap-4 px-6 text-lg font-semibold max-sm:min-w-0 sm:ms-auto'
               disabled={!making.canRefund}
               onClick={making.submit}
             >
@@ -446,7 +524,12 @@ function Receipt({ ticket, title }: { ticket: TicketDetail; title: React.ReactNo
         ) : (
           <>
             {!isVoided && (
-              <Button variant='outline' size='lg' className='h-12 min-w-40 text-base' onClick={() => void printSheets()}>
+              <Button
+                variant='outline'
+                size='lg'
+                className='h-12 min-w-40 text-base'
+                onClick={() => void printSheets()}
+              >
                 <Printer className='size-5' />
                 {t('print')}
               </Button>
@@ -468,7 +551,11 @@ function Receipt({ ticket, title }: { ticket: TicketDetail; title: React.ReactNo
 
       {/* What Print puts on paper: off screen until then (styles/index.css) */}
       {!isVoided && <ReceiptSheet ticket={ticket} />}
-      <ChangeTenderDialog ticketId={toNumber(ticket.id)} payment={tenderFix} onOpenChange={(open) => !open && setTenderFix(null)} />
+      <ChangeTenderDialog
+        ticketId={toNumber(ticket.id)}
+        payment={tenderFix}
+        onOpenChange={(open) => !open && setTenderFix(null)}
+      />
     </>
   )
 }

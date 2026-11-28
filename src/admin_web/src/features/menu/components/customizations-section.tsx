@@ -1,18 +1,7 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import {
-  GripVertical,
-  Pencil,
-  Plus,
-  SlidersHorizontal,
-  Trash2,
-  X,
-} from 'lucide-react'
-import {
-  type CatalogItemDto,
-  type ItemCustomization,
-  type ItemCustomizationDto,
-} from '@/api/catalog'
+import { GripVertical, Pencil, Plus, SlidersHorizontal, Trash2, X } from 'lucide-react'
+import { type CatalogItemDto, type ItemCustomization, type ItemCustomizationDto } from '@/api/catalog'
 import {
   createCustomizationMutation,
   deleteCustomizationMutation,
@@ -61,11 +50,7 @@ type CustomizationsSectionProps = {
 }
 
 /** Rebuilds the full replace-all-options body the update endpoint expects. */
-function bodyFromDto(
-  itemId: number,
-  group: ItemCustomizationDto,
-  displayOrder: number
-): ItemCustomization {
+function bodyFromDto(itemId: number, group: ItemCustomizationDto, displayOrder: number): ItemCustomization {
   return {
     catalogItemId: itemId,
     name: { en: group.name?.en ?? '', ar: group.name?.ar ?? null },
@@ -97,11 +82,8 @@ export function CustomizationsSection({ item }: CustomizationsSectionProps) {
 
   // null = browsing, 'new' = creating, number = editing that group id,
   // { draft } = editing one of the assistant's proposals before adding it
-  const [editing, setEditing] = useState<
-    number | 'new' | { draft: number } | null
-  >(null)
-  const [deletingGroup, setDeletingGroup] =
-    useState<ItemCustomizationDto | null>(null)
+  const [editing, setEditing] = useState<number | 'new' | { draft: number } | null>(null)
+  const [deletingGroup, setDeletingGroup] = useState<ItemCustomizationDto | null>(null)
 
   // The assistant's proposals wait here until each is added or discarded;
   // asking again replaces them
@@ -110,8 +92,7 @@ export function CustomizationsSection({ item }: CustomizationsSectionProps) {
   // The owner's own word to the assistant: what to propose, followed over the menu's examples
   const [note, setNote] = useState('')
   const [addingDraft, setAddingDraft] = useState<number | 'all' | null>(null)
-  const editingDraft =
-    editing !== null && typeof editing === 'object' ? editing.draft : null
+  const editingDraft = editing !== null && typeof editing === 'object' ? editing.draft : null
 
   // Drag-to-reorder: grip arms the drag, drop persists the new order
   const [dragArmedId, setDragArmedId] = useState<number | null>(null)
@@ -176,8 +157,7 @@ export function CustomizationsSection({ item }: CustomizationsSectionProps) {
     }
   }
 
-  const discardDraft = (index: number) =>
-    setDrafts((prev) => prev.filter((_, i) => i !== index))
+  const discardDraft = (index: number) => setDrafts((prev) => prev.filter((_, i) => i !== index))
 
   /** Saves the proposals at these positions, in order, after the groups the item has */
   const addDrafts = async (indexes: number[]) => {
@@ -245,9 +225,7 @@ export function CustomizationsSection({ item }: CustomizationsSectionProps) {
           <div className='flex justify-center py-6'>
             <Spinner className='text-muted-foreground size-5' />
           </div>
-        ) : sortedGroups.length === 0 &&
-          editing !== 'new' &&
-          drafts.length === 0 ? (
+        ) : sortedGroups.length === 0 && editing !== 'new' && drafts.length === 0 ? (
           <EmptyState
             compact
             icon={SlidersHorizontal}
@@ -261,10 +239,7 @@ export function CustomizationsSection({ item }: CustomizationsSectionProps) {
               const multiple = group.allowMultiple ?? false
               const options = (group.options ?? [])
                 .slice()
-                .sort(
-                  (a, b) =>
-                    Number(a.displayOrder ?? 0) - Number(b.displayOrder ?? 0)
-                )
+                .sort((a, b) => Number(a.displayOrder ?? 0) - Number(b.displayOrder ?? 0))
 
               if (editing === groupId) {
                 return (
@@ -284,10 +259,7 @@ export function CustomizationsSection({ item }: CustomizationsSectionProps) {
               return (
                 <div
                   key={groupId}
-                  className={cn(
-                    'group/card',
-                    draggingId === groupId && 'opacity-40'
-                  )}
+                  className={cn('group/card', draggingId === groupId && 'opacity-40')}
                   draggable={dragArmedId === groupId}
                   onDragStart={() => setDraggingId(groupId)}
                   onDragEnd={() => {
@@ -300,11 +272,7 @@ export function CustomizationsSection({ item }: CustomizationsSectionProps) {
                     e.preventDefault()
                     setDropTargetId(groupId)
                   }}
-                  onDragLeave={() =>
-                    setDropTargetId((current) =>
-                      current === groupId ? null : current
-                    )
-                  }
+                  onDragLeave={() => setDropTargetId((current) => (current === groupId ? null : current))}
                   onDrop={() => handleDrop(groupId)}
                 >
                   {index > 0 && <Separator className='my-4' />}
@@ -327,9 +295,7 @@ export function CustomizationsSection({ item }: CustomizationsSectionProps) {
                           <GripVertical className='h-4 w-4' />
                         </button>
                         <div className='min-w-0'>
-                          <h4 className='truncate text-sm font-medium'>
-                            {localized(group.name)}
-                          </h4>
+                          <h4 className='truncate text-sm font-medium'>{localized(group.name)}</h4>
                           <p className='text-muted-foreground text-xs'>
                             {group.isRequired ? t('required') : t('optional')}
                             {' · '}
@@ -361,33 +327,19 @@ export function CustomizationsSection({ item }: CustomizationsSectionProps) {
 
                     <div className='mt-2.5 flex flex-col gap-2 ps-[22px]'>
                       {options.map((option) => (
-                        <div
-                          key={String(option.id)}
-                          className='flex items-center gap-2.5 text-sm'
-                        >
-                          <ChoiceGlyph
-                            multiple={multiple}
-                            selected={option.isDefault ?? false}
-                          />
-                          <span className='min-w-0 flex-1 truncate'>
-                            {localized(option.name)}
-                          </span>
+                        <div key={String(option.id)} className='flex items-center gap-2.5 text-sm'>
+                          <ChoiceGlyph multiple={multiple} selected={option.isDefault ?? false} />
+                          <span className='min-w-0 flex-1 truncate'>{localized(option.name)}</span>
                           {option.isOutOfStock && (
                             // Set by Inventory for the active branch;
                             // read-only here — it clears when the
                             // ingredient is back
-                            <Badge
-                              variant='outline'
-                              className='text-destructive border-destructive/40 shrink-0'
-                            >
+                            <Badge variant='outline' className='text-destructive border-destructive/40 shrink-0'>
                               {t('outOfStock')}
                             </Badge>
                           )}
                           <span className='text-muted-foreground shrink-0 text-xs tabular-nums'>
-                            {formatAdjustment(
-                              Number(option.priceAdjustment ?? 0),
-                              currency
-                            )}
+                            {formatAdjustment(Number(option.priceAdjustment ?? 0), currency)}
                           </span>
                         </div>
                       ))}
@@ -440,9 +392,7 @@ export function CustomizationsSection({ item }: CustomizationsSectionProps) {
                       disabled={addingDraft != null || editingDraft != null}
                       onClick={() => addDrafts(drafts.map((_, i) => i))}
                     >
-                      {addingDraft === 'all' && (
-                        <Spinner className='size-3.5' />
-                      )}
+                      {addingDraft === 'all' && <Spinner className='size-3.5' />}
                       {t('addAll')}
                     </Button>
                   </div>
@@ -468,9 +418,7 @@ export function CustomizationsSection({ item }: CustomizationsSectionProps) {
                       actions={
                         <DraftActions
                           name={localized(draft.name)}
-                          adding={
-                            addingDraft === index || addingDraft === 'all'
-                          }
+                          adding={addingDraft === index || addingDraft === 'all'}
                           disabled={addingDraft != null}
                           onAdd={() => addDrafts([index])}
                           onEdit={() => setEditing({ draft: index })}
@@ -487,13 +435,7 @@ export function CustomizationsSection({ item }: CustomizationsSectionProps) {
 
         {editing !== 'new' && (
           <div
-            className={cn(
-              'flex gap-2',
-              (sortedGroups.length > 0 ||
-                editing != null ||
-                drafts.length > 0) &&
-                'mt-6'
-            )}
+            className={cn('flex gap-2', (sortedGroups.length > 0 || editing != null || drafts.length > 0) && 'mt-6')}
           >
             <Button
               variant='outline'
@@ -571,13 +513,7 @@ function DraftActions({
   const t = useT()
   return (
     <>
-      <Button
-        type='button'
-        size='sm'
-        className='h-7'
-        disabled={disabled}
-        onClick={onAdd}
-      >
+      <Button type='button' size='sm' className='h-7' disabled={disabled} onClick={onAdd}>
         {adding && <Spinner className='size-3.5' />}
         {t('add')}
       </Button>
@@ -628,25 +564,16 @@ function GroupEditor({
   const currency = useCurrencyLabel()
   const isEditing = !!group
 
-  const [name, setName] = useState<LocalizedValue>(
-    () => initial?.name ?? toLocalizedValue(group?.name)
-  )
-  const [isRequired, setIsRequired] = useState(
-    initial?.isRequired ?? group?.isRequired ?? false
-  )
-  const [allowMultiple, setAllowMultiple] = useState(
-    initial?.allowMultiple ?? group?.allowMultiple ?? false
-  )
+  const [name, setName] = useState<LocalizedValue>(() => initial?.name ?? toLocalizedValue(group?.name))
+  const [isRequired, setIsRequired] = useState(initial?.isRequired ?? group?.isRequired ?? false)
+  const [allowMultiple, setAllowMultiple] = useState(initial?.allowMultiple ?? group?.allowMultiple ?? false)
   const [options, setOptions] = useState<OptionRow[]>(
     initial?.options.length
       ? initial.options
       : group?.options?.length
         ? group.options
             .slice()
-            .sort(
-              (a, b) =>
-                Number(a.displayOrder ?? 0) - Number(b.displayOrder ?? 0)
-            )
+            .sort((a, b) => Number(a.displayOrder ?? 0) - Number(b.displayOrder ?? 0))
             .map((option) => ({
               id: option.id === undefined ? undefined : Number(option.id),
               name: toLocalizedValue(option.name),
@@ -662,9 +589,7 @@ function GroupEditor({
   const isSaving = createGroup.isPending || updateGroup.isPending
 
   const updateOption = (index: number, patch: Partial<OptionRow>) => {
-    setOptions((rows) =>
-      rows.map((row, i) => (i === index ? { ...row, ...patch } : row))
-    )
+    setOptions((rows) => rows.map((row, i) => (i === index ? { ...row, ...patch } : row)))
   }
 
   // Single-choice groups can only have one default option
@@ -672,8 +597,7 @@ function GroupEditor({
     setOptions((rows) =>
       rows.map((row, i) => ({
         ...row,
-        isDefault:
-          i === index ? isDefault : allowMultiple ? row.isDefault : false,
+        isDefault: i === index ? isDefault : allowMultiple ? row.isDefault : false,
       }))
     )
   }
@@ -720,13 +644,7 @@ function GroupEditor({
   return (
     <LocalizedFields>
       <div className='bg-muted/30 space-y-3 rounded-lg border p-3'>
-        <LocalizedInput
-          label={t('name')}
-          value={name}
-          onChange={setName}
-          compact
-          autoFocus
-        />
+        <LocalizedInput label={t('name')} value={name} onChange={setName} compact autoFocus />
 
         <div className='flex gap-4'>
           <label className='flex items-center gap-2 text-sm'>
@@ -762,10 +680,7 @@ function GroupEditor({
             <span />
           </div>
           {options.map((option, index) => (
-            <div
-              key={index}
-              className='grid grid-cols-[1fr_64px_36px_32px] items-center gap-1.5'
-            >
+            <div key={index} className='grid grid-cols-[1fr_64px_36px_32px] items-center gap-1.5'>
               <LocalizedInput
                 ariaLabel={t('name')}
                 value={option.name}
@@ -797,9 +712,7 @@ function GroupEditor({
                 className='size-8'
                 aria-label={t('removeOption')}
                 disabled={options.length === 1}
-                onClick={() =>
-                  setOptions((rows) => rows.filter((_, i) => i !== index))
-                }
+                onClick={() => setOptions((rows) => rows.filter((_, i) => i !== index))}
               >
                 <X className='h-3.5 w-3.5' />
               </Button>
@@ -821,21 +734,10 @@ function GroupEditor({
 
         {/* One group is open at a time, so its Cancel and Save take the sheet's footer */}
         <SheetActions>
-          <Button
-            type='button'
-            variant='outline'
-            size='sm'
-            onClick={onDone}
-            disabled={isSaving}
-          >
+          <Button type='button' variant='outline' size='sm' onClick={onDone} disabled={isSaving}>
             {t('cancel')}
           </Button>
-          <Button
-            type='button'
-            size='sm'
-            onClick={handleSubmit}
-            disabled={isSaving}
-          >
+          <Button type='button' size='sm' onClick={handleSubmit} disabled={isSaving}>
             {isSaving && <Spinner />}
             {isEditing ? t('update') : t('add')}
           </Button>

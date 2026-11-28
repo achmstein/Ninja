@@ -1,9 +1,9 @@
 import { useEffect, useRef } from 'react'
 import { type LocalizedText } from '@/api/spaces'
-import { PLACE_ROOM, PLACE_TABLE } from '@/lib/places'
-import { useActiveStay, useMyReservations, useSeatedReservation } from '@/lib/stays'
 import { useBranchStore } from '@/stores/branch-store'
 import { useActivePlace, usePlaceStore } from '@/stores/place-store'
+import { PLACE_ROOM, PLACE_TABLE } from '@/lib/places'
+import { useActiveStay, useMyReservations, useSeatedReservation } from '@/lib/stays'
 
 /**
  * Where the next order goes: a Spaces place, and — when a clock is running

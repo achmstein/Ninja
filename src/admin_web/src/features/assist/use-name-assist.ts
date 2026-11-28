@@ -38,11 +38,7 @@ export function useNameAssist(
       const result = await assist.localize({ kind, name })
       const filled = result.filled.includes(`name.${target}`)
       if (filled) {
-        setName((prev) =>
-          hasText(prev[target])
-            ? prev
-            : { ...prev, [target]: result.name[target] ?? '' }
-        )
+        setName((prev) => (hasText(prev[target]) ? prev : { ...prev, [target]: result.name[target] ?? '' }))
         setSuggested({ [target]: true })
         setLang(target)
       }

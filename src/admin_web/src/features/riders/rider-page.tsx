@@ -6,10 +6,7 @@ import { getRealmRoles } from '@/config/oidc-config'
 import { History, Motorbike, Pencil, Store } from 'lucide-react'
 import { useAuth } from 'react-oidc-context'
 import { type RiderDeliveryRow } from '@/api/ordering'
-import {
-  getRiderDeliveriesOptions,
-  getRidersOverviewOptions,
-} from '@/api/ordering/@tanstack/react-query.gen'
+import { getRiderDeliveriesOptions, getRidersOverviewOptions } from '@/api/ordering/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useLanguage, useT } from '@/lib/i18n'
 import { formatEgp } from '@/lib/money'
@@ -17,12 +14,7 @@ import { cn } from '@/lib/utils'
 import { useTableUrlState } from '@/hooks/use-table-url-state'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import {
-  createAppColumnHelper,
-  DataTable,
-  DataTablePagination,
-  dataTableFeatures,
-} from '@/components/data-table'
+import { createAppColumnHelper, DataTable, DataTablePagination, dataTableFeatures } from '@/components/data-table'
 import { DateRangePicker } from '@/components/date-range-picker'
 import { EmptyState } from '@/components/empty-state'
 import { ErrorState } from '@/components/error-state'
@@ -36,10 +28,7 @@ import { StatusChip } from '@/components/status-chip'
 import { When } from '@/components/when'
 import { customersService } from '@/features/customers/services/customers-service'
 import { ManageBranchesDialog } from '@/features/staff/components/manage-branches-dialog'
-import {
-  useBusinessDayOffset,
-  useTillWindow,
-} from '@/features/till/use-till-window'
+import { useBusinessDayOffset, useTillWindow } from '@/features/till/use-till-window'
 import {
   addressLine,
   cashDifferenceTone,
@@ -63,23 +52,15 @@ function StageCell({ row }: { row: RiderDeliveryRow }) {
   const t = useT()
   return (
     <div className='flex flex-col items-start gap-1'>
-      <StatusChip tone={stageTone(row.stage)}>
-        {t(stageLabel(row.stage))}
-      </StatusChip>
+      <StatusChip tone={stageTone(row.stage)}>{t(stageLabel(row.stage))}</StatusChip>
       {row.stillWithRider === false && (
         <span className='text-muted-foreground text-xs'>
-          {row.givenToRiderName && (
-            <>{t('riderGivenTo', { name: row.givenToRiderName })} · </>
-          )}
-          {row.takenFromRiderAt && (
-            <When value={row.takenFromRiderAt} mode='dateTime' />
-          )}
+          {row.givenToRiderName && <>{t('riderGivenTo', { name: row.givenToRiderName })} · </>}
+          {row.takenFromRiderAt && <When value={row.takenFromRiderAt} mode='dateTime' />}
         </span>
       )}
       {row.stage === 'Failed' && row.failureReason && (
-        <span className='text-muted-foreground text-xs'>
-          “{row.failureReason}”
-        </span>
+        <span className='text-muted-foreground text-xs'>“{row.failureReason}”</span>
       )}
     </div>
   )
@@ -98,9 +79,7 @@ function CashCell({ row }: { row: RiderDeliveryRow }) {
       value={row.cashCollected}
       sub={
         tone === 'short' ? (
-          <span className='text-destructive font-medium'>
-            {t('riderShort', { amount: formatEgp(difference) })}
-          </span>
+          <span className='text-destructive font-medium'>{t('riderShort', { amount: formatEgp(difference) })}</span>
         ) : tone === 'over' ? (
           <span className='font-medium text-amber-600 dark:text-amber-400'>
             {t('riderOver', { amount: formatEgp(difference) })}
@@ -176,13 +155,12 @@ export function RiderPage({ userId }: { userId: string }) {
   const { dayWindow, ready, fromIso, toIso } = useTillWindow(search)
   const tooWide = windowTooWide(dayWindow?.from, dayWindow?.to)
 
-  const { pagination, onPaginationChange, ensurePageInRange } =
-    useTableUrlState({
-      search,
-      navigate,
-      pagination: { defaultPageSize: 20 },
-      globalFilter: { enabled: false },
-    })
+  const { pagination, onPaginationChange, ensurePageInRange } = useTableUrlState({
+    search,
+    navigate,
+    pagination: { defaultPageSize: 20 },
+    globalFilter: { enabled: false },
+  })
 
   const history = useQuery({
     ...getRiderDeliveriesOptions({
@@ -209,23 +187,15 @@ export function RiderPage({ userId }: { userId: string }) {
           header: t('riderOrderCol'),
           cell: ({ row }) => (
             <div className='flex flex-col leading-tight'>
-              <span className='font-medium tabular-nums'>
-                #{num(row.original.orderNumber)}
-              </span>
-              <span className='text-muted-foreground text-xs'>
-                {row.original.customerName || '—'}
-              </span>
+              <span className='font-medium tabular-nums'>#{num(row.original.orderNumber)}</span>
+              <span className='text-muted-foreground text-xs'>{row.original.customerName || '—'}</span>
             </div>
           ),
         }),
         columnHelper.accessor((row) => addressLine(row), {
           id: 'address',
           header: t('riderAddressCol'),
-          cell: ({ getValue }) => (
-            <span className='line-clamp-2 max-w-[16rem] text-sm'>
-              {getValue() || '—'}
-            </span>
-          ),
+          cell: ({ getValue }) => <span className='line-clamp-2 max-w-[16rem] text-sm'>{getValue() || '—'}</span>,
         }),
         columnHelper.accessor('stage', {
           header: t('riderStageCol'),
@@ -352,12 +322,7 @@ export function RiderPage({ userId }: { userId: string }) {
         )}
       </PageHeader>
       {rider && (
-        <RenameRiderDialog
-          open={renaming}
-          onOpenChange={setRenaming}
-          userId={userId}
-          name={rider.name ?? ''}
-        />
+        <RenameRiderDialog open={renaming} onOpenChange={setRenaming} userId={userId} name={rider.name ?? ''} />
       )}
       <ManageBranchesDialog
         user={choosingBranches ? (account.data ?? null) : null}
@@ -373,49 +338,29 @@ export function RiderPage({ userId }: { userId: string }) {
         </CardHeader>
         <CardContent>
           {current.isError ? (
-            <ErrorState
-              size='section'
-              error={current.error}
-              onRetry={current.refetch}
-            />
+            <ErrorState size='section' error={current.error} onRetry={current.refetch} />
           ) : openNow.length === 0 ? (
-            <p className='text-muted-foreground text-sm'>
-              {current.isLoading ? '…' : t('riderNothingNow')}
-            </p>
+            <p className='text-muted-foreground text-sm'>{current.isLoading ? '…' : t('riderNothingNow')}</p>
           ) : (
             <ul className='divide-y'>
               {openNow.map((row) => (
-                <li
-                  key={num(row.orderNumber)}
-                  className='py-2 first:pt-0 last:pb-0'
-                >
+                <li key={num(row.orderNumber)} className='py-2 first:pt-0 last:pb-0'>
                   <ListRow
                     title={
                       <span className='tabular-nums'>
                         #{num(row.orderNumber)}
-                        {row.customerName && (
-                          <span className='font-normal'>
-                            {' '}
-                            · {row.customerName}
-                          </span>
-                        )}
+                        {row.customerName && <span className='font-normal'> · {row.customerName}</span>}
                       </span>
                     }
                     meta={
                       <>
-                        <span className='truncate'>
-                          {addressLine(row) || '—'}
-                        </span>
+                        <span className='truncate'>{addressLine(row) || '—'}</span>
                         <Dot />
                         <When value={row.outAt ?? row.assignedAt} />
                       </>
                     }
                     trailing={<Money value={row.total} strong />}
-                    trailingMeta={
-                      <StatusChip tone={stageTone(row.stage)}>
-                        {t(stageLabel(row.stage))}
-                      </StatusChip>
-                    }
+                    trailingMeta={<StatusChip tone={stageTone(row.stage)}>{t(stageLabel(row.stage))}</StatusChip>}
                   />
                 </li>
               ))}
@@ -439,10 +384,7 @@ export function RiderPage({ userId }: { userId: string }) {
       </div>
 
       {tooWide ? (
-        <EmptyState
-          compact
-          title={t('riderWindowTooWide', { days: MAX_HISTORY_DAYS })}
-        />
+        <EmptyState compact title={t('riderWindowTooWide', { days: MAX_HISTORY_DAYS })} />
       ) : history.isError ? (
         <ErrorState
           size='section'
@@ -460,16 +402,8 @@ export function RiderPage({ userId }: { userId: string }) {
               value={num(summary?.delivered)}
               hint={t('riderSummaryHint')}
             />
-            <MetricTile
-              label={t('riderSummaryFailed')}
-              loading={history.isLoading}
-              value={num(summary?.failed)}
-            />
-            <MetricTile
-              label={t('riderSummaryReturned')}
-              loading={history.isLoading}
-              value={num(summary?.returned)}
-            />
+            <MetricTile label={t('riderSummaryFailed')} loading={history.isLoading} value={num(summary?.failed)} />
+            <MetricTile label={t('riderSummaryReturned')} loading={history.isLoading} value={num(summary?.returned)} />
             <MetricTile
               label={t('riderSummaryCash')}
               loading={history.isLoading}
@@ -482,8 +416,7 @@ export function RiderPage({ userId }: { userId: string }) {
                 <span
                   className={cn(
                     differenceTone === 'short' && 'text-destructive',
-                    differenceTone === 'over' &&
-                      'text-amber-600 dark:text-amber-400'
+                    differenceTone === 'over' && 'text-amber-600 dark:text-amber-400'
                   )}
                 >
                   {formatEgp(summary?.cashDifferenceTotal, true)}
@@ -493,9 +426,7 @@ export function RiderPage({ userId }: { userId: string }) {
             <MetricTile
               label={t('riderSummaryAverage')}
               loading={history.isLoading}
-              value={
-                average == null ? '—' : t('riderMinutes', { n: num(average) })
-              }
+              value={average == null ? '—' : t('riderMinutes', { n: num(average) })}
             />
           </MetricStrip>
 
@@ -503,17 +434,13 @@ export function RiderPage({ userId }: { userId: string }) {
             table={table}
             isLoading={history.isLoading || !ready}
             emptyMessage={t('riderHistoryEmpty')}
-            onRowClick={(row) =>
-              setTimelineOrder(num(row.original.orderNumber))
-            }
+            onRowClick={(row) => setTimelineOrder(num(row.original.orderNumber))}
             mobileRow={({ original: row }) => (
               <ListRow
                 title={
                   <span className='tabular-nums'>
                     #{num(row.orderNumber)}
-                    {row.customerName && (
-                      <span className='font-normal'> · {row.customerName}</span>
-                    )}
+                    {row.customerName && <span className='font-normal'> · {row.customerName}</span>}
                   </span>
                 }
                 meta={
@@ -522,19 +449,13 @@ export function RiderPage({ userId }: { userId: string }) {
                     {row.stillWithRider === false && row.givenToRiderName && (
                       <>
                         <Dot />
-                        <span>
-                          {t('riderGivenTo', { name: row.givenToRiderName })}
-                        </span>
+                        <span>{t('riderGivenTo', { name: row.givenToRiderName })}</span>
                       </>
                     )}
                   </>
                 }
                 trailing={<Money value={row.total} strong />}
-                trailingMeta={
-                  <StatusChip tone={stageTone(row.stage)}>
-                    {t(stageLabel(row.stage))}
-                  </StatusChip>
-                }
+                trailingMeta={<StatusChip tone={stageTone(row.stage)}>{t(stageLabel(row.stage))}</StatusChip>}
               />
             )}
           />
@@ -543,10 +464,7 @@ export function RiderPage({ userId }: { userId: string }) {
         </>
       )}
 
-      <TimelineDialog
-        orderId={timelineOrder}
-        onOpenChange={(open) => !open && setTimelineOrder(null)}
-      />
+      <TimelineDialog orderId={timelineOrder} onOpenChange={(open) => !open && setTimelineOrder(null)} />
     </Main>
   )
 }

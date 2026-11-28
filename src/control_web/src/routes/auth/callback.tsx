@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useAuth } from 'react-oidc-context'
 import { Loader2 } from 'lucide-react'
+import { useAuth } from 'react-oidc-context'
 import { useT } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
 
@@ -27,10 +27,7 @@ function AuthCallback() {
       <div className='flex h-svh flex-col items-center justify-center gap-4'>
         <h1 className='text-2xl font-bold'>{t('signInFailed')}</h1>
         <p className='text-muted-foreground'>{auth.error.message}</p>
-        <Button
-          size='lg'
-          onClick={() => navigate({ to: '/sign-in', replace: true })}
-        >
+        <Button size='lg' onClick={() => navigate({ to: '/sign-in', replace: true })}>
           {t('retry')}
         </Button>
       </div>

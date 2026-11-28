@@ -11,11 +11,7 @@ import { localDateOf } from '@/lib/zoned-time'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ErrorState } from '@/components/error-state'
 import { Money } from '@/components/money'
-import {
-  formatShare,
-  profitBase,
-  shareOf,
-} from '@/features/finance/profit-math'
+import { formatShare, profitBase, shareOf } from '@/features/finance/profit-math'
 import { useTillWindow } from '@/features/till/use-till-window'
 
 /**
@@ -34,13 +30,9 @@ export function MonthMoney() {
   const today = businessDateOf(new Date(), hours ?? { timeZone })
   const { year, month } = today
   const monthKey = `${year}-${String(month).padStart(2, '0')}`
-  const monthLabel = new Intl.DateTimeFormat(locale, { month: 'long' }).format(
-    localDateOf(today)
-  )
+  const monthLabel = new Intl.DateTimeFormat(locale, { month: 'long' }).format(localDateOf(today))
 
-  const profit = useQuery(
-    getProfitOptions({ query: { 'api-version': API_VERSION, year, month } })
-  )
+  const profit = useQuery(getProfitOptions({ query: { 'api-version': API_VERSION, year, month } }))
 
   if (profit.isError) {
     return <ErrorState error={profit.error} onRetry={profit.refetch} />
@@ -87,15 +79,12 @@ export function MonthMoney() {
     },
   ]
 
-  const line =
-    'hover:bg-muted/50 flex items-center gap-3 px-4 py-3 transition-colors'
+  const line = 'hover:bg-muted/50 flex items-center gap-3 px-4 py-3 transition-colors'
 
   return (
     <section className='flex flex-col gap-3'>
       <div className='flex items-baseline justify-between gap-4'>
-        <h2 className='text-sm font-semibold'>
-          {t('monthMoney', { month: monthLabel })}
-        </h2>
+        <h2 className='text-sm font-semibold'>{t('monthMoney', { month: monthLabel })}</h2>
         <Link
           to='/finance/profit'
           search={{ month: monthKey }}
@@ -109,14 +98,8 @@ export function MonthMoney() {
       ) : (
         // One list from what came in to what is left: sales, what it cost, then the profit under a line
         <div className='bg-card divide-border/60 divide-y overflow-hidden rounded-xl shadow-sm'>
-          <Link
-            to='/finance/profit'
-            search={{ month: monthKey }}
-            className={line}
-          >
-            <span className='flex-1 text-sm font-medium'>
-              {t('netSalesExVat')}
-            </span>
+          <Link to='/finance/profit' search={{ month: monthKey }} className={line}>
+            <span className='flex-1 text-sm font-medium'>{t('netSalesExVat')}</span>
             <Money value={sales} strong className='text-base' />
           </Link>
           {rows
@@ -125,25 +108,14 @@ export function MonthMoney() {
               const body = (
                 <>
                   <span className='min-w-0 flex-1'>
-                    <span className='text-muted-foreground block text-sm'>
-                      {row.label}
-                    </span>
-                    {row.hint && (
-                      <span className='text-muted-foreground/80 block text-xs'>
-                        {row.hint}
-                      </span>
-                    )}
+                    <span className='text-muted-foreground block text-sm'>{row.label}</span>
+                    {row.hint && <span className='text-muted-foreground/80 block text-xs'>{row.hint}</span>}
                   </span>
                   <Money value={-row.amount} dashZero className='text-sm' />
                 </>
               )
               return row.to ? (
-                <Link
-                  key={row.label}
-                  to={row.to}
-                  search={{ month: monthKey }}
-                  className={line}
-                >
+                <Link key={row.label} to={row.to} search={{ month: monthKey }} className={line}>
                   {body}
                 </Link>
               ) : (
@@ -152,15 +124,9 @@ export function MonthMoney() {
                 </div>
               )
             })}
-          <Link
-            to='/finance/profit'
-            search={{ month: monthKey }}
-            className={cn(line, 'bg-muted/30')}
-          >
+          <Link to='/finance/profit' search={{ month: monthKey }} className={cn(line, 'bg-muted/30')}>
             <span className='min-w-0 flex-1'>
-              <span className='block text-sm font-semibold'>
-                {t('profitLabel')}
-              </span>
+              <span className='block text-sm font-semibold'>{t('profitLabel')}</span>
               {p.margin != null && (
                 <span className='text-muted-foreground block text-xs'>
                   {t('marginOfSales', {

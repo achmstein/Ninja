@@ -54,9 +54,7 @@ export function buildSections({
     result.push({ id: 'section-popular', label: labels.popular, kind: 'popular', items: popular })
   }
   for (const category of [...categories].sort(byDisplayOrder)) {
-    const categoryItems = items
-      .filter((i) => Number(i.catalogTypeId) === Number(category.id))
-      .sort(byDisplayOrder)
+    const categoryItems = items.filter((i) => Number(i.catalogTypeId) === Number(category.id)).sort(byDisplayOrder)
     if (categoryItems.length > 0) {
       result.push({
         id: `section-${category.id}`,

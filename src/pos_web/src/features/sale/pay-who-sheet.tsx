@@ -1,8 +1,8 @@
-import type { TicketLineView } from '@/api/sales/types.gen'
 import { ChevronRight } from 'lucide-react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import type { TicketLineView } from '@/api/sales/types.gen'
 import { useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 
 /** One payer on a bill: a person and their lines, or the bill's own lines that were for nobody */
 export type Payer = { key: string; name: string | null; lineIds: number[]; subtotal: number; summary: TicketLineView[] }
@@ -71,21 +71,22 @@ export function PayWhoSheet({
   const t = useT()
   const money = useMoney()
   const localized = useLocalized()
-  const row = 'hover:bg-muted flex min-h-16 w-full items-center gap-3 border-b px-4 py-3 text-start last:border-b-0 disabled:opacity-50'
+  const row =
+    'hover:bg-muted flex min-h-16 w-full items-center gap-3 border-b px-4 py-3 text-start last:border-b-0 disabled:opacity-50'
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent size='lg'>
         <DialogHeader>
-          <DialogTitle className='flex items-center gap-2'>
-            {t('payWhoTitle')}
-          </DialogTitle>
+          <DialogTitle className='flex items-center gap-2'>{t('payWhoTitle')}</DialogTitle>
         </DialogHeader>
         <div className='flex flex-col overflow-hidden rounded-lg border'>
           <button type='button' className={row} onClick={onEverything}>
             <span className='min-w-0 flex-1'>
               <span className='type-heading block'>{partPaid ? t('payTheRest') : t('payEverything')}</span>
-              {clockRunning && <span className='text-muted-foreground type-detail block truncate'>{t('payEverythingClock')}</span>}
+              {clockRunning && (
+                <span className='text-muted-foreground type-detail block truncate'>{t('payEverythingClock')}</span>
+              )}
             </span>
             {/* The time is still to come: the sum so far would read as the whole */}
             {!clockRunning && <span className='type-heading shrink-0 tabular-nums'>{money(total)}</span>}

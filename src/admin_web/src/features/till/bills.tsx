@@ -19,9 +19,7 @@ export function TillBills() {
       tab='bills'
       search={search}
       dayWindow={dayWindow}
-      onRangeChange={(next) =>
-        navigate({ search: (prev) => ({ ...prev, ...next, page: undefined }) })
-      }
+      onRangeChange={(next) => navigate({ search: (prev) => ({ ...prev, ...next, page: undefined }) })}
     >
       <TicketsList from='/_authenticated/till/tickets' />
     </TillPage>

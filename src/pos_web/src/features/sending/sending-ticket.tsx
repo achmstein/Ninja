@@ -2,20 +2,17 @@ import { useEffect, useRef } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { ArrowLeft, ArrowRight, CloudOff, Loader2, Pencil, RotateCw } from 'lucide-react'
-import {
-  getTicketByOrderOptions,
-  getTicketOptions,
-} from '@/api/sales/@tanstack/react-query.gen'
+import { getTicketByOrderOptions, getTicketOptions } from '@/api/sales/@tanstack/react-query.gen'
+import { API_VERSION } from '@/lib/api-client'
+import { translate, useLanguage, useT } from '@/lib/i18n'
+import { useMoney } from '@/lib/money'
+import { toast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { useOfflineCharge } from '@/features/offline/offline-charge'
 import { counterBill, NO_PRICING } from '@/features/offline/pricing'
 import { useBranchPricing } from '@/features/offline/use-branch-pricing'
 import { saleTotal, useSale } from '@/features/sale/cart'
-import { API_VERSION } from '@/lib/api-client'
-import { translate, useLanguage, useT } from '@/lib/i18n'
-import { useMoney } from '@/lib/money'
-import { toast } from '@/lib/toast'
 import { dropSend, sendOrder, useSending } from './sending'
 import { SendingLines } from './sending-lines'
 
@@ -108,7 +105,7 @@ export function SendingTicket({ requestId }: { requestId: string }) {
         toast.warning(translate('ticketNotReadyYet'))
         navigate({ to: '/', replace: true })
       },
-      Math.max(0, TICKET_POLL_TIMEOUT_MS - (Date.now() - placedAt)),
+      Math.max(0, TICKET_POLL_TIMEOUT_MS - (Date.now() - placedAt))
     )
     return () => clearTimeout(handle)
   }, [placedAt, requestId, navigate])
@@ -152,11 +149,9 @@ export function SendingTicket({ requestId }: { requestId: string }) {
             <BackIcon className='size-6' />
           </Link>
         </Button>
-        <h1 className='flex min-w-0 flex-1 items-baseline gap-2 type-title'>
+        <h1 className='type-title flex min-w-0 flex-1 items-baseline gap-2'>
           <span className='truncate'>{send.customer?.name || t('counter')}</span>
-          <span className='text-muted-foreground shrink-0 type-detail font-medium'>
-            {t('newTicket')}
-          </span>
+          <span className='text-muted-foreground type-detail shrink-0 font-medium'>{t('newTicket')}</span>
         </h1>
       </div>
 

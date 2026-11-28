@@ -17,12 +17,7 @@ import { PageHeader } from '@/components/page-header'
 import { LiveTabs } from './components/live-tabs'
 import { PendingOrderCard } from './components/pending-order-card'
 import { PlatformRejectReasonPicker } from './components/platform-badge'
-import {
-  defaultPlatformRejectReason,
-  orderPlace,
-  orderUrgency,
-  type OrderPlace,
-} from './status'
+import { defaultPlatformRejectReason, orderPlace, orderUrgency, type OrderPlace } from './status'
 import { useOrderActions } from './use-order-actions'
 
 const route = getRouteApi('/_authenticated/orders/live')
@@ -43,8 +38,7 @@ export function OrdersBoard() {
 
   // Tapping a card's customer name opens their hub on the Customers page
   const globalNavigate = useNavigate()
-  const openCustomer = (customerId: string) =>
-    globalNavigate({ to: '/customers', search: { customer: customerId } })
+  const openCustomer = (customerId: string) => globalNavigate({ to: '/customers', search: { customer: customerId } })
 
   // Cancelling is irreversible for the customer: always a confirm step
   const [cancelTarget, setCancelTarget] = useState<number | null>(null)
@@ -68,15 +62,10 @@ export function OrdersBoard() {
   const pending = [...(pendingQuery.data ?? [])].sort(
     (a, b) => new Date(a.date ?? 0).getTime() - new Date(b.date ?? 0).getTime()
   )
-  const delayedCount = pending.filter(
-    (order) => orderUrgency(order.date, nowMs) === 'delayed'
-  ).length
+  const delayedCount = pending.filter((order) => orderUrgency(order.date, nowMs) === 'delayed').length
 
   const cancelIsPlatform =
-    cancelTarget != null &&
-    pending.some(
-      (order) => Number(order.orderNumber) === cancelTarget && order.platform
-    )
+    cancelTarget != null && pending.some((order) => Number(order.orderNumber) === cancelTarget && order.platform)
 
   const place = search.place
   const counts: Record<OrderPlace, number> = {
@@ -86,9 +75,7 @@ export function OrdersBoard() {
     delivery: 0,
   }
   for (const order of pending) counts[orderPlace(order)] += 1
-  const visible = place
-    ? pending.filter((order) => orderPlace(order) === place)
-    : pending
+  const visible = place ? pending.filter((order) => orderPlace(order) === place) : pending
   const showFilter = pending.length > FILTER_THRESHOLD || place != null
   // Rooms where time is billed, tables where there are places; either still shows while it has orders
   const modules = useModules()
@@ -111,9 +98,7 @@ export function OrdersBoard() {
           description={t('liveDescription')}
           badge={
             <>
-              {pending.length > 0 && (
-                <Badge className='h-6 tabular-nums'>{pending.length}</Badge>
-              )}
+              {pending.length > 0 && <Badge className='h-6 tabular-nums'>{pending.length}</Badge>}
               {delayedCount > 0 && (
                 <Badge variant='danger' className='h-6 gap-1 tabular-nums'>
                   <Clock className='h-3 w-3' />
@@ -140,31 +125,23 @@ export function OrdersBoard() {
                 {showRooms && (
                   <ToggleGroupItem value='rooms' className='gap-1.5 px-3'>
                     {t('rooms')}
-                    <span className='text-muted-foreground tabular-nums'>
-                      {counts.rooms}
-                    </span>
+                    <span className='text-muted-foreground tabular-nums'>{counts.rooms}</span>
                   </ToggleGroupItem>
                 )}
                 {showTables && (
                   <ToggleGroupItem value='tables' className='gap-1.5 px-3'>
                     {t('tables')}
-                    <span className='text-muted-foreground tabular-nums'>
-                      {counts.tables}
-                    </span>
+                    <span className='text-muted-foreground tabular-nums'>{counts.tables}</span>
                   </ToggleGroupItem>
                 )}
                 <ToggleGroupItem value='counter' className='gap-1.5 px-3'>
                   {t('counter')}
-                  <span className='text-muted-foreground tabular-nums'>
-                    {counts.counter}
-                  </span>
+                  <span className='text-muted-foreground tabular-nums'>{counts.counter}</span>
                 </ToggleGroupItem>
                 {counts.delivery > 0 && (
                   <ToggleGroupItem value='delivery' className='gap-1.5 px-3'>
                     {t('boardLaneDelivery')}
-                    <span className='text-muted-foreground tabular-nums'>
-                      {counts.delivery}
-                    </span>
+                    <span className='text-muted-foreground tabular-nums'>{counts.delivery}</span>
                   </ToggleGroupItem>
                 )}
               </ToggleGroup>
@@ -173,10 +150,7 @@ export function OrdersBoard() {
         </PageHeader>
 
         {pendingQuery.isError ? (
-          <ErrorState
-            error={pendingQuery.error}
-            onRetry={() => pendingQuery.refetch()}
-          />
+          <ErrorState error={pendingQuery.error} onRetry={() => pendingQuery.refetch()} />
         ) : pendingQuery.isLoading ? (
           <div className='grid gap-4 md:grid-cols-2 xl:grid-cols-3'>
             {[...Array(3)].map((_, i) => (
@@ -199,13 +173,9 @@ export function OrdersBoard() {
                   setCancelTarget(Number(order.orderNumber))
                 }}
                 onRejectGuest={() => setRejectTarget(Number(order.orderNumber))}
-                onViewCustomer={
-                  order.userId ? () => openCustomer(order.userId!) : undefined
-                }
+                onViewCustomer={order.userId ? () => openCustomer(order.userId!) : undefined}
                 // Only the card being acted on shows busy
-                isActing={
-                  Number(actingOrderNumber) === Number(order.orderNumber)
-                }
+                isActing={Number(actingOrderNumber) === Number(order.orderNumber)}
               />
             ))}
           </div>
@@ -222,17 +192,11 @@ export function OrdersBoard() {
         confirmText={t('cancelOrderButton')}
         destructive
         handleConfirm={() => {
-          if (cancelTarget != null)
-            cancel(cancelTarget, cancelIsPlatform ? cancelReason : undefined)
+          if (cancelTarget != null) cancel(cancelTarget, cancelIsPlatform ? cancelReason : undefined)
           setCancelTarget(null)
         }}
       >
-        {cancelIsPlatform && (
-          <PlatformRejectReasonPicker
-            value={cancelReason}
-            onChange={setCancelReason}
-          />
-        )}
+        {cancelIsPlatform && <PlatformRejectReasonPicker value={cancelReason} onChange={setCancelReason} />}
       </ConfirmDialog>
 
       <ConfirmDialog

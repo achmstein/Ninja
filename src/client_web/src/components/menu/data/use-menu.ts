@@ -1,15 +1,12 @@
 import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import {
-  listCategoriesOptions,
-  listItemsOptions,
-} from '@/api/catalog/@tanstack/react-query.gen'
+import { listCategoriesOptions, listItemsOptions } from '@/api/catalog/@tanstack/react-query.gen'
 import { useBranchScope, useSelectedBranch } from '@/lib/branch'
 import { useBrand } from '@/lib/brand'
 import { useLocalized, useT } from '@/lib/i18n'
+import { buildSections, type MenuSectionData } from './sections'
 import { useFavorites } from './use-favorites'
 import { useMyTopItems } from './use-my-top-items'
-import { buildSections, type MenuSectionData } from './sections'
 
 export type { MenuSectionData } from './sections'
 
@@ -32,11 +29,17 @@ export function useMenuData(): MenuData {
   // This branch's menu by name, each branch cached as its own (lib/branch.ts)
   const scope = useBranchScope()
   const { data: categories = [] } = useQuery({ ...listCategoriesOptions(scope.options), enabled: scope.ready })
-  const { data: allItems = [], isLoading: itemsLoading } = useQuery({ ...listItemsOptions(scope.options), enabled: scope.ready })
+  const { data: allItems = [], isLoading: itemsLoading } = useQuery({
+    ...listItemsOptions(scope.options),
+    enabled: scope.ready,
+  })
   // The business's choice (admin, Brand): an item that is off or sold out at this branch is either
   // shown greyed and marked unavailable, or left off the menu until it is back
   const hideSoldOut = useBrand()?.hideSoldOutItems ?? false
-  const items = useMemo(() => (hideSoldOut ? allItems.filter((item) => item.isAvailable !== false) : allItems), [allItems, hideSoldOut])
+  const items = useMemo(
+    () => (hideSoldOut ? allItems.filter((item) => item.isAvailable !== false) : allItems),
+    [allItems, hideSoldOut]
+  )
   const isLoading = itemsLoading || !scope.ready
   const { favorites } = useFavorites()
   const topItemIds = useMyTopItems()

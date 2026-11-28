@@ -1,13 +1,13 @@
 import { useMemo, useState } from 'react'
 import { Banknote, CheckSquare, Square } from 'lucide-react'
-import { NumericKeypad } from '@/components/numeric-keypad'
+import { useT } from '@/lib/i18n'
+import { toNumber, useMoney } from '@/lib/money'
+import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { useT } from '@/lib/i18n'
-import { toNumber, useMoney } from '@/lib/money'
-import { cn } from '@/lib/utils'
+import { NumericKeypad } from '@/components/numeric-keypad'
 import { splitCounted, type RiderGroup } from './delivery-board'
 import type { BoardDelivery } from './use-deliveries'
 
@@ -39,7 +39,15 @@ export function RiderCashDialog({
   return (
     <Dialog open={rider != null} onOpenChange={onOpenChange}>
       <DialogContent className='max-h-[95svh] gap-4' size='xl'>
-        {rider && <Body key={rider.riderUserId ?? ''} rider={rider} busy={busy} cancel={() => onOpenChange(false)} onTake={onTake} />}
+        {rider && (
+          <Body
+            key={rider.riderUserId ?? ''}
+            rider={rider}
+            busy={busy}
+            cancel={() => onOpenChange(false)}
+            onTake={onTake}
+          />
+        )}
       </DialogContent>
     </Dialog>
   )
@@ -65,7 +73,7 @@ function Body({
         total: toNumber(o.total),
         order: o,
       })),
-    [rider],
+    [rider]
   )
   const [ticked, setTicked] = useState(() => new Set(bills.map((b) => b.orderNumber)))
   const [typed, setTyped] = useState<string | null>(null)
@@ -77,7 +85,8 @@ function Body({
   const counted = typed ?? plain(expected)
   const value = counted === '' ? null : Number(counted)
   const difference = value == null || !Number.isFinite(value) ? null : Math.round((value - expected) * 100) / 100
-  const on = differenceOn != null && ticked.has(differenceOn) ? differenceOn : (chosen[chosen.length - 1]?.orderNumber ?? null)
+  const on =
+    differenceOn != null && ticked.has(differenceOn) ? differenceOn : (chosen[chosen.length - 1]?.orderNumber ?? null)
   const canTake = chosen.length > 0 && value != null && Number.isFinite(value) && value >= 0 && !busy
   const name = rider.riderName ?? t('deliveryNoRider')
 
@@ -111,17 +120,20 @@ function Body({
                 onClick={() => toggle(b.orderNumber)}
                 className={cn(
                   'flex min-h-14 items-center gap-3 rounded-xl border px-3 text-start transition-colors',
-                  on ? 'bg-secondary border-foreground/30' : 'hover:bg-muted',
+                  on ? 'bg-secondary border-foreground/30' : 'hover:bg-muted'
                 )}
               >
                 <Box className={cn('size-5 shrink-0', !on && 'text-muted-foreground')} aria-hidden />
-                <span className='text-muted-foreground shrink-0 type-detail tabular-nums'>{'#\u200F'}{b.orderNumber}</span>
+                <span className='text-muted-foreground type-detail shrink-0 tabular-nums'>
+                  {'#\u200F'}
+                  {b.orderNumber}
+                </span>
                 <span className='min-w-0 flex-1 truncate font-medium'>{b.order.customerName || t('guest')}</span>
                 <span className='shrink-0 font-semibold tabular-nums'>{money(b.total)}</span>
               </button>
             )
           })}
-          {chosen.length === 0 && <p className='text-destructive mt-1 type-detail'>{t('riderCashNoneTicked')}</p>}
+          {chosen.length === 0 && <p className='text-destructive type-detail mt-1'>{t('riderCashNoneTicked')}</p>}
           {/* Off by something: which bill carries it */}
           {difference != null && difference !== 0 && chosen.length > 1 && (
             <div className='mt-2 flex flex-col gap-1.5'>
@@ -161,7 +173,7 @@ function Body({
           </div>
           <NumericKeypad value={counted} onChange={setTyped} />
           {/* Said in words, never colour alone */}
-          <p id='rider-cash-difference' className='min-h-5 type-detail font-semibold' aria-live='polite'>
+          <p id='rider-cash-difference' className='type-detail min-h-5 font-semibold' aria-live='polite'>
             {difference == null ? null : difference === 0 ? (
               <span className='text-emerald-700 dark:text-emerald-400'>{t('riderCashExact')}</span>
             ) : (
@@ -179,7 +191,12 @@ function Body({
         <Button variant='outline' size='lg' className='h-12' onClick={cancel}>
           {t('cancel')}
         </Button>
-        <Button size='lg' className='col-span-2 h-12' disabled={!canTake} onClick={() => onTake(splitCounted(chosen, value ?? 0, on))}>
+        <Button
+          size='lg'
+          className='col-span-2 h-12'
+          disabled={!canTake}
+          onClick={() => onTake(splitCounted(chosen, value ?? 0, on))}
+        >
           <Banknote className='size-5' />
           {t('riderCashTakeIn', { amount: money(value ?? 0) })}
         </Button>

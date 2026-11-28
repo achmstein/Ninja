@@ -18,15 +18,8 @@ import {
   X,
 } from 'lucide-react'
 import { type OrderSummary } from '@/api/ordering'
-import {
-  type PlaceViewModel,
-  type ReservationViewModel,
-  type StayViewModel,
-} from '@/api/spaces'
-import {
-  getPlaceReservationHistoryOptions,
-  getPlaceStayHistoryOptions,
-} from '@/api/spaces/@tanstack/react-query.gen'
+import { type PlaceViewModel, type ReservationViewModel, type StayViewModel } from '@/api/spaces'
+import { getPlaceReservationHistoryOptions, getPlaceStayHistoryOptions } from '@/api/spaces/@tanstack/react-query.gen'
 import { useCustomerOrigin, useFeatures } from '@/lib/brand'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { placeQrUrl } from '@/lib/qr'
@@ -83,10 +76,7 @@ interface PlaceDetailPanelProps {
   onHold: () => void
   onWalkIn: () => void
   /** A reservation at a timed place needs a rate picked before its clock starts */
-  onStartHeld: (
-    reservation: ReservationViewModel,
-    mode: 'start' | 'confirm'
-  ) => void
+  onStartHeld: (reservation: ReservationViewModel, mode: 'start' | 'confirm') => void
 }
 
 /**
@@ -166,9 +156,7 @@ export function PlaceDetailPanel({
   const currentOption = stay?.currentOptionCode ?? null
   const estimate = stay && running ? estimateStayCost(stay, now) : null
   const expiresInSeconds =
-    held && reservation.expiresAt
-      ? Math.max(0, (new Date(reservation.expiresAt).getTime() - now) / 1000)
-      : null
+    held && reservation.expiresAt ? Math.max(0, (new Date(reservation.expiresAt).getTime() - now) / 1000) : null
 
   const copyQrLink = () => {
     navigator.clipboard.writeText(placeQrUrl(customerOrigin, placeId))
@@ -180,11 +168,7 @@ export function PlaceDetailPanel({
     // The customer asked for the clock to start the moment the counter
     // confirms the reservation. With a rate to pick that they did not
     // pick, ask first; otherwise the server starts at the rate they asked for
-    if (
-      reservation.startOnConfirm &&
-      hasOptions(place.tariff) &&
-      !reservation.requestedOptionCode
-    ) {
+    if (reservation.startOnConfirm && hasOptions(place.tariff) && !reservation.requestedOptionCode) {
       onStartHeld(reservation, 'confirm')
     } else {
       actions.confirm(reservationId, null, Boolean(reservation.startOnConfirm))
@@ -206,33 +190,16 @@ export function PlaceDetailPanel({
       {/* Header */}
       <div className='flex flex-none items-center justify-between gap-2 border-b p-4'>
         <div className='flex min-w-0 items-center gap-3'>
-          <Button
-            size='icon'
-            variant='ghost'
-            className='-ms-2 sm:hidden'
-            onClick={onBack}
-            aria-label={t('goBack')}
-          >
+          <Button size='icon' variant='ghost' className='-ms-2 sm:hidden' onClick={onBack} aria-label={t('goBack')}>
             <ArrowLeft className='rtl:rotate-180' />
           </Button>
-          <span
-            className={`h-2.5 w-2.5 shrink-0 rounded-full ${placeStatus?.dotClass ?? 'bg-muted'}`}
-          />
+          <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${placeStatus?.dotClass ?? 'bg-muted'}`} />
           <div className='min-w-0'>
-            <h2 className='truncate text-sm font-semibold'>
-              {localized(place.name)}
-            </h2>
-            <p className='text-muted-foreground truncate text-xs tabular-nums'>
-              {tariffLine(place, t, localized)}
-            </p>
+            <h2 className='truncate text-sm font-semibold'>{localized(place.name)}</h2>
+            <p className='text-muted-foreground truncate text-xs tabular-nums'>{tariffLine(place, t, localized)}</p>
           </div>
         </div>
-        <Button
-          size='icon'
-          variant='ghost'
-          onClick={copyQrLink}
-          aria-label={t('copyPlaceLink')}
-        >
+        <Button size='icon' variant='ghost' onClick={copyQrLink} aria-label={t('copyPlaceLink')}>
           <QrCode className='h-4 w-4' />
         </Button>
       </div>
@@ -249,10 +216,7 @@ export function PlaceDetailPanel({
                 </span>
                 {currentOption && (
                   <p className='text-muted-foreground text-sm'>
-                    {localized(
-                      findOption(stay.tariff, currentOption)?.name ??
-                        stay.currentOptionName
-                    )}
+                    {localized(findOption(stay.tariff, currentOption)?.name ?? stay.currentOptionName)}
                   </p>
                 )}
 
@@ -273,11 +237,7 @@ export function PlaceDetailPanel({
                     {members.map((member) => {
                       const isOwner = member.role === 'Owner'
                       return (
-                        <Badge
-                          key={member.customerId}
-                          variant='outline'
-                          className='gap-1.5 py-1'
-                        >
+                        <Badge key={member.customerId} variant='outline' className='gap-1.5 py-1'>
                           {isOwner ? (
                             <Star className='h-3 w-3 fill-amber-400 text-amber-400' />
                           ) : (
@@ -289,9 +249,7 @@ export function PlaceDetailPanel({
                               type='button'
                               aria-label={t('memberRemove')}
                               disabled={actions.isBusy}
-                              onClick={() =>
-                                actions.removeMember(stayId, member.customerId!)
-                              }
+                              onClick={() => actions.removeMember(stayId, member.customerId!)}
                             >
                               <X className='text-muted-foreground hover:text-destructive h-3 w-3' />
                             </button>
@@ -322,9 +280,7 @@ export function PlaceDetailPanel({
                       variant='outline'
                       size='sm'
                       disabled={actions.isBusy}
-                      onClick={() =>
-                        setPickerFor(stay.customerId ? 'member' : 'assign')
-                      }
+                      onClick={() => setPickerFor(stay.customerId ? 'member' : 'assign')}
                     >
                       <UserPlus />
                       {t(stay.customerId ? 'addCustomer' : 'assignCustomer')}
@@ -340,39 +296,26 @@ export function PlaceDetailPanel({
                       .filter((line) => line.hours > 0)
                       .map((line) => (
                         <div key={line.code} className='flex justify-between'>
-                          <span className='text-muted-foreground'>
-                            {localized(line.name)}
-                          </span>
+                          <span className='text-muted-foreground'>{localized(line.name)}</span>
                           <span className='tabular-nums'>
-                            {formatBillingHours(line.hours, t)} ·{' '}
-                            {formatEgp(line.amount)}
+                            {formatBillingHours(line.hours, t)} · {formatEgp(line.amount)}
                           </span>
                         </div>
                       ))}
                     <Separator className='my-2' />
                     <div className='flex justify-between font-semibold'>
                       <span>{t('estimate')}</span>
-                      <span className='tabular-nums'>
-                        {formatEgp(estimate.amount)}
-                      </span>
+                      <span className='tabular-nums'>{formatEgp(estimate.amount)}</span>
                     </div>
                   </div>
                 )}
 
                 <div className='flex gap-2'>
-                  <Button
-                    variant='outline'
-                    disabled={actions.isBusy}
-                    onClick={() => setConfirmCancel(true)}
-                  >
+                  <Button variant='outline' disabled={actions.isBusy} onClick={() => setConfirmCancel(true)}>
                     <X />
                     {t('cancelTime')}
                   </Button>
-                  <Button
-                    variant='destructive'
-                    disabled={actions.isBusy}
-                    onClick={() => setConfirmEnd(true)}
-                  >
+                  <Button variant='destructive' disabled={actions.isBusy} onClick={() => setConfirmEnd(true)}>
                     <Square />
                     {t('end')}
                   </Button>
@@ -387,9 +330,7 @@ export function PlaceDetailPanel({
                 <p className='text-muted-foreground flex items-center gap-1 text-sm'>
                   <User className='size-4' />
                   {seated.customerName || t('guest')}
-                  {seated.partySize
-                    ? ` · ${t('partyOf', { count: seated.partySize })}`
-                    : ''}
+                  {seated.partySize ? ` · ${t('partyOf', { count: seated.partySize })}` : ''}
                 </p>
                 {seated.seatedAt && (
                   <p className='text-muted-foreground text-sm tabular-nums'>
@@ -401,9 +342,7 @@ export function PlaceDetailPanel({
                 <Button
                   className='mt-2'
                   disabled={actions.isBusy}
-                  onClick={() =>
-                    actions.completeReservation(Number(seated.reservationId))
-                  }
+                  onClick={() => actions.completeReservation(Number(seated.reservationId))}
                 >
                   <LogOut className='me-1 h-4 w-4 rtl:rotate-180' />
                   {t('partyLeft')}
@@ -415,17 +354,10 @@ export function PlaceDetailPanel({
                   <Clock className='size-7 text-amber-500' />
                 </div>
                 <p className='font-medium'>
-                  {reservation.customerName
-                    ? t('heldFor', { name: reservation.customerName })
-                    : t('held')}
+                  {reservation.customerName ? t('heldFor', { name: reservation.customerName }) : t('held')}
                 </p>
                 {!reservation.customerId && (
-                  <Button
-                    variant='outline'
-                    size='sm'
-                    disabled={actions.isBusy}
-                    onClick={() => setPickerFor('assign')}
-                  >
+                  <Button variant='outline' size='sm' disabled={actions.isBusy} onClick={() => setPickerFor('assign')}>
                     <UserPlus />
                     {t('assignCustomer')}
                   </Button>
@@ -443,26 +375,18 @@ export function PlaceDetailPanel({
                     {t('startsOnConfirm')}
                     {/* The rate the customer asked to start at */}
                     {reservation.requestedOptionName && (
-                      <Badge variant='secondary'>
-                        {localized(reservation.requestedOptionName)}
-                      </Badge>
+                      <Badge variant='secondary'>{localized(reservation.requestedOptionName)}</Badge>
                     )}
                   </p>
                 )}
                 <div className='mt-2 flex flex-wrap justify-center gap-2'>
-                  <Button
-                    variant='outline'
-                    disabled={actions.isBusy}
-                    onClick={() => setConfirmCancel(true)}
-                  >
+                  <Button variant='outline' disabled={actions.isBusy} onClick={() => setConfirmCancel(true)}>
                     <X />
                     {t('cancel')}
                   </Button>
                   {timed && (
                     <Button
-                      variant={
-                        reservation.startOnConfirm ? 'default' : 'outline'
-                      }
+                      variant={reservation.startOnConfirm ? 'default' : 'outline'}
                       disabled={actions.isBusy}
                       onClick={confirmHold}
                     >
@@ -472,11 +396,7 @@ export function PlaceDetailPanel({
                   )}
                   {!reservation.startOnConfirm && (
                     <Button disabled={actions.isBusy} onClick={startHeld}>
-                      {timed ? (
-                        <Play className='me-1 h-4 w-4 rtl:rotate-180' />
-                      ) : (
-                        <CheckCircle2 />
-                      )}
+                      {timed ? <Play className='me-1 h-4 w-4 rtl:rotate-180' /> : <CheckCircle2 />}
                       {t(timed ? 'start' : 'seatParty')}
                     </Button>
                   )}
@@ -487,9 +407,7 @@ export function PlaceDetailPanel({
                 <div className='bg-muted flex size-16 items-center justify-center rounded-full'>
                   <Wrench className='text-muted-foreground size-7' />
                 </div>
-                <p className='text-muted-foreground font-medium'>
-                  {t('outOfService')}
-                </p>
+                <p className='text-muted-foreground font-medium'>{t('outOfService')}</p>
               </div>
             ) : (
               <div className='flex flex-col items-center gap-3 px-4 py-8'>
@@ -498,9 +416,7 @@ export function PlaceDetailPanel({
                 </div>
                 <p className='font-medium'>{t('available')}</p>
                 {place.description && localized(place.description) && (
-                  <p className='text-muted-foreground max-w-sm text-center text-sm'>
-                    {localized(place.description)}
-                  </p>
+                  <p className='text-muted-foreground max-w-sm text-center text-sm'>{localized(place.description)}</p>
                 )}
                 {/* Holding needs bookings, a walk-in the clock: a place that kept a
                     tariff from a bigger plan is a plain table without them */}
@@ -529,15 +445,11 @@ export function PlaceDetailPanel({
             <h3 className='text-sm font-medium'>
               {t('pendingOrders')}
               {orders.length > 0 && (
-                <span className='text-muted-foreground ms-2 font-normal tabular-nums'>
-                  {orders.length}
-                </span>
+                <span className='text-muted-foreground ms-2 font-normal tabular-nums'>{orders.length}</span>
               )}
             </h3>
             {orders.length === 0 ? (
-              <p className='text-muted-foreground text-sm'>
-                {t('noOrdersForTable')}
-              </p>
+              <p className='text-muted-foreground text-sm'>{t('noOrdersForTable')}</p>
             ) : (
               // The board's tickets, as many across as fit at a comfortable
               // width rather than one stretched across the panel; the place
@@ -549,17 +461,10 @@ export function PlaceDetailPanel({
                     summary={order}
                     nowMs={now}
                     hidePlace
-                    onConfirm={() =>
-                      orderActions.confirm(Number(order.orderNumber))
-                    }
+                    onConfirm={() => orderActions.confirm(Number(order.orderNumber))}
                     onCancel={() => setCancelOrder(Number(order.orderNumber))}
-                    onRejectGuest={() =>
-                      setRejectOrder(Number(order.orderNumber))
-                    }
-                    isActing={
-                      Number(orderActions.actingOrderNumber) ===
-                      Number(order.orderNumber)
-                    }
+                    onRejectGuest={() => setRejectOrder(Number(order.orderNumber))}
+                    isActing={Number(orderActions.actingOrderNumber) === Number(order.orderNumber)}
                   />
                 ))}
               </div>
@@ -572,13 +477,9 @@ export function PlaceDetailPanel({
           <div className='p-4'>
             <h3 className='pb-1 text-sm font-medium'>{t('history')}</h3>
             {historyQuery.isLoading ? (
-              <p className='text-muted-foreground py-4 text-sm'>
-                {t('loading')}
-              </p>
+              <p className='text-muted-foreground py-4 text-sm'>{t('loading')}</p>
             ) : history.length === 0 ? (
-              <p className='text-muted-foreground py-4 text-sm'>
-                {t('noTimeYet')}
-              </p>
+              <p className='text-muted-foreground py-4 text-sm'>{t('noTimeYet')}</p>
             ) : (
               <>
                 {history.map((item) => {
@@ -591,37 +492,22 @@ export function PlaceDetailPanel({
                       className='flex items-center gap-3 border-b py-2.5 text-sm last:border-b-0'
                     >
                       <div className='w-20 shrink-0'>
-                        <div className='font-medium'>
-                          {start && dayHeading(dayKey(start), locale, t)}
-                        </div>
-                        {start && (
-                          <When
-                            value={start}
-                            mode='time'
-                            className='text-muted-foreground block text-xs'
-                          />
-                        )}
+                        <div className='font-medium'>{start && dayHeading(dayKey(start), locale, t)}</div>
+                        {start && <When value={start} mode='time' className='text-muted-foreground block text-xs' />}
                       </div>
-                      <span
-                        className={`min-w-0 flex-1 truncate ${item.customerName ? '' : 'text-muted-foreground'}`}
-                      >
+                      <span className={`min-w-0 flex-1 truncate ${item.customerName ? '' : 'text-muted-foreground'}`}>
                         {item.customerName || t('walkIn')}
                       </span>
                       {cancelled ? (
-                        <span className='text-destructive text-xs'>
-                          {t('cancelled')}
-                        </span>
+                        <span className='text-destructive text-xs'>{t('cancelled')}</span>
                       ) : (
                         <div className='text-end'>
                           <div className='font-mono font-medium tabular-nums'>
-                            {item.startedAt && item.endedAt
-                              ? formatDuration(item.startedAt, item.endedAt)
-                              : '—'}
+                            {item.startedAt && item.endedAt ? formatDuration(item.startedAt, item.endedAt) : '—'}
                           </div>
                           {billed > 0 && (
                             <div className='text-muted-foreground text-xs tabular-nums'>
-                              {formatBillingHours(billed, t)} ·{' '}
-                              {formatEgp(item.totalCost)}
+                              {formatBillingHours(billed, t)} · {formatEgp(item.totalCost)}
                             </div>
                           )}
                         </div>
@@ -635,9 +521,7 @@ export function PlaceDetailPanel({
                     size='sm'
                     className='mt-2 w-full'
                     disabled={historyQuery.isFetching}
-                    onClick={() =>
-                      setHistoryLimit((limit) => limit + HISTORY_PAGE)
-                    }
+                    onClick={() => setHistoryLimit((limit) => limit + HISTORY_PAGE)}
                   >
                     {t('loadMore')}
                   </Button>
@@ -647,73 +531,51 @@ export function PlaceDetailPanel({
           </div>
         )}
         {/* Past reservations */}
-        {features.reservations &&
-          (place.reservable || pastReservations.length > 0) && (
-            <div className='border-t p-4'>
-              <h3 className='pb-1 text-sm font-medium'>
-                {t('reservationHistory')}
-              </h3>
-              {reservationsQuery.isLoading ? (
-                <p className='text-muted-foreground py-4 text-sm'>
-                  {t('loading')}
-                </p>
-              ) : pastReservations.length === 0 ? (
-                <p className='text-muted-foreground py-4 text-sm'>
-                  {t('noReservationsYet')}
-                </p>
-              ) : (
-                <>
-                  {pastReservations.map((item) => {
-                    const when = item.for ?? item.createdAt
-                    return (
-                      <div
-                        key={String(item.id)}
-                        className='flex items-center gap-3 border-b py-2.5 text-sm last:border-b-0'
-                      >
-                        <div className='w-20 shrink-0'>
-                          <div className='font-medium'>
-                            {when && dayHeading(dayKey(when), locale, t)}
-                          </div>
-                          {when && (
-                            <When
-                              value={when}
-                              mode='time'
-                              className='text-muted-foreground block text-xs'
-                            />
-                          )}
-                        </div>
-                        <span
-                          className={`min-w-0 flex-1 truncate ${item.customerName ? '' : 'text-muted-foreground'}`}
-                        >
-                          {item.customerName || t('walkIn')}
-                          {item.partySize ? (
-                            <span className='text-muted-foreground'>
-                              {' '}
-                              · {t('partyOf', { count: item.partySize })}
-                            </span>
-                          ) : null}
-                        </span>
-                        <ReservationOutcome reservation={item} />
-                      </div>
-                    )
-                  })}
-                  {pastReservations.length >= reservationLimit && (
-                    <Button
-                      variant='ghost'
-                      size='sm'
-                      className='mt-2 w-full'
-                      disabled={reservationsQuery.isFetching}
-                      onClick={() =>
-                        setReservationLimit((limit) => limit + HISTORY_PAGE)
-                      }
+        {features.reservations && (place.reservable || pastReservations.length > 0) && (
+          <div className='border-t p-4'>
+            <h3 className='pb-1 text-sm font-medium'>{t('reservationHistory')}</h3>
+            {reservationsQuery.isLoading ? (
+              <p className='text-muted-foreground py-4 text-sm'>{t('loading')}</p>
+            ) : pastReservations.length === 0 ? (
+              <p className='text-muted-foreground py-4 text-sm'>{t('noReservationsYet')}</p>
+            ) : (
+              <>
+                {pastReservations.map((item) => {
+                  const when = item.for ?? item.createdAt
+                  return (
+                    <div
+                      key={String(item.id)}
+                      className='flex items-center gap-3 border-b py-2.5 text-sm last:border-b-0'
                     >
-                      {t('loadMore')}
-                    </Button>
-                  )}
-                </>
-              )}
-            </div>
-          )}
+                      <div className='w-20 shrink-0'>
+                        <div className='font-medium'>{when && dayHeading(dayKey(when), locale, t)}</div>
+                        {when && <When value={when} mode='time' className='text-muted-foreground block text-xs' />}
+                      </div>
+                      <span className={`min-w-0 flex-1 truncate ${item.customerName ? '' : 'text-muted-foreground'}`}>
+                        {item.customerName || t('walkIn')}
+                        {item.partySize ? (
+                          <span className='text-muted-foreground'> · {t('partyOf', { count: item.partySize })}</span>
+                        ) : null}
+                      </span>
+                      <ReservationOutcome reservation={item} />
+                    </div>
+                  )
+                })}
+                {pastReservations.length >= reservationLimit && (
+                  <Button
+                    variant='ghost'
+                    size='sm'
+                    className='mt-2 w-full'
+                    disabled={reservationsQuery.isFetching}
+                    onClick={() => setReservationLimit((limit) => limit + HISTORY_PAGE)}
+                  >
+                    {t('loadMore')}
+                  </Button>
+                )}
+              </>
+            )}
+          </div>
+        )}
       </ScrollArea>
 
       <CustomerSearchDialog
@@ -736,18 +598,12 @@ export function PlaceDetailPanel({
         open={confirmEnd}
         onOpenChange={setConfirmEnd}
         title={t('endTimeQuestion')}
-        desc={
-          estimate
-            ? t('endTimeEstimate', { amount: formatEgp(estimate.amount) })
-            : undefined
-        }
+        desc={estimate ? t('endTimeEstimate', { amount: formatEgp(estimate.amount) }) : undefined}
         cancelBtnText={t('keepGoing')}
         confirmText={t('end')}
         destructive
         isLoading={actions.isBusy}
-        handleConfirm={() =>
-          actions.endStay(stayId, { onSuccess: () => setConfirmEnd(false) })
-        }
+        handleConfirm={() => actions.endStay(stayId, { onSuccess: () => setConfirmEnd(false) })}
       />
 
       <ConfirmDialog

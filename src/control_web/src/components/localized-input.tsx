@@ -1,12 +1,7 @@
 import { createContext, useContext, useId, useState } from 'react'
 import { useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupInput,
-  InputGroupTextarea,
-} from '@/components/ui/input-group'
+import { InputGroup, InputGroupAddon, InputGroupInput, InputGroupTextarea } from '@/components/ui/input-group'
 import { Label } from '@/components/ui/label'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 
@@ -18,9 +13,7 @@ export type LocalizedValue = { en: string; ar: string }
 type LocalizedText = { en?: string | null; ar?: string | null }
 
 /** From the API's nullable pair to form state */
-export function toLocalizedValue(
-  text: LocalizedText | null | undefined
-): LocalizedValue {
+export function toLocalizedValue(text: LocalizedText | null | undefined): LocalizedValue {
   return { en: text?.en ?? '', ar: text?.ar ?? '' }
 }
 
@@ -47,19 +40,9 @@ const LangContext = createContext<{
  * together: pick Arabic once, fill in all the Arabic names, done. Starts
  * in the UI's language unless `defaultLang` says otherwise.
  */
-export function LocalizedFields({
-  defaultLang,
-  children,
-}: {
-  defaultLang?: Lang
-  children: React.ReactNode
-}) {
+export function LocalizedFields({ defaultLang, children }: { defaultLang?: Lang; children: React.ReactNode }) {
   const [lang, setLang] = useState<Lang>(defaultLang ?? 'en')
-  return (
-    <LangContext.Provider value={{ lang, setLang }}>
-      {children}
-    </LangContext.Provider>
-  )
+  return <LangContext.Provider value={{ lang, setLang }}>{children}</LangContext.Provider>
 }
 
 function useLang(): [Lang, (lang: Lang) => void] {
@@ -168,11 +151,7 @@ const LANG_CHIP =
 function LangItem({ lang, filled }: { lang: Lang; filled: boolean }) {
   const t = useT()
   return (
-    <ToggleGroupItem
-      value={lang}
-      className={LANG_CHIP}
-      aria-label={lang === 'en' ? t('english') : t('arabic')}
-    >
+    <ToggleGroupItem value={lang} className={LANG_CHIP} aria-label={lang === 'en' ? t('english') : t('arabic')}>
       {lang === 'en' ? 'EN' : 'ع'}
       {!filled && (
         <span

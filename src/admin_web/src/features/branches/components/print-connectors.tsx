@@ -3,10 +3,7 @@ import { AxiosError } from 'axios'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Copy, Download, MonitorSmartphone, Plus, Trash2 } from 'lucide-react'
 import type { PrintConnectorView } from '@/api/ordering'
-import {
-  createConnectorPairingMutation,
-  deletePrintConnectorMutation,
-} from '@/api/ordering/@tanstack/react-query.gen'
+import { createConnectorPairingMutation, deletePrintConnectorMutation } from '@/api/ordering/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useBrand } from '@/lib/brand'
 import { useLanguage, useLocale, useT } from '@/lib/i18n'
@@ -19,9 +16,7 @@ import { Button } from '@/components/ui/button'
 export const CONNECTOR_FILE = 'ninja-print-connector.exe'
 
 const refusal = (error: unknown) =>
-  error instanceof AxiosError && typeof error.response?.data === 'string'
-    ? error.response.data
-    : null
+  error instanceof AxiosError && typeof error.response?.data === 'string' ? error.response.data : null
 
 /**
  * The branch's print connectors: Windows PCs in the shop that print the
@@ -29,22 +24,14 @@ const refusal = (error: unknown) =>
  * download and a one-time link: the connector asks for the link when it
  * first runs, and installs itself as a service from there.
  */
-export function PrintConnectors({
-  branchId,
-  connectors,
-}: {
-  branchId: number
-  connectors: PrintConnectorView[]
-}) {
+export function PrintConnectors({ branchId, connectors }: { branchId: number; connectors: PrintConnectorView[] }) {
   const t = useT()
   const brand = useBrand()
   const language = useLanguage((s) => s.language)
   const locale = useLocale()
   const queryClient = useQueryClient()
   const scope = { headers: { 'X-Branch-Id': String(branchId) } }
-  const [link, setLink] = useState<{ link: string; expiresAt: Date } | null>(
-    null
-  )
+  const [link, setLink] = useState<{ link: string; expiresAt: Date } | null>(null)
 
   const apiUrl = brand?.apiUrl ?? window.location.origin
   const download = brand?.appsUrl ? `${brand.appsUrl}/${CONNECTOR_FILE}` : null
@@ -102,10 +89,7 @@ export function PrintConnectors({
             <li>
               {t('connectorStepDownload')}{' '}
               {download && (
-                <a
-                  className='text-primary inline-flex items-center gap-1 underline'
-                  href={download}
-                >
+                <a className='text-primary inline-flex items-center gap-1 underline' href={download}>
                   <Download className='h-3 w-3' />
                   {CONNECTOR_FILE}
                 </a>
@@ -114,18 +98,10 @@ export function PrintConnectors({
             <li>{t('connectorStepRun')}</li>
           </ol>
           <div className='flex items-center gap-2'>
-            <code
-              dir='ltr'
-              className='bg-background min-w-0 flex-1 truncate rounded border px-2 py-1.5 text-xs'
-            >
+            <code dir='ltr' className='bg-background min-w-0 flex-1 truncate rounded border px-2 py-1.5 text-xs'>
               {link.link}
             </code>
-            <Button
-              variant='outline'
-              size='icon'
-              aria-label={t('copy')}
-              onClick={() => copy(link.link)}
-            >
+            <Button variant='outline' size='icon' aria-label={t('copy')} onClick={() => copy(link.link)}>
               <Copy className='h-4 w-4' />
             </Button>
           </div>
@@ -138,16 +114,11 @@ export function PrintConnectors({
       )}
 
       {connectors.length === 0 ? (
-        <p className='text-muted-foreground text-xs'>
-          {t('noPrintConnectors')}
-        </p>
+        <p className='text-muted-foreground text-xs'>{t('noPrintConnectors')}</p>
       ) : (
         <ul className='divide-y rounded-lg border'>
           {connectors.map((connector) => (
-            <li
-              key={String(connector.id)}
-              className='flex items-center justify-between gap-3 p-3'
-            >
+            <li key={String(connector.id)} className='flex items-center justify-between gap-3 p-3'>
               <div className='min-w-0 space-y-0.5'>
                 <div className='flex items-center gap-2 text-sm font-medium'>
                   <MonitorSmartphone className='h-4 w-4' />
@@ -155,9 +126,7 @@ export function PrintConnectors({
                   <span
                     className={cn(
                       'size-2 rounded-full',
-                      connector.isOnline
-                        ? 'bg-emerald-500'
-                        : 'bg-muted-foreground/40'
+                      connector.isOnline ? 'bg-emerald-500' : 'bg-muted-foreground/40'
                     )}
                   />
                   <span className='text-muted-foreground text-xs font-normal'>
@@ -165,8 +134,7 @@ export function PrintConnectors({
                   </span>
                 </div>
                 <div className='text-muted-foreground truncate text-xs'>
-                  {(connector.printers ?? []).join(' · ') ||
-                    t('noPrintersReported')}
+                  {(connector.printers ?? []).join(' · ') || t('noPrintersReported')}
                 </div>
               </div>
               <Button

@@ -5,7 +5,8 @@ import { fromPath, PAGES, pathOf, SLUG } from './pages'
 
 describe('the pages and their addresses', () => {
   it('give every page an address in both languages that reads back as itself', () => {
-    for (const lang of ['en', 'ar'] as const) for (const page of PAGES) expect(fromPath(pathOf(lang, page))).toEqual({ lang, page })
+    for (const lang of ['en', 'ar'] as const)
+      for (const page of PAGES) expect(fromPath(pathOf(lang, page))).toEqual({ lang, page })
   })
 
   it('put the home pages at / and /ar', () => {
@@ -31,6 +32,7 @@ describe('what is built from the pages', () => {
 
   it('lists every page in the sitemap, in both languages', () => {
     const sitemap = read('public/sitemap.xml')
-    for (const lang of ['en', 'ar'] as const) for (const page of PAGES) expect(sitemap).toContain(`<loc>https://ninjapp.net${pathOf(lang, page)}</loc>`)
+    for (const lang of ['en', 'ar'] as const)
+      for (const page of PAGES) expect(sitemap).toContain(`<loc>https://ninjapp.net${pathOf(lang, page)}</loc>`)
   })
 })

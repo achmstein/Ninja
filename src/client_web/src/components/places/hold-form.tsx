@@ -1,19 +1,19 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useAuth } from 'react-oidc-context'
 import { isAxiosError } from 'axios'
-import { AnimatePresence, motion } from 'motion/react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Clock } from 'lucide-react'
-import { toast } from '@/lib/toast'
+import { AnimatePresence, motion } from 'motion/react'
+import { useAuth } from 'react-oidc-context'
 import { type PlaceViewModel } from '@/api/spaces'
 import { reservePlaceMutation } from '@/api/spaces/@tanstack/react-query.gen'
-import { useTickBeat } from '@/lib/tick-beat'
-import { spring, springSoft } from '@/lib/motion'
 import { useLocalized, usePrice, useT } from '@/lib/i18n'
+import { spring, springSoft } from '@/lib/motion'
 import { hasOptions, optionColor, tariffOptions } from '@/lib/places'
+import { useTickBeat } from '@/lib/tick-beat'
+import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
-import { MorphButton, type MorphPhase } from '@/components/motion/morph-button'
 import { Switch } from '@/components/ui/switch'
+import { MorphButton, type MorphPhase } from '@/components/motion/morph-button'
 
 /** How long the tick shows before whoever showed the form puts it away (the scan sheet), ms */
 const SUCCESS_HOLD_MS = 700
@@ -114,7 +114,7 @@ export function HoldForm({
           clock has nothing to start */}
       {place.isTimed && (
         <motion.label {...step(1)} className='bg-muted/60 flex min-h-12 items-center gap-3 rounded-2xl px-4 py-2'>
-          <span className='flex-1 text-note font-medium'>{t('startTimeNow')}</span>
+          <span className='text-note flex-1 font-medium'>{t('startTimeNow')}</span>
           <Switch checked={startOnConfirm} onCheckedChange={setStartOnConfirm} />
         </motion.label>
       )}
@@ -131,7 +131,7 @@ export function HoldForm({
             transition={springSoft}
             className='overflow-hidden'
           >
-            <p className='text-muted-foreground px-1 pb-2 text-caption font-semibold'>{t('bookStartAt')}</p>
+            <p className='text-muted-foreground text-caption px-1 pb-2 font-semibold'>{t('bookStartAt')}</p>
             <div role='radiogroup' className='bg-muted flex gap-1 rounded-[1.25rem] p-1'>
               {options.map((option) => {
                 const selected = option.code === chosenCode
@@ -154,11 +154,11 @@ export function HoldForm({
                         className='bg-background absolute inset-0 rounded-2xl shadow-[0_1px_3px_rgb(0_0_0/0.12)]'
                       />
                     )}
-                    <span className='relative flex items-center gap-1.5 text-note font-semibold'>
+                    <span className='text-note relative flex items-center gap-1.5 font-semibold'>
                       <span className={cn('size-2 rounded-full', color.dot)} />
                       {localized(option.name)}
                     </span>
-                    <span className='text-muted-foreground relative text-caption tabular-nums'>
+                    <span className='text-muted-foreground text-caption relative tabular-nums'>
                       {t('hourlyRateFormat', { rate: price.whole(option.hourlyRate) })}
                     </span>
                   </button>

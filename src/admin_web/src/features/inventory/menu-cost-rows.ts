@@ -30,11 +30,7 @@ export type MenuCostRow = {
  * recipe but no menu entry any more are dropped; the food-cost target
  * decides which rows are flagged.
  */
-export function toMenuCostRows(
-  costs: RecipeCostView[],
-  items: CatalogItemDto[],
-  target: number
-): MenuCostRow[] {
+export function toMenuCostRows(costs: RecipeCostView[], items: CatalogItemDto[], target: number): MenuCostRow[] {
   const byId = new Map(items.map((item) => [toNumber(item.id), item]))
   const rows: MenuCostRow[] = []
   for (const c of costs) {
@@ -61,20 +57,12 @@ export function toMenuCostRows(
       uncostedNames,
       optionExtras: c.lines.filter((l) => l.optionIds.length > 0).length,
       status:
-        price <= 0
-          ? 'unpriced'
-          : uncosted > 0
-            ? 'incomplete'
-            : foodCost !== null && foodCost > target
-              ? 'over'
-              : 'ok',
+        price <= 0 ? 'unpriced' : uncosted > 0 ? 'incomplete' : foodCost !== null && foodCost > target ? 'over' : 'ok',
     })
   }
   // The worst food cost first; incomplete ones among them by their lower bound
   return rows.sort(
-    (a, b) =>
-      (b.foodCost ?? -1) - (a.foodCost ?? -1) ||
-      primaryText(a.name).localeCompare(primaryText(b.name))
+    (a, b) => (b.foodCost ?? -1) - (a.foodCost ?? -1) || primaryText(a.name).localeCompare(primaryText(b.name))
   )
 }
 
@@ -82,9 +70,7 @@ export function toMenuCostRows(
 export function summarize(rows: MenuCostRow[], target: number) {
   // Only items whose every ingredient is costed: an uncosted one's cost is
   // a lower bound and would pull the average down
-  const priced = rows.filter(
-    (r) => r.foodCost !== null && r.status !== 'incomplete'
-  )
+  const priced = rows.filter((r) => r.foodCost !== null && r.status !== 'incomplete')
   const revenue = priced.reduce((sum, r) => sum + r.price, 0)
   const cost = priced.reduce((sum, r) => sum + r.cost, 0)
   return {

@@ -2,14 +2,14 @@ import { useEffect, useRef } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { motion, useReducedMotion } from 'motion/react'
-import { toast } from '@/lib/toast'
-import { springSoft } from '@/lib/motion'
 import { getPlaceOptions } from '@/api/spaces/@tanstack/react-query.gen'
-import { moveToBranch, useSayOrderMoved } from '@/lib/use-branch-switch'
 import { useBranchStore } from '@/stores/branch-store'
 import { usePlaceStore } from '@/stores/place-store'
 import { useT, useLocalized } from '@/lib/i18n'
+import { springSoft } from '@/lib/motion'
 import { PLACE_TABLE } from '@/lib/places'
+import { toast } from '@/lib/toast'
+import { moveToBranch, useSayOrderMoved } from '@/lib/use-branch-switch'
 import { BrandWordmark } from '@/components/brand/brand-mark'
 
 export const Route = createFileRoute('/p/$placeId')({
@@ -50,8 +50,7 @@ function PlaceLinkPage() {
   // Only act on the first settled outcome
   const handled = useRef(false)
 
-  const resume = () =>
-    navigate({ to: '/', replace: true })
+  const resume = () => navigate({ to: '/', replace: true })
 
   useEffect(() => {
     if (handled.current || placeQuery.isLoading) return
@@ -111,9 +110,7 @@ function Reading({ label }: { label: string }) {
         initial={{ opacity: 0, scale: 0.96 }}
         animate={reduced ? { opacity: 1, scale: 1 } : { opacity: [0.55, 1, 0.55], scale: 1 }}
         transition={
-          reduced
-            ? springSoft
-            : { opacity: { duration: 1.8, ease: 'easeInOut', repeat: Infinity }, scale: springSoft }
+          reduced ? springSoft : { opacity: { duration: 1.8, ease: 'easeInOut', repeat: Infinity }, scale: springSoft }
         }
         className='flex max-w-full flex-col items-center gap-3 [--wordmark-h:3rem]'
       >

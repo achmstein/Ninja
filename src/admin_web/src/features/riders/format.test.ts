@@ -40,14 +40,7 @@ describe('riders format', () => {
       },
       { name: 'Amr', status: 'Off', out: 0 },
     ]
-    expect([...riders].sort(compareRiders).map((r) => r.name)).toEqual([
-      'Busy',
-      'Fresh',
-      'Idle',
-      'Quiet',
-      'Amr',
-      'Zed',
-    ])
+    expect([...riders].sort(compareRiders).map((r) => r.name)).toEqual(['Busy', 'Fresh', 'Idle', 'Quiet', 'Amr', 'Zed'])
   })
 
   it('names and colours each stage, and how a delivery left a rider', () => {
@@ -60,19 +53,11 @@ describe('riders format', () => {
   })
 
   it('keeps only what is still with the rider and unfinished in Now', () => {
-    expect(isOpenForRider({ stage: 'Assigned', stillWithRider: true })).toBe(
-      true
-    )
-    expect(isOpenForRider({ stage: 'OnTheWay', stillWithRider: true })).toBe(
-      true
-    )
+    expect(isOpenForRider({ stage: 'Assigned', stillWithRider: true })).toBe(true)
+    expect(isOpenForRider({ stage: 'OnTheWay', stillWithRider: true })).toBe(true)
     expect(isOpenForRider({ stage: 'Failed', stillWithRider: true })).toBe(true)
-    expect(isOpenForRider({ stage: 'Delivered', stillWithRider: true })).toBe(
-      false
-    )
-    expect(
-      isOpenForRider({ stage: 'GivenToOther', stillWithRider: false })
-    ).toBe(false)
+    expect(isOpenForRider({ stage: 'Delivered', stillWithRider: true })).toBe(false)
+    expect(isOpenForRider({ stage: 'GivenToOther', stillWithRider: false })).toBe(false)
   })
 
   it('names each step of a timeline', () => {

@@ -19,7 +19,10 @@ let knownBranch: number | null = null
 const mark = (bill: Bill) => `${Number(bill.lineCount ?? 0)}|${Number(bill.total ?? 0)}`
 
 /** The bills that are new or have grown since the last look; nothing on a first look or a change of branch. Exported for its test. */
-export function changedBills(before: Map<number, string> | null, bills: Bill[]): { changed: number[]; now: Map<number, string> } {
+export function changedBills(
+  before: Map<number, string> | null,
+  bills: Bill[]
+): { changed: number[]; now: Map<number, string> } {
   const now = new Map(bills.map((b) => [Number(b.id), mark(b)]))
   if (!before) return { changed: [], now }
   const changed: number[] = []

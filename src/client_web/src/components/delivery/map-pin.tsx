@@ -15,7 +15,10 @@ const GoogleMapPicker = lazy(() => import('./google-map-pin'))
  * host). The package exports only its source entry, so its prebuilt script is
  * reached by path: Vite serves it as is in dev and copies it, hashed, into the build.
  */
-const rtlTextUrl = new URL('../../../node_modules/@mapbox/mapbox-gl-rtl-text/dist/mapbox-gl-rtl-text.js', import.meta.url).href
+const rtlTextUrl = new URL(
+  '../../../node_modules/@mapbox/mapbox-gl-rtl-text/dist/mapbox-gl-rtl-text.js',
+  import.meta.url
+).href
 
 /** Free street tiles, no key: OpenFreeMap's style, the same streets the riders' maps show */
 const STYLE = 'https://tiles.openfreemap.org/styles/liberty'
@@ -72,10 +75,17 @@ export function MapPicker(props: {
 export function CentrePin({ moving }: { moving: boolean }) {
   return (
     <div aria-hidden className='pointer-events-none absolute inset-0 grid place-items-center'>
-      <div className={cn('-mt-9 flex flex-col items-center transition-transform duration-150', moving && '-translate-y-2')}>
+      <div
+        className={cn('-mt-9 flex flex-col items-center transition-transform duration-150', moving && '-translate-y-2')}
+      >
         <PinIcon className='fill-primary text-primary-foreground size-9 drop-shadow-md' strokeWidth={1.5} />
       </div>
-      <span className={cn('absolute size-2 rounded-full bg-black/40 transition-opacity', moving ? 'opacity-30' : 'opacity-70')} />
+      <span
+        className={cn(
+          'absolute size-2 rounded-full bg-black/40 transition-opacity',
+          moving ? 'opacity-30' : 'opacity-70'
+        )}
+      />
     </div>
   )
 }
@@ -113,7 +123,8 @@ function FreeMapPicker({
       .then(([{ default: maplibre }]) => {
         if (disposed || !box.current) return
         // Arabic street names joined and right to left, not letter by letter backwards
-        if (maplibre.getRTLTextPluginStatus() === 'unavailable') void maplibre.setRTLTextPlugin(rtlTextUrl, true).catch(() => {})
+        if (maplibre.getRTLTextPluginStatus() === 'unavailable')
+          void maplibre.setRTLTextPlugin(rtlTextUrl, true).catch(() => {})
         const m = new maplibre.Map({
           container: box.current,
           style: STYLE,
@@ -169,7 +180,10 @@ function FreeMapPicker({
       {/* Sized by width and height, not inset: MapLibre's stylesheet makes its container position: relative */}
       <div ref={box} className='size-full' />
       {failed ? (
-        <div className='text-muted-foreground absolute inset-0 flex flex-col items-center justify-center gap-2 text-caption' role='alert'>
+        <div
+          className='text-muted-foreground text-caption absolute inset-0 flex flex-col items-center justify-center gap-2'
+          role='alert'
+        >
           {t('mapNotLoaded')}
           <button
             type='button'

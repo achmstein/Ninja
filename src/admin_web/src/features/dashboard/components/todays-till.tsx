@@ -22,12 +22,7 @@ type TodaysTillProps = {
  * the dashboard's first card, so it is not said twice. Every line links to
  * the till page behind it.
  */
-export function TodaysTill({
-  report,
-  isLoading,
-  error,
-  onRetry,
-}: TodaysTillProps) {
+export function TodaysTill({ report, isLoading, error, onRetry }: TodaysTillProps) {
   const t = useT()
 
   if (error) {
@@ -78,10 +73,7 @@ export function TodaysTill({
     <section className='flex flex-col gap-5'>
       <div className='flex items-start justify-between gap-4'>
         <h2 className='text-sm font-semibold'>{t('todaysTill')}</h2>
-        <Link
-          to='/till'
-          className='text-primary text-sm underline-offset-4 hover:underline'
-        >
+        <Link to='/till' className='text-primary text-sm underline-offset-4 hover:underline'>
           {t('viewAll')}
         </Link>
       </div>
@@ -107,11 +99,7 @@ export function TodaysTill({
                   className='hover:bg-accent/50 -mx-2 flex items-center gap-2 rounded-md px-2 py-2 transition-colors'
                 >
                   <dt className='flex-1'>{line.label}</dt>
-                  {line.hint && (
-                    <span className='text-muted-foreground text-xs tabular-nums'>
-                      {line.hint}
-                    </span>
-                  )}
+                  {line.hint && <span className='text-muted-foreground text-xs tabular-nums'>{line.hint}</span>}
                   <dd className='font-medium tabular-nums'>{line.value}</dd>
                 </Link>
               </div>

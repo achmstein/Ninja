@@ -3,9 +3,22 @@ import type { CatalogItemDto } from '@/api/catalog'
 import type { CartLine } from '@/lib/cart'
 import { cartNudge, menuById, pairedFor } from './paired-items'
 
-const item = (id: number, extra: Partial<CatalogItemDto> = {}): CatalogItemDto => ({ id, name: { en: `Item ${id}` }, price: 10, isAvailable: true, ...extra })
+const item = (id: number, extra: Partial<CatalogItemDto> = {}): CatalogItemDto => ({
+  id,
+  name: { en: `Item ${id}` },
+  price: 10,
+  isAvailable: true,
+  ...extra,
+})
 
-const line = (productId: number): CartLine => ({ productId, nameEn: `Item ${productId}`, nameAr: '', price: 10, quantity: 1, customizations: [] })
+const line = (productId: number): CartLine => ({
+  productId,
+  nameEn: `Item ${productId}`,
+  nameAr: '',
+  price: 10,
+  quantity: 1,
+  customizations: [],
+})
 
 // A cappuccino goes with a waffle, then ice cream, then a cake that is sold out; a waffle goes with a milkshake that needs its size picked
 const cappuccino = item(1, { pairedItemIds: [2, 3, 4] })

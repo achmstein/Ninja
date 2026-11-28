@@ -43,9 +43,7 @@ export function drawerFormula(shift: ShiftView): DrawerFormula {
     shift.cashTendered != null
       ? toNumber(shift.cashTendered)
       : // An older server: the cash tender was what was handed over
-        toNumber(
-          (shift.tenderTotals ?? []).find((t) => t.tender === 'Cash')?.amount
-        )
+        toNumber((shift.tenderTotals ?? []).find((t) => t.tender === 'Cash')?.amount)
   const every: DrawerTerm[] = [
     { key: 'openingFloat', sign: 1, amount: toNumber(shift.openingFloat) },
     {
@@ -64,18 +62,13 @@ export function drawerFormula(shift: ShiftView): DrawerFormula {
   const expected = round(every.reduce((sum, t) => sum + t.sign * t.amount, 0))
   // The float and the cash taken always; the rest only when there was any,
   // as the till app lists them: a row of zero says nothing
-  const terms = every.filter(
-    (t) => t.key === 'openingFloat' || t.key === 'cashTakenNet' || t.amount !== 0
-  )
+  const terms = every.filter((t) => t.key === 'openingFloat' || t.key === 'cashTakenNet' || t.amount !== 0)
   const closed = shift.status === 'Closed'
   return {
     terms,
     expected,
     lateCash: closed ? toNumber(shift.lateCash) : 0,
-    adjustedOverShort:
-      closed && shift.adjustedOverShort != null
-        ? toNumber(shift.adjustedOverShort)
-        : null,
+    adjustedOverShort: closed && shift.adjustedOverShort != null ? toNumber(shift.adjustedOverShort) : null,
   }
 }
 

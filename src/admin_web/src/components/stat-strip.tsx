@@ -61,17 +61,11 @@ export function Stat({
           {value}
         </div>
       )}
-      {hint && (
-        <div className='text-muted-foreground text-xs tabular-nums'>{hint}</div>
-      )}
+      {hint && <div className='text-muted-foreground text-xs tabular-nums'>{hint}</div>}
     </>
   )
 
-  const cellClass = cn(
-    'flex min-w-0 flex-col gap-0.5',
-    hero ? '' : 'p-3 @5xl:p-4',
-    className
-  )
+  const cellClass = cn('flex min-w-0 flex-col gap-0.5', hero ? '' : 'p-3 @5xl:p-4', className)
 
   if (to) {
     return (

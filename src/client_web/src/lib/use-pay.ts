@@ -1,17 +1,12 @@
 import { useQuery } from '@tanstack/react-query'
 import { type PayView } from '@/api/sales'
-import {
-  getBillToPayOptions,
-  getPlaceBillToPayOptions,
-} from '@/api/sales/@tanstack/react-query.gen'
+import { getBillToPayOptions, getPlaceBillToPayOptions } from '@/api/sales/@tanstack/react-query.gen'
 import { API_VERSION } from './api-client'
 import { offersPay } from './pay'
 
 /** Which bill to pay: one the guest is on, or whatever is open at the
  *  table they sit at (a guest who ordered nothing themselves). */
-export type PaySource =
-  | { ticketId: number }
-  | { placeId: number; branchId: number }
+export type PaySource = { ticketId: number } | { placeId: number; branchId: number }
 
 /** Every guest at the table sees the others' shares land, so an open view
  *  is re-read this often. */
@@ -19,8 +14,7 @@ const LIVE_MS = 4_000
 
 /** Nothing will change for the guest: the business takes no payments here, or
  *  the bill is closed. */
-const settled = (view: PayView | undefined) =>
-  view != null && (!offersPay(view.why) || view.why === 'closed')
+const settled = (view: PayView | undefined) => view != null && (!offersPay(view.why) || view.why === 'closed')
 
 /**
  * The bill as a guest pays it, re-read every few seconds while `live`.
@@ -42,7 +36,6 @@ export function usePayView(source: PaySource | null, { live = true, enabled = tr
     ...(options as ReturnType<typeof getBillToPayOptions>),
     enabled: enabled && source != null,
     retry: false,
-    refetchInterval: (query) =>
-      live && !query.state.error && !settled(query.state.data) ? LIVE_MS : false,
+    refetchInterval: (query) => (live && !query.state.error && !settled(query.state.data) ? LIVE_MS : false),
   })
 }

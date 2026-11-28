@@ -1,20 +1,25 @@
 import { describe, expect, it } from 'vitest'
 import type { CatalogItemDto, ItemCustomizationDto } from '@/api/catalog'
 import type { MenuSectionData } from '@/components/menu/data/sections'
-import {
-  buildDeck,
-  canQuickAdd,
-  columnAt,
-  pickUsual,
-  pinchIntent,
-  positionOf,
-  quickAddChoice,
-} from './deck-model'
+import { buildDeck, canQuickAdd, columnAt, pickUsual, pinchIntent, positionOf, quickAddChoice } from './deck-model'
 
 const item = (id: number, x: Partial<CatalogItemDto> = {}): CatalogItemDto =>
-  ({ id, name: { en: `Item ${id}`, ar: `صنف ${id}` }, price: 50, catalogTypeId: 1, isAvailable: true, displayOrder: id, ...x }) as CatalogItemDto
+  ({
+    id,
+    name: { en: `Item ${id}`, ar: `صنف ${id}` },
+    price: 50,
+    catalogTypeId: 1,
+    isAvailable: true,
+    displayOrder: id,
+    ...x,
+  }) as CatalogItemDto
 
-const section = (id: string, kind: MenuSectionData['kind'], items: CatalogItemDto[]): MenuSectionData => ({ id, label: id, kind, items })
+const section = (id: string, kind: MenuSectionData['kind'], items: CatalogItemDto[]): MenuSectionData => ({
+  id,
+  label: id,
+  kind,
+  items,
+})
 
 const option = (id: number, priceAdjustment = 0, x: Record<string, unknown> = {}) => ({
   id,
@@ -27,7 +32,15 @@ const option = (id: number, priceAdjustment = 0, x: Record<string, unknown> = {}
 })
 
 const group = (id: number, name: string, options: ReturnType<typeof option>[], x: Partial<ItemCustomizationDto> = {}) =>
-  ({ id, name: { en: name, ar: null }, isRequired: false, allowMultiple: false, displayOrder: id, options, ...x }) as ItemCustomizationDto
+  ({
+    id,
+    name: { en: name, ar: null },
+    isRequired: false,
+    allowMultiple: false,
+    displayOrder: id,
+    options,
+    ...x,
+  }) as ItemCustomizationDto
 
 describe('buildDeck', () => {
   it('leads with the usuals, then each category, and leaves favourites and popular out', () => {
@@ -90,16 +103,28 @@ describe('quick add', () => {
 
   it('is allowed with a saved way that still answers every required choice', () => {
     const sized = item(1, {
-      customizations: [group(1, 'Size', [option(1), option(2)], { isRequired: true }), group(2, 'Sugar', [option(3), option(4)])],
+      customizations: [
+        group(1, 'Size', [option(1), option(2)], { isRequired: true }),
+        group(2, 'Sugar', [option(3), option(4)]),
+      ],
     })
     expect(canQuickAdd(sized, pref([2, 3]))).toBe(false)
     expect(canQuickAdd(sized, pref([1, 2]))).toBe(true)
-    expect(canQuickAdd(item(1, { customizations: [group(1, 'Size', [option(1, 0, { isOutOfStock: true })], { isRequired: true })] }), pref([1, 1]))).toBe(false)
-    expect(canQuickAdd(item(1, { isAvailable: false, customizations: [group(1, 'Sugar', [option(1)])] }), pref([1, 1]))).toBe(false)
+    expect(
+      canQuickAdd(
+        item(1, { customizations: [group(1, 'Size', [option(1, 0, { isOutOfStock: true })], { isRequired: true })] }),
+        pref([1, 1])
+      )
+    ).toBe(false)
+    expect(
+      canQuickAdd(item(1, { isAvailable: false, customizations: [group(1, 'Sugar', [option(1)])] }), pref([1, 1]))
+    ).toBe(false)
   })
 
   it('adds the saved way over the defaults', () => {
-    const x = item(1, { customizations: [group(1, 'Size', [option(1, 0, { isDefault: true }), option(2, 10)], { isRequired: true })] })
+    const x = item(1, {
+      customizations: [group(1, 'Size', [option(1, 0, { isDefault: true }), option(2, 10)], { isRequired: true })],
+    })
     const choice = quickAddChoice(x, pref([1, 2]))
     expect(choice.customizations.map((c) => c.optionId)).toEqual([2])
     expect(choice.unitPrice).toBe(60)
@@ -110,7 +135,9 @@ describe('quick add', () => {
       isOnOffer: true,
       offerPrice: 40,
       customizations: [
-        group(1, 'Extras', [option(1, 5, { isDefault: true }), option(2, 7, { isDefault: true, isOutOfStock: true })], { allowMultiple: true }),
+        group(1, 'Extras', [option(1, 5, { isDefault: true }), option(2, 7, { isDefault: true, isOutOfStock: true })], {
+          allowMultiple: true,
+        }),
       ],
     })
     const choice = quickAddChoice(x)

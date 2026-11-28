@@ -2,17 +2,17 @@ import { StrictMode } from 'react'
 import ReactDOM from 'react-dom/client'
 import { AxiosError } from 'axios'
 import { QueryCache, QueryClient } from '@tanstack/react-query'
-import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client'
 import { RouterProvider, createRouter } from '@tanstack/react-router'
 import { getStoredUser } from '@/config/oidc-config'
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client'
 import { setSessionRenewer } from '@/lib/api-client'
 import { bootBrand } from '@/lib/brand'
-import { keepPersistedQueries, queryPersistOptions } from '@/lib/query-persist'
 import { handleServerError } from '@/lib/handle-server-error'
+import { keepPersistedQueries, queryPersistOptions } from '@/lib/query-persist'
 import { reloadForNewBuild } from '@/lib/stale-build'
 import { AuthProvider } from './context/auth-provider'
-import { renewSession } from './context/session'
 import { DirectionProvider } from './context/direction-provider'
+import { renewSession } from './context/session'
 import { ThemeProvider } from './context/theme-provider'
 // Generated Routes
 import { routeTree } from './routeTree.gen'
@@ -33,10 +33,7 @@ const queryClient = new QueryClient({
     queries: {
       retry: (failureCount, error) => {
         if (failureCount > 3) return false
-        return !(
-          error instanceof AxiosError &&
-          [401, 403].includes(error.response?.status ?? 0)
-        )
+        return !(error instanceof AxiosError && [401, 403].includes(error.response?.status ?? 0))
       },
       refetchOnWindowFocus: import.meta.env.PROD,
       staleTime: 10 * 1000, // 10s
@@ -131,10 +128,7 @@ if (!rootElement.innerHTML) {
         {/* The menu, the branches and their pricing come back from the last
             visit before the network answers: a till that reloads with the
             internet down can still sell (lib/query-persist.ts) */}
-        <PersistQueryClientProvider
-          client={queryClient}
-          persistOptions={queryPersistOptions}
-        >
+        <PersistQueryClientProvider client={queryClient} persistOptions={queryPersistOptions}>
           <ThemeProvider>
             <DirectionProvider>
               <RouterProvider router={router} />

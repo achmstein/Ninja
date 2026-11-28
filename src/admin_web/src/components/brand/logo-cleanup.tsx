@@ -2,13 +2,7 @@ import { useState, type ReactNode } from 'react'
 import { motion, useReducedMotion } from 'motion/react'
 import { isMark, isPhoto, type ImageSlot } from '@/lib/brand-slots'
 import { useT, type TranslationKey } from '@/lib/i18n'
-import {
-  cleanLogo,
-  releaseLogo,
-  type CleanedLogo,
-  type LogoChoice,
-  type LogoImage,
-} from '@/lib/logo-cleanup'
+import { cleanLogo, releaseLogo, type CleanedLogo, type LogoChoice, type LogoImage } from '@/lib/logo-cleanup'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -58,17 +52,11 @@ type Pending = {
  * own surface would swallow is the version made for it; a dark logo offers the version made for the dark
  * surface, and a white mark (made into a dark one for the light slot) offers itself as it was.
  */
-function plan(
-  slot: ImageSlot,
-  choice: LogoChoice
-): { own: LogoImage; dark: LogoImage | null } {
-  if (slot.endsWith('-dark'))
-    return { own: choice.onDark ?? choice, dark: null }
+function plan(slot: ImageSlot, choice: LogoChoice): { own: LogoImage; dark: LogoImage | null } {
+  if (slot.endsWith('-dark')) return { own: choice.onDark ?? choice, dark: null }
   return {
     own: choice.onLight ?? choice,
-    dark: DARK_OF[slot]
-      ? (choice.onDark ?? (choice.onLight ? choice : null))
-      : null,
+    dark: DARK_OF[slot] ? (choice.onDark ?? (choice.onLight ? choice : null)) : null,
   }
 }
 
@@ -129,16 +117,11 @@ export function useLogoCleanup({ onUse, hasImage }: Options): {
 
   const confirm = () => {
     if (!pending) return
-    const { own, dark } = plan(
-      pending.slot,
-      pending.logo[pending.choice] ?? pending.logo.original
-    )
+    const { own, dark } = plan(pending.slot, pending.logo[pending.choice] ?? pending.logo.original)
     const darkSlot = DARK_OF[pending.slot]
     onUse([
       { slot: pending.slot, file: own.file },
-      ...(pending.fillDark && dark && darkSlot
-        ? [{ slot: darkSlot, file: dark.file }]
-        : []),
+      ...(pending.fillDark && dark && darkSlot ? [{ slot: darkSlot, file: dark.file }] : []),
     ])
     close()
   }
@@ -149,9 +132,7 @@ export function useLogoCleanup({ onUse, hasImage }: Options): {
         return image ? [{ choice, image }] : []
       })
     : []
-  const chosen = pending
-    ? (pending.logo[pending.choice] ?? pending.logo.original)
-    : null
+  const chosen = pending ? (pending.logo[pending.choice] ?? pending.logo.original) : null
   const result = pending && chosen ? plan(pending.slot, chosen) : null
   const darkSlotOnly = pending?.slot.endsWith('-dark') ?? false
 
@@ -159,8 +140,7 @@ export function useLogoCleanup({ onUse, hasImage }: Options): {
   // itself when the dark slot is left alone (the apps fall back to it), with a word when that loses it
   const darkNote = (): string | undefined => {
     if (!pending || !chosen || !result) return undefined
-    if (darkSlotOnly)
-      return result.own !== chosen ? t('logoMadeForDark') : undefined
+    if (darkSlotOnly) return result.own !== chosen ? t('logoMadeForDark') : undefined
     if (pending.fillDark && result.dark) return t('logoMadeForDark')
     return result.dark ? t('logoLostOnDark') : undefined
   }
@@ -175,17 +155,10 @@ export function useLogoCleanup({ onUse, hasImage }: Options): {
         {pending && chosen && result && (
           <div className='space-y-5'>
             {pending.logo.background === 'none' && (
-              <p className='text-muted-foreground text-sm'>
-                {t('logoNoPlainBackground')}
-              </p>
+              <p className='text-muted-foreground text-sm'>{t('logoNoPlainBackground')}</p>
             )}
             {choices.length > 1 && (
-              <div
-                className={cn(
-                  'grid gap-3',
-                  choices.length === 3 ? 'sm:grid-cols-3' : 'sm:grid-cols-2'
-                )}
-              >
+              <div className={cn('grid gap-3', choices.length === 3 ? 'sm:grid-cols-3' : 'sm:grid-cols-2')}>
                 {choices.map(({ choice, image }, i) => (
                   <ChoiceTile
                     key={choice}
@@ -203,9 +176,7 @@ export function useLogoCleanup({ onUse, hasImage }: Options): {
 
             <div className='space-y-2'>
               <p className='text-sm font-medium'>{t('logoHowItShows')}</p>
-              <div
-                className={cn('grid gap-3', !darkSlotOnly && 'sm:grid-cols-2')}
-              >
+              <div className={cn('grid gap-3', !darkSlotOnly && 'sm:grid-cols-2')}>
                 {!darkSlotOnly && (
                   <SurfaceTile
                     key={`light-${pending.choice}`}
@@ -213,9 +184,7 @@ export function useLogoCleanup({ onUse, hasImage }: Options): {
                     surface={LIGHT}
                     before={chosen.url}
                     after={result.own.url}
-                    note={
-                      result.own !== chosen ? t('logoMadeForLight') : undefined
-                    }
+                    note={result.own !== chosen ? t('logoMadeForLight') : undefined}
                   />
                 )}
                 <SurfaceTile
@@ -224,11 +193,7 @@ export function useLogoCleanup({ onUse, hasImage }: Options): {
                   surface={DARK}
                   before={darkSlotOnly ? chosen.url : result.own.url}
                   after={
-                    darkSlotOnly
-                      ? result.own.url
-                      : pending.fillDark && result.dark
-                        ? result.dark.url
-                        : result.own.url
+                    darkSlotOnly ? result.own.url : pending.fillDark && result.dark ? result.dark.url : result.own.url
                   }
                   note={darkNote()}
                 />
@@ -238,14 +203,9 @@ export function useLogoCleanup({ onUse, hasImage }: Options): {
                   <Checkbox
                     id='logo-fill-dark'
                     checked={pending.fillDark}
-                    onCheckedChange={(checked) =>
-                      setPending({ ...pending, fillDark: checked === true })
-                    }
+                    onCheckedChange={(checked) => setPending({ ...pending, fillDark: checked === true })}
                   />
-                  <Label
-                    htmlFor='logo-fill-dark'
-                    className='leading-snug font-normal'
-                  >
+                  <Label htmlFor='logo-fill-dark' className='leading-snug font-normal'>
                     {t('logoFillDark')}
                   </Label>
                 </div>
@@ -282,24 +242,9 @@ const SWEEP_EASE = [0.65, 0, 0.35, 1] as const
  * The picture as it was, and what it becomes swept in over it from the start edge, a bright line leading:
  * the change seen being made rather than a second picture beside the first. Still under reduced motion.
  */
-function Sweep({
-  before,
-  after,
-  delay = 0,
-}: {
-  before: string
-  after: string
-  delay?: number
-}) {
+function Sweep({ before, after, delay = 0 }: { before: string; after: string; delay?: number }) {
   const reduced = useReducedMotion()
-  if (reduced || before === after)
-    return (
-      <img
-        src={after}
-        alt=''
-        className='max-h-full max-w-full object-contain'
-      />
-    )
+  if (reduced || before === after) return <img src={after} alt='' className='max-h-full max-w-full object-contain' />
   return (
     <div className='relative flex h-full w-full items-center justify-center'>
       {/* The picture as it was gives way behind the line: where the new one is clear (a removed
@@ -310,11 +255,7 @@ function Sweep({
         animate={{ clipPath: 'inset(0 0 0 100%)' }}
         transition={{ duration: 0.9, delay, ease: SWEEP_EASE }}
       >
-        <img
-          src={before}
-          alt=''
-          className='max-h-full max-w-full object-contain'
-        />
+        <img src={before} alt='' className='max-h-full max-w-full object-contain' />
       </motion.div>
       <motion.div
         className='absolute inset-0 flex items-center justify-center'
@@ -322,11 +263,7 @@ function Sweep({
         animate={{ clipPath: 'inset(0 0% 0 0)' }}
         transition={{ duration: 0.9, delay, ease: SWEEP_EASE }}
       >
-        <img
-          src={after}
-          alt=''
-          className='max-h-full max-w-full object-contain'
-        />
+        <img src={after} alt='' className='max-h-full max-w-full object-contain' />
       </motion.div>
       <motion.div
         aria-hidden
@@ -377,9 +314,7 @@ function ChoiceTile({
       }}
       className={cn(
         'flex flex-col gap-2 rounded-lg border-2 p-2 text-start transition-colors',
-        selected
-          ? 'border-primary'
-          : 'hover:border-muted-foreground/40 border-transparent'
+        selected ? 'border-primary' : 'hover:border-muted-foreground/40 border-transparent'
       )}
     >
       <div

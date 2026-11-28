@@ -1,14 +1,14 @@
 import { useMemo, useRef, useState } from 'react'
-import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { ArrowLeft, Search, X } from 'lucide-react'
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import type { CatalogItemDto } from '@/api/catalog'
 import { useLocalized, useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
+import type { MenuSectionData } from './data/use-menu'
 import { ItemPhoto } from './item-photo'
 import { itemPictureUrl } from './item-picture'
-import { OfferPrice } from './offer'
 import { SoldOutTag } from './list/item-parts'
-import type { MenuSectionData } from './data/use-menu'
+import { OfferPrice } from './offer'
 
 /** Lower case, Arabic without its marks and with one alef and one yaa: "إسبريسو" finds "اسبريسو" */
 export function normalize(text: string): string {
@@ -22,10 +22,7 @@ export function normalize(text: string): string {
 }
 
 /** The items whose name or description holds every word typed, the ones named so first */
-export function searchMenu(
-  items: CatalogItemDto[],
-  query: string
-): CatalogItemDto[] {
+export function searchMenu(items: CatalogItemDto[], query: string): CatalogItemDto[] {
   const words = normalize(query).split(/\s+/).filter(Boolean)
   if (words.length === 0) return []
   const scored: { item: CatalogItemDto; score: number }[] = []
@@ -126,7 +123,12 @@ export function MenuSearch({
                   className='placeholder:text-muted-foreground min-w-0 flex-1 bg-transparent text-base outline-none'
                 />
                 {query && (
-                  <button type='button' onClick={() => setQuery('')} aria-label={t('close')} className='text-muted-foreground'>
+                  <button
+                    type='button'
+                    onClick={() => setQuery('')}
+                    aria-label={t('close')}
+                    className='text-muted-foreground'
+                  >
                     <X className='size-4' />
                   </button>
                 )}
@@ -135,7 +137,7 @@ export function MenuSearch({
 
             <div className='mx-auto w-full max-w-lg flex-1 overflow-y-auto px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))]'>
               {query.trim() !== '' && results.length === 0 && (
-                <p className='text-muted-foreground py-16 text-center text-body'>{t('noItemsFound')}</p>
+                <p className='text-muted-foreground text-body py-16 text-center'>{t('noItemsFound')}</p>
               )}
               <ul className='grid gap-1'>
                 {results.map((item, i) => {
@@ -154,15 +156,20 @@ export function MenuSearch({
                           close()
                           onOpen(item, from)
                         }}
-                        className={cn('flex w-full items-center gap-3 rounded-2xl p-2 text-start active:bg-muted', soldOut && 'opacity-75')}
+                        className={cn(
+                          'active:bg-muted flex w-full items-center gap-3 rounded-2xl p-2 text-start',
+                          soldOut && 'opacity-75'
+                        )}
                       >
                         <span data-photo className='size-14 shrink-0 overflow-hidden rounded-xl'>
                           <ItemPhoto src={item.pictureUri ? itemPictureUrl(item, 320) : null} />
                         </span>
                         <span className='min-w-0 flex-1'>
-                          <span className='block truncate text-name font-semibold'>{localized(item.name)}</span>
+                          <span className='text-name block truncate font-semibold'>{localized(item.name)}</span>
                           {categoryOf.get(String(item.id)) && (
-                            <span className='text-muted-foreground block truncate text-caption'>{categoryOf.get(String(item.id))}</span>
+                            <span className='text-muted-foreground text-caption block truncate'>
+                              {categoryOf.get(String(item.id))}
+                            </span>
                           )}
                         </span>
                         {soldOut ? <SoldOutTag className='h-7' /> : <OfferPrice item={item} className='shrink-0' />}

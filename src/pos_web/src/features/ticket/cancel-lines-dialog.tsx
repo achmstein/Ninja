@@ -4,17 +4,24 @@ import { Minus, Plus } from 'lucide-react'
 import { getOrderOptions } from '@/api/ordering/@tanstack/react-query.gen'
 import { cancelTicketLinesMutation } from '@/api/sales/@tanstack/react-query.gen'
 import type { TicketLineView } from '@/api/sales/types.gen'
-import { StockDispositionChoice } from '@/components/stock-disposition-choice'
-import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
 import { API_VERSION } from '@/lib/api-client'
 import { useFeatures } from '@/lib/brand'
+import { handleServerError } from '@/lib/handle-server-error'
 import { useLocalized, useT } from '@/lib/i18n'
 import { toNumber, useMoney } from '@/lib/money'
-import { handleServerError } from '@/lib/handle-server-error'
 import { defaultDispositionFor, orderIdsOn, type StockDisposition } from '@/lib/stock-disposition'
 import { toast } from '@/lib/toast'
+import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { StockDispositionChoice } from '@/components/stock-disposition-choice'
 import { isCancellable } from './cancel-lines'
 
 export { isCancellable }
@@ -125,7 +132,9 @@ export function CancelLinesDialog({
             <li key={String(line.id)} className='flex min-h-14 items-center gap-3 px-3 py-2'>
               <span className='min-w-0 flex-1'>
                 <span className='type-body block truncate font-medium'>{localized(line.description)}</span>
-                {localized(line.details) && <span className='text-muted-foreground type-detail block truncate'>{localized(line.details)}</span>}
+                {localized(line.details) && (
+                  <span className='text-muted-foreground type-detail block truncate'>{localized(line.details)}</span>
+                )}
               </span>
               {left(line) > 1 ? (
                 <span className='flex shrink-0 items-center gap-1'>
@@ -139,7 +148,9 @@ export function CancelLinesDialog({
                   >
                     <Minus className='size-4' />
                   </Button>
-                  <span className='type-body w-16 text-center font-semibold tabular-nums'>{t('countOf', { count: count(line), total: left(line) })}</span>
+                  <span className='type-body w-16 text-center font-semibold tabular-nums'>
+                    {t('countOf', { count: count(line), total: left(line) })}
+                  </span>
                   <Button
                     variant='outline'
                     size='icon'
@@ -166,7 +177,12 @@ export function CancelLinesDialog({
             {REASONS.map((key) => {
               const why = t(key)
               return (
-                <Button key={key} variant={reason === why ? 'default' : 'outline'} className='h-11' onClick={() => setReason(why)}>
+                <Button
+                  key={key}
+                  variant={reason === why ? 'default' : 'outline'}
+                  className='h-11'
+                  onClick={() => setReason(why)}
+                >
                   {why}
                 </Button>
               )
@@ -184,7 +200,12 @@ export function CancelLinesDialog({
 
         {/* What becomes of the food, as voiding a bill asks */}
         {hasFood && (
-          <StockDispositionChoice value={disposition} onChange={setPicked} disabled={cancel.isPending} name='cancel-stock-disposition' />
+          <StockDispositionChoice
+            value={disposition}
+            onChange={setPicked}
+            disabled={cancel.isPending}
+            name='cancel-stock-disposition'
+          />
         )}
 
         <DialogFooter className='gap-2'>

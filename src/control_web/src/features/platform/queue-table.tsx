@@ -9,6 +9,11 @@ import {
   getPlatformJobsQueryKey,
   getTenantQueryKey,
 } from '@/api/control/@tanstack/react-query.gen'
+import { duration, useFormat } from '@/lib/format'
+import { useT, type TranslationKey } from '@/lib/i18n'
+import { problemDetail } from '@/lib/problem'
+import { toast } from '@/lib/toast'
+import { cn } from '@/lib/utils'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,19 +29,7 @@ import { Button } from '@/components/ui/button'
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import { duration, useFormat } from '@/lib/format'
-import { useT, type TranslationKey } from '@/lib/i18n'
-import { problemDetail } from '@/lib/problem'
-import { toast } from '@/lib/toast'
-import { cn } from '@/lib/utils'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 
 /** The verb a job carries, in the admin's language. */
 export const jobActionKey: Record<string, TranslationKey> = {
@@ -83,7 +76,9 @@ export function JobLabel({ job }: { job: JobDto }) {
       {job.imageTag && (
         <>
           {' → '}
-          <span className='font-mono' dir='ltr'>{job.imageTag}</span>
+          <span className='font-mono' dir='ltr'>
+            {job.imageTag}
+          </span>
         </>
       )}
     </span>
@@ -231,7 +226,15 @@ export function QueueTable() {
 }
 
 /** Jobs in the order given: a lane's running one and its line, or what ran lately. */
-function JobsTable({ jobs, onCancel, cancellingId }: { jobs: JobDto[]; onCancel?: (j: JobDto) => void; cancellingId?: number }) {
+function JobsTable({
+  jobs,
+  onCancel,
+  cancellingId,
+}: {
+  jobs: JobDto[]
+  onCancel?: (j: JobDto) => void
+  cancellingId?: number
+}) {
   const t = useT()
   const format = useFormat()
   return (

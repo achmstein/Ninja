@@ -5,13 +5,7 @@ import { API_VERSION } from '@/lib/api-client'
 import { useT } from '@/lib/i18n'
 import { formatEgp } from '@/lib/money'
 import { cn } from '@/lib/utils'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Skeleton } from '@/components/ui/skeleton'
 import { EmptyState } from '@/components/empty-state'
 import { ErrorState } from '@/components/error-state'
@@ -46,11 +40,7 @@ function StepActor({ step }: { step: DeliveryTimelineStep }) {
   const t = useT()
   const byTill = step.actorRole === 'Till'
   if (step.actorName) {
-    return (
-      <>
-        {t(byTill ? 'riderByTill' : 'riderByRider', { name: step.actorName })}
-      </>
-    )
+    return <>{t(byTill ? 'riderByTill' : 'riderByRider', { name: step.actorName })}</>
   }
   return <>{t(byTill ? 'riderAtTill' : 'riderFromApp')}</>
 }
@@ -82,9 +72,7 @@ export function TimelineDialog({
       <DialogContent className='max-h-[85vh] overflow-y-auto sm:max-w-md'>
         <DialogHeader>
           <DialogTitle>{t('riderTimeline')}</DialogTitle>
-          <DialogDescription>
-            {t('riderTimelineOf', { id: orderId ?? '' })}
-          </DialogDescription>
+          <DialogDescription>{t('riderTimelineOf', { id: orderId ?? '' })}</DialogDescription>
         </DialogHeader>
 
         {timeline.isError ? (
@@ -117,9 +105,7 @@ export function TimelineDialog({
                 <div className='text-sm font-medium'>
                   <StepTitle step={step} />
                 </div>
-                {step.action === 'Failed' && step.reason && (
-                  <div className='text-sm'>“{step.reason}”</div>
-                )}
+                {step.action === 'Failed' && step.reason && <div className='text-sm'>“{step.reason}”</div>}
                 <div className='text-muted-foreground flex flex-wrap gap-x-2 text-xs'>
                   <When value={step.at} mode='dateTime' />
                   <span>·</span>

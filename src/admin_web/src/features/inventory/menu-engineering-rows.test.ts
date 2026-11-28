@@ -8,12 +8,7 @@ vi.mock('@/components/localized-input', () => ({
   primaryText: (text: { en?: string } | undefined) => text?.en ?? '',
 }))
 
-const row = (
-  id: number,
-  price: number,
-  cost: number,
-  status: MenuCostRow['status'] = 'ok'
-): MenuCostRow => ({
+const row = (id: number, price: number, cost: number, status: MenuCostRow['status'] = 'ok'): MenuCostRow => ({
   catalogItemId: id,
   name: { en: `Item ${id}` },
   category: undefined,
@@ -45,8 +40,7 @@ describe('toMenuEngineering', () => {
     const result = toMenuEngineering(costs, sales)
     expect(result.popularityThreshold).toBeCloseTo(0.175)
     expect(result.averageMargin).toBe(28)
-    const classOf = (id: number) =>
-      result.rows.find((r) => r.catalogItemId === id)?.menuClass
+    const classOf = (id: number) => result.rows.find((r) => r.catalogItemId === id)?.menuClass
     expect(classOf(1)).toBe('star')
     expect(classOf(2)).toBe('plowhorse')
     expect(classOf(3)).toBe('puzzle')
@@ -60,18 +54,12 @@ describe('toMenuEngineering', () => {
   })
 
   it('lists stars first and the biggest earners first within a class', () => {
-    const result = toMenuEngineering(
-      [...costs, row(5, 80, 20)],
-      [...sales, sold(5, 40)]
-    )
+    const result = toMenuEngineering([...costs, row(5, 80, 20)], [...sales, sold(5, 40)])
     expect(result.rows.slice(0, 2).map((r) => r.catalogItemId)).toEqual([5, 1])
   })
 
   it('leaves an item with an uncosted ingredient unplaced and out of the averages', () => {
-    const result = toMenuEngineering(
-      [...costs, row(9, 50, 1, 'incomplete')],
-      [...sales, sold(9, 500)]
-    )
+    const result = toMenuEngineering([...costs, row(9, 50, 1, 'incomplete')], [...sales, sold(9, 500)])
     expect(result.averageMargin).toBe(28)
     const incomplete = result.rows.find((r) => r.catalogItemId === 9)
     expect(incomplete?.menuClass).toBeNull()
@@ -86,11 +74,7 @@ describe('toMenuEngineering', () => {
   })
 
   it('adds up lines of the same item and skips lines with no item', () => {
-    const result = toMenuEngineering(costs, [
-      sold(1, 5),
-      sold(1, 7),
-      { ...sold(2, 3), catalogItemId: null },
-    ])
+    const result = toMenuEngineering(costs, [sold(1, 5), sold(1, 7), { ...sold(2, 3), catalogItemId: null }])
     expect(result.rows.find((r) => r.catalogItemId === 1)?.sold).toBe(12)
     expect(result.rows.find((r) => r.catalogItemId === 2)?.sold).toBe(0)
   })

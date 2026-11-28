@@ -40,5 +40,4 @@ export const partnerLedgerQueryOptions = (id: number) =>
     query: { 'api-version': API_VERSION },
   })
 
-export const recurringQueryOptions = () =>
-  getRecurringExpensesOptions({ query: { 'api-version': API_VERSION } })
+export const recurringQueryOptions = () => getRecurringExpensesOptions({ query: { 'api-version': API_VERSION } })

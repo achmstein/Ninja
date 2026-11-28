@@ -46,20 +46,13 @@ export function RateOptionToggle({
             onClick={() => onChange(code)}
             className={cn(
               'flex items-center justify-center gap-2 rounded-md border py-2 text-sm font-medium transition-colors disabled:opacity-50',
-              selected
-                ? 'border-primary bg-primary text-primary-foreground'
-                : 'hover:bg-muted'
+              selected ? 'border-primary bg-primary text-primary-foreground' : 'hover:bg-muted'
             )}
           >
             <Icon className='h-4 w-4' />
             {localized(option.name)}
             <span
-              className={cn(
-                'text-xs tabular-nums',
-                selected
-                  ? 'text-primary-foreground/80'
-                  : 'text-muted-foreground'
-              )}
+              className={cn('text-xs tabular-nums', selected ? 'text-primary-foreground/80' : 'text-muted-foreground')}
             >
               {formatRate(option.hourlyRate)}
               {t('perHour')}

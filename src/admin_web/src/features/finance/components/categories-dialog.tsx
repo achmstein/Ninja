@@ -25,13 +25,7 @@ import { useFinanceActions } from '../use-finance-actions'
  * one. A retired category keeps its old expenses and just leaves the
  * pickers.
  */
-export function CategoriesDialog({
-  open,
-  onOpenChange,
-}: {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-}) {
+export function CategoriesDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
   const t = useT()
   const categories = useQuery({
     ...categoriesQueryOptions(true),
@@ -39,11 +33,7 @@ export function CategoriesDialog({
   })
 
   return (
-    <EntitySheet
-      open={open}
-      onOpenChange={onOpenChange}
-      title={t('expenseCategories')}
-    >
+    <EntitySheet open={open} onOpenChange={onOpenChange} title={t('expenseCategories')}>
       {categories.isLoading ? (
         <Skeleton className='h-40' />
       ) : (
@@ -65,9 +55,7 @@ function CategoryRow({ category }: { category: ExpenseCategoryView }) {
   const localized = useLocalized()
   const { saveCategory, isPending } = useFinanceActions()
   const [editing, setEditing] = useState(false)
-  const [name, setName] = useState<LocalizedValue>(() =>
-    toLocalizedValue(category.name)
-  )
+  const [name, setName] = useState<LocalizedValue>(() => toLocalizedValue(category.name))
 
   const save = async (patch: { name?: LocalizedValue; isActive?: boolean }) => {
     try {
@@ -94,22 +82,13 @@ function CategoryRow({ category }: { category: ExpenseCategoryView }) {
           }}
         >
           <div className='flex-1'>
-            <LocalizedInput
-              ariaLabel={t('name')}
-              value={name}
-              onChange={setName}
-            />
+            <LocalizedInput ariaLabel={t('name')} value={name} onChange={setName} />
           </div>
           <Button type='submit' size='sm' disabled={isPending}>
             {isPending && <Spinner />}
             {t('save')}
           </Button>
-          <Button
-            type='button'
-            size='sm'
-            variant='ghost'
-            onClick={() => setEditing(false)}
-          >
+          <Button type='button' size='sm' variant='ghost' onClick={() => setEditing(false)}>
             {t('cancel')}
           </Button>
         </form>
@@ -180,20 +159,11 @@ function NewCategoryRow({ order }: { order: number }) {
       <div className='flex-1'>
         <LocalizedInput ariaLabel={t('name')} value={name} onChange={setName} />
       </div>
-      <Button
-        type='submit'
-        size='sm'
-        disabled={isPending || (!name.en.trim() && !name.ar.trim())}
-      >
+      <Button type='submit' size='sm' disabled={isPending || (!name.en.trim() && !name.ar.trim())}>
         {isPending && <Spinner />}
         {t('save')}
       </Button>
-      <Button
-        type='button'
-        size='sm'
-        variant='ghost'
-        onClick={() => setAdding(false)}
-      >
+      <Button type='button' size='sm' variant='ghost' onClick={() => setAdding(false)}>
         {t('cancel')}
       </Button>
     </form>

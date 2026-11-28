@@ -2,7 +2,13 @@ import { describe, expect, it } from 'vitest'
 import type { CartLine } from '@/lib/cart'
 import { checkoutBlock, NO_EXTRAS, orderBody, orderSignature } from './order-payload'
 
-const table = { kind: 'place' as const, placeId: 7, placeKind: 2, name: { en: 'Table 7', ar: 'ترابيزة ٧' }, sessionId: null }
+const table = {
+  kind: 'place' as const,
+  placeId: 7,
+  placeKind: 2,
+  name: { en: 'Table 7', ar: 'ترابيزة ٧' },
+  sessionId: null,
+}
 
 const line: CartLine = {
   productId: 1,
@@ -91,7 +97,13 @@ describe('orderBody', () => {
       guestContact: null,
       destination: null,
     })
-    expect(body).toMatchObject({ userId: 'u1', userName: 'Ali', pointsToRedeem: 100, loyaltyDiscount: 5, placeId: null })
+    expect(body).toMatchObject({
+      userId: 'u1',
+      userName: 'Ali',
+      pointsToRedeem: 100,
+      loyaltyDiscount: 5,
+      placeId: null,
+    })
   })
 
   it('sends a name the business wrote in one language as that language only', () => {
@@ -101,7 +113,17 @@ describe('orderBody', () => {
       nameAr: 'شاي',
       price: 20,
       quantity: 1,
-      customizations: [{ customizationId: 4, customizationNameEn: '', customizationNameAr: 'السكر', optionId: 11, optionNameEn: '', optionNameAr: 'زيادة', priceAdjustment: 0 }],
+      customizations: [
+        {
+          customizationId: 4,
+          customizationNameEn: '',
+          customizationNameAr: 'السكر',
+          optionId: 11,
+          optionNameEn: '',
+          optionNameAr: 'زيادة',
+          priceAdjustment: 0,
+        },
+      ],
     }
     const body = orderBody({
       lines: [arabicOnly],
@@ -123,7 +145,16 @@ describe('orderBody', () => {
 })
 
 describe('a delivery', () => {
-  const tahrir = { latitude: 30.0444, longitude: 31.2357, address: 'Tahrir St', building: '12', floor: '', apartment: null, directions: 'Blue gate', phone: null }
+  const tahrir = {
+    latitude: 30.0444,
+    longitude: 31.2357,
+    address: 'Tahrir St',
+    building: '12',
+    floor: '',
+    apartment: null,
+    directions: 'Blue gate',
+    phone: null,
+  }
 
   it('lets a guest order without a table: the address anchors it', () => {
     const base = { isGuest: true, destination: null, guestOrdersAnywhere: false, requireSignInForTableOrders: false }
@@ -164,9 +195,18 @@ describe('a delivery', () => {
 
 describe('paying ahead', () => {
   it('asks for it only on an order to a door or the counter, and makes it a different order', () => {
-    const base = { lines: [line], extras: NO_EXTRAS, isGuest: false, profile: { sub: 'u' }, guestContact: null, newId: () => 'id' }
+    const base = {
+      lines: [line],
+      extras: NO_EXTRAS,
+      isGuest: false,
+      profile: { sub: 'u' },
+      guestContact: null,
+      newId: () => 'id',
+    }
     expect(orderBody({ ...base, destination: null, payOnline: true }).payOnline).toBe(true)
     expect(orderBody({ ...base, destination: table, payOnline: true }).payOnline).toBe(false)
-    expect(orderSignature([line], NO_EXTRAS, null, null, null, true)).not.toBe(orderSignature([line], NO_EXTRAS, null, null, null, false))
+    expect(orderSignature([line], NO_EXTRAS, null, null, null, true)).not.toBe(
+      orderSignature([line], NO_EXTRAS, null, null, null, false)
+    )
   })
 })

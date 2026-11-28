@@ -19,14 +19,9 @@ const RED: Rgba = [220, 30, 40, 255]
 const CLEAR: Rgba = [0, 0, 0, 0]
 
 /** An image drawn by a function of x and y. */
-function draw(
-  width: number,
-  height: number,
-  at: (x: number, y: number) => Rgba
-): Pixels {
+function draw(width: number, height: number, at: (x: number, y: number) => Rgba): Pixels {
   const data = new Uint8ClampedArray(width * height * 4)
-  for (let y = 0; y < height; y++)
-    for (let x = 0; x < width; x++) data.set(at(x, y), (y * width + x) * 4)
+  for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) data.set(at(x, y), (y * width + x) * 4)
   return { data, width, height }
 }
 
@@ -49,28 +44,16 @@ describe('detectBackground', () => {
   })
 
   it('reads a transparent border as already cut out', () => {
-    expect(
-      detectBackground(draw(20, 20, (x) => (x > 8 && x < 12 ? BLACK : CLEAR)))
-    ).toEqual({ kind: 'transparent' })
+    expect(detectBackground(draw(20, 20, (x) => (x > 8 && x < 12 ? BLACK : CLEAR)))).toEqual({ kind: 'transparent' })
   })
 
   it('takes a JPEG’s noise in its stride', () => {
-    const noisy = draw(30, 30, (x, y) => [
-      250 + ((x * 7 + y * 3) % 6),
-      251,
-      249 + ((x + y) % 5),
-      255,
-    ])
+    const noisy = draw(30, 30, (x, y) => [250 + ((x * 7 + y * 3) % 6), 251, 249 + ((x + y) % 5), 255])
     expect(detectBackground(noisy)?.kind).toBe('solid')
   })
 
   it('leaves a photo alone: a border of many colours is no background', () => {
-    const photo = draw(30, 30, (x, y) => [
-      (x * 37) % 256,
-      (y * 53) % 256,
-      ((x + y) * 29) % 256,
-      255,
-    ])
+    const photo = draw(30, 30, (x, y) => [(x * 37) % 256, (y * 53) % 256, ((x + y) * 29) % 256, 255])
     expect(detectBackground(photo)).toBeNull()
   })
 })
@@ -106,9 +89,7 @@ describe('removeBackground', () => {
 
   it('turns a soft grey edge into the ink at part opacity, with no white fringe', () => {
     // A black bar whose edge column is the 50% blend of black and white
-    const bar = draw(30, 30, (x) =>
-      x >= 12 && x < 18 ? BLACK : x === 11 ? [128, 128, 128, 255] : WHITE
-    )
+    const bar = draw(30, 30, (x) => (x >= 12 && x < 18 ? BLACK : x === 11 ? [128, 128, 128, 255] : WHITE))
     const { pixels } = removeBackground(bar, white, false)
     const [r, g, b, a] = pixel(pixels, 11, 15)
     expect(a).toBeGreaterThan(110)
@@ -118,9 +99,7 @@ describe('removeBackground', () => {
 
   it('works against a coloured background as well as white', () => {
     const blue = { r: 30, g: 60, b: 200 }
-    const card = draw(30, 30, (x, y) =>
-      x > 10 && x < 20 && y > 10 && y < 20 ? WHITE : [30, 60, 200, 255]
-    )
+    const card = draw(30, 30, (x, y) => (x > 10 && x < 20 && y > 10 && y < 20 ? WHITE : [30, 60, 200, 255]))
     const { pixels } = removeBackground(card, blue, false)
     expect(pixel(pixels, 2, 2)[3]).toBe(0)
     expect(pixel(pixels, 15, 15)).toEqual(WHITE)
@@ -129,9 +108,7 @@ describe('removeBackground', () => {
 
 describe('contentBox and crop', () => {
   it('finds the visible part and cuts to it', () => {
-    const dot = draw(20, 10, (x, y) =>
-      x >= 5 && x < 9 && y >= 2 && y < 5 ? BLACK : CLEAR
-    )
+    const dot = draw(20, 10, (x, y) => (x >= 5 && x < 9 && y >= 2 && y < 5 ? BLACK : CLEAR))
     const box = contentBox(dot)
     expect(box).toEqual({ x: 5, y: 2, width: 4, height: 3 })
     const cut = crop(dot, box!)
@@ -146,8 +123,7 @@ describe('contentBox and crop', () => {
 
 describe('light and dark', () => {
   /** A logo cut out: the ink where `at` says, clear elsewhere. */
-  const cutOut = (ink: (x: number) => Rgba) =>
-    draw(20, 20, (x, y) => (y >= 5 && y < 15 ? ink(x) : CLEAR))
+  const cutOut = (ink: (x: number) => Rgba) => draw(20, 20, (x, y) => (y >= 5 && y < 15 ? ink(x) : CLEAR))
 
   it('finds a black logo lost on the dark surface and not on the light one', () => {
     const black = cutOut(() => BLACK)
@@ -203,8 +179,6 @@ describe('light and dark', () => {
     const white = cutOut(() => WHITE)
     expect(needsAdapting(white, LIGHT_SURFACE)).toBe(true)
     expect(needsAdapting(white, DARK_SURFACE)).toBe(false)
-    expect(pixel(adaptTo(white, LIGHT_SURFACE).pixels, 10, 10)).toEqual([
-      0, 0, 0, 255,
-    ])
+    expect(pixel(adaptTo(white, LIGHT_SURFACE).pixels, 10, 10)).toEqual([0, 0, 0, 255])
   })
 })

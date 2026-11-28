@@ -89,7 +89,10 @@ export function imageOf(images: BrandImages, slot: ImageSlot): string | null {
  * with a wordmark's box read from the file once it is loaded (until then a
  * 4:1 box, close enough for a preview).
  */
-export function imagesFromUrls(urls: Partial<Record<ImageSlot, string | null>>, sizes: Partial<Record<ImageSlot, { width: number; height: number }>> = {}): BrandImages {
+export function imagesFromUrls(
+  urls: Partial<Record<ImageSlot, string | null>>,
+  sizes: Partial<Record<ImageSlot, { width: number; height: number }>> = {}
+): BrandImages {
   const wide = (slot: ImageSlot): BrandWordmark | null => {
     const url = urls[slot]
     if (!url) return null

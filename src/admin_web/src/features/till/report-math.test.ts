@@ -85,37 +85,22 @@ describe('how net sales is made', () => {
 describe('the two tender series', () => {
   it('keeps bills (cash after change) and tab payments apart, bills adding up to gross sales', () => {
     const series = tenderSeries(day, { tabs: true })
-    expect(series.bills.map((r) => r.name)).toEqual([
-      'Cash',
-      'Card',
-      'InstaPay',
-      'Account',
-    ])
+    expect(series.bills.map((r) => r.name)).toEqual(['Cash', 'Card', 'InstaPay', 'Account'])
     expect(series.bills.find((r) => r.name === 'Cash')?.amount).toBe(206.84)
     expect(series.billsTotal).toBe(343.64)
-    expect(series.tabs).toEqual([
-      expect.objectContaining({ name: 'InstaPay', amount: 400, count: 2 }),
-    ])
+    expect(series.tabs).toEqual([expect.objectContaining({ name: 'InstaPay', amount: 400, count: 2 })])
     expect(series.tabsTotal).toBe(400)
   })
 
   it('offers Online and Talabat only where they apply', () => {
-    expect(
-      tenderSeries(day, { onlinePayments: true }).bills.map((r) => r.name)
-    ).toContain('Online')
-    const talabat = tenderSeries(
-      { ...day, tenderTotals: [{ tender: 'Talabat', amount: 90, count: 1 }] },
-      {}
-    )
+    expect(tenderSeries(day, { onlinePayments: true }).bills.map((r) => r.name)).toContain('Online')
+    const talabat = tenderSeries({ ...day, tenderTotals: [{ tender: 'Talabat', amount: 90, count: 1 }] }, {})
     expect(talabat.bills.map((r) => r.name)).toContain('Talabat')
     expect(talabat.tabs.length).toBe(1)
   })
 
   it("leaves out a switched-off module's empty tender, never its money", () => {
-    const off = tenderSeries(
-      { ...day, tenderTotals: [{ tender: 'Cash', amount: 100, count: 1 }] },
-      {}
-    )
+    const off = tenderSeries({ ...day, tenderTotals: [{ tender: 'Cash', amount: 100, count: 1 }] }, {})
     expect(off.bills.map((r) => r.name)).toEqual(['Cash', 'Card', 'InstaPay'])
 
     // A courier's sales count on a day without Talabat ones, and add up

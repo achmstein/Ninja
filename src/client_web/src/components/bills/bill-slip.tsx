@@ -1,23 +1,9 @@
 import { type ReactNode } from 'react'
-import { motion } from 'motion/react'
 import { Timer } from 'lucide-react'
+import { motion } from 'motion/react'
 import { type BillLineView, type BillView } from '@/api/sales'
-import {
-  closedAt,
-  hoursLabel,
-  isSettled,
-  percent,
-  runningTime,
-  useNow,
-  type RunningTime,
-} from '@/lib/bills'
-import {
-  useLanguage,
-  useLocalized,
-  usePrice,
-  useT,
-  type TranslationKey,
-} from '@/lib/i18n'
+import { closedAt, hoursLabel, isSettled, percent, runningTime, useNow, type RunningTime } from '@/lib/bills'
+import { useLanguage, useLocalized, usePrice, useT, type TranslationKey } from '@/lib/i18n'
 import { springSoft } from '@/lib/motion'
 import { useActiveStay } from '@/lib/stays'
 import { cn } from '@/lib/utils'
@@ -55,7 +41,10 @@ export function Paper({ children, className }: { children: ReactNode; className?
       >
         {children}
       </motion.div>
-      <div aria-hidden className='h-2 bg-[radial-gradient(circle_at_7px_0,white_6px,transparent_6.5px)] bg-[length:14px_8px] bg-repeat-x' />
+      <div
+        aria-hidden
+        className='h-2 bg-[radial-gradient(circle_at_7px_0,white_6px,transparent_6.5px)] bg-[length:14px_8px] bg-repeat-x'
+      />
     </motion.div>
   )
 }
@@ -108,13 +97,10 @@ export function BillSlip({ bill }: { bill: BillView }) {
               dateStyle: 'short',
               timeStyle: 'short',
             })}
-            {closed &&
-              ` – ${closed.toLocaleTimeString(locale, { hour: 'numeric', minute: '2-digit' })}`}
+            {closed && ` – ${closed.toLocaleTimeString(locale, { hour: 'numeric', minute: '2-digit' })}`}
           </div>
         )}
-        {bill.status === 'Voided' && (
-          <div className='text-[11px] font-semibold'>{t('voided')}</div>
-        )}
+        {bill.status === 'Voided' && <div className='text-[11px] font-semibold'>{t('voided')}</div>}
       </div>
 
       {rule}
@@ -171,20 +157,14 @@ export function BillSlip({ bill }: { bill: BillView }) {
       </div>
       {vat > 0 && bill.vatIncluded && (
         <div className={`${row} -mt-1 text-[10px]`}>
-          <span>
-            {t('vatIncluded', { rate: String(percent(bill.vatRate)) })}
-          </span>
+          <span>{t('vatIncluded', { rate: String(percent(bill.vatRate)) })}</span>
           <span>{price(vat)}</span>
         </div>
       )}
 
       {isSettled(bill) && bill.paidWith && (
         <div className={row}>
-          <span>
-            {tenderKey[bill.paidWith]
-              ? t(tenderKey[bill.paidWith])
-              : bill.paidWith}
-          </span>
+          <span>{tenderKey[bill.paidWith] ? t(tenderKey[bill.paidWith]) : bill.paidWith}</span>
           <span>{price(Number(bill.total ?? 0))}</span>
         </div>
       )}
@@ -212,20 +192,15 @@ function SlipLine({ line }: { line: BillLineView }) {
     <div>
       <div className='flex items-baseline justify-between gap-2'>
         <span>{localized(line.description)}</span>
-        <span className='shrink-0 tabular-nums'>
-          {price(Number(line.total ?? 0))}
-        </span>
+        <span className='shrink-0 tabular-nums'>{price(Number(line.total ?? 0))}</span>
       </div>
       <div className='text-[10px] tabular-nums'>
-        {isTime ? t('hoursShort', { count: hoursLabel(qty) }) : qty} ×{' '}
-        {price(Number(line.unitPrice ?? 0))}
+        {isTime ? t('hoursShort', { count: hoursLabel(qty) }) : qty} × {price(Number(line.unitPrice ?? 0))}
         {isTime && t('perHourShort')}
         {discount > 0 && ` − ${price(discount)} (${t('discount')})`}
         {line.customerName && ` · ${line.customerName}`}
       </div>
-      {localized(line.details) && (
-        <div className='text-[10px]'>{localized(line.details)}</div>
-      )}
+      {localized(line.details) && <div className='text-[10px]'>{localized(line.details)}</div>}
     </div>
   )
 }
@@ -254,30 +229,17 @@ export function RunningTimeLine({
     <div>
       {running.parts.map((part, i) => (
         <div key={i}>
-          <div
-            className={cn(
-              'flex items-baseline gap-1',
-              slip ? 'justify-between gap-2' : 'text-sm',
-            )}
-          >
-            {!slip && (
-              <Timer className='text-muted-foreground h-3.5 w-3.5 shrink-0 self-center' />
-            )}
+          <div className={cn('flex items-baseline gap-1', slip ? 'justify-between gap-2' : 'text-sm')}>
+            {!slip && <Timer className='text-muted-foreground h-3.5 w-3.5 shrink-0 self-center' />}
             <span className='min-w-0 flex-1'>
               {t('timeSoFar', { place })}
               {perOption && ` — ${localized(part.optionName)}`}
             </span>
             <span className='shrink-0 tabular-nums'>≈ {price(part.cost)}</span>
           </div>
-          <p
-            className={cn(
-              'tabular-nums',
-              slip ? 'text-[10px]' : 'text-muted-foreground ms-6 text-xs',
-            )}
-          >
+          <p className={cn('tabular-nums', slip ? 'text-[10px]' : 'text-muted-foreground ms-6 text-xs')}>
             {i === 0 && `${elapsed} · `}
-            {t('hoursShort', { count: hoursLabel(part.hours) })} ×{' '}
-            {price(part.rate)}
+            {t('hoursShort', { count: hoursLabel(part.hours) })} × {price(part.rate)}
             {t('perHourShort')}
           </p>
         </div>

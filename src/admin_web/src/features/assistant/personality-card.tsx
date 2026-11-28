@@ -6,13 +6,7 @@ import { brandQueryKey, useBrand, type Brand } from '@/lib/brand'
 import { useT, type TranslationKey } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
 import { Textarea } from '@/components/ui/textarea'
@@ -57,10 +51,7 @@ export function PersonalityCard() {
   const brand = useBrand()
   const t = useT()
   return (
-    <SettingsCard
-      title={t('assistantPersonalityTitle')}
-      description={t('assistantPersonalityHint')}
-    >
+    <SettingsCard title={t('assistantPersonalityTitle')} description={t('assistantPersonalityHint')}>
       {/* Keyed on the version so a save elsewhere re-seeds the form */}
       {brand ? (
         <PersonalityFields key={String(brand.version)} brand={brand} />
@@ -79,10 +70,8 @@ function PersonalityFields({ brand }: { brand: Brand }) {
   const saved = toPersonalityForm(brand.assistant)
   const [form, setForm] = useState<PersonalityForm>(saved)
   const [problem, setProblem] = useState<string | null>(null)
-  const set = <K extends keyof PersonalityForm>(
-    key: K,
-    value: PersonalityForm[K]
-  ) => setForm((prev) => ({ ...prev, [key]: value }))
+  const set = <K extends keyof PersonalityForm>(key: K, value: PersonalityForm[K]) =>
+    setForm((prev) => ({ ...prev, [key]: value }))
 
   const save = useMutation({
     ...setTenantAssistantMutation(),
@@ -104,16 +93,8 @@ function PersonalityFields({ brand }: { brand: Brand }) {
   }
 
   const preview = t('assistantPreview', {
-    tone: t(
-      form.tone === 'detailed'
-        ? 'assistantPreviewDetailed'
-        : 'assistantPreviewBrief'
-    ),
-    manner: t(
-      form.manner === 'formal'
-        ? 'assistantPreviewFormal'
-        : 'assistantPreviewFriendly'
-    ),
+    tone: t(form.tone === 'detailed' ? 'assistantPreviewDetailed' : 'assistantPreviewBrief'),
+    manner: t(form.manner === 'formal' ? 'assistantPreviewFormal' : 'assistantPreviewFriendly'),
     language: t(LANGUAGE_PREVIEW[form.language]),
   })
 
@@ -122,15 +103,8 @@ function PersonalityFields({ brand }: { brand: Brand }) {
       <SettingRow
         title={t('assistantLanguage')}
         control={
-          <Select
-            value={form.language}
-            onValueChange={(v) => set('language', v as AssistantLanguage)}
-          >
-            <SelectTrigger
-              id='assistant-language'
-              aria-label={t('assistantLanguage')}
-              className='w-full sm:w-60'
-            >
+          <Select value={form.language} onValueChange={(v) => set('language', v as AssistantLanguage)}>
+            <SelectTrigger id='assistant-language' aria-label={t('assistantLanguage')} className='w-full sm:w-60'>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -204,19 +178,10 @@ function PersonalityFields({ brand }: { brand: Brand }) {
         <p className='bg-muted/50 rounded-lg px-3 py-2 text-sm'>{preview}</p>
       </div>
       <div className='flex flex-wrap items-center justify-end gap-3 px-5 py-4'>
-        <p
-          className={
-            problem
-              ? 'text-destructive me-auto text-sm'
-              : 'text-muted-foreground me-auto text-sm'
-          }
-        >
+        <p className={problem ? 'text-destructive me-auto text-sm' : 'text-muted-foreground me-auto text-sm'}>
           {problem ?? t('assistantPersonalityTakesEffect')}
         </p>
-        <Button
-          type='submit'
-          disabled={save.isPending || samePersonality(form, saved)}
-        >
+        <Button type='submit' disabled={save.isPending || samePersonality(form, saved)}>
           {save.isPending && <Spinner />}
           {t('save')}
         </Button>

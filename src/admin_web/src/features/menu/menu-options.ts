@@ -28,9 +28,7 @@ export type MenuOptions = {
 
 export function menuOptionsOf(
   item: CatalogItemDto,
-  localized: (
-    t: { en?: string | null; ar?: string | null } | null | undefined
-  ) => string
+  localized: (t: { en?: string | null; ar?: string | null } | null | undefined) => string
 ): MenuOptions {
   const byOrder = <T extends { displayOrder?: number | string }>(a: T, b: T) =>
     toNumber(a.displayOrder) - toNumber(b.displayOrder)
@@ -46,9 +44,7 @@ export function menuOptionsOf(
         const entry = {
           id: String(option.id),
           label: localized(option.name),
-          names: [option.name?.en, option.name?.ar].filter(
-            (n): n is string => !!n && n.trim() !== ''
-          ),
+          names: [option.name?.en, option.name?.ar].filter((n): n is string => !!n && n.trim() !== ''),
           groupIndex,
           index,
           isDefault: option.isDefault === true,

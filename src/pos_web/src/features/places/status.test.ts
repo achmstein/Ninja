@@ -1,10 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type {
-  PlaceViewModel,
-  ReservationViewModel,
-  StayViewModel,
-  TariffViewModel,
-} from '@/api/spaces/types.gen'
+import type { PlaceViewModel, ReservationViewModel, StayViewModel, TariffViewModel } from '@/api/spaces/types.gen'
 import {
   elapsedSeconds,
   estimateStayCost,
@@ -162,7 +157,7 @@ describe('what a stay has cost so far', () => {
           { customerId: 'c2', customerName: null },
           { customerName: 'A guest with no account' },
         ],
-      }),
+      })
     ).toEqual([
       { id: 'c1', name: 'Laila' },
       { id: 'c2', name: '' },

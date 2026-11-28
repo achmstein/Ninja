@@ -7,13 +7,7 @@ import { useBrandName } from '@/lib/brand'
 import { useLanguage, useT } from '@/lib/i18n'
 import { useTheme } from '@/context/theme-provider'
 import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Spinner } from '@/components/ui/spinner'
 import { BrandMark } from '@/components/brand-mark'
 import { PoweredBy } from '@/components/ninja-wordmark'
@@ -32,10 +26,7 @@ export function SignIn() {
   // A renewal that failed is not a sign-in that did: the dead session is
   // dropped (DropRefusedSession) and Keycloak is asked afresh
   const signInError =
-    auth.error?.source === 'renewSilent' ||
-    auth.error?.source === 'signinSilent'
-      ? undefined
-      : auth.error
+    auth.error?.source === 'renewSilent' || auth.error?.source === 'signinSilent' ? undefined : auth.error
   const { resolvedTheme } = useTheme()
   const language = useLanguage((state) => state.language)
   const navigate = useNavigate()
@@ -65,13 +56,7 @@ export function SignIn() {
   }
 
   useEffect(() => {
-    if (
-      auth.isLoading ||
-      auth.isAuthenticated ||
-      signInError ||
-      auth.activeNavigator ||
-      redirectStarted.current
-    ) {
+    if (auth.isLoading || auth.isAuthenticated || signInError || auth.activeNavigator || redirectStarted.current) {
       return
     }
     redirectStarted.current = true
@@ -87,9 +72,7 @@ export function SignIn() {
       <AuthLayout>
         <Card className='gap-4'>
           <CardHeader className='text-center'>
-            <CardTitle className='text-xl tracking-tight'>
-              {t('signInFailed')}
-            </CardTitle>
+            <CardTitle className='text-xl tracking-tight'>{t('signInFailed')}</CardTitle>
             <CardDescription>{signInError.message}</CardDescription>
           </CardHeader>
           <CardContent>
@@ -108,12 +91,8 @@ export function SignIn() {
       <div className='flex flex-col items-center gap-3'>
         <BrandMark className='size-14 text-2xl' />
         <div className='flex flex-col items-center gap-1'>
-          <span className='text-2xl font-semibold tracking-tight'>
-            {businessName || t('adminName')}
-          </span>
-          {businessName && (
-            <span className='text-muted-foreground'>{t('adminName')}</span>
-          )}
+          <span className='text-2xl font-semibold tracking-tight'>{businessName || t('adminName')}</span>
+          {businessName && <span className='text-muted-foreground'>{t('adminName')}</span>}
         </div>
       </div>
       <div className='text-muted-foreground flex items-center gap-2 text-sm'>

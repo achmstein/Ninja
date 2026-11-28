@@ -7,26 +7,19 @@ import { useAuth } from 'react-oidc-context'
 import { useLocale, useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
-import {
-  createAppColumnHelper,
-  DataTable,
-  dataTableFeatures,
-} from '@/components/data-table'
+import { createAppColumnHelper, DataTable, dataTableFeatures } from '@/components/data-table'
 import { EntityAvatar } from '@/components/entity-avatar'
 import { ErrorState } from '@/components/error-state'
 import { Main } from '@/components/layout/main'
 import { ListRow } from '@/components/list-row'
 import { PageHeader } from '@/components/page-header'
 import { RowActions } from '@/components/row-actions'
-import { Badge } from '@/components/ui/badge'
 import { StatusChip } from '@/components/status-chip'
 import { customersService } from '@/features/customers/services/customers-service'
-import {
-  type Customer,
-  getCustomerDisplayName,
-} from '@/features/customers/types'
+import { type Customer, getCustomerDisplayName } from '@/features/customers/types'
 import { AddStaffDialog } from './components/add-staff-dialog'
 import { EditStaffDialog } from './components/edit-staff-dialog'
 import { ManageBranchesDialog } from './components/manage-branches-dialog'
@@ -35,8 +28,7 @@ const columnHelper = createAppColumnHelper<Customer>()
 
 // Owners first, then admins, then cashiers, kitchens and riders
 const STAFF_ROLES = ['Owner', 'Admin', 'Cashier', 'Kitchen', 'Rider'] as const
-const rank = (user: Customer) =>
-  STAFF_ROLES.findIndex((role) => (user.realmRoles ?? []).includes(role))
+const rank = (user: Customer) => STAFF_ROLES.findIndex((role) => (user.realmRoles ?? []).includes(role))
 
 export function StaffManagement() {
   const t = useT()
@@ -59,10 +51,7 @@ export function StaffManagement() {
       }),
   })
 
-  const staff = useMemo(
-    () => [...(staffQuery.data ?? [])].sort((a, b) => rank(a) - rank(b)),
-    [staffQuery.data]
-  )
+  const staff = useMemo(() => [...(staffQuery.data ?? [])].sort((a, b) => rank(a) - rank(b)), [staffQuery.data])
 
   const toggleEnabled = useMutation({
     mutationFn: (userId: string) => customersService.toggleEnabled(userId),
@@ -97,11 +86,7 @@ export function StaffManagement() {
             {roleLabel(role)}
           </Badge>
         ) : (
-          <StatusChip
-            key={role}
-            tone={role === 'Admin' ? 'outline' : 'muted'}
-            dot={false}
-          >
+          <StatusChip key={role} tone={role === 'Admin' ? 'outline' : 'muted'} dot={false}>
             {roleLabel(role)}
           </StatusChip>
         )
@@ -110,9 +95,7 @@ export function StaffManagement() {
   const enabledSwitch = (user: (typeof staff)[number]) => (
     <Switch
       checked={user.enabled}
-      disabled={
-        !isOwner || user.id === currentUserId || toggleEnabled.isPending
-      }
+      disabled={!isOwner || user.id === currentUserId || toggleEnabled.isPending}
       onCheckedChange={() => toggleEnabled.mutate(user.id)}
       aria-label={t('toggleAccountFor', { name: getCustomerDisplayName(user) })}
     />
@@ -146,21 +129,12 @@ export function StaffManagement() {
           id: 'name',
           header: t('name'),
           cell: ({ row }) => (
-            <div
-              className={cn(
-                'flex items-center gap-3',
-                !row.original.enabled && 'opacity-60'
-              )}
-            >
+            <div className={cn('flex items-center gap-3', !row.original.enabled && 'opacity-60')}>
               <EntityAvatar name={getCustomerDisplayName(row.original)} />
               <div className='flex min-w-0 flex-col leading-tight'>
-                <span className='truncate font-medium'>
-                  {getCustomerDisplayName(row.original)}
-                </span>
+                <span className='truncate font-medium'>{getCustomerDisplayName(row.original)}</span>
                 {row.original.email && (
-                  <span className='text-muted-foreground truncate text-xs'>
-                    {row.original.email}
-                  </span>
+                  <span className='text-muted-foreground truncate text-xs'>{row.original.email}</span>
                 )}
               </div>
             </div>
@@ -169,9 +143,7 @@ export function StaffManagement() {
         columnHelper.display({
           id: 'roles',
           header: t('roles'),
-          cell: ({ row }) => (
-            <div className='flex flex-wrap gap-1'>{rolesOf(row.original)}</div>
-          ),
+          cell: ({ row }) => <div className='flex flex-wrap gap-1'>{rolesOf(row.original)}</div>,
         }),
         columnHelper.display({
           id: 'enabled',

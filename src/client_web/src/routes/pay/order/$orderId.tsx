@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
+import { isAxiosError } from 'axios'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
-import { isAxiosError } from 'axios'
 import { useAuth } from 'react-oidc-context'
 import { cancelUnpaidOrderMutation } from '@/api/ordering/@tanstack/react-query.gen'
 import { getOrderToPayOptions, startOrderPaymentMutation } from '@/api/sales/@tanstack/react-query.gen'
+import { useGuestStore } from '@/stores/guest-store'
 import { API_VERSION } from '@/lib/api-client'
 import { useBrandName } from '@/lib/brand'
 import { formatClock, useSecondTick } from '@/lib/clock'
@@ -12,7 +13,6 @@ import { formatMoney } from '@/lib/currency'
 import { useLanguage, useT } from '@/lib/i18n'
 import { problemMessage } from '@/lib/problem'
 import { toast } from '@/lib/toast'
-import { useGuestStore } from '@/stores/guest-store'
 import { Outcome } from '@/components/pay/pay-outcome'
 
 export const Route = createFileRoute('/pay/order/$orderId')({
@@ -57,7 +57,8 @@ function PayOrderPage() {
   const query = useQuery({
     ...options,
     // 404 until Sales has heard of it: asked again rather than given up on
-    retry: (count, error) => !gaveUp && isAxiosError(error) && error.response?.status === 404 && count < GIVE_UP_MS / POLL_MS,
+    retry: (count, error) =>
+      !gaveUp && isAxiosError(error) && error.response?.status === 404 && count < GIVE_UP_MS / POLL_MS,
     retryDelay: POLL_MS,
     // While it waits, its time and the provider's word can change it
     refetchInterval: (q) => (q.state.data?.status === 'Due' ? 10_000 : false),
@@ -146,7 +147,9 @@ function PayOrderPage() {
       amount={formatMoney(order.charged, order.currency, language)}
       payment={order}
     >
-      {order.holdsCards && <p className='text-muted-foreground px-2 text-center text-note'>{t('payAheadHeld', { name: business })}</p>}
+      {order.holdsCards && (
+        <p className='text-muted-foreground text-note px-2 text-center'>{t('payAheadHeld', { name: business })}</p>
+      )}
       <button type='button' onClick={startPaying} disabled={outOfTime} className={`${PRIMARY} disabled:opacity-50`}>
         {t('payAheadPay', { amount: formatMoney(order.charged, order.currency, language) })}
       </button>
@@ -162,7 +165,8 @@ function PayOrderPage() {
   )
 }
 
-const PRIMARY = 'bg-primary text-primary-foreground flex h-[52px] w-full items-center justify-center rounded-full text-body font-bold'
+const PRIMARY =
+  'bg-primary text-primary-foreground flex h-[52px] w-full items-center justify-center rounded-full text-body font-bold'
 const SECONDARY = 'bg-muted flex h-[52px] w-full items-center justify-center rounded-full text-body font-bold'
 
 function BackToMenu() {

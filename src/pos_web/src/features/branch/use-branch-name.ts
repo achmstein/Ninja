@@ -24,6 +24,8 @@ export function useTakenByText() {
   const branchName = useBranchName()
   return (takenBy: string | null | undefined, takenAtBranchId?: number | string | null): string | null => {
     if (!takenBy) return null
-    return takenAtBranchId != null ? t('takenByAt', { name: takenBy, branch: branchName(takenAtBranchId) }) : t('takenBy', { name: takenBy })
+    return takenAtBranchId != null
+      ? t('takenByAt', { name: takenBy, branch: branchName(takenAtBranchId) })
+      : t('takenBy', { name: takenBy })
   }
 }

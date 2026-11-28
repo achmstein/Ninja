@@ -1,6 +1,6 @@
 import { createPortal } from 'react-dom'
-import type { OfflineSale } from '@/features/offline/offline-replay'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
+import type { OfflineSale } from '@/features/offline/offline-replay'
 
 /**
  * The kitchen's copy of a sale taken while the server was out of reach:
@@ -21,13 +21,9 @@ export function KitchenChitSheet({ sale }: { sale: OfflineSale }) {
         <div style={{ fontSize: 16, fontWeight: 700 }}>{t('kitchenChit')}</div>
         <div style={{ fontSize: 20, fontWeight: 700 }}>{sale.provisionalReceiptNumber}</div>
         <div style={{ fontSize: 11 }}>
-          {new Intl.DateTimeFormat(locale, { timeStyle: 'short' }).format(
-            new Date(sale.placedAt),
-          )}
+          {new Intl.DateTimeFormat(locale, { timeStyle: 'short' }).format(new Date(sale.placedAt))}
         </div>
-        {sale.customerName && (
-          <div style={{ fontSize: 13, fontWeight: 600 }}>{sale.customerName}</div>
-        )}
+        {sale.customerName && <div style={{ fontSize: 13, fontWeight: 600 }}>{sale.customerName}</div>}
       </div>
 
       <div style={{ borderTop: '1px dashed #000', margin: '2mm 0' }} />
@@ -57,6 +53,6 @@ export function KitchenChitSheet({ sale }: { sale: OfflineSale }) {
         </>
       )}
     </div>,
-    document.body,
+    document.body
   )
 }

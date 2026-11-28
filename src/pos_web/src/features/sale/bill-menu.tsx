@@ -1,19 +1,20 @@
 import { useState } from 'react'
-import { useAuth } from 'react-oidc-context'
-import { BadgePercent, Ban, Ellipsis, ListChecks, Printer, Trash2, Undo2 } from 'lucide-react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { getRealmRoles } from '@/config/oidc-config'
+import { BadgePercent, Ban, Ellipsis, ListChecks, Printer, Trash2, Undo2 } from 'lucide-react'
+import { useAuth } from 'react-oidc-context'
 import { returnPartPaymentMutation } from '@/api/sales/@tanstack/react-query.gen'
 import type { PartPaymentView, TicketDetail } from '@/api/sales/types.gen'
 import type { StayViewModel } from '@/api/spaces/types.gen'
-import { ConfirmDialog } from '@/components/confirm-dialog'
+import { API_VERSION } from '@/lib/api-client'
+import { handleServerError } from '@/lib/handle-server-error'
+import { useT } from '@/lib/i18n'
+import { useMoney, toNumber } from '@/lib/money'
+import { orderIdsOn } from '@/lib/stock-disposition'
+import { toast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { getRealmRoles } from '@/config/oidc-config'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { ConfirmDialog } from '@/components/confirm-dialog'
 import { useStayActions } from '@/features/places/use-places'
 import { printSheets } from '@/features/printing/print-sheets'
 import { ReceiptSheet } from '@/features/receipt/receipt-sheet'
@@ -21,12 +22,6 @@ import { DiscardTicketDialog } from '@/features/ticket/discard-dialog'
 import { DiscountDialog } from '@/features/ticket/discount-dialog'
 import { KitchenReprintDialog, useCanReprintKitchen } from '@/features/ticket/kitchen-reprint'
 import { VoidTicketDialog } from '@/features/ticket/void-dialog'
-import { API_VERSION } from '@/lib/api-client'
-import { handleServerError } from '@/lib/handle-server-error'
-import { useT } from '@/lib/i18n'
-import { toast } from '@/lib/toast'
-import { useMoney, toNumber } from '@/lib/money'
-import { orderIdsOn } from '@/lib/stock-disposition'
 
 /**
  * The rest a bill can do, from the sale screen it is rung up on: a discount,
@@ -115,10 +110,7 @@ export function BillMenu({
           )}
           {/* Picking lines to split, move or name: the order's own list turns into boxes to tick */}
           {lines.length > 0 && (
-            <DropdownMenuItem
-              className={item}
-              onSelect={onSelectLines}
-            >
+            <DropdownMenuItem className={item} onSelect={onSelectLines}>
               <ListChecks className='size-5' />
               {t('splitOrMove')}
             </DropdownMenuItem>
@@ -177,7 +169,10 @@ export function BillMenu({
       <ConfirmDialog
         open={givingBack !== null}
         onOpenChange={(open) => !open && setGivingBack(null)}
-        title={t('partGiveBackTitle', { amount: money(givingBack?.amount ?? 0), name: givingBack?.payerName ?? t('guest') })}
+        title={t('partGiveBackTitle', {
+          amount: money(givingBack?.amount ?? 0),
+          name: givingBack?.payerName ?? t('guest'),
+        })}
         description={t('partGiveBackHint')}
         cancelLabel={t('goBack')}
         actionLabel={t('partGiveBack', { amount: money(givingBack?.amount ?? 0) })}

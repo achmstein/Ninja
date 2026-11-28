@@ -1,7 +1,15 @@
 import { useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { getPlatformUpdatesOptions, listArchivedBackupsOptions, listNodesOptions } from '@/api/control/@tanstack/react-query.gen'
 import type { TenantUpdate } from '@/api/control'
+import {
+  getPlatformUpdatesOptions,
+  listArchivedBackupsOptions,
+  listNodesOptions,
+} from '@/api/control/@tanstack/react-query.gen'
+import { useFormat } from '@/lib/format'
+import { useT } from '@/lib/i18n'
+import { planLabelKey, TENANT_PLANS, type TenantPlanName } from '@/lib/tenant'
+import { cn } from '@/lib/utils'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,19 +32,9 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Spinner } from '@/components/ui/spinner'
 import { DatePicker } from '@/components/date-picker'
-import { useFormat } from '@/lib/format'
-import { useT } from '@/lib/i18n'
-import { cn } from '@/lib/utils'
-import { planLabelKey, TENANT_PLANS, type TenantPlanName } from '@/lib/tenant'
 import { isValidTag, TagPicker } from './tag-picker'
 
 type DialogProps = {
@@ -141,16 +139,19 @@ export function UpgradeDialog({
         </DialogHeader>
         <div className='grid gap-2'>
           <Label>{t('version')}</Label>
-          <TagPicker tags={tags} releases={updates.data?.releases ?? []} current={currentTag} value={tag} onChange={setTag} />
+          <TagPicker
+            tags={tags}
+            releases={updates.data?.releases ?? []}
+            current={currentTag}
+            value={tag}
+            onChange={setTag}
+          />
         </div>
         <DialogFooter>
           <Button variant='outline' onClick={() => onOpenChange(false)}>
             {t('cancel')}
           </Button>
-          <Button
-            disabled={isPending || !isValidTag(tag)}
-            onClick={() => onConfirm(tag === currentTag ? null : tag)}
-          >
+          <Button disabled={isPending || !isValidTag(tag)} onClick={() => onConfirm(tag === currentTag ? null : tag)}>
             {isPending && <Spinner />}
             {t('upgrade')}
           </Button>
@@ -176,7 +177,9 @@ export function RollbackDialog({
         <AlertDialogHeader>
           <AlertDialogTitle>{t('rollbackTitle', { tag: previousTag })}</AlertDialogTitle>
           <AlertDialogDescription>
-            {backupId ? t('rollbackNoteWithBackup', { tag: previousTag, backupId }) : t('rollbackNote', { tag: previousTag })}
+            {backupId
+              ? t('rollbackNoteWithBackup', { tag: previousTag, backupId })
+              : t('rollbackNote', { tag: previousTag })}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -210,7 +213,10 @@ export function FleetUpgradeDialog({
   isPending,
   tenants,
   onConfirm,
-}: DialogProps & { tenants: FleetTenant[]; onConfirm: (imageTag: string, canary: string | null, slugs: string[]) => void }) {
+}: DialogProps & {
+  tenants: FleetTenant[]
+  onConfirm: (imageTag: string, canary: string | null, slugs: string[]) => void
+}) {
   const t = useT()
   const updates = useQuery({ ...getPlatformUpdatesOptions(), enabled: open })
   const behind = tenants.filter((x) => x.behind).map((x) => x.slug)
@@ -220,7 +226,9 @@ export function FleetUpgradeDialog({
   // With many businesses the list is found, not scrolled
   const [find, setFind] = useState('')
   const needle = find.trim().toLowerCase()
-  const listed = needle ? tenants.filter((x) => x.name.toLowerCase().includes(needle) || x.slug.includes(needle)) : tenants
+  const listed = needle
+    ? tenants.filter((x) => x.name.toLowerCase().includes(needle) || x.slug.includes(needle))
+    : tenants
 
   // Opened: the newest release if there is one, else the platform's default; the tenants behind, else everyone
   const defaultTag = updates.data?.newestRelease ?? updates.data?.knownTags[0] ?? ''
@@ -246,32 +254,61 @@ export function FleetUpgradeDialog({
         <div className='grid gap-4'>
           <div className='grid gap-2'>
             <Label>{t('version')}</Label>
-            <TagPicker tags={updates.data?.knownTags ?? []} releases={updates.data?.releases ?? []} value={tag} onChange={setTag} />
+            <TagPicker
+              tags={updates.data?.knownTags ?? []}
+              releases={updates.data?.releases ?? []}
+              value={tag}
+              onChange={setTag}
+            />
           </div>
           <div className='grid gap-2'>
             <div className='flex items-center justify-between'>
               <Label>{t('whichTenants')}</Label>
               <div className='flex gap-1'>
                 {behind.length > 0 && (
-                  <Button type='button' variant='ghost' size='sm' className='h-7 px-2 text-xs' onClick={() => setChosen(behind)}>
+                  <Button
+                    type='button'
+                    variant='ghost'
+                    size='sm'
+                    className='h-7 px-2 text-xs'
+                    onClick={() => setChosen(behind)}
+                  >
                     {t('onlyBehind')}
                   </Button>
                 )}
-                <Button type='button' variant='ghost' size='sm' className='h-7 px-2 text-xs' onClick={() => setChosen(tenants.map((x) => x.slug))}>
+                <Button
+                  type='button'
+                  variant='ghost'
+                  size='sm'
+                  className='h-7 px-2 text-xs'
+                  onClick={() => setChosen(tenants.map((x) => x.slug))}
+                >
                   {t('everyone')}
                 </Button>
               </div>
             </div>
             {tenants.length > 6 && (
-              <Input value={find} onChange={(e) => setFind(e.target.value)} placeholder={t('searchTenants')} aria-label={t('searchTenants')} />
+              <Input
+                value={find}
+                onChange={(e) => setFind(e.target.value)}
+                placeholder={t('searchTenants')}
+                aria-label={t('searchTenants')}
+              />
             )}
             <div className='grid max-h-48 gap-1 overflow-y-auto rounded-md border p-2'>
               {listed.map((x) => (
-                <label key={x.slug} className='flex cursor-pointer items-center gap-2 rounded px-1 py-1 text-sm hover:bg-muted/50'>
+                <label
+                  key={x.slug}
+                  className='hover:bg-muted/50 flex cursor-pointer items-center gap-2 rounded px-1 py-1 text-sm'
+                >
                   <Checkbox checked={chosen.includes(x.slug)} onCheckedChange={(v) => toggle(x.slug, v === true)} />
                   <span className='truncate'>{x.name}</span>
-                  <span className='text-muted-foreground font-mono text-xs' dir='ltr'>{x.slug}</span>
-                  {x.behind && <span className='ms-auto text-xs text-sky-700 dark:text-sky-400'>{t('updateAvailable')}</span>}
+                  <span className='text-muted-foreground font-mono text-xs' dir='ltr'>
+                    {x.slug}
+                  </span>
+                  {x.behind && (
+                    <span className='ms-auto text-xs text-sky-700 dark:text-sky-400'>{t('updateAvailable')}</span>
+                  )}
                 </label>
               ))}
             </div>
@@ -284,11 +321,13 @@ export function FleetUpgradeDialog({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value='none'>{t('noCanary')}</SelectItem>
-                {tenants.filter((x) => chosen.includes(x.slug)).map((x) => (
-                  <SelectItem key={x.slug} value={x.slug}>
-                    {x.slug}
-                  </SelectItem>
-                ))}
+                {tenants
+                  .filter((x) => chosen.includes(x.slug))
+                  .map((x) => (
+                    <SelectItem key={x.slug} value={x.slug}>
+                      {x.slug}
+                    </SelectItem>
+                  ))}
               </SelectContent>
             </Select>
             <p className='text-muted-foreground text-xs'>{t('canaryNote')}</p>
@@ -298,7 +337,10 @@ export function FleetUpgradeDialog({
           <Button variant='outline' onClick={() => onOpenChange(false)}>
             {t('cancel')}
           </Button>
-          <Button disabled={!valid || isPending} onClick={() => onConfirm(tag.trim(), canary === 'none' ? null : canary, chosen)}>
+          <Button
+            disabled={!valid || isPending}
+            onClick={() => onConfirm(tag.trim(), canary === 'none' ? null : canary, chosen)}
+          >
             {isPending && <Spinner />}
             {t('upgradeAll')}
           </Button>
@@ -369,9 +411,7 @@ export function DestroyDialog({
           <AlertDialogDescription className='sr-only'>{t('destroy')}</AlertDialogDescription>
         </AlertDialogHeader>
         <div className='grid gap-2'>
-          <Label htmlFor='destroy-slug'>
-            {t('destroyConfirmLabel', { slug })}
-          </Label>
+          <Label htmlFor='destroy-slug'>{t('destroyConfirmLabel', { slug })}</Label>
           <Input
             id='destroy-slug'
             value={typed}
@@ -426,7 +466,13 @@ export function BringBackDialog({
   const fromBackup = !!newest && !empty
 
   const options = [
-    { key: 'data', on: fromBackup, disabled: !newest, title: t('bringBackWithData'), note: newest ? t('bringBackWithDataNote', { date: format.dateTime(newest.at) }) : t('bringBackNoBackup') },
+    {
+      key: 'data',
+      on: fromBackup,
+      disabled: !newest,
+      title: t('bringBackWithData'),
+      note: newest ? t('bringBackWithDataNote', { date: format.dateTime(newest.at) }) : t('bringBackNoBackup'),
+    },
     { key: 'empty', on: !fromBackup, disabled: false, title: t('bringBackEmpty'), note: t('bringBackEmptyNote') },
   ]
 
@@ -559,7 +605,9 @@ export function ConvertDialog({
               ))}
             </SelectContent>
           </Select>
-          <Label htmlFor='convert-paid-through' className='mt-2'>{t('paidThrough')}</Label>
+          <Label htmlFor='convert-paid-through' className='mt-2'>
+            {t('paidThrough')}
+          </Label>
           <DatePicker id='convert-paid-through' value={paidThrough} onChange={setPaidThrough} />
         </div>
         <AlertDialogFooter>
@@ -591,7 +639,13 @@ export function RecordPaymentDialog({
 }: DialogProps & {
   currency: string
   paidThrough: string | null | undefined
-  onConfirm: (payment: { amount: number; currency: string; periodEnd: string; reference?: string; note?: string }) => void
+  onConfirm: (payment: {
+    amount: number
+    currency: string
+    periodEnd: string
+    reference?: string
+    note?: string
+  }) => void
 }) {
   const t = useT()
   const [amount, setAmount] = useState('')
@@ -613,11 +667,27 @@ export function RecordPaymentDialog({
           <div className='grid grid-cols-[1fr_5rem] gap-2'>
             <div className='grid gap-2'>
               <Label htmlFor='payment-amount'>{t('amount')}</Label>
-              <Input id='payment-amount' type='number' min={0} step='0.01' inputMode='decimal' value={amount} onChange={(e) => setAmount(e.target.value)} autoFocus />
+              <Input
+                id='payment-amount'
+                type='number'
+                min={0}
+                step='0.01'
+                inputMode='decimal'
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                autoFocus
+              />
             </div>
             <div className='grid gap-2'>
               <Label htmlFor='payment-currency'>{t('currency')}</Label>
-              <Input id='payment-currency' value={code} maxLength={3} className='font-mono uppercase' dir='ltr' onChange={(e) => setCode(e.target.value.toUpperCase())} />
+              <Input
+                id='payment-currency'
+                value={code}
+                maxLength={3}
+                className='font-mono uppercase'
+                dir='ltr'
+                onChange={(e) => setCode(e.target.value.toUpperCase())}
+              />
             </div>
           </div>
           <div className='grid gap-2'>
@@ -626,7 +696,12 @@ export function RecordPaymentDialog({
           </div>
           <div className='grid gap-2'>
             <Label htmlFor='payment-reference'>{t('reference')}</Label>
-            <Input id='payment-reference' value={reference} onChange={(e) => setReference(e.target.value)} placeholder={t('referencePlaceholder')} />
+            <Input
+              id='payment-reference'
+              value={reference}
+              onChange={(e) => setReference(e.target.value)}
+              placeholder={t('referencePlaceholder')}
+            />
           </div>
           <div className='grid gap-2'>
             <Label htmlFor='payment-note'>{t('note')}</Label>
@@ -639,7 +714,15 @@ export function RecordPaymentDialog({
           </Button>
           <Button
             disabled={!valid || isPending}
-            onClick={() => onConfirm({ amount: value, currency: code.toUpperCase(), periodEnd, reference: reference.trim() || undefined, note: note.trim() || undefined })}
+            onClick={() =>
+              onConfirm({
+                amount: value,
+                currency: code.toUpperCase(),
+                periodEnd,
+                reference: reference.trim() || undefined,
+                note: note.trim() || undefined,
+              })
+            }
           >
             {isPending && <Spinner />}
             {t('recordPayment')}
@@ -726,7 +809,8 @@ export function MoveDialog({
               {choices.map((n) => (
                 <SelectItem key={String(n.id)} value={String(n.id)}>
                   {n.name}
-                  {n.roomFor !== null && ` · ${t('nodeRoom').toLowerCase()} ${Number(n.roomFor) > 999 ? '∞' : String(n.roomFor)}`}
+                  {n.roomFor !== null &&
+                    ` · ${t('nodeRoom').toLowerCase()} ${Number(n.roomFor) > 999 ? '∞' : String(n.roomFor)}`}
                 </SelectItem>
               ))}
             </SelectContent>

@@ -13,13 +13,7 @@ import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
 import { Switch } from '@/components/ui/switch'
@@ -65,10 +59,7 @@ export function Suppliers() {
     })
 
   const rows = suppliers.data ?? []
-  const totalOwed = rows.reduce(
-    (sum, s) => sum + Math.max(0, toNumber(s.balance)),
-    0
-  )
+  const totalOwed = rows.reduce((sum, s) => sum + Math.max(0, toNumber(s.balance)), 0)
   const selected = rows.find((s) => toNumber(s.id) === search.supplier) ?? null
 
   return (
@@ -138,34 +129,20 @@ export function Suppliers() {
                     <ListRow
                       className={cn(!s.isActive && 'opacity-60')}
                       leading={<EntityAvatar name={s.name ?? ''} />}
-                      title={
-                        <span className={cn(!s.isActive && 'line-through')}>
-                          {s.name}
-                        </span>
-                      }
-                      meta={
-                        s.phone ? (
-                          <span dir='ltr'>{showPhone(s.phone)}</span>
-                        ) : null
-                      }
+                      title={<span className={cn(!s.isActive && 'line-through')}>{s.name}</span>}
+                      meta={s.phone ? <span dir='ltr'>{showPhone(s.phone)}</span> : null}
                       trailing={
                         balance < 0 ? (
-                          <span className='text-success'>
-                            {formatEgp(-balance)}
-                          </span>
+                          <span className='text-success'>{formatEgp(-balance)}</span>
                         ) : (
                           <Money value={balance} strong dashZero />
                         )
                       }
                       trailingMeta={
                         balance > 0 ? (
-                          <span className='text-muted-foreground text-xs'>
-                            {t('weOwe')}
-                          </span>
+                          <span className='text-muted-foreground text-xs'>{t('weOwe')}</span>
                         ) : balance < 0 ? (
-                          <span className='text-success text-xs'>
-                            {t('creditWithSupplier')}
-                          </span>
+                          <span className='text-success text-xs'>{t('creditWithSupplier')}</span>
                         ) : null
                       }
                     />
@@ -212,22 +189,12 @@ function SupplierSheet({
     >
       {isNew ? (
         <Section title={t('details')}>
-          <SupplierForm
-            key='new'
-            supplier={null}
-            onSaved={onClose}
-            fillSlot={fillSlot}
-          />
+          <SupplierForm key='new' supplier={null} onSaved={onClose} fillSlot={fillSlot} />
         </Section>
       ) : supplier ? (
         <>
           <Section title={t('details')}>
-            <SupplierForm
-              key={String(supplier.id)}
-              supplier={supplier}
-              onSaved={() => {}}
-              fillSlot={fillSlot}
-            />
+            <SupplierForm key={String(supplier.id)} supplier={supplier} onSaved={() => {}} fillSlot={fillSlot} />
           </Section>
           <Section title={t('account')}>
             <SupplierLedger supplier={supplier} />
@@ -301,46 +268,20 @@ function SupplierForm({
       <div className='grid gap-4 sm:grid-cols-2'>
         <div className='flex flex-col gap-1.5'>
           <Label htmlFor='sup-name'>{t('name')}</Label>
-          <Input
-            id='sup-name'
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            autoFocus={!supplier}
-            required
-          />
+          <Input id='sup-name' value={name} onChange={(e) => setName(e.target.value)} autoFocus={!supplier} required />
         </div>
         <div className='flex flex-col gap-1.5'>
           <Label htmlFor='sup-phone'>{t('phone')}</Label>
-          <Input
-            id='sup-phone'
-            value={phone}
-            inputMode='tel'
-            dir='ltr'
-            onChange={(e) => setPhone(e.target.value)}
-          />
+          <Input id='sup-phone' value={phone} inputMode='tel' dir='ltr' onChange={(e) => setPhone(e.target.value)} />
         </div>
         <div className='flex flex-col gap-1.5 sm:col-span-2'>
           <Label htmlFor='sup-notes'>{t('note')}</Label>
-          <Input
-            id='sup-notes'
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-          />
+          <Input id='sup-notes' value={notes} onChange={(e) => setNotes(e.target.value)} />
         </div>
       </div>
-      {supplier && (
-        <SwitchRow
-          title={t('active')}
-          checked={isActive}
-          onCheckedChange={setIsActive}
-        />
-      )}
+      {supplier && <SwitchRow title={t('active')} checked={isActive} onCheckedChange={setIsActive} />}
       <SheetActions>
-        <Button
-          type='submit'
-          form='supplier-form'
-          disabled={name.trim() === '' || isPending}
-        >
+        <Button type='submit' form='supplier-form' disabled={name.trim() === '' || isPending}>
           {isPending && <Spinner />}
           {supplier ? t('save') : t('addSupplier')}
         </Button>
@@ -397,26 +338,13 @@ function SupplierLedger({ supplier }: { supplier: SupplierView }) {
     <div className='space-y-3'>
       <div className='flex flex-wrap items-center justify-between gap-2'>
         <div>
-          <div className='text-muted-foreground text-xs'>
-            {balance < 0 ? t('supplierOwesUs') : t('weOwe')}
-          </div>
-          <div className='text-lg font-semibold tabular-nums'>
-            {formatEgp(Math.abs(balance))}
-          </div>
+          <div className='text-muted-foreground text-xs'>{balance < 0 ? t('supplierOwesUs') : t('weOwe')}</div>
+          <div className='text-lg font-semibold tabular-nums'>{formatEgp(Math.abs(balance))}</div>
         </div>
         {!adding && (
           <div className='flex gap-2'>
-            <ExportButton
-              size='sm'
-              onExport={exportCsv}
-              disabled={(ledger.data?.entries.length ?? 0) === 0}
-            />
-            <Button
-              type='button'
-              variant='outline'
-              size='sm'
-              onClick={() => setAdding(true)}
-            >
+            <ExportButton size='sm' onExport={exportCsv} disabled={(ledger.data?.entries.length ?? 0) === 0} />
+            <Button type='button' variant='outline' size='sm' onClick={() => setAdding(true)}>
               <Plus />
               {t('addLedgerEntry')}
             </Button>
@@ -425,10 +353,7 @@ function SupplierLedger({ supplier }: { supplier: SupplierView }) {
       </div>
 
       {adding && (
-        <form
-          onSubmit={submit}
-          className='bg-muted/40 space-y-3 rounded-lg border p-3'
-        >
+        <form onSubmit={submit} className='bg-muted/40 space-y-3 rounded-lg border p-3'>
           <div className='grid gap-3 sm:grid-cols-3'>
             <div className='flex flex-col gap-1.5'>
               <Label>{t('type')}</Label>
@@ -437,11 +362,7 @@ function SupplierLedger({ supplier }: { supplier: SupplierView }) {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {[
-                    SUPPLIER_ENTRY.payment,
-                    SUPPLIER_ENTRY.credit,
-                    SUPPLIER_ENTRY.invoice,
-                  ].map((v) => (
+                  {[SUPPLIER_ENTRY.payment, SUPPLIER_ENTRY.credit, SUPPLIER_ENTRY.invoice].map((v) => (
                     <SelectItem key={v} value={String(v)}>
                       {supplierEntryLabel(v, t)}
                     </SelectItem>
@@ -465,36 +386,18 @@ function SupplierLedger({ supplier }: { supplier: SupplierView }) {
             </div>
             <div className='flex flex-col gap-1.5'>
               <Label htmlFor='sup-date'>{t('date')}</Label>
-              <DatePicker
-                id='sup-date'
-                value={date}
-                onChange={setDate}
-                disabled={(d) => d > new Date()}
-              />
+              <DatePicker id='sup-date' value={date} onChange={setDate} disabled={(d) => d > new Date()} />
             </div>
           </div>
           <div className='flex flex-col gap-1.5'>
             <Label htmlFor='sup-note'>{t('note')}</Label>
-            <Input
-              id='sup-note'
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-            />
+            <Input id='sup-note' value={note} onChange={(e) => setNote(e.target.value)} />
           </div>
           <div className='flex justify-end gap-2'>
-            <Button
-              type='button'
-              variant='ghost'
-              size='sm'
-              onClick={() => setAdding(false)}
-            >
+            <Button type='button' variant='ghost' size='sm' onClick={() => setAdding(false)}>
               {t('cancel')}
             </Button>
-            <Button
-              type='submit'
-              size='sm'
-              disabled={isPending || !(parseFloat(amount) > 0)}
-            >
+            <Button type='submit' size='sm' disabled={isPending || !(parseFloat(amount) > 0)}>
               {isPending && <Spinner />}
               {t('post')}
             </Button>

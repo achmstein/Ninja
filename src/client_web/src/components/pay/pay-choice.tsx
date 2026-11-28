@@ -1,6 +1,6 @@
 import { type KeyboardEvent } from 'react'
-import { motion } from 'motion/react'
 import { Banknote, CreditCard } from 'lucide-react'
+import { motion } from 'motion/react'
 import { useBrandName } from '@/lib/brand'
 import { usePrice, useT } from '@/lib/i18n'
 import type { PayAhead, PayMethod } from '@/lib/pay-ahead'
@@ -33,7 +33,12 @@ export function PayChoice({ payAhead, delivering, fee }: { payAhead: PayAhead; d
 
   return (
     <div className='flex flex-col gap-2'>
-      <div role='radiogroup' aria-label={t('payAheadLabel')} onKeyDown={onKeyDown} className='bg-background/10 relative grid grid-cols-2 rounded-full p-1'>
+      <div
+        role='radiogroup'
+        aria-label={t('payAheadLabel')}
+        onKeyDown={onKeyDown}
+        className='bg-background/10 relative grid grid-cols-2 rounded-full p-1'
+      >
         {methods.map((method) => {
           const on = method === current
           const Icon = method === 'online' ? CreditCard : Banknote
@@ -46,19 +51,30 @@ export function PayChoice({ payAhead, delivering, fee }: { payAhead: PayAhead; d
               aria-checked={on}
               tabIndex={on ? 0 : -1}
               onClick={() => payAhead.setMethod(method)}
-              className='relative flex h-10 items-center justify-center gap-2 rounded-full text-note font-semibold'
+              className='text-note relative flex h-10 items-center justify-center gap-2 rounded-full font-semibold'
             >
-              {on && <motion.span layoutId='pay-method' transition={SPRING} aria-hidden className='bg-background text-foreground absolute inset-0 rounded-full' />}
+              {on && (
+                <motion.span
+                  layoutId='pay-method'
+                  transition={SPRING}
+                  aria-hidden
+                  className='bg-background text-foreground absolute inset-0 rounded-full'
+                />
+              )}
               <span className={cn('relative flex min-w-0 items-center gap-2', on && 'text-foreground')}>
                 <Icon className='size-4 shrink-0' />
-                <span className='truncate'>{t(method === 'online' ? 'payAheadOnline' : delivering ? 'payAheadCashDelivery' : 'payAheadCashPickup')}</span>
+                <span className='truncate'>
+                  {t(
+                    method === 'online' ? 'payAheadOnline' : delivering ? 'payAheadCashDelivery' : 'payAheadCashPickup'
+                  )}
+                </span>
               </span>
             </button>
           )
         })}
       </div>
       {payAhead.online && (fee > 0 || payAhead.holdsCards) && (
-        <div className='flex flex-col gap-1 px-1 text-caption'>
+        <div className='text-caption flex flex-col gap-1 px-1'>
           {fee > 0 && (
             <span className='flex items-center justify-between opacity-80'>
               <span>{t('payAheadFee')}</span>

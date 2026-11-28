@@ -80,8 +80,7 @@ export function isIos(): boolean {
   if (typeof navigator === 'undefined') return false
   try {
     const ua = navigator.userAgent ?? ''
-    const iPadOs =
-      navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1
+    const iPadOs = navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1
     return (/iPad|iPhone|iPod/.test(ua) || iPadOs) && !IN_APP_BROWSER.test(ua)
   } catch {
     return false

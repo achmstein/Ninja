@@ -1,11 +1,11 @@
-import { useBusinessTheme } from '@/context/theme-provider'
 import { useEffect } from 'react'
-import { useCurrency } from '@/lib/currency'
-import { setPhoneCountry } from '@/lib/phone'
 import { useQuery, type QueryClient } from '@tanstack/react-query'
 import { type TenantFeatures, type TenantResponse } from '@/api/tenant'
 import { getTenantOptions } from '@/api/tenant/@tanstack/react-query.gen'
+import { useCurrency } from '@/lib/currency'
 import { useLanguage, type Language } from '@/lib/i18n'
+import { setPhoneCountry } from '@/lib/phone'
+import { useBusinessTheme } from '@/context/theme-provider'
 import { applyBrandTheme } from './brand-theme'
 
 /**
@@ -81,17 +81,12 @@ export async function bootBrand(queryClient: QueryClient) {
   // useBrandEffects after the first render: the OIDC config reads the
   // tenant's authority from there before anything mounts, so a first visit
   // must not fall back to the build's realm.
-  const fetching = queryClient
-    .prefetchQuery({ ...brandQueryOptions(), staleTime: 0 })
-    .then(() => {
-      const fresh = queryClient.getQueryData<Brand>(brandQueryKey())
-      if (fresh) writeCachedBrand(fresh)
-    })
+  const fetching = queryClient.prefetchQuery({ ...brandQueryOptions(), staleTime: 0 }).then(() => {
+    const fresh = queryClient.getQueryData<Brand>(brandQueryKey())
+    if (fresh) writeCachedBrand(fresh)
+  })
   if (!cached) {
-    await Promise.race([
-      fetching,
-      new Promise((resolve) => setTimeout(resolve, BOOT_TIMEOUT_MS)),
-    ])
+    await Promise.race([fetching, new Promise((resolve) => setTimeout(resolve, BOOT_TIMEOUT_MS))])
   }
 }
 

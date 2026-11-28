@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Loader2, MapPin, Search, X } from 'lucide-react'
-import { useBrand } from '@/lib/brand'
 import { useAddressSearch, type PickedPlace } from '@/lib/address-search'
+import { useBrand } from '@/lib/brand'
 import type { LatLng } from '@/lib/geo'
 import { useLanguage, useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
@@ -54,7 +54,11 @@ export function AddressSearch({ near, onPick }: { near?: LatLng | null; onPick: 
         )}
       </div>
       {search.suggestions.length > 0 && (
-        <ul className='bg-background flex max-h-56 flex-col overflow-y-auto rounded-2xl p-1 shadow-md' role='listbox' aria-label={t('deliverySearchAddress')}>
+        <ul
+          className='bg-background flex max-h-56 flex-col overflow-y-auto rounded-2xl p-1 shadow-md'
+          role='listbox'
+          aria-label={t('deliverySearchAddress')}
+        >
           {search.suggestions.map((s) => (
             <li key={s.placeId}>
               <button
@@ -77,8 +81,10 @@ export function AddressSearch({ near, onPick }: { near?: LatLng | null; onPick: 
                   <MapPin className='text-muted-foreground size-4 shrink-0' />
                 )}
                 <span className='flex min-w-0 flex-col'>
-                  <span className='truncate text-body font-semibold'>{s.primaryText}</span>
-                  {s.secondaryText && <span className='text-muted-foreground truncate text-caption'>{s.secondaryText}</span>}
+                  <span className='text-body truncate font-semibold'>{s.primaryText}</span>
+                  {s.secondaryText && (
+                    <span className='text-muted-foreground text-caption truncate'>{s.secondaryText}</span>
+                  )}
                 </span>
               </button>
             </li>

@@ -1,16 +1,8 @@
-import {
-  type ItemCustomization,
-  type ProposedCustomization,
-} from '@/api/catalog'
+import { type ItemCustomization, type ProposedCustomization } from '@/api/catalog'
 import { useCurrencyLabel } from '@/lib/currency'
 import { useLocalized, useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
-import {
-  fromLocalizedValue,
-  isBlank,
-  toLocalizedValue,
-  type LocalizedValue,
-} from '@/components/localized-input'
+import { fromLocalizedValue, isBlank, toLocalizedValue, type LocalizedValue } from '@/components/localized-input'
 
 export type OptionRow = {
   /** What the recipes name. Absent on a row that has not been saved yet;
@@ -49,11 +41,7 @@ export function fromProposal(group: ProposedCustomization): DraftGroup {
 }
 
 /** The create/update body from a draft; options with no name in either language are left out. */
-export function bodyFromDraft(
-  itemId: number,
-  draft: DraftGroup,
-  displayOrder: number
-): ItemCustomization {
+export function bodyFromDraft(itemId: number, draft: DraftGroup, displayOrder: number): ItemCustomization {
   return {
     catalogItemId: itemId,
     name: fromLocalizedValue(draft.name),
@@ -80,13 +68,7 @@ export function formatAdjustment(value: number, currency: string): string {
 
 /** Tiny radio/checkbox glyph: shape mirrors what the customer will see
  *  (circle = pick one, square = pick several); filled = default choice. */
-export function ChoiceGlyph({
-  multiple,
-  selected,
-}: {
-  multiple: boolean
-  selected: boolean
-}) {
+export function ChoiceGlyph({ multiple, selected }: { multiple: boolean; selected: boolean }) {
   return (
     <span
       aria-hidden
@@ -104,13 +86,7 @@ export function ChoiceGlyph({
  * options as the customer will see them. What can be done with it is the
  * caller's `actions`, at the end of the title row.
  */
-export function DraftCard({
-  draft,
-  actions,
-}: {
-  draft: DraftGroup
-  actions: React.ReactNode
-}) {
+export function DraftCard({ draft, actions }: { draft: DraftGroup; actions: React.ReactNode }) {
   const t = useT()
   const currency = useCurrencyLabel()
   const localized = useLocalized()
@@ -119,9 +95,7 @@ export function DraftCard({
     <div className='bg-background rounded-lg border p-2.5'>
       <div className='flex items-start justify-between gap-2'>
         <div className='min-w-0'>
-          <h4 className='truncate text-sm font-medium'>
-            {localized(draft.name)}
-          </h4>
+          <h4 className='truncate text-sm font-medium'>{localized(draft.name)}</h4>
           <p className='text-muted-foreground text-xs'>
             {draft.isRequired ? t('required') : t('optional')}
             {' · '}
@@ -133,13 +107,8 @@ export function DraftCard({
       <div className='mt-2 flex flex-col gap-1.5'>
         {draft.options.map((option, index) => (
           <div key={index} className='flex items-center gap-2.5 text-sm'>
-            <ChoiceGlyph
-              multiple={draft.allowMultiple}
-              selected={option.isDefault}
-            />
-            <span className='min-w-0 flex-1 truncate'>
-              {localized(option.name)}
-            </span>
+            <ChoiceGlyph multiple={draft.allowMultiple} selected={option.isDefault} />
+            <span className='min-w-0 flex-1 truncate'>{localized(option.name)}</span>
             <span className='text-muted-foreground shrink-0 text-xs tabular-nums'>
               {formatAdjustment(option.priceAdjustment, currency)}
             </span>

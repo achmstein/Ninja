@@ -23,10 +23,7 @@ function standardSelection(item: CatalogItemDto): Set<string> {
 }
 
 /** The resolved deduction for a selection, priced */
-function costOfSelection(
-  cost: RecipeCostView,
-  selection: ReadonlySet<string>
-): number {
+function costOfSelection(cost: RecipeCostView, selection: ReadonlySet<string>): number {
   const unitCost = new Map<string, number>()
   for (const line of cost.lines) {
     unitCost.set(String(line.stockItemId), toNumber(line.unitCost))
@@ -39,10 +36,7 @@ function costOfSelection(
 }
 
 /** The cost of the standard choice */
-export function standardCost(
-  cost: RecipeCostView,
-  item: CatalogItemDto
-): number {
+export function standardCost(cost: RecipeCostView, item: CatalogItemDto): number {
   return costOfSelection(cost, standardSelection(item))
 }
 
@@ -58,16 +52,10 @@ type CostLine = {
 }
 
 /** What the standard choice takes, line by line and priced: how its cost adds up */
-export function standardBreakdown(
-  cost: RecipeCostView,
-  item: CatalogItemDto
-): CostLine[] {
+export function standardBreakdown(cost: RecipeCostView, item: CatalogItemDto): CostLine[] {
   const uncosted = new Set(cost.uncosted.map(String))
   const lines: CostLine[] = []
-  for (const [stockItemId, quantity] of resolve(
-    cost.lines,
-    standardSelection(item)
-  )) {
+  for (const [stockItemId, quantity] of resolve(cost.lines, standardSelection(item))) {
     const line = cost.lines.find((l) => String(l.stockItemId) === stockItemId)
     const unitCost = toNumber(line?.unitCost)
     lines.push({
@@ -104,10 +92,7 @@ type GroupDeltas = {
  * the standard cost: a single-choice option replaces the group's default,
  * an add-on stacks on top.
  */
-export function choiceDeltas(
-  cost: RecipeCostView,
-  item: CatalogItemDto
-): GroupDeltas[] {
+export function choiceDeltas(cost: RecipeCostView, item: CatalogItemDto): GroupDeltas[] {
   const standard = standardSelection(item)
   const base = costOfSelection(cost, standard)
   const referenced = new Set<string>()
@@ -135,8 +120,7 @@ export function choiceDeltas(
           id,
           name: option.name,
           isDefault: !!option.isDefault,
-          delta:
-            Math.round((costOfSelection(cost, selection) - base) * 100) / 100,
+          delta: Math.round((costOfSelection(cost, selection) - base) * 100) / 100,
         }
       }),
     })

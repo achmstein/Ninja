@@ -70,7 +70,13 @@ describe('whose a line on a bill is', () => {
 
   it('sends what is new person by person, in the order they first appear', () => {
     const tea: SaleLine = { ...latte, productId: 2, customizations: [] }
-    const rounds = roundsByPerson([{ ...latte, who: ahmed }, tea, { ...tea, who: omar }, { ...tea, who: ahmed }, { ...latte, who: null }])
+    const rounds = roundsByPerson([
+      { ...latte, who: ahmed },
+      tea,
+      { ...tea, who: omar },
+      { ...tea, who: ahmed },
+      { ...latte, who: null },
+    ])
     expect(rounds.map((round) => [round.who?.name ?? null, round.lines.length])).toEqual([
       ['Ahmed', 2],
       [null, 2],

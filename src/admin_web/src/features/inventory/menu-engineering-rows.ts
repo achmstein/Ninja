@@ -44,10 +44,7 @@ export type MenuEngineering = {
  * lower-bound cost never passes for a real one. The Assistant's
  * get_menu_engineering applies the same rule.
  */
-export function toMenuEngineering(
-  costRows: MenuCostRow[],
-  byItem: ItemTotal[]
-): MenuEngineering {
+export function toMenuEngineering(costRows: MenuCostRow[], byItem: ItemTotal[]): MenuEngineering {
   const sold = new Map<number, number>()
   for (const line of byItem) {
     if (line.catalogItemId == null) continue
@@ -59,19 +56,10 @@ export function toMenuEngineering(
 
   const placeable = (r: MenuCostRow) => r.status === 'ok' || r.status === 'over'
   const classified = costRows.filter(placeable)
-  const totalSold = classified.reduce(
-    (sum, r) => sum + (sold.get(r.catalogItemId) ?? 0),
-    0
-  )
-  const popularityThreshold =
-    classified.length > 0 ? POPULARITY_FACTOR / classified.length : 0
+  const totalSold = classified.reduce((sum, r) => sum + (sold.get(r.catalogItemId) ?? 0), 0)
+  const popularityThreshold = classified.length > 0 ? POPULARITY_FACTOR / classified.length : 0
   const averageMargin =
-    totalSold > 0
-      ? classified.reduce(
-          (sum, r) => sum + r.margin * (sold.get(r.catalogItemId) ?? 0),
-          0
-        ) / totalSold
-      : 0
+    totalSold > 0 ? classified.reduce((sum, r) => sum + r.margin * (sold.get(r.catalogItemId) ?? 0), 0) / totalSold : 0
   const noSales = totalSold === 0
 
   const rows = costRows.map((r): MenuEngineeringRow => {
@@ -85,26 +73,14 @@ export function toMenuEngineering(
       mix,
       contribution: r.margin * units,
       menuClass:
-        !placeable(r) || noSales
-          ? null
-          : popular
-            ? paying
-              ? 'star'
-              : 'plowhorse'
-            : paying
-              ? 'puzzle'
-              : 'dog',
+        !placeable(r) || noSales ? null : popular ? (paying ? 'star' : 'plowhorse') : paying ? 'puzzle' : 'dog',
     }
   })
 
   // Placed items in matrix order, the biggest earners first within each;
   // the unplaced at the end
-  const order = (c: MenuClass | null) =>
-    c === null ? MENU_CLASSES.length : MENU_CLASSES.indexOf(c)
-  rows.sort(
-    (a, b) =>
-      order(a.menuClass) - order(b.menuClass) || b.contribution - a.contribution
-  )
+  const order = (c: MenuClass | null) => (c === null ? MENU_CLASSES.length : MENU_CLASSES.indexOf(c))
+  rows.sort((a, b) => order(a.menuClass) - order(b.menuClass) || b.contribution - a.contribution)
 
   return { rows, popularityThreshold, averageMargin, noSales }
 }

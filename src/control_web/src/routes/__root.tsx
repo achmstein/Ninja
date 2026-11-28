@@ -1,26 +1,16 @@
 import { type QueryClient } from '@tanstack/react-query'
-import {
-  createRootRouteWithContext,
-  Link,
-  Outlet,
-} from '@tanstack/react-router'
+import { createRootRouteWithContext, Link, Outlet } from '@tanstack/react-router'
 import { Toaster } from 'sileo'
-import { Button } from '@/components/ui/button'
 import { useT } from '@/lib/i18n'
 import { useTheme } from '@/context/theme-provider'
+import { Button } from '@/components/ui/button'
 
 // Sileo only paints the pill background when it knows the theme (otherwise
 // it falls back to a white fill that vanishes on light pages), and autopilot
 // is the demo's expand/collapse physics for title + description toasts.
 function AppToaster() {
   const { resolvedTheme } = useTheme()
-  return (
-    <Toaster
-      position='top-center'
-      theme={resolvedTheme}
-      options={{ autopilot: true }}
-    />
-  )
+  return <Toaster position='top-center' theme={resolvedTheme} options={{ autopilot: true }} />
 }
 
 function NotFound() {

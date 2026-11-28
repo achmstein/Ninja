@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useAuth } from 'react-oidc-context'
-import { getAccountOptions, getPointsValueOptions } from '@/api/loyalty/@tanstack/react-query.gen'
 import { quotePromoOptions } from '@/api/catalog/@tanstack/react-query.gen'
+import { getAccountOptions, getPointsValueOptions } from '@/api/loyalty/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useFeatures } from '@/lib/brand'
 import { cartTotal, useCart } from '@/lib/cart'
@@ -93,7 +93,13 @@ export function useCheckoutExtras() {
   return {
     note,
     setNote,
-    promo: { code: promoCode, reason: promoReason, checking: promoQuery.isFetching, apply: setPromoCode, clear: () => setPromoCode(null) },
+    promo: {
+      code: promoCode,
+      reason: promoReason,
+      checking: promoQuery.isFetching,
+      apply: setPromoCode,
+      clear: () => setPromoCode(null),
+    },
     points: {
       /** Worth offering: a signed-in member with points that would take something off */
       offered: loyaltyOn && auth.isAuthenticated && maxRedeemable > 0,

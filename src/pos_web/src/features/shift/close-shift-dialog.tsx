@@ -3,21 +3,16 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Printer } from 'lucide-react'
 import { closeShiftMutation } from '@/api/sales/@tanstack/react-query.gen'
 import type { ShiftView } from '@/api/sales/types.gen'
+import { API_VERSION } from '@/lib/api-client'
+import { useT } from '@/lib/i18n'
+import { useMoney, toNumber } from '@/lib/money'
+import { toast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { NumericKeypad } from '@/components/numeric-keypad'
 import { useOfflineQueue } from '@/features/offline/offline-queue'
-import { API_VERSION } from '@/lib/api-client'
-import { useT } from '@/lib/i18n'
-import { toast } from '@/lib/toast'
-import { useMoney, toNumber } from '@/lib/money'
 import { printSheets } from '@/features/printing/print-sheets'
 import { ShiftReport } from './shift-report'
 import { ShiftReportSheet } from './shift-report-sheet'
@@ -35,11 +30,7 @@ type CloseShiftDialogProps = {
  * frozen Z report from the server: the over/short verdict, the tender
  * split, and every movement — printable on the 80mm roll.
  */
-export function CloseShiftDialog({
-  shift,
-  open,
-  onOpenChange,
-}: CloseShiftDialogProps) {
+export function CloseShiftDialog({ shift, open, onOpenChange }: CloseShiftDialogProps) {
   const t = useT()
   const money = useMoney()
   const queryClient = useQueryClient()
@@ -79,12 +70,7 @@ export function CloseShiftDialog({
   const waiting = useOfflineQueue((s) => s.sales.length)
 
   const amount = Number(amountStr)
-  const canClose =
-    waiting === 0 &&
-    amountStr !== '' &&
-    Number.isFinite(amount) &&
-    amount >= 0 &&
-    !closeShift.isPending
+  const canClose = waiting === 0 && amountStr !== '' && Number.isFinite(amount) && amount >= 0 && !closeShift.isPending
 
   const doClose = () =>
     closeShift.mutate({
@@ -107,19 +93,10 @@ export function CloseShiftDialog({
           <ShiftReport shift={result} />
 
           <div className='grid grid-cols-2 gap-2'>
-            <Button
-              variant='outline'
-              size='lg'
-              className='h-14 text-base'
-              onClick={() => onOpenChange(false)}
-            >
+            <Button variant='outline' size='lg' className='h-14 text-base' onClick={() => onOpenChange(false)}>
               {t('done')}
             </Button>
-            <Button
-              size='lg'
-              className='h-14 text-base'
-              onClick={() => void printSheets()}
-            >
+            <Button size='lg' className='h-14 text-base' onClick={() => void printSheets()}>
               <Printer className='size-5' />
               {t('print')}
             </Button>
@@ -140,12 +117,8 @@ export function CloseShiftDialog({
         </DialogHeader>
 
         <div className='bg-accent flex items-center justify-between rounded-lg px-4 py-3'>
-          <span className='text-muted-foreground type-detail'>
-            {t('expectedInDrawer')}
-          </span>
-          <span className='type-body font-semibold tabular-nums'>
-            {money(shift.expectedInDrawer)}
-          </span>
+          <span className='text-muted-foreground type-detail'>{t('expectedInDrawer')}</span>
+          <span className='type-body font-semibold tabular-nums'>{money(shift.expectedInDrawer)}</span>
         </div>
 
         <div className='grid gap-1.5'>
@@ -164,27 +137,16 @@ export function CloseShiftDialog({
         <NumericKeypad value={amountStr} onChange={setAmountStr} />
 
         {waiting > 0 && (
-          <p className='bg-destructive/10 text-destructive rounded-lg px-3 py-2 type-detail'>
+          <p className='bg-destructive/10 text-destructive type-detail rounded-lg px-3 py-2'>
             {t('offlineSalesBlockClose', { count: waiting })}
           </p>
         )}
 
         <div className='grid grid-cols-2 gap-2'>
-          <Button
-            variant='outline'
-            size='lg'
-            className='h-12'
-            onClick={() => onOpenChange(false)}
-          >
+          <Button variant='outline' size='lg' className='h-12' onClick={() => onOpenChange(false)}>
             {t('cancel')}
           </Button>
-          <Button
-            variant='destructive'
-            size='lg'
-            className='h-12'
-            disabled={!canClose}
-            onClick={doClose}
-          >
+          <Button variant='destructive' size='lg' className='h-12' disabled={!canClose} onClick={doClose}>
             {t('confirmCloseShift')}
           </Button>
         </div>

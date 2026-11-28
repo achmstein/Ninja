@@ -1,22 +1,17 @@
 import { useEffect, useRef } from 'react'
-import {
-  createFileRoute,
-  Outlet,
-  useNavigate,
-  useRouter,
-} from '@tanstack/react-router'
-import { useAuth } from 'react-oidc-context'
-import { Lock } from 'lucide-react'
-import { BootSplash } from '@/components/boot-splash'
-import { Button } from '@/components/ui/button'
-import { BranchGate } from '@/components/branch-gate'
+import { createFileRoute, Outlet, useNavigate, useRouter } from '@tanstack/react-router'
 import { getRealmRoles } from '@/config/oidc-config'
-import { KitchenHeader } from '@/components/layout/kitchen-header'
+import { Lock } from 'lucide-react'
+import { useAuth } from 'react-oidc-context'
+import { useFeatures } from '@/lib/brand'
+import { useT } from '@/lib/i18n'
 import { useKitchenNotifications } from '@/hooks/use-kitchen-notifications'
 import { useWakeLock } from '@/hooks/use-wake-lock'
-import { useT } from '@/lib/i18n'
-import { useFeatures } from '@/lib/brand'
+import { Button } from '@/components/ui/button'
+import { BootSplash } from '@/components/boot-splash'
+import { BranchGate } from '@/components/branch-gate'
 import { BrandMark } from '@/components/brand-mark'
+import { KitchenHeader } from '@/components/layout/kitchen-header'
 
 // Everything the kitchen calls is covered by the backend's "Pos" policy
 // (Admin | Owner | Cashier); this gate mirrors it. A kitchen screen signs
@@ -95,11 +90,7 @@ function AuthenticatedRoute() {
       <div className='flex h-svh flex-col items-center justify-center gap-4'>
         <h1 className='text-2xl font-bold'>{t('accessDeniedTitle')}</h1>
         <p className='text-muted-foreground'>{t('accessDeniedDescription')}</p>
-        <Button
-          variant='outline'
-          size='lg'
-          onClick={() => auth.signoutRedirect()}
-        >
+        <Button variant='outline' size='lg' onClick={() => auth.signoutRedirect()}>
           {t('signOut')}
         </Button>
       </div>

@@ -22,9 +22,7 @@ function toDate(value: Date | string | number | null | undefined): Date | null {
 }
 
 const sameDay = (a: Date, b: Date) =>
-  a.getFullYear() === b.getFullYear() &&
-  a.getMonth() === b.getMonth() &&
-  a.getDate() === b.getDate()
+  a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate()
 
 export function formatWhen(
   value: Date | string | number | null | undefined,
@@ -61,8 +59,7 @@ export function formatWhen(
       const minutes = Math.round((now.getTime() - date.getTime()) / 60_000)
       if (minutes < 1) return t('justNow')
       if (minutes < 60) return t('minutesAgo', { minutes })
-      if (sameDay(date, now))
-        return t('hoursAgo', { hours: Math.round(minutes / 60) })
+      if (sameDay(date, now)) return t('hoursAgo', { hours: Math.round(minutes / 60) })
       const yesterday = new Date(now)
       yesterday.setDate(now.getDate() - 1)
       if (sameDay(date, yesterday)) return `${t('yesterday')} ${time}`
@@ -72,10 +69,7 @@ export function formatWhen(
 }
 
 /** The full moment, for a tooltip under a relative or a time-only one: "Fri 3 Oct 2026, 14:32" */
-export function formatFull(
-  value: Date | string | number | null | undefined,
-  locale: string
-): string {
+export function formatFull(value: Date | string | number | null | undefined, locale: string): string {
   const date = toDate(value)
   if (!date) return ''
   return date.toLocaleString(locale, {
@@ -89,9 +83,7 @@ export function formatFull(
 }
 
 /** The local day a moment falls on, as yyyy-MM-dd: what a list groups its rows by. */
-export function dayKey(
-  value: Date | string | number | null | undefined
-): string {
+export function dayKey(value: Date | string | number | null | undefined): string {
   const date = toDate(value)
   if (!date) return ''
   const pad = (n: number) => String(n).padStart(2, '0')
@@ -99,12 +91,7 @@ export function dayKey(
 }
 
 /** A day group's heading: "Today", "Yesterday", or "Fri 3 Oct". */
-export function dayHeading(
-  key: string,
-  locale: string,
-  t: Translate,
-  now: Date = new Date()
-): string {
+export function dayHeading(key: string, locale: string, t: Translate, now: Date = new Date()): string {
   const [y, m, d] = key.split('-').map(Number)
   if (!y) return ''
   const date = new Date(y, m - 1, d)

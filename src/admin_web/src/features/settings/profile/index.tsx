@@ -6,13 +6,7 @@ import { useDirection } from '@/context/direction-provider'
 import { useTheme } from '@/context/theme-provider'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { EntityAvatar } from '@/components/entity-avatar'
 import { SettingRow, SettingsCard } from '@/components/kit'
 import { PageHeader } from '@/components/page-header'
@@ -35,13 +29,9 @@ export function SettingsProfile() {
   const email = user?.email || ''
 
   // Roles from the token, minus Keycloak's built-in noise
-  const realmRoles =
-    (auth.user?.profile?.realm_access as { roles?: string[] })?.roles || []
+  const realmRoles = (auth.user?.profile?.realm_access as { roles?: string[] })?.roles || []
   const roles = [...new Set(realmRoles)].filter(
-    (role) =>
-      !role.startsWith('default-') &&
-      !role.startsWith('uma_') &&
-      role !== 'offline_access'
+    (role) => !role.startsWith('default-') && !role.startsWith('uma_') && role !== 'offline_access'
   )
 
   // The document's direction follows the language (Arabic → RTL)
@@ -74,11 +64,7 @@ export function SettingsProfile() {
               <div className='flex flex-wrap gap-1.5'>
                 {roles.map((role) => (
                   <Badge key={role} variant='secondary'>
-                    {role === 'Admin'
-                      ? t('adminRole')
-                      : role === 'Owner'
-                        ? t('owner')
-                        : role}
+                    {role === 'Admin' ? t('adminRole') : role === 'Owner' ? t('owner') : role}
                   </Badge>
                 ))}
               </div>
@@ -93,10 +79,7 @@ export function SettingsProfile() {
           icon={Languages}
           title={t('language')}
           control={
-            <Select
-              value={language}
-              onValueChange={(v) => pickLanguage(v as Language)}
-            >
+            <Select value={language} onValueChange={(v) => pickLanguage(v as Language)}>
               <SelectTrigger aria-label={t('language')} className='w-40'>
                 <SelectValue />
               </SelectTrigger>
@@ -111,10 +94,7 @@ export function SettingsProfile() {
           icon={SunMoon}
           title={t('theme')}
           control={
-            <Select
-              value={theme}
-              onValueChange={(v) => setTheme(v as typeof theme)}
-            >
+            <Select value={theme} onValueChange={(v) => setTheme(v as typeof theme)}>
               <SelectTrigger aria-label={t('selectTheme')} className='w-40'>
                 <SelectValue />
               </SelectTrigger>
@@ -148,8 +128,7 @@ export function SettingsProfile() {
 
       {/* Version and environment as a caption, not a card's worth of info */}
       <p className='text-muted-foreground text-center text-xs'>
-        {t('version', { version: __APP_VERSION__ })} ·{' '}
-        {import.meta.env.DEV ? t('development') : t('production')}
+        {t('version', { version: __APP_VERSION__ })} · {import.meta.env.DEV ? t('development') : t('production')}
       </p>
 
       <SignOutDialog open={signOutOpen} onOpenChange={setSignOutOpen} />

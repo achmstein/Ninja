@@ -10,13 +10,13 @@ import {
   History,
   Lock,
 } from 'lucide-react'
+import { useLanguage, useT } from '@/lib/i18n'
+import { toNumber } from '@/lib/money'
+import { useNetworkStatus } from '@/lib/network-status'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
-import { useLanguage, useT } from '@/lib/i18n'
-import { toNumber } from '@/lib/money'
-import { useNetworkStatus } from '@/lib/network-status'
 import { CloseShiftDialog } from './close-shift-dialog'
 import { MovementDialog, type MovementDirection } from './movement-dialog'
 import { OpenShiftDialog } from './open-shift-dialog'
@@ -73,11 +73,7 @@ export function ShiftScreen() {
         <div>
           <p className='type-heading'>{t('noShiftOpen')}</p>
         </div>
-        <Button
-          size='lg'
-          className='h-14 px-8 text-lg'
-          onClick={() => setOpenShiftOpen(true)}
-        >
+        <Button size='lg' className='h-14 px-8 text-lg' onClick={() => setOpenShiftOpen(true)}>
           {t('openShiftAction')}
         </Button>
         <Button asChild variant='outline' size='lg' className='h-12'>
@@ -99,9 +95,7 @@ export function ShiftScreen() {
             <BackIcon className='size-6' />
           </Link>
         </Button>
-        <h1 className='min-w-0 flex-1 truncate type-title'>
-          {t('shiftNumber', { id: toNumber(shift.id) })}
-        </h1>
+        <h1 className='type-title min-w-0 flex-1 truncate'>{t('shiftNumber', { id: toNumber(shift.id) })}</h1>
         <Badge className='h-8 border-transparent bg-emerald-500/15 px-3 text-sm text-emerald-700 dark:text-emerald-400'>
           {t('shiftOpenBadge')}
         </Badge>
@@ -121,19 +115,11 @@ export function ShiftScreen() {
           across do not fit a phone, so there the close takes a row of its own */}
       <div className='bg-background/95 fixed inset-x-0 bottom-0 z-30 border-t p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur'>
         <div className='mx-auto flex max-w-3xl items-center gap-2 max-sm:grid max-sm:grid-cols-2'>
-          <Button
-            variant='outline'
-            className='h-14 flex-1 text-base max-sm:h-12'
-            onClick={() => setMovement('in')}
-          >
+          <Button variant='outline' className='h-14 flex-1 text-base max-sm:h-12' onClick={() => setMovement('in')}>
             <ArrowDownToLine className='size-5' />
             {t('payIn')}
           </Button>
-          <Button
-            variant='outline'
-            className='h-14 flex-1 text-base max-sm:h-12'
-            onClick={() => setMovement('out')}
-          >
+          <Button variant='outline' className='h-14 flex-1 text-base max-sm:h-12' onClick={() => setMovement('out')}>
             <ArrowUpFromLine className='size-5' />
             {t('payOut')}
           </Button>
@@ -156,11 +142,7 @@ export function ShiftScreen() {
           if (!open) setMovement(null)
         }}
       />
-      <CloseShiftDialog
-        shift={shift}
-        open={closeOpen}
-        onOpenChange={setCloseOpen}
-      />
+      <CloseShiftDialog shift={shift} open={closeOpen} onOpenChange={setCloseOpen} />
     </div>
   )
 }

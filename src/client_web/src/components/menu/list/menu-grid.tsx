@@ -169,7 +169,7 @@ export const MenuGrid = memo(function MenuGrid({
       ref={scroller}
       onScroll={spy}
       // The room under the top bar is every page's: the bar, then the same gap to what comes first
-      className='no-scrollbar h-full overflow-y-auto overscroll-y-contain px-4 pt-[calc(var(--bar-h)+var(--page-top))] pb-6 [touch-action:pan-y]'
+      className='no-scrollbar h-full [touch-action:pan-y] overflow-y-auto overscroll-y-contain px-4 pt-[calc(var(--bar-h)+var(--page-top))] pb-6'
     >
       {title && <PageTitle title={title} action={titleAction} scrollY={scrollY} className='mb-5' />}
       {notice && <div className='mb-5'>{notice}</div>}
@@ -196,24 +196,13 @@ export const MenuGrid = memo(function MenuGrid({
           {look ? (
             <div className={look.className}>
               {col.items.map((item) => (
-                <look.Item
-                  key={String(item.id)}
-                  scroller={scroller}
-                  item={item}
-                  onOpen={open}
-                  onQuickAdd={quickAdd}
-                />
+                <look.Item key={String(item.id)} scroller={scroller} item={item} onOpen={open} onQuickAdd={quickAdd} />
               ))}
             </div>
           ) : (
             <div className='grid grid-cols-3 gap-2.5'>
               {col.items.map((item) => (
-                <ZoomTile
-                  key={String(item.id)}
-                  item={item}
-                  onOpen={open}
-                  onQuickAdd={quickAdd}
-                />
+                <ZoomTile key={String(item.id)} item={item} onOpen={open} onQuickAdd={quickAdd} />
               ))}
             </div>
           )}

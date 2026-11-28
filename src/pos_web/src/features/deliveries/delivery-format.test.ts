@@ -19,8 +19,16 @@ const words = { building: 'Bldg', floor: 'Floor', apartment: 'Apt' }
 
 describe('formatAddressLine', () => {
   it('puts the street first and the parts after, in the language’s own list', () => {
-    expect(formatAddressLine({ address: 'Tahrir St', building: '12', floor: '3' }, words, 'en')).toBe('Tahrir St · Bldg 12, Floor 3')
-    expect(formatAddressLine({ address: 'Tahrir St', building: '12', floor: '3' }, { building: 'عمارة', floor: 'دور', apartment: 'شقة' }, 'ar')).toBe('Tahrir St · عمارة 12، دور 3')
+    expect(formatAddressLine({ address: 'Tahrir St', building: '12', floor: '3' }, words, 'en')).toBe(
+      'Tahrir St · Bldg 12, Floor 3'
+    )
+    expect(
+      formatAddressLine(
+        { address: 'Tahrir St', building: '12', floor: '3' },
+        { building: 'عمارة', floor: 'دور', apartment: 'شقة' },
+        'ar'
+      )
+    ).toBe('Tahrir St · عمارة 12، دور 3')
   })
 
   it('is the street alone when nothing else was said', () => {
@@ -43,8 +51,12 @@ describe('distanceParts', () => {
 
 describe('directionsUrl', () => {
   it('goes to the pin when there is one, else searches the words', () => {
-    expect(directionsUrl({ latitude: '30.06', longitude: 31.47, address: 'x' })).toBe('https://www.google.com/maps/dir/?api=1&destination=30.06,31.47')
-    expect(directionsUrl({ latitude: null, longitude: null, address: 'Maadi, Road 9' })).toBe('https://www.google.com/maps/dir/?api=1&destination=Maadi%2C%20Road%209')
+    expect(directionsUrl({ latitude: '30.06', longitude: 31.47, address: 'x' })).toBe(
+      'https://www.google.com/maps/dir/?api=1&destination=30.06,31.47'
+    )
+    expect(directionsUrl({ latitude: null, longitude: null, address: 'Maadi, Road 9' })).toBe(
+      'https://www.google.com/maps/dir/?api=1&destination=Maadi%2C%20Road%209'
+    )
   })
 })
 
@@ -76,8 +88,21 @@ describe('lanes', () => {
   })
 
   it('orders the board by what needs the till first', () => {
-    const orders = [at('Returned'), at('Delivered'), at('OnTheWay'), at('Failed'), at('Waiting'), at('Delivered', { cashHandedInAt: 'x' })]
-    expect(boardOrder(orders).map((o) => o.delivery.stage)).toEqual(['Waiting', 'Failed', 'OnTheWay', 'Delivered', 'Returned'])
+    const orders = [
+      at('Returned'),
+      at('Delivered'),
+      at('OnTheWay'),
+      at('Failed'),
+      at('Waiting'),
+      at('Delivered', { cashHandedInAt: 'x' }),
+    ]
+    expect(boardOrder(orders).map((o) => o.delivery.stage)).toEqual([
+      'Waiting',
+      'Failed',
+      'OnTheWay',
+      'Delivered',
+      'Returned',
+    ])
   })
 })
 

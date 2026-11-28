@@ -1,8 +1,8 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios'
 import { getStoredUser } from '@/config/oidc-config'
+import { getActiveBranchId } from '@/stores/branch-store'
 import { isConnectionError, networkStatus, useNetworkStatus } from '@/lib/network-status'
 import { trackOwnOrders } from '@/lib/own-orders'
-import { getActiveBranchId } from '@/stores/branch-store'
 
 // Version sent with every API call; generated clients require it explicitly.
 export const API_VERSION = '1.0'
@@ -41,10 +41,7 @@ const RENEWAL_WAIT_MS = 8_000
 async function freshToken(): Promise<string | undefined> {
   const user = getStoredUser()
   if (!user?.expired || !renewSession || !useNetworkStatus.getState().online) return user?.access_token
-  await Promise.race([
-    renewSession().catch(() => {}),
-    new Promise((resolve) => setTimeout(resolve, RENEWAL_WAIT_MS)),
-  ])
+  await Promise.race([renewSession().catch(() => {}), new Promise((resolve) => setTimeout(resolve, RENEWAL_WAIT_MS))])
   return getStoredUser()?.access_token
 }
 

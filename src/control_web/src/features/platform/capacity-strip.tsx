@@ -1,8 +1,8 @@
 import type { CapacityResponse } from '@/api/control'
-import { Progress } from '@/components/ui/progress'
-import { Stat, StatStrip } from '@/components/stat-strip'
 import { megabytes, percent } from '@/lib/format'
 import { useT } from '@/lib/i18n'
+import { Progress } from '@/components/ui/progress'
+import { Stat, StatStrip } from '@/components/stat-strip'
 
 type Tone = 'default' | 'warning' | 'negative'
 
@@ -81,8 +81,7 @@ export function CapacityStrip({ capacity, loading }: CapacityStripProps) {
         hint={
           !loading && (
             <>
-              {t('stackFootprint')}:{' '}
-              {megabytes(Number(capacity?.stackFootprintMb ?? 0))} {t('stackTypical')} ·{' '}
+              {t('stackFootprint')}: {megabytes(Number(capacity?.stackFootprintMb ?? 0))} {t('stackTypical')} ·{' '}
               {megabytes(Number(capacity?.stackLimitMb ?? 0))} {t('stackCap')}
               <br />
               {t('connections')}: {Number(capacity?.connectionsEstimate ?? 0)} / {Number(capacity?.connectionsMax ?? 0)}

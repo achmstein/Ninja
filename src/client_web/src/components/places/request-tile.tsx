@@ -1,5 +1,5 @@
-import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { Check, Hourglass, Loader2 } from 'lucide-react'
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { useT } from '@/lib/i18n'
 import { blurSwap, spring } from '@/lib/motion'
 import { type RequestState } from '@/lib/service-requests'
@@ -58,7 +58,11 @@ export function RequestTile({
       <span
         className={cn(
           'grid size-10 place-items-center rounded-full transition-colors duration-300',
-          phase === 'onTheWay' ? 'bg-emerald-500 text-white' : phase === 'sent' ? 'bg-primary text-primary-foreground' : 'bg-background text-foreground'
+          phase === 'onTheWay'
+            ? 'bg-emerald-500 text-white'
+            : phase === 'sent'
+              ? 'bg-primary text-primary-foreground'
+              : 'bg-background text-foreground'
         )}
       >
         <AnimatePresence mode='popLayout' initial={false}>
@@ -81,7 +85,11 @@ export function RequestTile({
         <span className='text-note leading-snug font-semibold'>{label}</span>
         <AnimatePresence mode='popLayout' initial={false}>
           {note && (
-            <motion.span key={note} {...swap} className='text-muted-foreground flex flex-col text-caption text-balance break-words'>
+            <motion.span
+              key={note}
+              {...swap}
+              className='text-muted-foreground text-caption flex flex-col text-balance break-words'
+            >
               <span>{note}</span>
               {phase === 'sent' && <span className='text-micro'>{t('tapToCancel')}</span>}
             </motion.span>

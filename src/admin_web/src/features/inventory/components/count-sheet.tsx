@@ -9,14 +9,7 @@ import { cn } from '@/lib/utils'
 import { formatWhen } from '@/lib/when'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { EntitySheet } from '@/components/entity-sheet'
 import { formatQuantity, formatSignedQuantity } from '../format'
 
@@ -44,13 +37,7 @@ export function CountSheet({ countId, onOpenChange }: CountSheetProps) {
   })
 
   const meta = count
-    ? [
-        formatWhen(count.countedAt, 'dateTime', locale, t),
-        count.countedBy,
-        count.note,
-      ]
-        .filter(Boolean)
-        .join(' · ')
+    ? [formatWhen(count.countedAt, 'dateTime', locale, t), count.countedBy, count.note].filter(Boolean).join(' · ')
     : ' '
 
   const off = (count?.lines ?? []).filter((l) => toNumber(l.variance) !== 0)
@@ -65,9 +52,7 @@ export function CountSheet({ countId, onOpenChange }: CountSheetProps) {
           <TableCell className='text-muted-foreground text-end tabular-nums'>
             {formatQuantity(line.expected, line.unit, t)}
           </TableCell>
-          <TableCell className='text-end tabular-nums'>
-            {formatQuantity(line.counted, line.unit, t)}
-          </TableCell>
+          <TableCell className='text-end tabular-nums'>{formatQuantity(line.counted, line.unit, t)}</TableCell>
           <TableCell
             className={cn(
               'text-end font-medium tabular-nums',
@@ -104,11 +89,7 @@ export function CountSheet({ countId, onOpenChange }: CountSheetProps) {
               off.length > 0 ? 'text-destructive' : 'text-success'
             )}
           >
-            {off.length > 0 ? (
-              <TriangleAlert className='h-4 w-4' />
-            ) : (
-              <CircleCheck className='h-4 w-4' />
-            )}
+            {off.length > 0 ? <TriangleAlert className='h-4 w-4' /> : <CircleCheck className='h-4 w-4' />}
             {off.length > 0
               ? t('countOffSummary', {
                   off: off.length,

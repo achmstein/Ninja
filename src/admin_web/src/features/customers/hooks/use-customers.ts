@@ -19,9 +19,7 @@ export function useCustomer(userId: string) {
   })
 }
 
-export function useCustomerCount(
-  params: Pick<CustomerParams, 'search' | 'excludeRole' | 'enabled'>
-) {
+export function useCustomerCount(params: Pick<CustomerParams, 'search' | 'excludeRole' | 'enabled'>) {
   return useQuery({
     queryKey: customersKeys.count(params),
     queryFn: () => customersService.getCustomerCount(params),

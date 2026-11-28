@@ -1,12 +1,12 @@
 import { useEffect } from 'react'
-import { HubConnectionBuilder, HubConnectionState } from '@microsoft/signalr'
 import { useQueryClient } from '@tanstack/react-query'
 import { getStoredUser } from '@/config/oidc-config'
-import { renewSession } from '@/context/session'
+import { HubConnectionBuilder, HubConnectionState } from '@microsoft/signalr'
+import { getActiveBranchId } from '@/stores/branch-store'
 import { translate } from '@/lib/i18n'
 import { playAlertSound } from '@/lib/sound'
 import { toast } from '@/lib/toast'
-import { getActiveBranchId } from '@/stores/branch-store'
+import { renewSession } from '@/context/session'
 
 type OrderStatusChangedEvent = {
   type?: string
@@ -105,9 +105,7 @@ export function useKitchenNotifications() {
     const joinGroup = () =>
       connection
         .invoke('JoinAdminGroup')
-        .catch((error) =>
-          console.warn('[signalr] joining the staff group failed:', error)
-        )
+        .catch((error) => console.warn('[signalr] joining the staff group failed:', error))
 
     let disposed = false
     // What a dropped connection may have missed, asked again
@@ -130,10 +128,7 @@ export function useKitchenNotifications() {
         // Back-off retry (backend still booting, transient network); the
         // visibility handler below also retries, and the board keeps its
         // fallback poll.
-        if (
-          !disposed &&
-          connection.state === HubConnectionState.Disconnected
-        ) {
+        if (!disposed && connection.state === HubConnectionState.Disconnected) {
           // Never giving up while the page is open: a till left on all day
           // must come back by itself when the network does
           setTimeout(() => start(attempt + 1), Math.min(5_000 * (attempt + 1), 30_000))
@@ -163,10 +158,7 @@ export function useKitchenNotifications() {
     // Automatic reconnect gives up after long background periods; reconnect
     // when the tab becomes visible again (hard-learned on the mobile apps).
     const handleVisibility = () => {
-      if (
-        document.visibilityState === 'visible' &&
-        connection.state === HubConnectionState.Disconnected
-      ) {
+      if (document.visibilityState === 'visible' && connection.state === HubConnectionState.Disconnected) {
         start()
       }
     }

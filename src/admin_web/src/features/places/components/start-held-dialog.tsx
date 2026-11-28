@@ -34,12 +34,7 @@ interface StartHeldDialogProps {
  * rate where the tariff has a choice. Only opened when there is something
  * to pick; a one-rate place seats straight from the panel.
  */
-export function StartHeldDialog({
-  reservation,
-  tariff,
-  mode,
-  onOpenChange,
-}: StartHeldDialogProps) {
+export function StartHeldDialog({ reservation, tariff, mode, onOpenChange }: StartHeldDialogProps) {
   const t = useT()
   const localized = useLocalized()
   const actions = useStayActions()
@@ -67,11 +62,7 @@ export function StartHeldDialog({
       <DialogContent className='sm:max-w-md'>
         <DialogHeader>
           <DialogTitle className='flex items-center gap-2'>
-            {mode === 'confirm' ? (
-              <CheckCircle2 className='h-5 w-5' />
-            ) : (
-              <Play className='h-5 w-5 rtl:rotate-180' />
-            )}
+            {mode === 'confirm' ? <CheckCircle2 className='h-5 w-5' /> : <Play className='h-5 w-5 rtl:rotate-180' />}
             {t(mode === 'confirm' ? 'confirm' : 'start')}
           </DialogTitle>
           <DialogDescription>
@@ -82,25 +73,15 @@ export function StartHeldDialog({
 
         <div className='space-y-2 py-2'>
           <Label>{t('rate')}</Label>
-          <RateOptionToggle
-            options={options}
-            value={chosen}
-            onChange={setOptionCode}
-          />
+          <RateOptionToggle options={options} value={chosen} onChange={setOptionCode} />
         </div>
 
         <DialogFooter>
-          <Button
-            type='button'
-            variant='outline'
-            onClick={() => onOpenChange(false)}
-          >
+          <Button type='button' variant='outline' onClick={() => onOpenChange(false)}>
             {t('cancel')}
           </Button>
           <Button disabled={actions.isBusy} onClick={go}>
-            {actions.isBusy && (
-              <Loader2 className='me-2 h-4 w-4 animate-spin' />
-            )}
+            {actions.isBusy && <Loader2 className='me-2 h-4 w-4 animate-spin' />}
             {t(mode === 'confirm' ? 'confirm' : 'start')}
           </Button>
         </DialogFooter>

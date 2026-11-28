@@ -23,12 +23,7 @@ export type FillField = {
 }
 
 /** A two-language text as its two fields: "name.en" and "name.ar" */
-export function localizedFields(
-  key: string,
-  label: string,
-  value: LocalizedValue,
-  long = false
-): FillField[] {
+export function localizedFields(key: string, label: string, value: LocalizedValue, long = false): FillField[] {
   const type = long ? 'long' : 'text'
   return [
     {
@@ -49,11 +44,7 @@ export function localizedFields(
 }
 
 /** Puts filled "name.en" / "name.ar" back into a two-language value, keeping what was typed */
-export function mergeLocalized(
-  key: string,
-  value: LocalizedValue,
-  filled: Record<string, string>
-): LocalizedValue {
+export function mergeLocalized(key: string, value: LocalizedValue, filled: Record<string, string>): LocalizedValue {
   return {
     en: value.en.trim() ? value.en : (filled[`${key}.en`] ?? value.en),
     ar: value.ar.trim() ? value.ar : (filled[`${key}.ar`] ?? value.ar),
@@ -61,17 +52,13 @@ export function mergeLocalized(
 }
 
 const isEmpty = (value: FillField['value']) =>
-  value === null ||
-  value === undefined ||
-  (typeof value === 'string' && value.trim() === '')
+  value === null || value === undefined || (typeof value === 'string' && value.trim() === '')
 
 /**
  * Why a form cannot be filled yet: nothing typed to fill from, or nothing
  * left empty; null when it can.
  */
-export function fillBlocker(
-  fields: FillField[]
-): 'assistTypeSomethingFirst' | 'assistNothingMissing' | null {
+export function fillBlocker(fields: FillField[]): 'assistTypeSomethingFirst' | 'assistNothingMissing' | null {
   if (fields.every((f) => isEmpty(f.value))) return 'assistTypeSomethingFirst'
   if (fields.every((f) => !isEmpty(f.value))) return 'assistNothingMissing'
   return null
@@ -91,10 +78,7 @@ export function useFormFill() {
     onError: (error) => toast.error(assistErrorMessage(error)),
   })
 
-  const fill = async (
-    form: string,
-    fields: FillField[]
-  ): Promise<Record<string, string>> => {
+  const fill = async (form: string, fields: FillField[]): Promise<Record<string, string>> => {
     const body: FormField[] = fields.map((f) => ({
       key: f.key,
       label: f.label,

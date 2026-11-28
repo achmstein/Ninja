@@ -13,8 +13,7 @@ export const useStationStore = create<StationState>()(
   persist(
     (set) => ({
       byBranch: {},
-      setStation: (branchId, stationId) =>
-        set((state) => ({ byBranch: { ...state.byBranch, [branchId]: stationId } })),
+      setStation: (branchId, stationId) => set((state) => ({ byBranch: { ...state.byBranch, [branchId]: stationId } })),
     }),
     { name: 'ninja-kds-station' }
   )

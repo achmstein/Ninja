@@ -45,11 +45,7 @@ export function payLabel(
 }
 
 /** A calendar day (yyyy-MM-dd) as people say it: "3 Oct", "3 Oct 2025" */
-export function readableDay(
-  iso: string | null | undefined,
-  locale: string,
-  t: Translate
-): string {
+export function readableDay(iso: string | null | undefined, locale: string, t: Translate): string {
   if (!iso) return ''
   return formatWhen(parseDay(iso.slice(0, 10)) ?? iso, 'date', locale, t)
 }
@@ -69,9 +65,7 @@ export function monthName(year: number, month: number, locale: string) {
  */
 export type PayslipState = 'paid' | 'toPay' | 'nothing' | 'owes'
 
-export function payslipState(
-  p: Pick<PayslipView, 'status' | 'remaining'>
-): PayslipState {
+export function payslipState(p: Pick<PayslipView, 'status' | 'remaining'>): PayslipState {
   if (toNumber(p.status) === PAYSLIP_STATUS.paid) return 'paid'
   const remaining = toNumber(p.remaining)
   return remaining > 0 ? 'toPay' : remaining < 0 ? 'owes' : 'nothing'
@@ -79,10 +73,7 @@ export function payslipState(
 
 /** What the month itself is worth: pay, overtime and bonuses, less absence and deductions */
 export function monthPay(
-  p: Pick<
-    PayslipView,
-    'earned' | 'overtimePay' | 'absenceDeduction' | 'bonuses' | 'deductions'
-  >
+  p: Pick<PayslipView, 'earned' | 'overtimePay' | 'absenceDeduction' | 'bonuses' | 'deductions'>
 ): number {
   return (
     toNumber(p.earned) +
@@ -97,15 +88,11 @@ export function monthPay(
  * What reached the person for the month: advances and payments during it,
  * and the payslip's own payment once it is paid.
  */
-export function monthPaid(
-  p: Pick<PayslipView, 'advances' | 'payments' | 'status' | 'paidAmount'>
-): number {
+export function monthPaid(p: Pick<PayslipView, 'advances' | 'payments' | 'status' | 'paidAmount'>): number {
   return (
     toNumber(p.advances) +
     toNumber(p.payments) +
-    (toNumber(p.status) === PAYSLIP_STATUS.paid
-      ? toNumber(p.paidAmount ?? 0)
-      : 0)
+    (toNumber(p.status) === PAYSLIP_STATUS.paid ? toNumber(p.paidAmount ?? 0) : 0)
   )
 }
 

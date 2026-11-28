@@ -1,19 +1,19 @@
 import { useEffect, useRef, type ComponentType } from 'react'
-import { motion } from 'motion/react'
 import { Link, useRouterState } from '@tanstack/react-router'
-import { useT } from '@/lib/i18n'
-import { cn } from '@/lib/utils'
+import { motion } from 'motion/react'
 import { formatClock, useSecondTick } from '@/lib/clock'
-import { ease, spring } from '@/lib/motion'
-import { useVisitTab, type VisitLive } from '@/lib/visit'
-import { isTabActive, NAV_TABS } from './nav-tabs'
-import { DOCK_H, DOCK_INSET, DOCK_SIDE, TAB_PILL_H, TABS_H } from './chrome'
-import { DockBill } from './dock-bill'
+import { useT } from '@/lib/i18n'
 import { useLiveBills } from '@/lib/live-bills'
-import { useDockRowShown } from './use-dock-row'
+import { ease, spring } from '@/lib/motion'
+import { cn } from '@/lib/utils'
+import { useVisitTab, type VisitLive } from '@/lib/visit'
 import { LiquidPill } from '../liquid-pill'
 import { Odometer } from '../odometer'
 import { useLiquidEdges } from '../use-liquid'
+import { DOCK_H, DOCK_INSET, DOCK_SIDE, TAB_PILL_H, TABS_H } from './chrome'
+import { DockBill } from './dock-bill'
+import { isTabActive, NAV_TABS } from './nav-tabs'
+import { useDockRowShown } from './use-dock-row'
 import { useTuck, useTuckOnScroll } from './use-tuck'
 
 /**
@@ -28,7 +28,10 @@ export function NinjaNav({ className }: { className?: string }) {
   const pathname = useRouterState({ select: (s) => (s.resolvedLocation ?? s.location).pathname })
   // No places to book, no tab: the chip is the table's door
   const tabs = NAV_TABS.filter((tab) => tab.key !== 'rooms' || visitTab.visible)
-  const active = Math.max(0, tabs.findIndex((tab) => isTabActive(tab, pathname)))
+  const active = Math.max(
+    0,
+    tabs.findIndex((tab) => isTabActive(tab, pathname))
+  )
   const row = useRef<HTMLDivElement>(null)
   const items = useRef<Array<HTMLAnchorElement | null>>([])
   const edges = useLiquidEdges(active, items, row, tabs.map((tab) => tab.key).join(), 'app-tabs')
@@ -36,7 +39,12 @@ export function NinjaNav({ className }: { className?: string }) {
   return (
     <nav className={className}>
       <div ref={row} className='relative flex items-stretch px-1.5' style={{ height: TABS_H }}>
-        <LiquidPill edges={edges} height={TAB_PILL_H} top={(TABS_H - TAB_PILL_H) / 2} className='bg-[color-mix(in_oklab,var(--background)_16%,var(--foreground))]' />
+        <LiquidPill
+          edges={edges}
+          height={TAB_PILL_H}
+          top={(TABS_H - TAB_PILL_H) / 2}
+          className='bg-[color-mix(in_oklab,var(--background)_16%,var(--foreground))]'
+        />
         {tabs.map((tab, i) => {
           const isVisit = tab.key === 'rooms'
           const Icon = isVisit ? visitTab.icon : tab.icon
@@ -50,7 +58,7 @@ export function NinjaNav({ className }: { className?: string }) {
               }}
               aria-current={on ? 'page' : undefined}
               className={cn(
-                'relative z-10 flex min-w-0 flex-1 items-center justify-center gap-1.5 text-caption font-semibold transition-colors duration-200',
+                'text-caption relative z-10 flex min-w-0 flex-1 items-center justify-center gap-1.5 font-semibold transition-colors duration-200',
                 on ? 'text-background' : 'text-background/55'
               )}
             >
@@ -146,17 +154,42 @@ const RING_R = 11
  * the digits rolling like the tray's total. A running clock is the dock's
  * row, not the tab's. The place's name stays as the tab's accessible name.
  */
-function LiveVisit({ live, icon: Icon, label }: { live: VisitLive; icon: ComponentType<{ className?: string }>; label: string }) {
+function LiveVisit({
+  live,
+  icon: Icon,
+  label,
+}: {
+  live: VisitLive
+  icon: ComponentType<{ className?: string }>
+  label: string
+}) {
   const now = useSecondTick()
   const left = live.until != null ? Math.max(0, (live.until - now) / 1000) : null
-  const share = live.until != null && live.made > 0 ? Math.max(0, Math.min(1, (live.until - now) / Math.max(1, live.until - live.made))) : 1
+  const share =
+    live.until != null && live.made > 0
+      ? Math.max(0, Math.min(1, (live.until - now) / Math.max(1, live.until - live.made)))
+      : 1
   const hurry = left != null && left <= 120
 
   return (
     <span className='flex min-w-0 items-center gap-1.5' aria-label={label}>
       <span className='relative grid shrink-0 place-items-center' style={{ width: RING, height: RING }}>
-        <svg width={RING} height={RING} viewBox={`0 0 ${RING} ${RING}`} className='absolute inset-0 -rotate-90' aria-hidden>
-          <circle cx={RING / 2} cy={RING / 2} r={RING_R} fill='none' stroke='currentColor' strokeOpacity={0.2} strokeWidth={2} />
+        <svg
+          width={RING}
+          height={RING}
+          viewBox={`0 0 ${RING} ${RING}`}
+          className='absolute inset-0 -rotate-90'
+          aria-hidden
+        >
+          <circle
+            cx={RING / 2}
+            cy={RING / 2}
+            r={RING_R}
+            fill='none'
+            stroke='currentColor'
+            strokeOpacity={0.2}
+            strokeWidth={2}
+          />
           <motion.circle
             cx={RING / 2}
             cy={RING / 2}
@@ -174,7 +207,11 @@ function LiveVisit({ live, icon: Icon, label }: { live: VisitLive; icon: Compone
         </svg>
         <Icon className='size-[14px]' />
       </span>
-      {left != null ? <Odometer clock value={formatClock(left)} className={hurry ? 'text-red-400' : undefined} /> : <span className='truncate'>{label}</span>}
+      {left != null ? (
+        <Odometer clock value={formatClock(left)} className={hurry ? 'text-red-400' : undefined} />
+      ) : (
+        <span className='truncate'>{label}</span>
+      )}
     </span>
   )
 }

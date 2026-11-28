@@ -1,23 +1,17 @@
 import { useEffect, useRef } from 'react'
 import { z } from 'zod'
 import { createFileRoute, useNavigate, useSearch } from '@tanstack/react-router'
-import { useAuth } from 'react-oidc-context'
-import { useTheme } from '@/context/theme-provider'
-import { useBrandName } from '@/lib/brand'
-import { PoweredBy } from '@/components/ninja-wordmark'
-import { useLanguage } from '@/lib/i18n'
 import { loginPageParams } from '@/config/oidc-config'
 import { Loader2, RefreshCw } from 'lucide-react'
+import { useAuth } from 'react-oidc-context'
+import { useBrandName } from '@/lib/brand'
+import { useLanguage } from '@/lib/i18n'
 import { useT } from '@/lib/i18n'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { useTheme } from '@/context/theme-provider'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { BrandMark } from '@/components/brand-mark'
+import { PoweredBy } from '@/components/ninja-wordmark'
 
 const searchSchema = z.object({
   redirect: z.string().optional(),
@@ -43,10 +37,7 @@ function SignIn() {
   // A renewal that failed is not a sign-in that did: the dead session is
   // dropped (DropRefusedSession) and Keycloak is asked afresh
   const signInError =
-    auth.error?.source === 'renewSilent' ||
-    auth.error?.source === 'signinSilent'
-      ? undefined
-      : auth.error
+    auth.error?.source === 'renewSilent' || auth.error?.source === 'signinSilent' ? undefined : auth.error
   const { resolvedTheme } = useTheme()
   const language = useLanguage((state) => state.language)
   const navigate = useNavigate()
@@ -76,13 +67,7 @@ function SignIn() {
   }
 
   useEffect(() => {
-    if (
-      auth.isLoading ||
-      auth.isAuthenticated ||
-      signInError ||
-      auth.activeNavigator ||
-      redirectStarted.current
-    ) {
+    if (auth.isLoading || auth.isAuthenticated || signInError || auth.activeNavigator || redirectStarted.current) {
       return
     }
     redirectStarted.current = true
@@ -98,9 +83,7 @@ function SignIn() {
       <div className='grid h-svh place-items-center p-4'>
         <Card className='w-full max-w-sm gap-4'>
           <CardHeader className='text-center'>
-            <CardTitle className='text-xl tracking-tight'>
-              {t('signInFailed')}
-            </CardTitle>
+            <CardTitle className='text-xl tracking-tight'>{t('signInFailed')}</CardTitle>
             <CardDescription>{signInError.message}</CardDescription>
           </CardHeader>
           <CardContent>
@@ -119,12 +102,8 @@ function SignIn() {
       <div className='flex flex-col items-center gap-3'>
         <BrandMark className='size-14 text-2xl' />
         <div className='flex flex-col items-center gap-1'>
-          <span className='text-2xl font-semibold tracking-tight'>
-            {business || t('appName')}
-          </span>
-          {business && (
-            <span className='text-muted-foreground'>{t('appName')}</span>
-          )}
+          <span className='text-2xl font-semibold tracking-tight'>{business || t('appName')}</span>
+          {business && <span className='text-muted-foreground'>{t('appName')}</span>}
         </div>
       </div>
       <div className='text-muted-foreground flex items-center gap-2 text-sm'>

@@ -10,11 +10,11 @@ import {
   User,
   type LucideIcon,
 } from 'lucide-react'
+import { useLocale, useLocalized, useT, type TranslationKey } from '@/lib/i18n'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { relativeTime } from '@/features/orders/status'
 import { useSecondsClock } from '@/features/places/use-places'
-import { useLocale, useLocalized, useT, type TranslationKey } from '@/lib/i18n'
 import {
   REQUEST_CALL_WAITER,
   REQUEST_CONTROLLER_CHANGE,
@@ -70,9 +70,7 @@ export function ServiceRequestsStrip() {
           // or the bill the same way a room does
           const atTable = request.placeKind !== 'Room'
           const PlaceIcon = atTable ? Armchair : DoorOpen
-          const room =
-            localized(request.placeName) ||
-            `${atTable ? t('table') : t('room')} ${request.placeId ?? ''}`
+          const room = localized(request.placeName) || `${atTable ? t('table') : t('room')} ${request.placeId ?? ''}`
           // A rate change names the option wanted
           const requestText =
             request.requestType === REQUEST_CHANGE_OPTION
@@ -91,13 +89,12 @@ export function ServiceRequestsStrip() {
                   <Icon className='size-5 text-amber-600 dark:text-amber-500' />
                 </div>
                 <div className='min-w-0 flex-1'>
-                  <div className='flex items-center gap-1 type-heading'>
+                  <div className='type-heading flex items-center gap-1'>
                     <PlaceIcon className='text-muted-foreground size-4 shrink-0' />
                     <span className='truncate'>{room}</span>
                   </div>
                   <div className='text-muted-foreground type-detail truncate'>
-                    {requestText} ·{' '}
-                    {relativeTime(request.createdAt, nowMs, t, locale)}
+                    {requestText} · {relativeTime(request.createdAt, nowMs, t, locale)}
                   </div>
                 </div>
               </div>
@@ -110,19 +107,11 @@ export function ServiceRequestsStrip() {
                     disabled={isActing}
                     onClick={() => acknowledge(request.id)}
                   >
-                    {isActing ? (
-                      <Loader2 className='size-5 animate-spin' />
-                    ) : (
-                      <Check className='size-5' />
-                    )}
+                    {isActing ? <Loader2 className='size-5 animate-spin' /> : <Check className='size-5' />}
                     {t('acknowledgeRequest')}
                   </Button>
                 )}
-                <Button
-                  className='h-11 flex-1'
-                  disabled={isActing}
-                  onClick={() => complete(request.id)}
-                >
+                <Button className='h-11 flex-1' disabled={isActing} onClick={() => complete(request.id)}>
                   {t('done')}
                 </Button>
               </div>

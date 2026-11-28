@@ -56,10 +56,7 @@ export function businessDateOf(now: Date, hours: BusinessHours): PlainDate {
 }
 
 /** The window of the business day named `date`, as UTC instants. */
-export function businessDayWindow(
-  date: PlainDate,
-  hours: BusinessHours
-): DayWindow {
+export function businessDayWindow(date: PlainDate, hours: BusinessHours): DayWindow {
   const { start, end, crossesMidnight, timeZone } = resolve(hours)
   const from = zonedTime(date, start, timeZone)
   const to =
@@ -70,11 +67,7 @@ export function businessDayWindow(
 }
 
 /** From the first day's start to the last day's end. */
-export function businessDaysWindow(
-  first: PlainDate,
-  last: PlainDate,
-  hours: BusinessHours
-): DayWindow {
+export function businessDaysWindow(first: PlainDate, last: PlainDate, hours: BusinessHours): DayWindow {
   return {
     from: businessDayWindow(first, hours).from,
     to: businessDayWindow(last, hours).to,
@@ -85,10 +78,7 @@ export function businessDaysWindow(
  * The business month so far: from the first business day of the month
  * today's business day is in, to the end of today's.
  */
-export function businessMonthWindow(
-  now: Date,
-  hours: BusinessHours
-): DayWindow {
+export function businessMonthWindow(now: Date, hours: BusinessHours): DayWindow {
   const today = businessDateOf(now, hours)
   return businessDaysWindow({ ...today, day: 1 }, today, hours)
 }
@@ -108,19 +98,11 @@ export function elapsedOf(window: DayWindow, now: Date): number {
  * going. Days, not milliseconds, so a clock change between them does not
  * shift the comparison by an hour.
  */
-export function previousWindow(
-  window: DayWindow,
-  hours: BusinessHours,
-  now: Date
-): DayWindow {
+export function previousWindow(window: DayWindow, hours: BusinessHours, now: Date): DayWindow {
   const first = businessDateOf(window.from, hours)
   const last = businessDateOf(new Date(window.to.getTime() - 1), hours)
   const days = daysBetween(first, last) + 1
-  const before = businessDaysWindow(
-    addDays(first, -days),
-    addDays(last, -days),
-    hours
-  )
+  const before = businessDaysWindow(addDays(first, -days), addDays(last, -days), hours)
   if (now.getTime() >= window.to.getTime()) return before
   return {
     from: before.from,
@@ -128,13 +110,7 @@ export function previousWindow(
   }
 }
 
-export const rangePresets = [
-  'today',
-  'yesterday',
-  '7d',
-  '30d',
-  'custom',
-] as const
+export const rangePresets = ['today', 'yesterday', '7d', '30d', 'custom'] as const
 export type RangePreset = (typeof rangePresets)[number]
 
 // Presets span whole business days, from the first day's start to the last
@@ -149,22 +125,15 @@ export function presetWindow(
 ): DayWindow {
   const today = businessDateOf(now, hours)
 
-  if (preset === 'yesterday')
-    return businessDayWindow(addDays(today, -1), hours)
-  if (preset === '7d')
-    return businessDaysWindow(addDays(today, -6), today, hours)
-  if (preset === '30d')
-    return businessDaysWindow(addDays(today, -29), today, hours)
+  if (preset === 'yesterday') return businessDayWindow(addDays(today, -1), hours)
+  if (preset === '7d') return businessDaysWindow(addDays(today, -6), today, hours)
+  if (preset === '30d') return businessDaysWindow(addDays(today, -29), today, hours)
   if (preset === 'custom') {
     const first = custom.from ?? custom.to
     if (!first) return businessDayWindow(today, hours)
     const last = custom.to ?? first
     const [start, end] = first <= last ? [first, last] : [last, first]
-    return businessDaysWindow(
-      plainDateOfLocal(start),
-      plainDateOfLocal(end),
-      hours
-    )
+    return businessDaysWindow(plainDateOfLocal(start), plainDateOfLocal(end), hours)
   }
   return businessDayWindow(today, hours)
 }
@@ -178,11 +147,7 @@ export function parseDay(value: string | undefined): Date | undefined {
   if (!value) return undefined
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value)
   if (!match) return undefined
-  const date = new Date(
-    Number(match[1]),
-    Number(match[2]) - 1,
-    Number(match[3])
-  )
+  const date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]))
   return Number.isNaN(date.getTime()) ? undefined : date
 }
 
@@ -192,10 +157,7 @@ export function parseDay(value: string | undefined): Date | undefined {
  * the offset that makes their midnight the business day's start, so their
  * "today" is today's business day in the business's zone.
  */
-export function businessDayOffsetMinutes(
-  now: Date,
-  hours: BusinessHours
-): number {
+export function businessDayOffsetMinutes(now: Date, hours: BusinessHours): number {
   const start = businessDayWindow(businessDateOf(now, hours), hours).from
   // Within half a day either side of UTC, as a clock's own offset is: a day
   // starting at midnight in Cairo is 22:00 UTC, which is -120 and not 1320

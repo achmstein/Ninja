@@ -40,27 +40,17 @@ export function RecipeBriefSheet({
       subtitle={itemName}
       actions={
         <>
-          <Button
-            type='button'
-            variant='outline'
-            onClick={() => onOpenChange(false)}
-          >
+          <Button type='button' variant='outline' onClick={() => onOpenChange(false)}>
             {t('cancel')}
           </Button>
-          <AiButton
-            variant='default'
-            pending={pending}
-            onClick={() => onPropose(brief)}
-          >
+          <AiButton variant='default' pending={pending} onClick={() => onPropose(brief)}>
             {t('proposeRecipe')}
           </AiButton>
         </>
       }
     >
       <div className='flex flex-col gap-3'>
-        <p className='text-muted-foreground text-sm'>
-          {t('describeRecipeHint')}
-        </p>
+        <p className='text-muted-foreground text-sm'>{t('describeRecipeHint')}</p>
         <Textarea
           autoFocus
           value={brief}
@@ -69,9 +59,7 @@ export function RecipeBriefSheet({
           placeholder={t('describeRecipeExample')}
           className='min-h-36'
         />
-        <p className='text-muted-foreground text-xs'>
-          {t('describeRecipeEmpty')}
-        </p>
+        <p className='text-muted-foreground text-xs'>{t('describeRecipeEmpty')}</p>
       </div>
     </EntitySheet>
   )

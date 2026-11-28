@@ -2,32 +2,20 @@ import { useEffect, useState, useRef } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { Loader2, ShoppingBag, X } from 'lucide-react'
-import {
-  getOpenTicketsOptions,
-  openTicketMutation,
-} from '@/api/sales/@tanstack/react-query.gen'
-import { billLabel } from '@/features/deliveries/delivery-format'
-import type { SaleCustomer } from '@/features/sale/cart'
-import { CustomerSearch } from '@/features/customer/customer-search'
-import {
-  ChooseCustomerButton,
-  SelectedCustomer,
-} from '@/features/customer/selected-customer'
-import { usePlaces } from '@/features/places/use-places'
-import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { getOpenTicketsOptions, openTicketMutation } from '@/api/sales/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useLocalized, useT } from '@/lib/i18n'
 import { TICKET_TYPE_COUNTER } from '@/lib/ticket-types'
+import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { CustomerSearch } from '@/features/customer/customer-search'
+import { ChooseCustomerButton, SelectedCustomer } from '@/features/customer/selected-customer'
+import { billLabel } from '@/features/deliveries/delivery-format'
 import { STAY_RUNNING } from '@/features/places/status'
+import { usePlaces } from '@/features/places/use-places'
+import type { SaleCustomer } from '@/features/sale/cart'
 
 type NewTicketDialogProps = {
   open: boolean
@@ -116,10 +104,7 @@ export function NewTicketDialog({ open, onOpenChange }: NewTicketDialogProps) {
       const who = openingFor.current
       if (who?.id) {
         try {
-          localStorage.setItem(
-            pendingTicketCustomerKey(result.ticketId),
-            JSON.stringify(who),
-          )
+          localStorage.setItem(pendingTicketCustomerKey(result.ticketId), JSON.stringify(who))
         } catch {
           // A browser refusing storage just loses the pre-selection
         }
@@ -151,20 +136,14 @@ export function NewTicketDialog({ open, onOpenChange }: NewTicketDialogProps) {
         </DialogHeader>
 
         {customer ? (
-          <SelectedCustomer
-            customer={customer}
-            onRemove={() => setCustomer(null)}
-          />
+          <SelectedCustomer customer={customer} onRemove={() => setCustomer(null)} />
         ) : (
           <>
             <ChooseCustomerButton onClick={() => setPickerOpen(true)} />
             {/* Nobody picked: the tab can still carry a name */}
             <div className='grid gap-2'>
               <Label htmlFor='tab-label'>
-                {t('tabName')}{' '}
-                <span className='text-muted-foreground font-normal'>
-                  ({t('optional')})
-                </span>
+                {t('tabName')} <span className='text-muted-foreground font-normal'>({t('optional')})</span>
               </Label>
               <div className='relative'>
                 <Input
@@ -193,25 +172,11 @@ export function NewTicketDialog({ open, onOpenChange }: NewTicketDialogProps) {
         )}
 
         <DialogFooter className='gap-2'>
-          <Button
-            variant='outline'
-            size='lg'
-            className='h-12'
-            onClick={() => onOpenChange(false)}
-          >
+          <Button variant='outline' size='lg' className='h-12' onClick={() => onOpenChange(false)}>
             {t('cancel')}
           </Button>
-          <Button
-            size='lg'
-            className='h-12 px-6'
-            disabled={openTicket.isPending}
-            onClick={() => openCounter()}
-          >
-            {openTicket.isPending ? (
-              <Loader2 className='size-5 animate-spin' />
-            ) : (
-              <ShoppingBag className='size-5' />
-            )}
+          <Button size='lg' className='h-12 px-6' disabled={openTicket.isPending} onClick={() => openCounter()}>
+            {openTicket.isPending ? <Loader2 className='size-5 animate-spin' /> : <ShoppingBag className='size-5' />}
             {t('openTicketAction')}
           </Button>
         </DialogFooter>

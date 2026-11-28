@@ -59,20 +59,17 @@ describe('billing standing', () => {
   // The standing is read in the viewer's zone, the same way format.date()
   // renders it, so the count under a date always agrees with the date. These
   // build their instants from local parts to stay true wherever they run.
-  const on = (year: number, month: number, day: number, hour = 12) =>
-    new Date(year, month - 1, day, hour).toISOString()
+  const on = (year: number, month: number, day: number, hour = 12) => new Date(year, month - 1, day, hour).toISOString()
 
   const now = new Date(2026, 8, 23, 10)
   const customer = { kind: 'Customer', subscription: 'Active' }
   const demo = { kind: 'Demo', subscription: 'Trialing' }
 
   it('a customer is judged by paid-through, a demo by its expiry', () => {
-    expect(
-      billingStanding({ ...customer, paidThrough: on(2026, 10, 31), expiresAt: on(2026, 9, 1) }, now).days
-    ).toBe(38)
-    expect(
-      billingStanding({ ...demo, paidThrough: on(2026, 10, 31), expiresAt: on(2026, 9, 30) }, now).days
-    ).toBe(7)
+    expect(billingStanding({ ...customer, paidThrough: on(2026, 10, 31), expiresAt: on(2026, 9, 1) }, now).days).toBe(
+      38
+    )
+    expect(billingStanding({ ...demo, paidThrough: on(2026, 10, 31), expiresAt: on(2026, 9, 30) }, now).days).toBe(7)
   })
 
   it('days are whole days, and the time of day does not move them', () => {
@@ -97,9 +94,9 @@ describe('billing standing', () => {
       billingStanding({ kind: 'Customer', subscription: 'Suspended', paidThrough: on(2026, 12, 31) }, now).tone
     ).toBe('stopped')
     // A date that has passed is loud on its own, before the API has called it past due
-    expect(
-      billingStanding({ kind: 'Customer', subscription: 'Active', paidThrough: on(2026, 9, 20) }, now).tone
-    ).toBe('overdue')
+    expect(billingStanding({ kind: 'Customer', subscription: 'Active', paidThrough: on(2026, 9, 20) }, now).tone).toBe(
+      'overdue'
+    )
   })
 
   it('a tenant that has gone, or never had a date, says nothing', () => {

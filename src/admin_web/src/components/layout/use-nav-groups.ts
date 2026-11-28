@@ -40,9 +40,7 @@ export function useNavGroups(): NavGroup[] {
     enabled: features.reservations,
     refetchInterval: 60_000,
   })
-  const openReservations = features.reservations
-    ? reservations.filter(isOpenReservation).length
-    : 0
+  const openReservations = features.reservations ? reservations.filter(isOpenReservation).length : 0
 
   const badges: Record<string, number> = {
     '/orders/live': pendingOrders.length + serviceRequests.length,

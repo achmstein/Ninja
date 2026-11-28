@@ -67,10 +67,7 @@ export function useMenuScan() {
       }
       pages.push(image)
     }
-    if (leftOut > 0)
-      toast.warning(
-        t('menuPagesLeftOut', { max: MENU_SCAN_MAX_PAGES, count: leftOut })
-      )
+    if (leftOut > 0) toast.warning(t('menuPagesLeftOut', { max: MENU_SCAN_MAX_PAGES, count: leftOut }))
     return pages
   }
 

@@ -9,26 +9,11 @@ const SOON = 2
  * day", or with `left` the sentence "6 days left". Whole days, rounded down:
  * better to order a day early than a day late.
  */
-export function DaysLeft({
-  days,
-  left,
-  className,
-}: {
-  days: number
-  left?: boolean
-  className?: string
-}) {
+export function DaysLeft({ days, left, className }: { days: number; left?: boolean; className?: string }) {
   const t = useT()
-  const text =
-    days < 1 ? t('lessThanADay') : t('daysCount', { count: Math.floor(days) })
+  const text = days < 1 ? t('lessThanADay') : t('daysCount', { count: Math.floor(days) })
   return (
-    <span
-      className={cn(
-        'tabular-nums',
-        days <= SOON && 'text-destructive font-medium',
-        className
-      )}
-    >
+    <span className={cn('tabular-nums', days <= SOON && 'text-destructive font-medium', className)}>
       {left ? t('daysLeftLine', { days: text }) : text}
     </span>
   )

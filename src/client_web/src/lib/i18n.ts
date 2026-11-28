@@ -1,10 +1,10 @@
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
-import { arStandard } from './i18n.ar-standard'
-import { formatMoney, formatMoneyWhole, useCurrency } from '@/lib/currency'
-import { preview } from '@/lib/preview'
-import { openingLanguage } from '@/lib/opening-language'
 import type { LocalizedText } from '@/api/catalog'
+import { formatMoney, formatMoneyWhole, useCurrency } from '@/lib/currency'
+import { openingLanguage } from '@/lib/opening-language'
+import { preview } from '@/lib/preview'
+import { arStandard } from './i18n.ar-standard'
 import { messages, messagesArStandard, type Message } from './i18n.gen'
 
 export type Language = 'en' | 'ar'
@@ -25,7 +25,10 @@ const webExtras = {
   loading: { en: 'Loading...', ar: 'ثواني...' },
   pointsBalance: { en: 'Points balance', ar: 'رصيد النقط' },
   // Ordering again while the last order is still with the till (a guest has one at a time)
-  orderStillWaiting: { en: 'Your last order is still waiting for the counter. It will be confirmed shortly.', ar: 'طلبك اللي فات لسه مستني الكاشير يأكده، ثواني ويتأكد.' },
+  orderStillWaiting: {
+    en: 'Your last order is still waiting for the counter. It will be confirmed shortly.',
+    ar: 'طلبك اللي فات لسه مستني الكاشير يأكده، ثواني ويتأكد.',
+  },
   // The You page's card for a visitor, the same card the Book page asks with
   youSignInTitle: { en: 'Sign in or create an account', ar: 'سجّل دخول أو اعمل حساب' },
   signInPrompt: {
@@ -86,7 +89,10 @@ const webExtras = {
   demoUseTestCard: { en: 'Use the test card', ar: 'استخدم كارت التجربة' },
   demoWalletNumber: { en: 'Wallet phone number', ar: 'رقم المحفظة' },
   demoWalletHint: { en: 'Any Egyptian mobile number works in the demo.', ar: 'أي رقم موبايل مصري ينفع في التجربة.' },
-  demoWalletError: { en: 'Enter an 11-digit mobile number starting with 01.', ar: 'اكتب رقم موبايل ١١ رقم يبدأ بـ 01.' },
+  demoWalletError: {
+    en: 'Enter an 11-digit mobile number starting with 01.',
+    ar: 'اكتب رقم موبايل ١١ رقم يبدأ بـ 01.',
+  },
   demoCardError_number: { en: 'Enter the 16-digit card number.', ar: 'اكتب رقم الكارت الـ ١٦ رقم.' },
   demoCardError_expiry: { en: 'Enter a valid expiry date (MM/YY).', ar: 'اكتب تاريخ انتهاء صحيح (MM/YY).' },
   demoCardError_cvc: { en: 'Enter the 3-digit CVC.', ar: 'اكتب الـ CVC من ٣ أرقام.' },
@@ -276,7 +282,11 @@ const webExtras = {
   peopleAtTable: {
     plural: 'count',
     en: { other: '{count} people at the table' },
-    ar: { '=11': '{count} شخص على الترابيزة', '=12': '{count} شخص على الترابيزة', other: '{count} أشخاص على الترابيزة' },
+    ar: {
+      '=11': '{count} شخص على الترابيزة',
+      '=12': '{count} شخص على الترابيزة',
+      other: '{count} أشخاص على الترابيزة',
+    },
   },
   peopleUnit: {
     plural: 'count',
@@ -354,9 +364,15 @@ const webExtras = {
   payAheadCashDelivery: { en: 'Cash on delivery', ar: 'كاش عند الاستلام' },
   payAheadCashPickup: { en: 'Pay at pickup', ar: 'ادفع وانت بتستلم' },
   payAheadFee: { en: 'Online payment fee', ar: 'رسوم الدفع أونلاين' },
-  payAheadHeld: { en: 'Your card is only charged once {name} accepts the order.', ar: 'الكارت مش هيتخصم منه غير لما {name} يقبل الطلب.' },
+  payAheadHeld: {
+    en: 'Your card is only charged once {name} accepts the order.',
+    ar: 'الكارت مش هيتخصم منه غير لما {name} يقبل الطلب.',
+  },
   payAheadPlace: { en: 'Continue to pay', ar: 'كمّل للدفع' },
-  payAheadFinishFromDock: { en: 'Your order is waiting for its payment: pay it from the bar below.', ar: 'طلبك مستني الدفع: ادفعه من الشريط اللي تحت.' },
+  payAheadFinishFromDock: {
+    en: 'Your order is waiting for its payment: pay it from the bar below.',
+    ar: 'طلبك مستني الدفع: ادفعه من الشريط اللي تحت.',
+  },
   payAheadGettingReady: { en: 'Getting your payment ready…', ar: 'بنجهز الدفع…' },
   payAheadToCheckout: { en: 'Taking you to pay…', ar: 'رايحين للدفع…' },
   payAheadTitle: { en: 'Pay for your order', ar: 'ادفع تمن طلبك' },
@@ -368,7 +384,10 @@ const webExtras = {
   payAheadCancelFailed: { en: "Couldn't cancel the order", ar: 'معرفناش نلغي الطلب' },
   payAheadStartFailed: { en: "Couldn't start the payment", ar: 'معرفناش نبدأ الدفع' },
   payAheadPaidNote: { en: '{name} has your order.', ar: 'طلبك وصل لـ{name}.' },
-  payAheadHeldNote: { en: '{name} has your order. Your card is charged once they accept it.', ar: 'طلبك وصل لـ{name}. الكارت هيتخصم منه لما يقبل الطلب.' },
+  payAheadHeldNote: {
+    en: '{name} has your order. Your card is charged once they accept it.',
+    ar: 'طلبك وصل لـ{name}. الكارت هيتخصم منه لما يقبل الطلب.',
+  },
   payAheadFollow: { en: 'Follow your order', ar: 'تابع طلبك' },
   payAheadOrderCancelled: { en: 'This order was cancelled', ar: 'الطلب ده اتلغى' },
   payAheadNothingCharged: { en: 'Nothing was charged.', ar: 'محدش خصم حاجة.' },
@@ -402,7 +421,12 @@ const webExtras = {
   bookFreeNow: {
     plural: 'count',
     en: { '=0': 'Nothing free right now', '=1': '1 free now', other: '{count} free now' },
-    ar: { '=0': 'مفيش حاجة فاضية دلوقتي', '=1': 'واحدة فاضية دلوقتي', '=2': 'اتنين فاضيين دلوقتي', other: '{count} فاضيين دلوقتي' },
+    ar: {
+      '=0': 'مفيش حاجة فاضية دلوقتي',
+      '=1': 'واحدة فاضية دلوقتي',
+      '=2': 'اتنين فاضيين دلوقتي',
+      other: '{count} فاضيين دلوقتي',
+    },
   },
   // A branch's chip on the booking dial: as short as the chip is narrow
   bookFreeShort: {
@@ -417,7 +441,10 @@ const webExtras = {
   ninjaHeldFor: { en: 'Held for you', ar: 'محجوزة ليك' },
   ninjaHoldWalkOver: { en: 'Walk over and show this at the counter', ar: 'تعالى ووري ده للكاشير' },
   ninjaHoldFor: { en: 'For {time}', ar: 'الساعة {time}' },
-  ninjaHoldRanOut: { en: 'Your hold ran out. {name} may still have it for you.', ar: 'وقت الحجز خلص. ممكن {name} لسه ماسكهالك.' },
+  ninjaHoldRanOut: {
+    en: 'Your hold ran out. {name} may still have it for you.',
+    ar: 'وقت الحجز خلص. ممكن {name} لسه ماسكهالك.',
+  },
   ninjaHoldLeft: { en: '{time} left to arrive', ar: 'فاضل {time} توصل' },
   // Bills: each bill a stack of its rounds
   ninjaRoundCount: {
@@ -462,7 +489,10 @@ const webExtras = {
   directions: { en: 'Directions', ar: 'الطريق' },
   useMyLocation: { en: 'Use my location', ar: 'استخدم مكاني' },
   locating: { en: 'Finding you…', ar: 'بندوّر على مكانك…' },
-  locationOff: { en: 'Location is off for this site. Turn it on in your browser settings.', ar: 'اللوكيشن مقفول هنا. افتحه من إعدادات المتصفح.' },
+  locationOff: {
+    en: 'Location is off for this site. Turn it on in your browser settings.',
+    ar: 'اللوكيشن مقفول هنا. افتحه من إعدادات المتصفح.',
+  },
   distanceKm: { en: '{value} km', ar: '{value} كم' },
   distanceM: { en: '{value} m', ar: '{value} م' },
   // Cart and pay
@@ -478,7 +508,7 @@ const webExtras = {
   deliveryFee: { en: 'Delivery fee', ar: 'رسوم التوصيل' },
   deliveryFree: { en: 'Free delivery', ar: 'توصيل مجاني' },
   deliveryChecking: { en: 'Checking the address…', ar: 'بنشوف العنوان…' },
-  deliveryOutOfRange: { en: '{name} doesn\'t deliver this far', ar: '{name} مش بيوصّل للمسافة دي' },
+  deliveryOutOfRange: { en: "{name} doesn't deliver this far", ar: '{name} مش بيوصّل للمسافة دي' },
   deliveryTryBranch: { en: 'Order from {name}, {distance} away', ar: 'اطلب من {name}، على بعد {distance}' },
   deliveryAddMore: { en: 'Add {amount} more for delivery', ar: 'زوّد {amount} كمان عشان التوصيل' },
   deliveryAddressTitle: { en: 'Deliver to', ar: 'التوصيل إلى' },
@@ -493,7 +523,10 @@ const webExtras = {
   deliveryFloor: { en: 'Floor', ar: 'الدور' },
   deliveryApartment: { en: 'Apartment', ar: 'الشقة' },
   deliveryDirections: { en: 'Directions for the rider', ar: 'وصف للمندوب' },
-  deliveryDirectionsHint: { en: 'A landmark, the gate, anything that helps', ar: 'علامة مميزة، البوابة، أي حاجة تساعد' },
+  deliveryDirectionsHint: {
+    en: 'A landmark, the gate, anything that helps',
+    ar: 'علامة مميزة، البوابة، أي حاجة تساعد',
+  },
   deliveryPhone: { en: 'Phone for the rider', ar: 'رقم للمندوب' },
   deliveryYourName: { en: 'Your name', ar: 'اسمك' },
   dockAboutMinutes: { en: 'about {n} min', ar: 'حوالي {n} د' },
@@ -505,7 +538,10 @@ const webExtras = {
   deliveryRiderNote: { en: 'Note for the rider', ar: 'ملاحظة للمندوب' },
   optional: { en: 'Optional', ar: 'اختياري' },
   phoneGateTitle: { en: 'Your mobile number?', ar: 'رقم موبايلك؟' },
-  phoneGateHint: { en: "We'll text you a code. No password, no email.", ar: 'هنبعتلك كود في رسالة. من غير باسورد ولا إيميل.' },
+  phoneGateHint: {
+    en: "We'll text you a code. No password, no email.",
+    ar: 'هنبعتلك كود في رسالة. من غير باسورد ولا إيميل.',
+  },
   phoneGateSend: { en: 'Send the code', ar: 'ابعت الكود' },
   deliveryNeedsAccount: { en: 'Sign in to order delivery from here', ar: 'سجّل دخول عشان تطلب توصيل من هنا' },
   deliveryNeedName: { en: 'Your name, so the rider knows whom to ask for', ar: 'اسمك، عشان المندوب يعرف يسأل على مين' },
@@ -521,9 +557,15 @@ const webExtras = {
   deliveryAddressNotSaved: { en: "The address wasn't saved. Try again.", ar: 'العنوان متحفظش. جرب تاني.' },
   deliveryAddressRemoved: { en: 'Address removed', ar: 'العنوان اتشال' },
   deliveryRemoveAddress: { en: 'Remove this address', ar: 'شيل العنوان ده' },
-  deliveryNeedStreet: { en: 'Write your area and street, or a landmark near you', ar: 'اكتب المنطقة والشارع، أو علامة قريبة منك' },
+  deliveryNeedStreet: {
+    en: 'Write your area and street, or a landmark near you',
+    ar: 'اكتب المنطقة والشارع، أو علامة قريبة منك',
+  },
   deliveryNeedPhone: { en: 'A phone number the rider can call', ar: 'رقم يقدر المندوب يكلمه' },
-  deliveryNeedPin: { en: 'Move the map to your door, or use your location', ar: 'حرّك الخريطة لحد بابك، أو استخدم مكانك' },
+  deliveryNeedPin: {
+    en: 'Move the map to your door, or use your location',
+    ar: 'حرّك الخريطة لحد بابك، أو استخدم مكانك',
+  },
   deliveryQuoteFailed: { en: "Couldn't check this address.", ar: 'معرفناش نتأكد من العنوان ده.' },
   deliveryRetry: { en: 'Try again', ar: 'جرب تاني' },
   deliveryRemoveConfirm: { en: 'Remove this address?', ar: 'تشيل العنوان ده؟' },
@@ -535,21 +577,36 @@ const webExtras = {
   mapRetry: { en: 'Load it again', ar: 'حمّلها تاني' },
   // What the server refused, by its code (lib/problem.ts)
   problemNotDelivering: { en: "This branch isn't delivering right now.", ar: 'الفرع ده مش بيوصّل دلوقتي.' },
-  problemOutOfRange: { en: "This address is outside the branch's delivery area.", ar: 'العنوان ده برّه منطقة توصيل الفرع.' },
+  problemOutOfRange: {
+    en: "This address is outside the branch's delivery area.",
+    ar: 'العنوان ده برّه منطقة توصيل الفرع.',
+  },
   problemBelowMinimum: { en: 'Add a little more for delivery.', ar: 'زوّد شوية عشان التوصيل.' },
   problemPinInvalid: { en: "That pin isn't a point on the map.", ar: 'الدبوس ده مش نقطة على الخريطة.' },
-  problemPlaceConflict: { en: 'An order goes to a table or to your door, not both.', ar: 'الطلب يا للترابيزة يا للباب، مش الاتنين.' },
+  problemPlaceConflict: {
+    en: 'An order goes to a table or to your door, not both.',
+    ar: 'الطلب يا للترابيزة يا للباب، مش الاتنين.',
+  },
   problemTooLong: { en: 'Part of the address is too long. Shorten it.', ar: 'جزء من العنوان طويل أوي. قصّره.' },
-  problemAddressLimit: { en: "That's as many addresses as you can keep. Remove one first.", ar: 'ده آخر عدد عناوين ينفع تحفظه. شيل واحد الأول.' },
+  problemAddressLimit: {
+    en: "That's as many addresses as you can keep. Remove one first.",
+    ar: 'ده آخر عدد عناوين ينفع تحفظه. شيل واحد الأول.',
+  },
   problemAddressGone: { en: "That address isn't there any more.", ar: 'العنوان ده مبقاش موجود.' },
   problemGuestName: { en: 'Tell us your name to order.', ar: 'قولنا اسمك عشان تطلب.' },
-  problemGuestNeedsPlace: { en: 'A table or room is needed to order as a guest.', ar: 'لازم ترابيزة أو أوضة عشان تطلب كضيف.' },
+  problemGuestNeedsPlace: {
+    en: 'A table or room is needed to order as a guest.',
+    ar: 'لازم ترابيزة أو أوضة عشان تطلب كضيف.',
+  },
   problemGuestBlocked: { en: "This phone can't order here today.", ar: 'التليفون ده مش هيقدر يطلب هنا النهارده.' },
   problemSignInRequired: { en: 'Sign in to order this.', ar: 'سجّل دخول عشان تطلب ده.' },
   problemPlaceClosed: { en: "That place isn't taking orders.", ar: 'المكان ده مش بياخد طلبات.' },
   problemPaused: { en: "This branch isn't taking orders right now.", ar: 'الفرع ده مش بياخد طلبات دلوقتي.' },
   myAddresses: { en: 'My addresses', ar: 'عناويني' },
-  myAddressesEmpty: { en: 'No addresses yet. Add one when you order for delivery.', ar: 'لسه مفيش عناوين. ضيف واحد لما تطلب توصيل.' },
+  myAddressesEmpty: {
+    en: 'No addresses yet. Add one when you order for delivery.',
+    ar: 'لسه مفيش عناوين. ضيف واحد لما تطلب توصيل.',
+  },
   deliveryRider: { en: 'Your rider: {name}', ar: 'المندوب: {name}' },
 } satisfies Record<string, Message>
 
@@ -563,7 +620,9 @@ type LanguageState = {
   chosen: boolean
   setLanguage: (language: Language) => void
   /** The business's brand is known: its only language, else its default unless the customer chose */
-  followBusiness: (locale: { language?: string | null; contentLanguages?: string | null } | null | undefined) => Language
+  followBusiness: (
+    locale: { language?: string | null; contentLanguages?: string | null } | null | undefined
+  ) => Language
 }
 
 /** Under the control panel's preview the choice lives in memory only, so the frame never changes a real visitor's language */
@@ -635,12 +694,7 @@ function standardArabic(key: string, language: Language) {
     : undefined
 }
 
-function format(
-  entry: Message,
-  language: Language,
-  params?: TranslateParams,
-  key?: string
-): string {
+function format(entry: Message, language: Language, params?: TranslateParams, key?: string): string {
   const standard = key ? standardArabic(key, language) : undefined
   let template: string
   if ('plural' in entry) {
@@ -651,24 +705,18 @@ function format(
     template = (typeof standard === 'string' ? standard : entry[language]) || entry.en
   }
   if (!params) return template
-  return template.replace(/\{(\w+)\}/g, (whole, name) =>
-    name in params ? String(params[name]) : whole
-  )
+  return template.replace(/\{(\w+)\}/g, (whole, name) => (name in params ? String(params[name]) : whole))
 }
 
 export function useT() {
   const language = useLanguage((s) => s.language)
   // Re-render when the business's Arabic arrives with its brand
   useArabicStyle((s) => s.standard)
-  return (key: TranslationKey, params?: TranslateParams) =>
-    format(dictionary[key], language, params, key)
+  return (key: TranslationKey, params?: TranslateParams) => format(dictionary[key], language, params, key)
 }
 
 // For code living outside the React tree (the toast adapter)
-export function translate(
-  key: TranslationKey,
-  params?: TranslateParams
-): string {
+export function translate(key: TranslationKey, params?: TranslateParams): string {
   return format(dictionary[key], useLanguage.getState().language, params, key)
 }
 

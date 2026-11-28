@@ -1,19 +1,11 @@
 import { useState } from 'react'
-import {
-  Armchair,
-  DoorOpen,
-  Plus,
-  Search,
-  ShoppingBag,
-  Trophy,
-  type LucideIcon,
-} from 'lucide-react'
+import { Armchair, DoorOpen, Plus, Search, ShoppingBag, Trophy, type LucideIcon } from 'lucide-react'
 import type { TicketSummary } from '@/api/sales/types.gen'
-import type {
-  PlaceViewModel,
-  ReservationViewModel,
-  StayViewModel,
-} from '@/api/spaces/types.gen'
+import type { PlaceViewModel, ReservationViewModel, StayViewModel } from '@/api/spaces/types.gen'
+import { useFeatures } from '@/lib/brand'
+import { useLocalized, useT } from '@/lib/i18n'
+import { toNumber } from '@/lib/money'
+import { cn } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
@@ -30,19 +22,11 @@ import {
   placeStatusDot,
 } from '@/features/places/status'
 import { useSecondsClock } from '@/features/places/use-places'
-import { useFeatures } from '@/lib/brand'
-import { useLocalized, useT } from '@/lib/i18n'
-import { toNumber } from '@/lib/money'
-import { cn } from '@/lib/utils'
 
 type PlaceListProps = {
   places: PlaceViewModel[]
-  stayForPlace: (
-    placeId: number | string | undefined,
-  ) => StayViewModel | undefined
-  reservationForPlace: (
-    placeId: number | string | undefined,
-  ) => ReservationViewModel | undefined
+  stayForPlace: (placeId: number | string | undefined) => StayViewModel | undefined
+  reservationForPlace: (placeId: number | string | undefined) => ReservationViewModel | undefined
   tickets: TicketSummary[]
   busy: boolean
   loading: boolean
@@ -55,13 +39,7 @@ type PlaceListProps = {
 }
 
 /** The search over the places: in the list, or in the floor column's header */
-export function PlaceSearch({
-  value,
-  onChange,
-}: {
-  value: string
-  onChange: (value: string) => void
-}) {
+export function PlaceSearch({ value, onChange }: { value: string; onChange: (value: string) => void }) {
   const t = useT()
   return (
     <div className='relative w-full'>
@@ -78,15 +56,10 @@ export function PlaceSearch({
 }
 
 function Heading({ children }: { children: React.ReactNode }) {
-  return (
-    <h3 className='text-muted-foreground mt-2 type-label'>
-      {children}
-    </h3>
-  )
+  return <h3 className='text-muted-foreground type-label mt-2'>{children}</h3>
 }
 
-const rowClass =
-  'hover:bg-accent/50 flex h-12 w-full items-center gap-3 rounded-lg px-3 text-start disabled:opacity-50'
+const rowClass = 'hover:bg-accent/50 flex h-12 w-full items-center gap-3 rounded-lg px-3 text-start disabled:opacity-50'
 
 const kindIcon: Record<number, LucideIcon> = {
   [PLACE_ROOM]: DoorOpen,
@@ -96,10 +69,7 @@ const kindIcon: Record<number, LucideIcon> = {
 
 /** Whether a place already has a bill on the floor: a stay's bill names the
  *  stay, a table's bill names the place. */
-export function hasBill(
-  place: PlaceViewModel,
-  tickets: TicketSummary[],
-): boolean {
+export function hasBill(place: PlaceViewModel, tickets: TicketSummary[]): boolean {
   const id = toNumber(place.id)
   return tickets.some((ticket) => toNumber(ticket.placeId) === id)
 }
@@ -131,21 +101,12 @@ export function PlaceList({
   const nowMs = useSecondsClock(true)
 
   const needle = term.trim().toLowerCase()
-  const matches = (
-    name: { en?: string | null; ar?: string | null } | null | undefined,
-  ) =>
-    !needle ||
-    (name?.en ?? '').toLowerCase().includes(needle) ||
-    (name?.ar ?? '').toLowerCase().includes(needle)
+  const matches = (name: { en?: string | null; ar?: string | null } | null | undefined) =>
+    !needle || (name?.en ?? '').toLowerCase().includes(needle) || (name?.ar ?? '').toLowerCase().includes(needle)
 
   // A place with a bill is among the bills already; one without is here, in
   // whatever state it is in
-  const free = places.filter(
-    (place) =>
-      place.isActive !== false &&
-      matches(place.name) &&
-      !hasBill(place, tickets),
-  )
+  const free = places.filter((place) => place.isActive !== false && matches(place.name) && !hasBill(place, tickets))
   const groups = [
     { kind: PLACE_ROOM, label: t('rooms') },
     { kind: PLACE_TABLE, label: t('tables') },
@@ -195,8 +156,7 @@ export function PlaceList({
                 const stay = timed ? stayForPlace(place.id) : undefined
                 const reservation = reservationForPlace(place.id)
                 const reservedNow = isHolding(reservation)
-                const outOfService =
-                  Number(place.status) === PLACE_OUT_OF_SERVICE
+                const outOfService = Number(place.status) === PLACE_OUT_OF_SERVICE
                 // The dot already says free; text only when there is
                 // something to add
                 const detail = isRunning(stay)
@@ -220,29 +180,22 @@ export function PlaceList({
                         // A plain table's bill says whether it is taken;
                         // its dot only turns for a reservation
                         timed || Number(place.status) === PLACE_HELD
-                          ? (placeStatusDot[Number(place.status ?? 0)] ??
-                              'bg-muted')
-                          : 'bg-green-500',
+                          ? (placeStatusDot[Number(place.status ?? 0)] ?? 'bg-muted')
+                          : 'bg-green-500'
                       )}
                     />
-                    <span className='type-body min-w-0 flex-1 truncate font-medium'>
-                      {localized(place.name)}
-                    </span>
-                    {detail && (
-                      <span className='text-muted-foreground type-detail truncate'>
-                        {detail}
-                      </span>
-                    )}
+                    <span className='type-body min-w-0 flex-1 truncate font-medium'>{localized(place.name)}</span>
+                    {detail && <span className='text-muted-foreground type-detail truncate'>{detail}</span>}
                     <Icon className='text-muted-foreground size-4 shrink-0' />
                   </button>
                 )
               })}
             </div>
-          ),
+          )
       )}
 
       {free.length === 0 && !loading && (
-        <p className='text-muted-foreground py-6 text-center type-detail'>
+        <p className='text-muted-foreground type-detail py-6 text-center'>
           {needle ? t('noPlaceMatches') : t('everyPlaceHasABill')}
         </p>
       )}

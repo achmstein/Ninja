@@ -2,11 +2,7 @@ import { type ReactNode } from 'react'
 import { Link, useLocation } from '@tanstack/react-router'
 import { ChevronRight } from 'lucide-react'
 import { useT } from '@/lib/i18n'
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import {
   SidebarGroup,
   SidebarGroupLabel,
@@ -29,11 +25,7 @@ import {
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu'
 import { checkIsActive } from './nav-active'
-import {
-  type NavCollapsible,
-  type NavLink,
-  type NavGroup as NavGroupProps,
-} from './types'
+import { type NavCollapsible, type NavLink, type NavGroup as NavGroupProps } from './types'
 
 export function NavGroup({ title, items }: NavGroupProps) {
   const t = useT()
@@ -43,9 +35,7 @@ export function NavGroup({ title, items }: NavGroupProps) {
   // Every URL in this group, so prefix matching can defer to exact matches
   // (e.g. /menu/categories highlights Categories, not Menu Items)
   const groupUrls = items.flatMap((item) =>
-    item.url
-      ? [String(item.url)]
-      : (item.items ?? []).map((sub) => String(sub.url))
+    item.url ? [String(item.url)] : (item.items ?? []).map((sub) => String(sub.url))
   )
 
   return (
@@ -60,20 +50,10 @@ export function NavGroup({ title, items }: NavGroupProps) {
         {items.map((item) => {
           const key = `${item.title}-${item.url}`
 
-          if (!item.items)
-            return (
-              <SidebarMenuLink
-                key={key}
-                item={item}
-                href={href}
-                groupUrls={groupUrls}
-              />
-            )
+          if (!item.items) return <SidebarMenuLink key={key} item={item} href={href} groupUrls={groupUrls} />
 
           if (state === 'collapsed' && !isMobile)
-            return (
-              <SidebarMenuCollapsedDropdown key={key} item={item} href={href} />
-            )
+            return <SidebarMenuCollapsedDropdown key={key} item={item} href={href} />
 
           return <SidebarMenuCollapsible key={key} item={item} href={href} />
         })}
@@ -86,26 +66,13 @@ function NavBadge({ children }: { children: ReactNode }) {
   return <Badge className='rounded-full px-1 py-0 text-xs'>{children}</Badge>
 }
 
-function SidebarMenuLink({
-  item,
-  href,
-  groupUrls = [],
-}: {
-  item: NavLink
-  href: string
-  groupUrls?: string[]
-}) {
+function SidebarMenuLink({ item, href, groupUrls = [] }: { item: NavLink; href: string; groupUrls?: string[] }) {
   const t = useT()
   const { setOpenMobile } = useSidebar()
   const active = checkIsActive(href, item, false, groupUrls)
   return (
     <SidebarMenuItem className='isolate'>
-      {active && (
-        <ActiveMarker
-          group='sidebar'
-          className='bg-sidebar-accent rounded-md shadow-xs'
-        />
-      )}
+      {active && <ActiveMarker group='sidebar' className='bg-sidebar-accent rounded-md shadow-xs' />}
       <SidebarMenuButton
         asChild
         isActive={active}
@@ -122,23 +89,13 @@ function SidebarMenuLink({
   )
 }
 
-function SidebarMenuCollapsible({
-  item,
-  href,
-}: {
-  item: NavCollapsible
-  href: string
-}) {
+function SidebarMenuCollapsible({ item, href }: { item: NavCollapsible; href: string }) {
   const t = useT()
   const { setOpenMobile } = useSidebar()
   // Sub-items defer to their siblings, so /till/tickets lights Tickets, not Sales
   const subUrls = item.items.map((sub) => String(sub.url))
   return (
-    <Collapsible
-      asChild
-      defaultOpen={checkIsActive(href, item, true)}
-      className='group/collapsible'
-    >
+    <Collapsible asChild defaultOpen={checkIsActive(href, item, true)} className='group/collapsible'>
       <SidebarMenuItem>
         <CollapsibleTrigger asChild>
           <SidebarMenuButton tooltip={t(item.title)}>
@@ -153,10 +110,7 @@ function SidebarMenuCollapsible({
             {item.items.map((subItem) => (
               <SidebarMenuSubItem key={subItem.title} className='isolate'>
                 {checkIsActive(href, subItem, false, subUrls) && (
-                  <ActiveMarker
-                    group='sidebar'
-                    className='bg-sidebar-accent rounded-md shadow-xs'
-                  />
+                  <ActiveMarker group='sidebar' className='bg-sidebar-accent rounded-md shadow-xs' />
                 )}
                 <SidebarMenuSubButton
                   asChild
@@ -178,23 +132,14 @@ function SidebarMenuCollapsible({
   )
 }
 
-function SidebarMenuCollapsedDropdown({
-  item,
-  href,
-}: {
-  item: NavCollapsible
-  href: string
-}) {
+function SidebarMenuCollapsedDropdown({ item, href }: { item: NavCollapsible; href: string }) {
   const t = useT()
   const subUrls = item.items.map((sub) => String(sub.url))
   return (
     <SidebarMenuItem>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <SidebarMenuButton
-            tooltip={t(item.title)}
-            isActive={checkIsActive(href, item, true)}
-          >
+          <SidebarMenuButton tooltip={t(item.title)} isActive={checkIsActive(href, item, true)}>
             {item.icon && <item.icon />}
             <span>{t(item.title)}</span>
             {item.badge && <NavBadge>{item.badge}</NavBadge>}
@@ -208,15 +153,10 @@ function SidebarMenuCollapsedDropdown({
           <DropdownMenuSeparator />
           {item.items.map((sub) => (
             <DropdownMenuItem key={`${sub.title}-${sub.url}`} asChild>
-              <Link
-                to={sub.url}
-                className={`${checkIsActive(href, sub, false, subUrls) ? 'bg-secondary' : ''}`}
-              >
+              <Link to={sub.url} className={`${checkIsActive(href, sub, false, subUrls) ? 'bg-secondary' : ''}`}>
                 {sub.icon && <sub.icon />}
                 <span className='max-w-52 text-wrap'>{t(sub.title)}</span>
-                {sub.badge && (
-                  <span className='ms-auto text-xs'>{sub.badge}</span>
-                )}
+                {sub.badge && <span className='ms-auto text-xs'>{sub.badge}</span>}
               </Link>
             </DropdownMenuItem>
           ))}

@@ -1,8 +1,15 @@
 import { AlertTriangle, ArrowRightLeft } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { useLocalized, useT } from '@/lib/i18n'
 import { useMoney } from '@/lib/money'
+import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import type { SaleLine } from './cart'
 import type { PriceReview } from './use-branch-price-check'
 
@@ -48,16 +55,27 @@ export function PriceReviewDialog({
           </DialogTitle>
           {drops && !nothingLeft && <DialogDescription>{t('priceReviewDropped')}</DialogDescription>}
         </DialogHeader>
-        <ul className='flex flex-col gap-1.5 type-detail'>
+        <ul className='type-detail flex flex-col gap-1.5'>
           {review?.items.map((item) => (
-            <li key={item.key} className='flex items-start gap-2 rounded-md bg-muted px-2.5 py-2'>
-              {item.kind !== 'changed' && <AlertTriangle className='mt-0.5 size-4 shrink-0 text-amber-700 dark:text-amber-400' aria-hidden />}
+            <li key={item.key} className='bg-muted flex items-start gap-2 rounded-md px-2.5 py-2'>
+              {item.kind !== 'changed' && (
+                <AlertTriangle className='mt-0.5 size-4 shrink-0 text-amber-700 dark:text-amber-400' aria-hidden />
+              )}
               <span className='tabular-nums'>
                 {item.kind === 'changed'
-                  ? t('priceReviewChanged', { item: nameOf(item.line), from: money(item.from), to: money(item.to), branch })
+                  ? t('priceReviewChanged', {
+                      item: nameOf(item.line),
+                      from: money(item.from),
+                      to: money(item.to),
+                      branch,
+                    })
                   : item.kind === 'soldOut'
                     ? t('priceReviewSoldOut', { item: nameOf(item.line), branch })
-                    : t('priceReviewOptionsOut', { item: nameOf(item.line), options: optionNames(item.line, item.optionIds), branch })}
+                    : t('priceReviewOptionsOut', {
+                        item: nameOf(item.line),
+                        options: optionNames(item.line, item.optionIds),
+                        branch,
+                      })}
               </span>
             </li>
           ))}

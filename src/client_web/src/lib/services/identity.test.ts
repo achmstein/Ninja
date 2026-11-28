@@ -3,7 +3,10 @@ import { guestDetailsParams, hasWholeName, namePartsOf } from './identity'
 
 describe('namePartsOf', () => {
   it('takes the profile’s own first and last name', () => {
-    expect(namePartsOf({ name: 'Mona El Sayed', firstName: 'Mona', lastName: 'El Sayed' })).toEqual(['Mona', 'El Sayed'])
+    expect(namePartsOf({ name: 'Mona El Sayed', firstName: 'Mona', lastName: 'El Sayed' })).toEqual([
+      'Mona',
+      'El Sayed',
+    ])
   })
 
   it('splits a whole name at its first space when the profile has no parts', () => {

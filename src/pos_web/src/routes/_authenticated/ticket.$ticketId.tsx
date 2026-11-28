@@ -10,8 +10,7 @@ type TicketSearch = {
 
 export const Route = createFileRoute('/_authenticated/ticket/$ticketId')({
   validateSearch: (search: Record<string, unknown>): TicketSearch => ({
-    settle:
-      search.settle === true || search.settle === 'true' ? true : undefined,
+    settle: search.settle === true || search.settle === 'true' ? true : undefined,
     from: search.from === 'receipts' ? 'receipts' : undefined,
   }),
   component: TicketRoute,

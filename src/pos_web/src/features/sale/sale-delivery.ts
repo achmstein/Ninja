@@ -17,7 +17,11 @@ export function validatePhoneDelivery(form: SaleDelivery, name: string, needsNam
   if (needsName && !name.trim()) errors.name = true
   if (digitCount(form.phone) < MIN_PHONE_DIGITS) errors.phone = true
   if (!form.address.trim()) errors.address = true
-  if ((Object.keys(DELIVERY_LIMITS) as (keyof typeof DELIVERY_LIMITS)[]).some((k) => form[k].trim().length > DELIVERY_LIMITS[k]))
+  if (
+    (Object.keys(DELIVERY_LIMITS) as (keyof typeof DELIVERY_LIMITS)[]).some(
+      (k) => form[k].trim().length > DELIVERY_LIMITS[k]
+    )
+  )
     errors.tooLong = true
   return errors
 }
@@ -36,7 +40,7 @@ export function validateDeliveryWhere(form: SaleDelivery): PhoneDeliveryErrors {
   return { ...(address ? { address } : {}), ...(tooLong ? { tooLong } : {}) }
 }
 
-const orNull =(value: string) => value.trim() || null
+const orNull = (value: string) => value.trim() || null
 
 /**
  * The delivery as the till's order request carries it: the pin only when the
@@ -84,7 +88,10 @@ export function toSaleZone(zone: {
 }
 
 /** The area with this id in a list the server sent, as the sale keeps it; null when it is not (or no longer) there */
-export function zoneIn(zones: readonly StaffDeliveryZone[] | null | undefined, zoneId: number | string | null | undefined): SaleZone | null {
+export function zoneIn(
+  zones: readonly StaffDeliveryZone[] | null | undefined,
+  zoneId: number | string | null | undefined
+): SaleZone | null {
   if (zoneId == null) return null
   const found = (zones ?? []).find((z) => toNumber(z.zoneId) === toNumber(zoneId))
   return found ? toSaleZone(found) : null
@@ -126,7 +133,7 @@ export function toSendTo(alternative: DeliveryAlternative): SaleSendTo {
 export function keptSendTo(
   sendTo: SaleSendTo | null | undefined,
   alternatives: readonly DeliveryAlternative[] | null | undefined,
-  pinned: boolean,
+  pinned: boolean
 ): SaleSendTo | null {
   if (!sendTo || !pinned) return null
   const offered = (alternatives ?? []).find((a) => toNumber(a.branchId) === sendTo.branchId)
@@ -155,7 +162,7 @@ export type DeliveryReadiness = 'none' | 'ready' | 'loading' | 'failed' | 'off'
 export function deliveryReadiness(
   delivery: SaleDelivery | null,
   terms: { isLoading: boolean; isError: boolean; delivers: boolean | undefined },
-  featureOn: boolean,
+  featureOn: boolean
 ): DeliveryReadiness {
   if (delivery == null) return 'none'
   if (!featureOn) return 'off'

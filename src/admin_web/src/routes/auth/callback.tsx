@@ -29,11 +29,7 @@ function AuthCallback() {
         size='screen'
         title={t('signInFailed')}
         description={auth.error.message}
-        actions={
-          <Button onClick={() => navigate({ to: '/sign-in', replace: true })}>
-            {t('backToSignIn')}
-          </Button>
-        }
+        actions={<Button onClick={() => navigate({ to: '/sign-in', replace: true })}>{t('backToSignIn')}</Button>}
       />
     )
   }

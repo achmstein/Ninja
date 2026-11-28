@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import { Check, Truck } from 'lucide-react'
 import type { CourierProviderView } from '@/api/ordering/types.gen'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { useT } from '@/lib/i18n'
 import { toNumber, useMoney } from '@/lib/money'
 import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { useCourierProviders, useDeliveryActions, type BoardDelivery } from './use-deliveries'
 
 /**
@@ -39,7 +39,11 @@ export function CourierPicker({ order, enabled }: { order: BoardDelivery; enable
             provider={provider}
             initial={
               current === id
-                ? { courierName: d.courierName ?? '', courierPhone: d.courierPhone ?? '', fee: d.courierFee == null ? fee : toNumber(d.courierFee) }
+                ? {
+                    courierName: d.courierName ?? '',
+                    courierPhone: d.courierPhone ?? '',
+                    fee: d.courierFee == null ? fee : toNumber(d.courierFee),
+                  }
                 : { courierName: '', courierPhone: '', fee }
             }
             busy={actions.busy}
@@ -56,12 +60,14 @@ export function CourierPicker({ order, enabled }: { order: BoardDelivery; enable
             disabled={actions.busy || (provider.isConnected && current === id)}
             // A connected company's own system says who it sends and its fee: nothing to ask
             onClick={() =>
-              provider.isConnected ? actions.assignCourier(toNumber(order.orderNumber), { providerId: id }) : setOpen(id)
+              provider.isConnected
+                ? actions.assignCourier(toNumber(order.orderNumber), { providerId: id })
+                : setOpen(id)
             }
             aria-pressed={current === id}
             className={cn(
               'flex h-14 items-center gap-3 rounded-lg border px-3 text-start transition-colors',
-              current === id ? 'border-primary bg-primary/5' : 'hover:bg-muted',
+              current === id ? 'border-primary bg-primary/5' : 'hover:bg-muted'
             )}
           >
             <Truck className='size-5' aria-hidden />
@@ -70,12 +76,16 @@ export function CourierPicker({ order, enabled }: { order: BoardDelivery; enable
                 <bdi>{provider.name}</bdi>
               </span>
               {provider.isConnected && current !== id ? (
-                <span className='text-muted-foreground block type-caption'>{t('deliveryCourierConnected')}</span>
+                <span className='text-muted-foreground type-caption block'>{t('deliveryCourierConnected')}</span>
               ) : (current === id ? d.courierName : null) || fee != null ? (
-                <span className='text-muted-foreground block type-caption'>
+                <span className='text-muted-foreground type-caption block'>
                   {current === id && d.courierName ? <bdi>{d.courierName}</bdi> : null}
                   {current === id && d.courierName && fee != null ? ' · ' : null}
-                  {fee != null ? t('deliveryCourierFeeLine', { amount: money(current === id && d.courierFee != null ? d.courierFee : fee) }) : null}
+                  {fee != null
+                    ? t('deliveryCourierFeeLine', {
+                        amount: money(current === id && d.courierFee != null ? d.courierFee : fee),
+                      })
+                    : null}
                 </span>
               ) : null}
             </span>
@@ -124,7 +134,14 @@ function CourierForm({
       </span>
       <div className='flex flex-col gap-1.5'>
         <Label htmlFor={`courier-name-${id}`}>{t('deliveryCourierName')}</Label>
-        <Input id={`courier-name-${id}`} value={courierName} onChange={(e) => setCourierName(e.target.value)} maxLength={200} autoComplete='off' className='h-11' />
+        <Input
+          id={`courier-name-${id}`}
+          value={courierName}
+          onChange={(e) => setCourierName(e.target.value)}
+          maxLength={200}
+          autoComplete='off'
+          className='h-11'
+        />
       </div>
       <div className='flex flex-col gap-1.5'>
         <Label htmlFor={`courier-phone-${id}`}>{t('deliveryCourierPhone')}</Label>

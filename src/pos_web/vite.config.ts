@@ -36,20 +36,18 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,woff2,svg,png,mp3}'],
         navigateFallback: 'index.html',
         // The API, the hub and Keycloak (behind the same gateway) are never the app
-        navigateFallbackDenylist: [
-          /^\/api\//,
-          /^\/hub\//,
-          /^\/auth\/(realms|resources|admin|js)\//,
-        ],
+        navigateFallbackDenylist: [/^\/api\//, /^\/hub\//, /^\/auth\/(realms|resources|admin|js)\//],
         cleanupOutdatedCaches: true,
         runtimeCaching: [
           {
-            urlPattern: ({ url, sameOrigin }) =>
-              sameOrigin && /^\/api\/catalog\/items\/[^/]+\/pic$/.test(url.pathname),
+            urlPattern: ({ url, sameOrigin }) => sameOrigin && /^\/api\/catalog\/items\/[^/]+\/pic$/.test(url.pathname),
             handler: 'StaleWhileRevalidate',
             options: {
               cacheName: 'item-pictures',
-              expiration: { maxEntries: 1000, maxAgeSeconds: 30 * 24 * 60 * 60 },
+              expiration: {
+                maxEntries: 1000,
+                maxAgeSeconds: 30 * 24 * 60 * 60,
+              },
               cacheableResponse: { statuses: [200] },
             },
           },

@@ -36,21 +36,10 @@ type PairingsSectionProps = {
 export function PairingsSection({ item, items }: PairingsSectionProps) {
   const saved = (item.pairedItemIds ?? []).map(toNumber)
   // Keyed on what is saved, so a save or a refetch starts the list over from it
-  return (
-    <PairingsForm
-      key={saved.join(',')}
-      item={item}
-      items={items}
-      saved={saved}
-    />
-  )
+  return <PairingsForm key={saved.join(',')} item={item} items={items} saved={saved} />
 }
 
-function PairingsForm({
-  item,
-  items,
-  saved,
-}: PairingsSectionProps & { saved: number[] }) {
+function PairingsForm({ item, items, saved }: PairingsSectionProps & { saved: number[] }) {
   const t = useT()
   const localized = useLocalized()
   const queryClient = useQueryClient()
@@ -59,9 +48,7 @@ function PairingsForm({
   // A paired item deleted since drops out on its own; Catalog already dropped it
   const [ids, setIds] = useState(() => saved.filter((id) => byId.has(id)))
   // Why Ninja proposed each item it added, shown until the list is saved
-  const [reasons, setReasons] = useState<Map<number, LocalizedText>>(
-    () => new Map()
-  )
+  const [reasons, setReasons] = useState<Map<number, LocalizedText>>(() => new Map())
   const [note, setNote] = useState('')
   const assist = usePairingsAssist(itemId)
 
@@ -69,16 +56,10 @@ function PairingsForm({
     try {
       const result = await assist.suggest({ current: ids, note })
       const proposed = result.items.map((p) => toNumber(p.catalogItemId))
-      setIds((current) =>
-        [...current, ...proposed.filter((id) => !current.includes(id))].slice(
-          0,
-          MAX_PAIRINGS
-        )
-      )
+      setIds((current) => [...current, ...proposed.filter((id) => !current.includes(id))].slice(0, MAX_PAIRINGS))
       setReasons((current) => {
         const next = new Map(current)
-        for (const p of result.items)
-          next.set(toNumber(p.catalogItemId), p.reason)
+        for (const p of result.items) next.set(toNumber(p.catalogItemId), p.reason)
         return next
       })
       if (result.items.length === 0) toast.info(t('assistNoPairings'))
@@ -116,17 +97,10 @@ function PairingsForm({
 
   return (
     <div className='space-y-4'>
-      <p className='text-muted-foreground text-sm'>
-        {t('pairingsHint', { max: MAX_PAIRINGS })}
-      </p>
+      <p className='text-muted-foreground text-sm'>{t('pairingsHint', { max: MAX_PAIRINGS })}</p>
 
       {ids.length === 0 ? (
-        <EmptyState
-          compact
-          icon={Link2}
-          title={t('noPairings')}
-          className='border border-dashed'
-        />
+        <EmptyState compact icon={Link2} title={t('noPairings')} className='border border-dashed' />
       ) : (
         <ol className='divide-y rounded-md border'>
           {ids.map((id, index) => {
@@ -135,33 +109,19 @@ function PairingsForm({
             return (
               <li key={id} className='flex items-center gap-3 p-2'>
                 <ImageWithFallback
-                  src={
-                    paired.pictureUri
-                      ? itemPictureUrl(paired.id, paired.pictureUri, 160)
-                      : null
-                  }
+                  src={paired.pictureUri ? itemPictureUrl(paired.id, paired.pictureUri, 160) : null}
                   className='h-10 w-10 shrink-0 rounded-md'
-                  fallbackIcon={
-                    <Coffee className='text-muted-foreground h-4 w-4' />
-                  }
+                  fallbackIcon={<Coffee className='text-muted-foreground h-4 w-4' />}
                 />
                 <div className='min-w-0 flex-1'>
                   <div className='flex flex-wrap items-center gap-2'>
-                    <span className='truncate font-medium'>
-                      {localized(paired.name) || '—'}
-                    </span>
-                    {paired.isAvailable === false && (
-                      <Badge variant='outline'>{t('unavailable')}</Badge>
-                    )}
+                    <span className='truncate font-medium'>{localized(paired.name) || '—'}</span>
+                    {paired.isAvailable === false && <Badge variant='outline'>{t('unavailable')}</Badge>}
                   </div>
                   <span className='text-muted-foreground text-xs tabular-nums'>
                     {formatEgp(paired.effectivePrice ?? paired.price)}
                   </span>
-                  {reasons.has(id) && (
-                    <p className='text-primary text-xs'>
-                      {localized(reasons.get(id))}
-                    </p>
-                  )}
+                  {reasons.has(id) && <p className='text-primary text-xs'>{localized(reasons.get(id))}</p>}
                 </div>
                 <div className='flex shrink-0 items-center'>
                   <Button
@@ -192,9 +152,7 @@ function PairingsForm({
                     size='icon'
                     className='text-muted-foreground h-8 w-8'
                     aria-label={t('remove')}
-                    onClick={() =>
-                      setIds((current) => current.filter((c) => c !== id))
-                    }
+                    onClick={() => setIds((current) => current.filter((c) => c !== id))}
                   >
                     <X className='h-4 w-4' />
                   </Button>
@@ -222,11 +180,7 @@ function PairingsForm({
               />
             </div>
             {assist.available && (
-              <AiButton
-                className='h-9'
-                pending={assist.isPending}
-                onClick={askAssistant}
-              >
+              <AiButton className='h-9' pending={assist.isPending} onClick={askAssistant}>
                 {t('assistSuggest')}
               </AiButton>
             )}

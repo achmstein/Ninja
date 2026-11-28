@@ -22,4 +22,5 @@ export function useLang() {
 export const contentFor = (lang: Lang) => CONTENT[lang]
 
 /** A page's title and line for a search engine: a kind's own, or the home page's */
-export const metaFor = (lang: Lang, page: Page) => (page === 'home' ? CONTENT[lang].meta : CONTENT[lang].kinds[page].meta)
+export const metaFor = (lang: Lang, page: Page) =>
+  page === 'home' ? CONTENT[lang].meta : CONTENT[lang].kinds[page].meta

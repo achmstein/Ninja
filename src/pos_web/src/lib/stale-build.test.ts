@@ -3,7 +3,9 @@ import { isStaleBuildError, mayReload } from './stale-build'
 
 describe('isStaleBuildError', () => {
   it('knows each browser’s wording of a screen that could not be fetched', () => {
-    expect(isStaleBuildError(new TypeError('Failed to fetch dynamically imported module: https://x/assets/sale-abc.js'))).toBe(true)
+    expect(
+      isStaleBuildError(new TypeError('Failed to fetch dynamically imported module: https://x/assets/sale-abc.js'))
+    ).toBe(true)
     expect(isStaleBuildError(new TypeError('error loading dynamically imported module'))).toBe(true)
     expect(isStaleBuildError(new TypeError('Importing a module script failed.'))).toBe(true)
     expect(isStaleBuildError(new Error('Unable to preload CSS for /assets/sale-abc.css'))).toBe(true)

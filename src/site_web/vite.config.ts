@@ -1,8 +1,8 @@
-import fs from 'fs'
 import path from 'path'
 import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react-swc'
 import tailwindcss from '@tailwindcss/vite'
+import fs from 'fs'
 
 /**
  * The real apps under /demo/<app>/ are single-page apps of their own: any
@@ -13,7 +13,8 @@ function demoApps(): Plugin {
   const serve = (root: string) => (req: { url?: string }, _res: unknown, next: () => void) => {
     const url = (req.url ?? '').split('?')[0]
     const app = url.match(/^\/demo\/([\w-]+)\//)?.[1]
-    if (app && !fs.existsSync(path.join(root, url)) && fs.existsSync(path.join(root, 'demo', app, 'index.html'))) req.url = `/demo/${app}/index.html`
+    if (app && !fs.existsSync(path.join(root, url)) && fs.existsSync(path.join(root, 'demo', app, 'index.html')))
+      req.url = `/demo/${app}/index.html`
     else if (app && url.endsWith('/')) req.url = `/demo/${app}/index.html`
     next()
   }

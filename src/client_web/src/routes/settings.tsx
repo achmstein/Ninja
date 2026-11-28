@@ -1,25 +1,18 @@
 ﻿import { useState } from 'react'
-import { NameFields } from '@/components/auth/name-fields'
-import { usePhoneRule } from '@/lib/brand'
-import { formatPhone, isValidPhone, normalizePhone } from '@/lib/phone'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
-import { useAuth } from 'react-oidc-context'
 import { BellRing, Download, KeyRound, Loader2, Megaphone, Pencil, Trash2 } from 'lucide-react'
-import { toast } from '@/lib/toast'
+import { useAuth } from 'react-oidc-context'
+import { usePhoneRule } from '@/lib/brand'
+import { useT } from '@/lib/i18n'
+import { formatPhone, isValidPhone, normalizePhone } from '@/lib/phone'
+import { changePassword, deleteAccount, getMyProfile, namePartsOf, updateProfile } from '@/lib/services/identity'
 import {
   getNotificationPreferences,
   updateNotificationPreferences,
   type NotificationPreferences,
 } from '@/lib/services/notifications'
-import {
-  changePassword,
-  deleteAccount,
-  getMyProfile,
-  namePartsOf,
-  updateProfile,
-} from '@/lib/services/identity'
-import { useT } from '@/lib/i18n'
+import { toast } from '@/lib/toast'
 import { useInstallPrompt } from '@/lib/use-install-prompt'
 import {
   AlertDialog,
@@ -32,23 +25,18 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
+import { NameFields } from '@/components/auth/name-fields'
+import { InstallDialog } from '@/components/install/install-dialog'
 import { NinjaPage, Rise, RiseItem } from '@/components/ninja/page/page'
 import { SectionLabel } from '@/components/ninja/page/parts'
-import { InstallDialog } from '@/components/install/install-dialog'
+import { TileButton, TileGroup, TileRow } from '@/components/ninja/page/tile-row'
 import { LanguageSwitch } from '@/components/settings/language-switch'
 import { ThemeSwitch } from '@/components/settings/theme-switch'
-import { TileButton, TileGroup, TileRow } from '@/components/ninja/page/tile-row'
 
 export const Route = createFileRoute('/settings')({
   component: SettingsPage,
@@ -121,7 +109,9 @@ function SettingsPage() {
                 trailing={
                   <Switch
                     checked={preferences.orderStatusUpdates}
-                    onCheckedChange={(checked) => savePreferences.mutate({ ...preferences, orderStatusUpdates: checked })}
+                    onCheckedChange={(checked) =>
+                      savePreferences.mutate({ ...preferences, orderStatusUpdates: checked })
+                    }
                   />
                 }
               />
@@ -131,7 +121,9 @@ function SettingsPage() {
                 trailing={
                   <Switch
                     checked={preferences.promotionsAndOffers}
-                    onCheckedChange={(checked) => savePreferences.mutate({ ...preferences, promotionsAndOffers: checked })}
+                    onCheckedChange={(checked) =>
+                      savePreferences.mutate({ ...preferences, promotionsAndOffers: checked })
+                    }
                   />
                 }
               />
@@ -178,7 +170,10 @@ function SettingsPage() {
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
-                    <AlertDialogAction className='bg-destructive hover:bg-destructive/90 text-white' onClick={() => removeAccount.mutate()}>
+                    <AlertDialogAction
+                      className='bg-destructive hover:bg-destructive/90 text-white'
+                      onClick={() => removeAccount.mutate()}
+                    >
                       {t('delete')}
                     </AlertDialogAction>
                   </AlertDialogFooter>
@@ -198,10 +193,7 @@ function SettingsPage() {
           queryClient.invalidateQueries({ queryKey: ['my-profile'] })
         }}
       />
-      <ChangePasswordDialog
-        open={passwordOpen}
-        onOpenChange={setPasswordOpen}
-      />
+      <ChangePasswordDialog open={passwordOpen} onOpenChange={setPasswordOpen} />
       <InstallDialog open={installOpen} onOpenChange={setInstallOpen} />
     </NinjaPage>
   )
@@ -305,13 +297,7 @@ function UpdateProfileDialog({
   )
 }
 
-function ChangePasswordDialog({
-  open,
-  onOpenChange,
-}: {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-}) {
+function ChangePasswordDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
   const t = useT()
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')

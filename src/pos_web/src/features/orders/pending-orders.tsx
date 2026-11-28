@@ -1,20 +1,12 @@
 import { useState } from 'react'
-import {
-  Armchair,
-  Bike,
-  Check,
-  Clock,
-  DoorOpen,
-  ShieldQuestion,
-  User,
-} from 'lucide-react'
+import { Armchair, Bike, Check, Clock, DoorOpen, ShieldQuestion, User } from 'lucide-react'
 import type { OrderSummary } from '@/api/ordering/types.gen'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
 import { phoneInText } from '@/lib/phone'
 import { cn } from '@/lib/utils'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { OrderDetailDialog } from './order-detail-dialog'
 import { PlatformBadge, PlatformHandover } from './platform-badge'
 import { orderUrgency, relativeTime, urgencyTextClass } from './status'
@@ -49,8 +41,7 @@ function PendingOrderCard({
   const title = place || who
   // A guest: how many orders this device has had confirmed here before —
   // a first-timer at a table is worth a look before the kitchen starts
-  const ordersBefore =
-    order.guestOrdersBefore == null ? null : toNumber(order.guestOrdersBefore)
+  const ordersBefore = order.guestOrdersBefore == null ? null : toNumber(order.guestOrdersBefore)
   const history =
     ordersBefore == null
       ? null
@@ -63,50 +54,36 @@ function PendingOrderCard({
     : place
       ? who
       : order.guestPhone && phoneInText(order.guestPhone)
-  const PlaceIcon = order.delivery
-    ? Bike
-    : !place
-      ? User
-      : order.placeKind === 'Room'
-        ? DoorOpen
-        : Armchair
+  const PlaceIcon = order.delivery ? Bike : !place ? User : order.placeKind === 'Room' ? DoorOpen : Armchair
 
   return (
     <div
       className={cn(
         'bg-card text-card-foreground flex items-center gap-3 rounded-xl border p-3 shadow-xs',
         horizontal && 'w-[320px] shrink-0',
-        urgency === 'delayed'
-          ? 'border-destructive/70'
-          : urgency === 'warning'
-            ? 'border-amber-500/70'
-            : '',
+        urgency === 'delayed' ? 'border-destructive/70' : urgency === 'warning' ? 'border-amber-500/70' : ''
       )}
     >
       {/* The body opens the items; a separate button confirms, so neither
           tap can be mistaken for the other */}
-      <button
-        type='button'
-        onClick={onOpen}
-        className='min-w-0 flex-1 text-start'
-      >
+      <button type='button' onClick={onOpen} className='min-w-0 flex-1 text-start'>
         <div className='flex items-center gap-2'>
           <PlaceIcon className='text-muted-foreground size-4 shrink-0' />
-          <span className='truncate type-heading'>{title}</span>
+          <span className='type-heading truncate'>{title}</span>
         </div>
         {order.platform ? (
           <>
-            <div className='text-muted-foreground mt-0.5 flex items-center gap-2 type-detail'>
-              <span>{'#\u200F'}{toNumber(order.orderNumber)}</span>
+            <div className='text-muted-foreground type-detail mt-0.5 flex items-center gap-2'>
+              <span>
+                {'#\u200F'}
+                {toNumber(order.orderNumber)}
+              </span>
               <PlatformBadge platform={order.platform} />
             </div>
-            <PlatformHandover
-              platform={order.platform}
-              className='text-muted-foreground mt-0.5 type-detail'
-            />
+            <PlatformHandover platform={order.platform} className='text-muted-foreground type-detail mt-0.5' />
           </>
         ) : (
-          <div className='text-muted-foreground mt-0.5 truncate type-detail'>
+          <div className='text-muted-foreground type-detail mt-0.5 truncate'>
             #{toNumber(order.orderNumber)}
             {subtitle && ` · ${subtitle}`}
           </div>
@@ -116,30 +93,19 @@ function PendingOrderCard({
         {history && (
           <div
             className={cn(
-              'mt-0.5 flex items-center gap-1 type-detail',
-              ordersBefore === 0
-                ? 'text-amber-600 dark:text-amber-500'
-                : 'text-muted-foreground',
+              'type-detail mt-0.5 flex items-center gap-1',
+              ordersBefore === 0 ? 'text-amber-600 dark:text-amber-500' : 'text-muted-foreground'
             )}
           >
             <ShieldQuestion className='size-3.5 shrink-0' />
             {history}
           </div>
         )}
-        <div
-          className={cn(
-            'mt-0.5 type-detail tabular-nums',
-            urgencyTextClass(urgency),
-          )}
-        >
+        <div className={cn('type-detail mt-0.5 tabular-nums', urgencyTextClass(urgency))}>
           {relativeTime(order.date, nowMs, t, locale)} · {money(order.total)}
         </div>
       </button>
-      <Button
-        className='h-12 gap-2 px-4'
-        disabled={isActing}
-        onClick={onConfirm}
-      >
+      <Button className='h-12 gap-2 px-4' disabled={isActing} onClick={onConfirm}>
         <Check className='size-5' />
         {t('confirmOrder')}
       </Button>
@@ -153,13 +119,7 @@ function PendingOrderCard({
  * Confirm is right on the card — the usual answer — and the card body opens
  * the items for a look, or a cancel.
  */
-export function PendingOrders({
-  orders,
-  horizontal = false,
-}: {
-  orders: OrderSummary[]
-  horizontal?: boolean
-}) {
+export function PendingOrders({ orders, horizontal = false }: { orders: OrderSummary[]; horizontal?: boolean }) {
   const nowMs = useNowMs()
   const { confirm, cancel, rejectGuest, actingOrderNumber } = useOrderActions()
   const [openOrder, setOpenOrder] = useState<number | null>(null)
@@ -168,13 +128,7 @@ export function PendingOrders({
 
   return (
     <>
-      <div
-        className={cn(
-          horizontal
-            ? 'flex gap-3 overflow-x-auto pb-1'
-            : 'flex flex-col gap-2',
-        )}
-      >
+      <div className={cn(horizontal ? 'flex gap-3 overflow-x-auto pb-1' : 'flex flex-col gap-2')}>
         {orders.map((order) => {
           const id = toNumber(order.orderNumber)
           return (

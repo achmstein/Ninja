@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { useCallCentre } from '@/hooks/use-call-centre'
 import { CallCentre } from '@/features/call-centre'
 import { Floor } from '@/features/floor'
-import { useCallCentre } from '@/hooks/use-call-centre'
 
 export const Route = createFileRoute('/_authenticated/')({
   component: Home,

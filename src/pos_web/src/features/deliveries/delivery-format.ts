@@ -20,7 +20,8 @@ export type AddressWords = { building: string; floor: string; apartment: string 
  */
 export function listSeparator(locale: string): string {
   // Intl.ListFormat is ES2021, newer than this app's TypeScript lib: typed here, and a browser without it gets ", "
-  const ListFormat = (Intl as unknown as { ListFormat?: new (locale: string, options: object) => ListFormatLike }).ListFormat
+  const ListFormat = (Intl as unknown as { ListFormat?: new (locale: string, options: object) => ListFormatLike })
+    .ListFormat
   if (!ListFormat) return ', '
   try {
     const parts = new ListFormat(locale, { type: 'unit', style: 'short' }).formatToParts(['a', 'b', 'c'])
@@ -58,7 +59,11 @@ export function distanceParts(meters: number): { unit: 'm' | 'km'; value: number
  * Google Maps' way to the door, from wherever the rider is: to the pin, or,
  * for an address the till took over the phone without one, to its words.
  */
-export function directionsUrl(target: { latitude?: number | string | null; longitude?: number | string | null; address?: string | null }): string {
+export function directionsUrl(target: {
+  latitude?: number | string | null
+  longitude?: number | string | null
+  address?: string | null
+}): string {
   const lat = target.latitude == null ? null : Number(target.latitude)
   const lng = target.longitude == null ? null : Number(target.longitude)
   const destination =

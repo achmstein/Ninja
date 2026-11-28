@@ -83,17 +83,12 @@ export async function bootBrand(queryClient: QueryClient) {
   // useBrandEffects after the first render: the OIDC config reads the
   // tenant's authority from there before anything mounts, so a first visit
   // must not fall back to the build's realm.
-  const fetching = queryClient
-    .prefetchQuery({ ...brandQueryOptions(), staleTime: 0 })
-    .then(() => {
-      const fresh = queryClient.getQueryData<Brand>(brandQueryKey())
-      if (fresh) writeCachedBrand(fresh)
-    })
+  const fetching = queryClient.prefetchQuery({ ...brandQueryOptions(), staleTime: 0 }).then(() => {
+    const fresh = queryClient.getQueryData<Brand>(brandQueryKey())
+    if (fresh) writeCachedBrand(fresh)
+  })
   if (!cached) {
-    await Promise.race([
-      fetching,
-      new Promise((resolve) => setTimeout(resolve, BOOT_TIMEOUT_MS)),
-    ])
+    await Promise.race([fetching, new Promise((resolve) => setTimeout(resolve, BOOT_TIMEOUT_MS))])
   }
 }
 
@@ -150,17 +145,9 @@ export function useBrandName(): string {
   return brandDisplayName(brand, language)
 }
 
-export function brandDisplayName(
-  brand: Brand | undefined,
-  language: Language
-): string {
+export function brandDisplayName(brand: Brand | undefined, language: Language): string {
   if (!brand) return ''
-  return (
-    (language === 'ar' ? brand.name.ar : brand.name.en) ||
-    brand.name.en ||
-    brand.name.ar ||
-    ''
-  )
+  return (language === 'ar' ? brand.name.ar : brand.name.en) || brand.name.en || brand.name.ar || ''
 }
 
 /**
@@ -216,7 +203,6 @@ export function useApiOrigin(): string {
  */
 export function defaultApiOrigin(): string {
   const { protocol, host } = window.location
-  if (host.startsWith('admin.'))
-    return `${protocol}//${host.replace(/^admin\./, 'api.')}`
+  if (host.startsWith('admin.')) return `${protocol}//${host.replace(/^admin\./, 'api.')}`
   return 'http://localhost:5000'
 }

@@ -1,7 +1,6 @@
 import { Link } from '@tanstack/react-router'
 import { useAuth } from 'react-oidc-context'
 import { useT } from '@/lib/i18n'
-import { usePush } from '@/features/push/use-push'
 import useDialogState from '@/hooks/use-dialog-state'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
@@ -16,6 +15,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { SignOutDialog } from '@/components/sign-out-dialog'
+import { usePush } from '@/features/push/use-push'
 
 export function ProfileDropdown() {
   const t = useT()
@@ -48,11 +48,7 @@ export function ProfileDropdown() {
           <DropdownMenuLabel className='font-normal'>
             <div className='flex flex-col gap-1.5'>
               <p className='text-sm leading-none font-medium'>{name}</p>
-              {email && (
-                <p className='text-muted-foreground text-xs leading-none'>
-                  {email}
-                </p>
-              )}
+              {email && <p className='text-muted-foreground text-xs leading-none'>{email}</p>}
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />

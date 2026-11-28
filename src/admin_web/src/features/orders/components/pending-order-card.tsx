@@ -1,13 +1,4 @@
-import {
-  Check,
-  MessageSquare,
-  MoreHorizontal,
-  Phone,
-  ShieldQuestion,
-  User,
-  UserX,
-  X,
-} from 'lucide-react'
+import { Check, MessageSquare, MoreHorizontal, Phone, ShieldQuestion, User, UserX, X } from 'lucide-react'
 import { type OrderSummary } from '@/api/ordering'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { showPhone } from '@/lib/phone'
@@ -24,13 +15,7 @@ import {
 import { Separator } from '@/components/ui/separator'
 import { QueueCard } from '@/components/queue-card'
 import { PlaceKindIcon } from '@/features/places/components/place-kind-icon'
-import {
-  formatEgp,
-  orderSourceKey,
-  orderUrgency,
-  relativeTime,
-  urgencyTextClass,
-} from '../status'
+import { formatEgp, orderSourceKey, orderUrgency, relativeTime, urgencyTextClass } from '../status'
 import { PlatformBadge, PlatformHandover } from './platform-badge'
 
 type PendingOrderCardProps = {
@@ -74,8 +59,7 @@ export function PendingOrderCard({
   const sourceKey = orderSourceKey(summary)
   // A guest at a table: how many orders this device has had confirmed here
   // before. A first-timer is worth a look before the kitchen starts.
-  const ordersBefore =
-    summary.guestOrdersBefore == null ? null : Number(summary.guestOrdersBefore)
+  const ordersBefore = summary.guestOrdersBefore == null ? null : Number(summary.guestOrdersBefore)
   const isGuestAtPlace = ordersBefore != null && summary.placeId != null
 
   return (
@@ -94,9 +78,7 @@ export function PendingOrderCard({
             )
           )}
         </div>
-        <span className={`text-xs ${urgencyTextClass(urgency)}`}>
-          {relativeTime(summary.date, nowMs, t, locale)}
-        </span>
+        <span className={`text-xs ${urgencyTextClass(urgency)}`}>{relativeTime(summary.date, nowMs, t, locale)}</span>
       </div>
       <div className='text-muted-foreground mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm'>
         {summary.userName &&
@@ -135,16 +117,9 @@ export function PendingOrderCard({
           </span>
         )}
         {ordersBefore != null && (
-          <span
-            className={cn(
-              'flex items-center gap-1',
-              ordersBefore === 0 && 'text-amber-600 dark:text-amber-500'
-            )}
-          >
+          <span className={cn('flex items-center gap-1', ordersBefore === 0 && 'text-amber-600 dark:text-amber-500')}>
             <ShieldQuestion className='h-3 w-3' />
-            {ordersBefore === 0
-              ? t('guestFirstOrderHere')
-              : t('guestOrdersBefore', { count: ordersBefore })}
+            {ordersBefore === 0 ? t('guestFirstOrderHere') : t('guestOrdersBefore', { count: ordersBefore })}
           </span>
         )}
       </div>
@@ -159,20 +134,14 @@ export function PendingOrderCard({
                 {Number(item.units ?? 0)}× {localized(item.productName)}
               </span>
               <span className='text-muted-foreground shrink-0 tabular-nums'>
-                {formatEgp(
-                  Number(item.unitPrice ?? 0) * Number(item.units ?? 0)
-                )}
+                {formatEgp(Number(item.unitPrice ?? 0) * Number(item.units ?? 0))}
               </span>
             </div>
             {localized(item.customizationsDescription) && (
-              <div className='text-muted-foreground text-xs'>
-                {localized(item.customizationsDescription)}
-              </div>
+              <div className='text-muted-foreground text-xs'>{localized(item.customizationsDescription)}</div>
             )}
             {item.specialInstructions && (
-              <div className='text-muted-foreground text-xs italic'>
-                "{item.specialInstructions}"
-              </div>
+              <div className='text-muted-foreground text-xs italic'>"{item.specialInstructions}"</div>
             )}
           </div>
         ))}
@@ -215,12 +184,7 @@ export function PendingOrderCard({
         </Button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button
-              variant='outline'
-              size='icon'
-              disabled={isActing}
-              aria-label={t('actions')}
-            >
+            <Button variant='outline' size='icon' disabled={isActing} aria-label={t('actions')}>
               <MoreHorizontal className='h-4 w-4' />
             </Button>
           </DropdownMenuTrigger>

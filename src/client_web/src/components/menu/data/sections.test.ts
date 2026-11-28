@@ -31,7 +31,14 @@ describe('buildSections', () => {
   ]
 
   it('orders your usuals, favourites, most popular, then each category with items', () => {
-    const sections = buildSections({ items, categories, favoriteIds: new Set([2]), topItemIds: [3, 99], labels, localized })
+    const sections = buildSections({
+      items,
+      categories,
+      favoriteIds: new Set([2]),
+      topItemIds: [3, 99],
+      labels,
+      localized,
+    })
     expect(sections.map((s) => [s.kind, s.label])).toEqual([
       ['usuals', 'Your usual'],
       ['favorites', 'Favorites'],
@@ -60,13 +67,19 @@ describe('pickHero', () => {
   })
 
   it('opens with the offer that saves the most, when it has a photo', () => {
-    const offers = [item(5, { price: 50, offerPrice: 45 }), item(6, { price: 80, offerPrice: 60 }), item(7, { price: 90, offerPrice: 10, pictureUri: null })]
+    const offers = [
+      item(5, { price: 50, offerPrice: 45 }),
+      item(6, { price: 80, offerPrice: 60 }),
+      item(7, { price: 90, offerPrice: 10, pictureUri: null }),
+    ]
     expect(pickHero(offers, sections)?.id).toBe(6)
   })
 
   it('falls back to the first popular item with a photo, then any item with one, then none', () => {
     expect(pickHero([], sections)?.id).toBe(2)
-    expect(pickHero([], [{ id: 's', label: '', kind: 'category', items: [item(8, { pictureUri: null }), item(9)] }])?.id).toBe(9)
+    expect(
+      pickHero([], [{ id: 's', label: '', kind: 'category', items: [item(8, { pictureUri: null }), item(9)] }])?.id
+    ).toBe(9)
     expect(pickHero([], [{ id: 's', label: '', kind: 'category', items: [item(8, { pictureUri: null })] }])).toBeNull()
   })
 })
@@ -90,7 +103,9 @@ describe('tileSections', () => {
   })
 
   it('covers a tile with its first photographed item, or nothing', () => {
-    expect(coverItem({ id: 'a', label: '', kind: 'category', items: [item(1, { pictureUri: null }), item(2)] })?.id).toBe(2)
+    expect(
+      coverItem({ id: 'a', label: '', kind: 'category', items: [item(1, { pictureUri: null }), item(2)] })?.id
+    ).toBe(2)
     expect(coverItem({ id: 'a', label: '', kind: 'category', items: [item(1, { pictureUri: null })] })).toBeNull()
   })
 })

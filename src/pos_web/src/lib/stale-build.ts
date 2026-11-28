@@ -9,10 +9,9 @@ const RELOAD_GAP_MS = 30_000
 
 /** Whether the error is a screen's code that could not be fetched (each browser words it its own way). */
 export function isStaleBuildError(error: unknown): boolean {
-  const message =
-    error instanceof Error ? error.message : typeof error === 'string' ? error : ''
+  const message = error instanceof Error ? error.message : typeof error === 'string' ? error : ''
   return /dynamically imported module|Importing a module script failed|module script|Unable to preload CSS|ChunkLoadError/i.test(
-    message,
+    message
   )
 }
 

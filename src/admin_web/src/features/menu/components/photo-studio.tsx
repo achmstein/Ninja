@@ -7,13 +7,7 @@ import { API_VERSION } from '@/lib/api-client'
 import { useT, type TranslationKey } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Textarea } from '@/components/ui/textarea'
 import { NinjaMark } from '@/components/ninja-mark'
 import { assistErrorMessage } from '@/features/assist/errors'
@@ -50,8 +44,7 @@ const LOOKS: {
     value: 'overhead',
     key: 'lookOverhead',
     hint: 'lookOverheadHint',
-    swatch:
-      'bg-[radial-gradient(circle_at_center,white_0_32%,#e7e0d6_33%_100%)]',
+    swatch: 'bg-[radial-gradient(circle_at_center,white_0_32%,#e7e0d6_33%_100%)]',
   },
   {
     value: 'moody',
@@ -68,12 +61,7 @@ const LOOKS: {
 ]
 
 /** What the studio says while the model works, a step every few seconds */
-const STEPS: TranslationKey[] = [
-  'studioStepPlating',
-  'studioStepLight',
-  'studioStepShot',
-  'studioStepDeveloping',
-]
+const STEPS: TranslationKey[] = ['studioStepPlating', 'studioStepLight', 'studioStepShot', 'studioStepDeveloping']
 
 type Draft = { id: number; url: string; file: File; look: Look }
 
@@ -89,8 +77,7 @@ async function readableError(error: unknown, t: ReturnType<typeof useT>) {
   if (
     isAxiosError(error) &&
     error.response?.status === 503 &&
-    (error.response.data as { title?: string } | undefined)?.title ===
-      'No image model'
+    (error.response.data as { title?: string } | undefined)?.title === 'No image model'
   )
     return t('studioNoImageModel')
   return assistErrorMessage(error)
@@ -133,18 +120,14 @@ export function PhotoStudio({
   // The steps turn while drawing
   useEffect(() => {
     if (!drawing) return
-    const timer = setInterval(
-      () => setStep((s) => (s + 1) % STEPS.length),
-      2600
-    )
+    const timer = setInterval(() => setStep((s) => (s + 1) % STEPS.length), 2600)
     return () => clearInterval(timer)
   }, [drawing])
 
   // Drafts not kept are let go with the studio
   useEffect(
     () => () => {
-      for (const d of drafts)
-        if (!kept.current.has(d.url)) URL.revokeObjectURL(d.url)
+      for (const d of drafts) if (!kept.current.has(d.url)) URL.revokeObjectURL(d.url)
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     []
@@ -236,20 +219,13 @@ export function PhotoStudio({
             <NinjaMark className='text-primary size-4' />
             {t('photoStudio')}
           </DialogTitle>
-          <DialogDescription className='truncate'>
-            {name || t('photoStudioHint')}
-          </DialogDescription>
+          <DialogDescription className='truncate'>{name || t('photoStudioHint')}</DialogDescription>
         </DialogHeader>
 
         <div className='grid gap-5 md:grid-cols-[minmax(0,1fr)_22rem]'>
           <div className='min-w-0 space-y-3'>
             {/* The stage: the look's surface while idle, a breathing frame while drawing, the photo developing */}
-            <div
-              className={cn(
-                'relative aspect-square w-full overflow-hidden rounded-xl border',
-                !current && swatch
-              )}
-            >
+            <div className={cn('relative aspect-square w-full overflow-hidden rounded-xl border', !current && swatch)}>
               <AnimatePresence mode='popLayout'>
                 {current && !drawing && (
                   <motion.img
@@ -257,11 +233,7 @@ export function PhotoStudio({
                     src={current.url}
                     alt=''
                     className='absolute inset-0 size-full object-cover'
-                    initial={
-                      reduce
-                        ? { opacity: 0 }
-                        : { opacity: 0, scale: 1.08, filter: 'blur(24px)' }
-                    }
+                    initial={reduce ? { opacity: 0 } : { opacity: 0, scale: 1.08, filter: 'blur(24px)' }}
                     animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
                     exit={{ opacity: 0 }}
                     transition={{
@@ -339,11 +311,7 @@ export function PhotoStudio({
                 !drawing &&
                 (photo ? (
                   <>
-                    <img
-                      src={photo.url}
-                      alt=''
-                      className='absolute inset-0 size-full object-cover'
-                    />
+                    <img src={photo.url} alt='' className='absolute inset-0 size-full object-cover' />
                     <div className='absolute inset-x-0 bottom-0 flex justify-center p-4'>
                       <span className='bg-background/85 rounded-full px-3 py-1 text-xs font-medium shadow-sm backdrop-blur'>
                         {t('studioPhotoReady')}
@@ -360,9 +328,7 @@ export function PhotoStudio({
                     />
                     <span className='bg-background/85 flex flex-col items-center gap-2 rounded-xl border border-dashed px-4 py-3 shadow-sm backdrop-blur'>
                       <Camera className='text-primary size-5' />
-                      <span className='text-sm font-medium'>
-                        {t('studioPickPhoto')}
-                      </span>
+                      <span className='text-sm font-medium'>{t('studioPickPhoto')}</span>
                     </span>
                   </label>
                 ))}
@@ -371,9 +337,7 @@ export function PhotoStudio({
                 <div className='absolute inset-0 grid place-items-center p-6 text-center'>
                   <div className='bg-background/85 flex flex-col items-center gap-2 rounded-xl px-4 py-3 shadow-sm backdrop-blur'>
                     <Wand2 className='text-primary size-5' />
-                    <span className='text-sm font-medium'>
-                      {t('studioIdle')}
-                    </span>
+                    <span className='text-sm font-medium'>{t('studioIdle')}</span>
                   </div>
                 </div>
               )}
@@ -391,16 +355,10 @@ export function PhotoStudio({
                     aria-label={t(LOOKS.find((l) => l.value === d.look)!.key)}
                     className={cn(
                       'size-14 shrink-0 overflow-hidden rounded-lg border-2 transition-all',
-                      d.id === shown
-                        ? 'border-primary scale-105'
-                        : 'border-transparent opacity-70 hover:opacity-100'
+                      d.id === shown ? 'border-primary scale-105' : 'border-transparent opacity-70 hover:opacity-100'
                     )}
                   >
-                    <img
-                      src={d.url}
-                      alt=''
-                      className='size-full object-cover'
-                    />
+                    <img src={d.url} alt='' className='size-full object-cover' />
                   </button>
                 ))}
               </div>
@@ -423,10 +381,7 @@ export function PhotoStudio({
 
           <div className='flex min-w-0 flex-col gap-4'>
             {/* From its name, or from the owner's own photo (a branded can keeps its label) */}
-            <div
-              role='radiogroup'
-              className='bg-muted grid grid-cols-2 rounded-full p-1'
-            >
+            <div role='radiogroup' className='bg-muted grid grid-cols-2 rounded-full p-1'>
               {(['name', 'photo'] as const).map((s) => (
                 <button
                   key={s}
@@ -445,27 +400,17 @@ export function PhotoStudio({
                       : 'text-muted-foreground hover:text-foreground'
                   )}
                 >
-                  {s === 'photo' ? (
-                    <Camera className='size-4' />
-                  ) : (
-                    <Wand2 className='size-4' />
-                  )}
+                  {s === 'photo' ? <Camera className='size-4' /> : <Wand2 className='size-4' />}
                   {t(s === 'photo' ? 'studioFromPhoto' : 'studioFromName')}
                 </button>
               ))}
             </div>
-            {source === 'photo' && (
-              <p className='text-muted-foreground -mt-2 text-xs'>
-                {t('studioFromPhotoHint')}
-              </p>
-            )}
+            {source === 'photo' && <p className='text-muted-foreground -mt-2 text-xs'>{t('studioFromPhotoHint')}</p>}
 
             <div className='space-y-2'>
               <div>
                 <span className='text-sm font-medium'>{t('studioLook')}</span>
-                <p className='text-muted-foreground text-xs'>
-                  {t('studioLookHint')}
-                </p>
+                <p className='text-muted-foreground text-xs'>{t('studioLookHint')}</p>
               </div>
               {/* Two to a row, so the column is no taller than the photo beside it; what the chosen
                   look is reads under them */}
@@ -484,12 +429,7 @@ export function PhotoStudio({
                         : 'hover:bg-muted/60 border-transparent'
                     )}
                   >
-                    <span
-                      className={cn(
-                        'relative size-9 shrink-0 rounded-full border shadow-xs',
-                        l.swatch
-                      )}
-                    >
+                    <span className={cn('relative size-9 shrink-0 rounded-full border shadow-xs', l.swatch)}>
                       {look === l.value && (
                         <Check className='bg-primary text-primary-foreground absolute -end-1 -top-1 size-4 rounded-full p-0.5' />
                       )}
@@ -517,12 +457,7 @@ export function PhotoStudio({
                 disabled={drawing}
                 className='min-h-20 resize-none'
                 onKeyDown={(e) => {
-                  if (
-                    e.key === 'Enter' &&
-                    (e.ctrlKey || e.metaKey) &&
-                    !drawing &&
-                    canDraw
-                  ) {
+                  if (e.key === 'Enter' && (e.ctrlKey || e.metaKey) && !drawing && canDraw) {
                     e.preventDefault()
                     void draw()
                   }

@@ -50,11 +50,7 @@ export async function getMyProfile(): Promise<MyProfile> {
   return response.data
 }
 
-export async function updateProfile(
-  firstName: string,
-  lastName: string,
-  phoneNumber: string
-): Promise<void> {
+export async function updateProfile(firstName: string, lastName: string, phoneNumber: string): Promise<void> {
   await apiClient.post(`${BASE}/update-profile`, { firstName, lastName, phoneNumber })
   // The token carries the name every order and bill is made under: renewed
   // now, the next one says the new name rather than the old one until it
@@ -85,11 +81,7 @@ export async function previewClaim(token: string): Promise<ClaimPreview> {
   return response.data
 }
 
-export async function claimAccount(
-  token: string,
-  email: string,
-  password: string
-): Promise<{ email: string }> {
+export async function claimAccount(token: string, email: string, password: string): Promise<{ email: string }> {
   const response = await apiClient.post<{ email: string }>(`${BASE}/claim`, {
     token,
     email,

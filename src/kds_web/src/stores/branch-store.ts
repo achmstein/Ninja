@@ -19,10 +19,7 @@ export const useBranchStore = create<BranchState>()(
       setBranchId: (branchId) => set({ branchId }),
       reconcile: (allowedIds) => {
         const current = get().branchId
-        const next =
-          current !== null && allowedIds.includes(current)
-            ? current
-            : (allowedIds[0] ?? null)
+        const next = current !== null && allowedIds.includes(current) ? current : (allowedIds[0] ?? null)
         if (next !== current) set({ branchId: next })
       },
     }),

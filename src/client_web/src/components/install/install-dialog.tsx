@@ -1,25 +1,14 @@
 import type { ReactNode } from 'react'
 import { ChevronLeft, ChevronRight, Copy, Ellipsis, Share, SquarePlus, Star } from 'lucide-react'
-import { useT } from '@/lib/i18n'
-import { cn } from '@/lib/utils'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
 import { useBrand, useBrandName } from '@/lib/brand'
+import { useT } from '@/lib/i18n'
 import { isIPad } from '@/lib/use-install-prompt'
+import { cn } from '@/lib/utils'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 
 /** iOS has no install prompt: this walks the customer through Safari's share
  *  sheet instead. Shared by the home banner and the Settings tile. */
-export function InstallDialog({
-  open,
-  onOpenChange,
-}: {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-}) {
+export function InstallDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
   const t = useT()
   const brandName = useBrandName()
 
@@ -119,7 +108,9 @@ function SafariBar() {
         <ChevronRight className='size-4' />
         {share}
         <span className='size-4 rounded-[4px] border-[1.5px] border-current' />
-        <span className='grid size-4 place-items-center rounded-[4px] border-[1.5px] border-current text-[8px] font-bold'>2</span>
+        <span className='grid size-4 place-items-center rounded-[4px] border-[1.5px] border-current text-[8px] font-bold'>
+          2
+        </span>
       </div>
       <span className='bg-foreground/30 h-1 w-16 rounded-full' />
     </div>

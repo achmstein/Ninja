@@ -3,38 +3,19 @@ import { useQuery } from '@tanstack/react-query'
 import { getRouteApi } from '@tanstack/react-router'
 import { Bar, BarChart, Cell, XAxis } from 'recharts'
 import { listItemsOptions } from '@/api/catalog/@tanstack/react-query.gen'
-import {
-  getBreakdownReportOptions,
-  getRangeReportOptions,
-} from '@/api/sales/@tanstack/react-query.gen'
+import { getBreakdownReportOptions, getRangeReportOptions } from '@/api/sales/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { formatEgp, toNumber } from '@/lib/money'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-  type ChartConfig,
-} from '@/components/ui/chart'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from '@/components/ui/chart'
 import { Skeleton } from '@/components/ui/skeleton'
 import { EntityAvatar } from '@/components/entity-avatar'
 import { ErrorState } from '@/components/error-state'
 import { Dot, ListRow } from '@/components/list-row'
 import { Money } from '@/components/money'
 import { RankedList } from '@/components/ranked-list'
-import {
-  cashierKindKey,
-  cashierNetSales,
-  categoryRows,
-  itemRows,
-} from './breakdown-rows'
+import { cashierKindKey, cashierNetSales, categoryRows, itemRows } from './breakdown-rows'
 import { TillPage } from './till-page'
 import { useTillWindow } from './use-till-window'
 
@@ -84,14 +65,9 @@ export function TillBreakdown() {
   // The category is Catalog's, joined here: Sales names the item on each
   // line, the menu says which category it is in. A line from before the
   // stamp, or an item no longer on the menu, counts as uncategorised.
-  const items = useQuery(
-    listItemsOptions({ query: { 'api-version': API_VERSION } })
-  )
+  const items = useQuery(listItemsOptions({ query: { 'api-version': API_VERSION } }))
   const soldItems = useMemo(() => itemRows(report.data?.byItem), [report.data])
-  const byCategory = useMemo(
-    () => categoryRows(soldItems, items.data),
-    [soldItems, items.data]
-  )
+  const byCategory = useMemo(() => categoryRows(soldItems, items.data), [soldItems, items.data])
 
   const data = report.data
   const loading = !dayWindow || report.isPending
@@ -105,9 +81,7 @@ export function TillBreakdown() {
       tab='breakdown'
       search={search}
       dayWindow={dayWindow}
-      onRangeChange={(next) =>
-        navigate({ search: (prev) => ({ ...prev, ...next }) })
-      }
+      onRangeChange={(next) => navigate({ search: (prev) => ({ ...prev, ...next }) })}
     >
       {report.isError ? (
         <ErrorState error={report.error} onRetry={() => report.refetch()} />
@@ -131,9 +105,7 @@ export function TillBreakdown() {
             <Bars
               title={t('byWeekday')}
               rows={(data.byWeekday ?? []).map((d) => ({
-                label: weekday.format(
-                  new Date(SUNDAY + toNumber(d.weekday) * 86_400_000)
-                ),
+                label: weekday.format(new Date(SUNDAY + toNumber(d.weekday) * 86_400_000)),
                 count: toNumber(d.count),
                 net: toNumber(d.net),
               }))}
@@ -248,10 +220,7 @@ export function TillBreakdown() {
                     label: c.name ? localized(c.name) : t('uncategorised'),
                     value: c.amount,
                     display: formatEgp(c.amount),
-                    hint:
-                      c.refundedQty > 0
-                        ? `${c.qty}× · ${t('refundedQty', { count: c.refundedQty })}`
-                        : `${c.qty}×`,
+                    hint: c.refundedQty > 0 ? `${c.qty}× · ${t('refundedQty', { count: c.refundedQty })}` : `${c.qty}×`,
                   }))}
                 />
               </CardContent>
@@ -268,18 +237,13 @@ export function TillBreakdown() {
                     label: localized(i.description),
                     value: i.amount,
                     display: formatEgp(i.amount),
-                    hint:
-                      i.refundedQty > 0
-                        ? `${i.qty}× · ${t('refundedQty', { count: i.refundedQty })}`
-                        : `${i.qty}×`,
+                    hint: i.refundedQty > 0 ? `${i.qty}× · ${t('refundedQty', { count: i.refundedQty })}` : `${i.qty}×`,
                   }))}
                 />
                 {deliveryFees > 0 && (
                   <div className='text-muted-foreground mt-3 flex justify-between gap-3 border-t pt-2 text-sm'>
                     <span>{t('deliveryFeesNotItems')}</span>
-                    <span className='tabular-nums'>
-                      {formatEgp(deliveryFees)}
-                    </span>
+                    <span className='tabular-nums'>{formatEgp(deliveryFees)}</span>
                   </div>
                 )}
               </CardContent>
@@ -300,10 +264,7 @@ type Bar = { label: string; count: number; net: number }
  */
 function Bars({ title, rows }: { title: string; rows: Bar[] }) {
   const t = useT()
-  const peak = rows.reduce<Bar | null>(
-    (best, r) => (r.net > (best?.net ?? 0) ? r : best),
-    null
-  )
+  const peak = rows.reduce<Bar | null>((best, r) => (r.net > (best?.net ?? 0) ? r : best), null)
   const config = {
     // What customers paid in the bucket, before refunds
     net: { label: t('grossSales'), color: 'var(--chart-1)' },
@@ -312,26 +273,12 @@ function Bars({ title, rows }: { title: string; rows: Bar[] }) {
     <Card className='gap-2'>
       <CardHeader>
         <CardTitle>{title}</CardTitle>
-        {peak && (
-          <CardDescription>
-            {t('busiestAt', { when: peak.label })}
-          </CardDescription>
-        )}
+        {peak && <CardDescription>{t('busiestAt', { when: peak.label })}</CardDescription>}
       </CardHeader>
       <CardContent className='px-2 sm:px-6'>
         <ChartContainer config={config} className='aspect-auto h-36 w-full'>
-          <BarChart
-            data={rows}
-            margin={{ top: 4, left: 0, right: 0, bottom: 0 }}
-          >
-            <XAxis
-              dataKey='label'
-              tickLine={false}
-              axisLine={false}
-              tickMargin={6}
-              minTickGap={4}
-              fontSize={10}
-            />
+          <BarChart data={rows} margin={{ top: 4, left: 0, right: 0, bottom: 0 }}>
+            <XAxis dataKey='label' tickLine={false} axisLine={false} tickMargin={6} minTickGap={4} fontSize={10} />
             <ChartTooltip
               cursor={{ fill: 'var(--muted)', opacity: 0.5 }}
               content={
@@ -339,9 +286,7 @@ function Bars({ title, rows }: { title: string; rows: Bar[] }) {
                   hideIndicator
                   formatter={(value, _name, item) => (
                     <div className='flex w-full justify-between gap-4'>
-                      <span className='font-medium tabular-nums'>
-                        {formatEgp(Number(value))}
-                      </span>
+                      <span className='font-medium tabular-nums'>{formatEgp(Number(value))}</span>
                       <span className='text-muted-foreground tabular-nums'>
                         {t('posTicketsCount', {
                           count: Number(item.payload?.count ?? 0),
@@ -354,11 +299,7 @@ function Bars({ title, rows }: { title: string; rows: Bar[] }) {
             />
             <Bar dataKey='net' radius={[3, 3, 0, 0]}>
               {rows.map((r) => (
-                <Cell
-                  key={r.label}
-                  fill='var(--color-net)'
-                  fillOpacity={r === peak ? 1 : 0.45}
-                />
+                <Cell key={r.label} fill='var(--color-net)' fillOpacity={r === peak ? 1 : 0.45} />
               ))}
             </Bar>
           </BarChart>

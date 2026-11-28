@@ -1,24 +1,19 @@
 import { useEffect, useRef, useState } from 'react'
-import {
-  createFileRoute,
-  Outlet,
-  useNavigate,
-  useRouter,
-} from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
+import { createFileRoute, Outlet, useNavigate, useRouter } from '@tanstack/react-router'
+import { getRealmRoles } from '@/config/oidc-config'
 import { ErrorResponse } from 'oidc-client-ts'
 import { useAuth } from 'react-oidc-context'
-import { BootSplash } from '@/components/boot-splash'
+import { useT } from '@/lib/i18n'
+import { networkStatus, useNetworkStatus } from '@/lib/network-status'
+import { renewSession } from '@/context/session'
+import { usePosNotifications } from '@/hooks/use-pos-notifications'
 import { Button } from '@/components/ui/button'
+import { BootSplash } from '@/components/boot-splash'
 import { BranchGate } from '@/components/branch-gate'
-import { getRealmRoles } from '@/config/oidc-config'
 import { KitchenPrinterBanner } from '@/components/layout/kitchen-printer-banner'
 import { PosHeader } from '@/components/layout/pos-header'
 import { useOfflineSync } from '@/features/offline/use-offline-sync'
-import { usePosNotifications } from '@/hooks/use-pos-notifications'
-import { renewSession } from '@/context/session'
-import { useT } from '@/lib/i18n'
-import { networkStatus, useNetworkStatus } from '@/lib/network-status'
 
 // Everything the till calls is covered by the backend's "Pos" policy
 // (Admin | Owner | Cashier); this gate mirrors it. Owner-only actions
@@ -65,8 +60,7 @@ function AuthenticatedRoute() {
   const user = auth.user
   const [refusedFor, setRefusedFor] = useState<string | null>(null)
   const renewing = useRef(false)
-  const renewalPending =
-    !!user && user.expired === true && refusedFor !== user.access_token
+  const renewalPending = !!user && user.expired === true && refusedFor !== user.access_token
   useEffect(() => {
     if (!online || !renewalPending || renewing.current || !user) return
     renewing.current = true
@@ -91,8 +85,7 @@ function AuthenticatedRoute() {
   }, [online, renewalPending, user, queryClient])
   const keepsOfflineSession = !!user && (!online || renewalPending)
 
-  const needsSignIn =
-    !auth.isLoading && !auth.isAuthenticated && !keepsOfflineSession
+  const needsSignIn = !auth.isLoading && !auth.isAuthenticated && !keepsOfflineSession
 
   // Hand off to Keycloak exactly once. Rendering <Navigate> here instead
   // re-fires on every render (it compares its props by identity, and JSX
@@ -121,11 +114,7 @@ function AuthenticatedRoute() {
       <div className='flex h-svh flex-col items-center justify-center gap-4'>
         <h1 className='type-title'>{t('accessDeniedTitle')}</h1>
         <p className='text-muted-foreground'>{t('accessDeniedDescription')}</p>
-        <Button
-          variant='outline'
-          size='lg'
-          onClick={() => auth.signoutRedirect()}
-        >
+        <Button variant='outline' size='lg' onClick={() => auth.signoutRedirect()}>
           {t('signOut')}
         </Button>
       </div>

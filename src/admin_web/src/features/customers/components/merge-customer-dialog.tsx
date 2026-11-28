@@ -5,13 +5,7 @@ import { useT } from '@/lib/i18n'
 import { showPhone } from '@/lib/phone'
 import { toast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Spinner } from '@/components/ui/spinner'
 import { loyaltyKeys } from '@/features/loyalty/hooks/use-loyalty'
@@ -31,8 +25,7 @@ function useDebounced<T>(value: T, delayMs: number): T {
   return debounced
 }
 
-const reach = (customer: Customer) =>
-  showPhone(customer.phoneNumber) || customer.email || customer.username || ''
+const reach = (customer: Customer) => showPhone(customer.phoneNumber) || customer.email || customer.username || ''
 
 /**
  * One person with two accounts (two emails, or once at the counter and once
@@ -78,9 +71,7 @@ export function MergeCustomerDialog({
       }),
     enabled: open && !into && search.length >= 2,
   })
-  const results = (matches.data ?? []).filter(
-    (c) => c.id !== customer.id && c.enabled
-  )
+  const results = (matches.data ?? []).filter((c) => c.id !== customer.id && c.enabled)
 
   const merge = useMutation({
     mutationFn: () => customersService.mergeInto(customer.id, into!.id),
@@ -89,9 +80,7 @@ export function MergeCustomerDialog({
       queryClient.invalidateQueries({ queryKey: customersKeys.all })
       queryClient.invalidateQueries({ queryKey: ['accounts'] })
       queryClient.invalidateQueries({ queryKey: loyaltyKeys.all })
-      toast.success(
-        t('mergeDone', { name: into ? getCustomerDisplayName(into) : '' })
-      )
+      toast.success(t('mergeDone', { name: into ? getCustomerDisplayName(into) : '' }))
       const keptId = into!.id
       close()
       onMerged(keptId)
@@ -113,9 +102,7 @@ export function MergeCustomerDialog({
       <DialogContent className='sm:max-w-md'>
         <DialogHeader>
           <DialogTitle>{t('mergeCustomerTitle')}</DialogTitle>
-          <p className='text-muted-foreground text-sm'>
-            {t('mergeCustomerHint')}
-          </p>
+          <p className='text-muted-foreground text-sm'>{t('mergeCustomerHint')}</p>
         </DialogHeader>
 
         {!into ? (
@@ -131,9 +118,7 @@ export function MergeCustomerDialog({
               {search.length < 2 ? null : matches.isLoading ? (
                 <p className='text-muted-foreground p-3 text-sm'>…</p>
               ) : results.length === 0 ? (
-                <p className='text-muted-foreground p-3 text-sm'>
-                  {t('noCustomersFound')}
-                </p>
+                <p className='text-muted-foreground p-3 text-sm'>{t('noCustomersFound')}</p>
               ) : (
                 <ul className='divide-y'>
                   {results.map((candidate) => (
@@ -143,12 +128,8 @@ export function MergeCustomerDialog({
                         onClick={() => setInto(candidate)}
                         className='hover:bg-accent focus-visible:bg-accent flex w-full items-baseline justify-between gap-3 rounded-md px-3 py-2 text-start text-sm outline-none'
                       >
-                        <span className='truncate font-medium'>
-                          {getCustomerDisplayName(candidate)}
-                        </span>
-                        <span className='text-muted-foreground shrink-0 text-xs'>
-                          {reach(candidate)}
-                        </span>
+                        <span className='truncate font-medium'>{getCustomerDisplayName(candidate)}</span>
+                        <span className='text-muted-foreground shrink-0 text-xs'>{reach(candidate)}</span>
                       </button>
                     </li>
                   ))}
@@ -161,45 +142,28 @@ export function MergeCustomerDialog({
             {/* The one that goes, an arrow, the one that stays */}
             <div className='space-y-2'>
               <div className='rounded-lg border border-dashed p-3'>
-                <p className='text-muted-foreground text-xs'>
-                  {t('mergeGoesAway')}
-                </p>
+                <p className='text-muted-foreground text-xs'>{t('mergeGoesAway')}</p>
                 <p className='truncate text-sm font-medium'>{name}</p>
-                <p className='text-muted-foreground truncate text-xs'>
-                  {reach(customer)}
-                </p>
+                <p className='text-muted-foreground truncate text-xs'>{reach(customer)}</p>
               </div>
               <ArrowDown className='text-muted-foreground mx-auto size-4' />
               <div className='rounded-lg border p-3'>
-                <p className='text-muted-foreground text-xs'>
-                  {t('mergeIsKept')}
-                </p>
-                <p className='truncate text-sm font-medium'>
-                  {getCustomerDisplayName(into)}
-                </p>
-                <p className='text-muted-foreground truncate text-xs'>
-                  {reach(into)}
-                </p>
+                <p className='text-muted-foreground text-xs'>{t('mergeIsKept')}</p>
+                <p className='truncate text-sm font-medium'>{getCustomerDisplayName(into)}</p>
+                <p className='text-muted-foreground truncate text-xs'>{reach(into)}</p>
               </div>
             </div>
             <ul className='text-muted-foreground list-disc space-y-1 ps-5 text-sm'>
               <li>{t('mergeMovesEverything')}</li>
               <li>{t('mergeSwitchesOff', { name })}</li>
-              <li className='text-foreground font-medium'>
-                {t('mergeCannotBeUndone')}
-              </li>
+              <li className='text-foreground font-medium'>{t('mergeCannotBeUndone')}</li>
             </ul>
           </div>
         )}
 
         <DialogFooter>
           {into ? (
-            <Button
-              type='button'
-              variant='outline'
-              disabled={merge.isPending}
-              onClick={() => setInto(null)}
-            >
+            <Button type='button' variant='outline' disabled={merge.isPending} onClick={() => setInto(null)}>
               {t('mergeChooseAnother')}
             </Button>
           ) : (

@@ -65,12 +65,7 @@ export function ImageField({
           <img
             src={src}
             alt=''
-            className={cn(
-              'h-full w-full',
-              shape === 'wide' || contain
-                ? 'object-contain p-1'
-                : 'object-cover'
-            )}
+            className={cn('h-full w-full', shape === 'wide' || contain ? 'object-contain p-1' : 'object-cover')}
           />
         ) : (
           <ImagePlus className='text-muted-foreground size-6' />
@@ -78,13 +73,7 @@ export function ImageField({
       </button>
       <div className='flex min-w-0 flex-col gap-2'>
         <div className='flex flex-wrap items-center gap-2'>
-          <Button
-            type='button'
-            variant='outline'
-            size='sm'
-            disabled={busy}
-            onClick={pick}
-          >
+          <Button type='button' variant='outline' size='sm' disabled={busy} onClick={pick}>
             <Upload />
             {src ? t('replaceImage') : t('uploadLogo')}
           </Button>

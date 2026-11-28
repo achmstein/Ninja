@@ -112,7 +112,7 @@ export function LineRow({
           aria-hidden
           className={cn(
             'border-input mt-1 flex size-6 shrink-0 items-center justify-center rounded-md border',
-            selected && 'bg-primary text-primary-foreground border-primary',
+            selected && 'bg-primary text-primary-foreground border-primary'
           )}
         >
           {selected && <Check className='size-4' />}
@@ -121,17 +121,15 @@ export function LineRow({
       <div className={cn('min-w-0 flex-1', line.paid && PAID_DIM)}>
         <div
           className={cn(
-            'truncate type-body font-medium',
+            'type-body truncate font-medium',
             isNegative && 'text-emerald-600 dark:text-emerald-400',
-            gone && 'text-muted-foreground font-normal line-through',
+            gone && 'text-muted-foreground font-normal line-through'
           )}
         >
           {localized(line.description)}
         </div>
         {localized(line.details) && (
-          <div className='text-muted-foreground truncate type-detail'>
-            {localized(line.details)}
-          </div>
+          <div className='text-muted-foreground type-detail truncate'>{localized(line.details)}</div>
         )}
         {cancelled > 0 && <CancelledNote line={line} />}
         <div className={cn('text-muted-foreground type-detail tabular-nums', gone && 'line-through')}>
@@ -147,10 +145,10 @@ export function LineRow({
       {line.paid && <PaidTag />}
       <div
         className={cn(
-          'shrink-0 type-body font-semibold tabular-nums',
+          'type-body shrink-0 font-semibold tabular-nums',
           isNegative && 'text-emerald-600 dark:text-emerald-400',
           line.paid && PAID_DIM,
-          gone && 'text-muted-foreground font-normal line-through',
+          gone && 'text-muted-foreground font-normal line-through'
         )}
       >
         {money(gone ? cancelled * toNumber(line.unitPrice) : line.total)}
@@ -165,7 +163,7 @@ export function LineRow({
         onClick={onToggle}
         className={cn(
           'flex min-h-12 w-full items-start gap-3 rounded-lg px-3 py-2 text-start',
-          selected ? 'bg-accent' : 'hover:bg-accent/50',
+          selected ? 'bg-accent' : 'hover:bg-accent/50'
         )}
       >
         {content}
@@ -179,7 +177,7 @@ export function LineRow({
         'flex min-h-12 items-start gap-3 rounded-lg px-3 py-2',
         // Just in: it stops breathing (features/sending) and a soft tint
         // behind it fades out, so the eye finds what was added
-        landed && 'animate-landed',
+        landed && 'animate-landed'
       )}
     >
       {content}

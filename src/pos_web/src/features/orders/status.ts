@@ -2,20 +2,13 @@ import type { useT } from '@/lib/i18n'
 
 type Translate = ReturnType<typeof useT>
 
-export function relativeTime(
-  value: string | undefined,
-  nowMs: number,
-  t: Translate,
-  locale: string
-): string {
+export function relativeTime(value: string | undefined, nowMs: number, t: Translate, locale: string): string {
   if (!value) return ''
   const minutes = Math.round((nowMs - new Date(value).getTime()) / 60_000)
   if (minutes < 1) return t('justNow')
   if (minutes < 60) return t('minutesAgo', { minutes })
   const hours = Math.round(minutes / 60)
-  return hours < 24
-    ? t('hoursAgo', { hours })
-    : new Date(value).toLocaleDateString(locale)
+  return hours < 24 ? t('hoursAgo', { hours }) : new Date(value).toLocaleDateString(locale)
 }
 
 // KDS-style aging, the same tiers as the admin board and matched to the
@@ -27,10 +20,7 @@ export const DELAYED_AFTER_MINUTES = 3
 
 export type OrderUrgency = 'fresh' | 'warning' | 'delayed'
 
-export function orderUrgency(
-  value: string | undefined,
-  nowMs: number
-): OrderUrgency {
+export function orderUrgency(value: string | undefined, nowMs: number): OrderUrgency {
   if (!value) return 'fresh'
   const minutes = (nowMs - new Date(value).getTime()) / 60_000
   if (minutes >= DELAYED_AFTER_MINUTES) return 'delayed'

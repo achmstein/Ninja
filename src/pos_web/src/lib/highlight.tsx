@@ -115,23 +115,14 @@ function mergeRanges(ranges: Range[]): Range[] {
 }
 
 /** `text` with the matched parts wrapped in `<mark>`. */
-export function Highlight({
-  text,
-  ranges,
-}: {
-  text: string
-  ranges: Range[]
-}) {
+export function Highlight({ text, ranges }: { text: string; ranges: Range[] }) {
   if (ranges.length === 0) return <>{text}</>
   const parts = []
   let cursor = 0
   for (const [start, end] of ranges) {
     if (start > cursor) parts.push(<Fragment key={`t${cursor}`}>{text.slice(cursor, start)}</Fragment>)
     parts.push(
-      <mark
-        key={`m${start}`}
-        className='rounded-sm bg-primary/15 px-0.5 font-semibold text-inherit'
-      >
+      <mark key={`m${start}`} className='bg-primary/15 rounded-sm px-0.5 font-semibold text-inherit'>
         {text.slice(start, end)}
       </mark>
     )

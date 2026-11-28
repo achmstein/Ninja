@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { Loader2, MapPin, Search } from 'lucide-react'
-import { Input } from '@/components/ui/input'
 import { useAddressSearch, type PickedPlace } from '@/lib/address-search'
 import { useBrand } from '@/lib/brand'
 import { useLanguage, useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
+import { Input } from '@/components/ui/input'
 
 /**
  * The street the caller names, searched with Google through the business's
@@ -22,7 +22,10 @@ export function AddressSearchField({ onPick }: { onPick: (place: PickedPlace) =>
   return (
     <div className='flex flex-col gap-1'>
       <div className='relative'>
-        <Search className='text-muted-foreground pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2' aria-hidden />
+        <Search
+          className='text-muted-foreground pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2'
+          aria-hidden
+        />
         <Input
           value={search.text}
           onChange={(e) => search.setText(e.target.value)}
@@ -33,7 +36,12 @@ export function AddressSearchField({ onPick }: { onPick: (place: PickedPlace) =>
           autoComplete='off'
           onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
         />
-        {search.searching && <Loader2 className='text-muted-foreground absolute end-3 top-1/2 size-4 -translate-y-1/2 animate-spin' aria-hidden />}
+        {search.searching && (
+          <Loader2
+            className='text-muted-foreground absolute end-3 top-1/2 size-4 -translate-y-1/2 animate-spin'
+            aria-hidden
+          />
+        )}
       </div>
       {search.suggestions.length > 0 && (
         <ul className='flex flex-col rounded-md border' role='listbox' aria-label={t('deliverySearchAddress')}>
@@ -60,7 +68,9 @@ export function AddressSearchField({ onPick }: { onPick: (place: PickedPlace) =>
                 )}
                 <span className='flex min-w-0 flex-col'>
                   <span className='truncate font-medium'>{s.primaryText}</span>
-                  {s.secondaryText && <span className='text-muted-foreground truncate type-detail'>{s.secondaryText}</span>}
+                  {s.secondaryText && (
+                    <span className='text-muted-foreground type-detail truncate'>{s.secondaryText}</span>
+                  )}
                 </span>
               </button>
             </li>

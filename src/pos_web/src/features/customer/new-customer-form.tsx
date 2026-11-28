@@ -1,23 +1,18 @@
 import { useState } from 'react'
-import { useMutation } from '@tanstack/react-query'
 import { AxiosError } from 'axios'
+import { useMutation } from '@tanstack/react-query'
 import { Award, Loader2, Phone, User } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { useBrand, useFeatures } from '@/lib/brand'
 import { useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { sameName } from '@/lib/names'
 import { normalizePhone, showPhone } from '@/lib/phone'
 import { toast } from '@/lib/toast'
-import {
-  createCounterCustomer,
-  customerName,
-  useCustomerLookup,
-  type IdentityCustomer,
-} from './counter-customers'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { createCounterCustomer, customerName, useCustomerLookup, type IdentityCustomer } from './counter-customers'
 import { useLoyalty } from './use-customer-card'
 
 type NewCustomerFormProps = {
@@ -29,8 +24,7 @@ type NewCustomerFormProps = {
 }
 
 /** Whether what was typed in a search reads as a phone number rather than a name. */
-export const looksLikePhone = (typed: string) =>
-  /^[+\d٠-٩۰-۹\s()-]+$/.test(typed.trim())
+export const looksLikePhone = (typed: string) => /^[+\d٠-٩۰-۹\s()-]+$/.test(typed.trim())
 
 /**
  * A customer by name and phone, added at the counter. As the cashier types,
@@ -60,8 +54,7 @@ export function NewCustomerForm({ initialText = '', onPick, onCancel }: NewCusto
   const current = lookup.data && lookup.data.phone === normalized ? lookup.data : null
   const match = conflict ?? current?.match ?? null
   const similar = (lookup.data?.similar ?? []).filter((c) => c.id !== match?.id)
-  const placeholder =
-    (brand?.locale as { phonePlaceholder?: string } | undefined)?.phonePlaceholder || '01xxxxxxxxx'
+  const placeholder = (brand?.locale as { phonePlaceholder?: string } | undefined)?.phonePlaceholder || '01xxxxxxxxx'
 
   const create = useMutation({
     mutationFn: () => createCounterCustomer(name.trim(), phone),
@@ -72,8 +65,7 @@ export function NewCustomerForm({ initialText = '', onPick, onCancel }: NewCusto
     onError: (error) => {
       if (error instanceof AxiosError) {
         const data = error.response?.data as
-          | { field?: string; placeholder?: string; existing?: IdentityCustomer }
-          | undefined
+          { field?: string; placeholder?: string; existing?: IdentityCustomer } | undefined
         if (error.response?.status === 409 && data?.existing) {
           setConflict(data.existing)
           return
@@ -158,18 +150,16 @@ export function NewCustomerForm({ initialText = '', onPick, onCancel }: NewCusto
                 <span className='min-w-0 flex-1'>
                   <span className='type-heading block truncate'>{customerName(customer)}</span>
                   {customer.enabled === false ? (
-                    <span className='text-muted-foreground type-detail block truncate'>
-                      {t('customerDisabled')}
-                    </span>
-                  ) : customer.phoneNumber && (
-                    <span className='text-muted-foreground type-detail block truncate' dir='ltr'>
-                      <span dir='ltr'>{showPhone(customer.phoneNumber)}</span>
-                    </span>
+                    <span className='text-muted-foreground type-detail block truncate'>{t('customerDisabled')}</span>
+                  ) : (
+                    customer.phoneNumber && (
+                      <span className='text-muted-foreground type-detail block truncate' dir='ltr'>
+                        <span dir='ltr'>{showPhone(customer.phoneNumber)}</span>
+                      </span>
+                    )
                   )}
                 </span>
-                {sameName(customerName(customer), name) && (
-                  <Badge variant='secondary'>{t('sameName')}</Badge>
-                )}
+                {sameName(customerName(customer), name) && <Badge variant='secondary'>{t('sameName')}</Badge>}
               </button>
             ))}
           </div>
@@ -209,7 +199,7 @@ function ExistingCustomer({ customer, onUse }: { customer: IdentityCustomer; onU
         <div className='min-w-0 flex-1'>
           <p className='text-muted-foreground type-caption font-medium'>{t('alreadyACustomer')}</p>
           <p className='type-heading truncate'>{customerName(customer)}</p>
-          <p className='text-muted-foreground flex flex-wrap items-center gap-x-3 type-detail'>
+          <p className='text-muted-foreground type-detail flex flex-wrap items-center gap-x-3'>
             {customer.phoneNumber && (
               <span className='flex items-center gap-1' dir='ltr'>
                 <Phone className='size-3.5' />

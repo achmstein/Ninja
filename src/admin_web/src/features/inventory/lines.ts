@@ -33,18 +33,14 @@ export const newLine = (): Line => ({
 })
 
 export const money = (n: number) => (Number.isFinite(n) ? n.toFixed(2) : '')
-export const perUnit = (n: number) =>
-  Number.isFinite(n) ? String(Math.round(n * 10000) / 10000) : ''
+export const perUnit = (n: number) => (Number.isFinite(n) ? String(Math.round(n * 10000) / 10000) : '')
 
 /**
  * Keep quantity, unit cost and total consistent whichever one changed:
  * typing the invoice total gives the unit cost, typing a unit cost gives the
  * total, and a new quantity re-derives whichever the user did not type.
  */
-export function reprice(
-  line: Amounts,
-  patch: Partial<Amounts>
-): Partial<Amounts> {
+export function reprice(line: Amounts, patch: Partial<Amounts>): Partial<Amounts> {
   const next = { ...line, ...patch }
   const qty = parseFloat(next.quantity)
 
@@ -81,10 +77,5 @@ export function reprice(
 
 /** A line has an item, a quantity and a cost: what the API needs to post it */
 export function isComplete(line: Line): boolean {
-  return (
-    !!line.stockItemId &&
-    parseFloat(line.quantity) > 0 &&
-    parseFloat(line.unitCost) >= 0 &&
-    line.unitCost !== ''
-  )
+  return !!line.stockItemId && parseFloat(line.quantity) > 0 && parseFloat(line.unitCost) >= 0 && line.unitCost !== ''
 }

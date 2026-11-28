@@ -12,11 +12,21 @@ export function menuById(items: readonly CatalogItemDto[]): Map<string, CatalogI
  * order: only what this branch sells right now, never the item itself, and
  * nothing already in the order.
  */
-export function pairedFor(item: CatalogItemDto, menu: ReadonlyMap<string, CatalogItemDto>, lines: readonly CartLine[]): CatalogItemDto[] {
+export function pairedFor(
+  item: CatalogItemDto,
+  menu: ReadonlyMap<string, CatalogItemDto>,
+  lines: readonly CartLine[]
+): CatalogItemDto[] {
   const inOrder = new Set(lines.map((line) => line.productId))
   return (item.pairedItemIds ?? [])
     .map((id) => menu.get(String(id)))
-    .filter((paired): paired is CatalogItemDto => !!paired && paired.isAvailable !== false && String(paired.id) !== String(item.id) && !inOrder.has(Number(paired.id)))
+    .filter(
+      (paired): paired is CatalogItemDto =>
+        !!paired &&
+        paired.isAvailable !== false &&
+        String(paired.id) !== String(item.id) &&
+        !inOrder.has(Number(paired.id))
+    )
 }
 
 /** At most this many suggestions on an item's sheet: a few to glance at, never a second menu. */
@@ -38,7 +48,9 @@ export function cartNudge(
   for (const line of [...lines].reverse()) {
     const item = menu.get(String(line.productId))
     if (!item) continue
-    const offer = pairedFor(item, menu, lines).find((paired) => canQuickAdd(paired, preferences?.get(Number(paired.id))))
+    const offer = pairedFor(item, menu, lines).find((paired) =>
+      canQuickAdd(paired, preferences?.get(Number(paired.id)))
+    )
     if (offer) return offer
   }
   return null

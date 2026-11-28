@@ -48,9 +48,7 @@ export function BranchOverrideSection({ item }: BranchOverrideSectionProps) {
     }),
     enabled: branchId != null,
   })
-  const override = overrides.data?.find(
-    (o) => toNumber(o.catalogItemId) === catalogItemId
-  )
+  const override = overrides.data?.find((o) => toNumber(o.catalogItemId) === catalogItemId)
 
   // Keyed on the override so a refetch resets the fields to the saved state
   const key = `${override?.id ?? 'none'}-${override?.priceOverride ?? ''}-${override?.offerPriceOverride ?? ''}-${override?.isOnOfferOverride ?? ''}`
@@ -66,21 +64,13 @@ export function BranchOverrideSection({ item }: BranchOverrideSectionProps) {
       basePrice={toNumber(base.price)}
       isAvailable={override?.isAvailable ?? item.isAvailable ?? true}
       initial={{
-        price:
-          override?.priceOverride != null
-            ? String(toNumber(override.priceOverride))
-            : '',
+        price: override?.priceOverride != null ? String(toNumber(override.priceOverride)) : '',
         onOffer: override?.isOnOfferOverride ?? null,
-        offerPrice:
-          override?.offerPriceOverride != null
-            ? String(toNumber(override.offerPriceOverride))
-            : '',
+        offerPrice: override?.offerPriceOverride != null ? String(toNumber(override.offerPriceOverride)) : '',
       }}
       hasOverride={
         !!override &&
-        (override.priceOverride != null ||
-          override.offerPriceOverride != null ||
-          override.isOnOfferOverride != null)
+        (override.priceOverride != null || override.offerPriceOverride != null || override.isOnOfferOverride != null)
       }
       onChanged={() =>
         Promise.all([
@@ -138,10 +128,7 @@ function OverrideForm({
   })
   const isPending = setOverride.isPending || clearOverride.isPending
 
-  const dirty =
-    price !== initial.price ||
-    onOffer !== (initial.onOffer === true) ||
-    offerPrice !== initial.offerPrice
+  const dirty = price !== initial.price || onOffer !== (initial.onOffer === true) || offerPrice !== initial.offerPrice
 
   const save = (e: React.FormEvent) => {
     e.preventDefault()
@@ -167,10 +154,7 @@ function OverrideForm({
   return (
     <form id={FORM_ID} onSubmit={save}>
       <FieldGrid>
-        <Field
-          label={`${t('priceAtBranch')} (${currency})`}
-          htmlFor='override-price'
-        >
+        <Field label={`${t('priceAtBranch')} (${currency})`} htmlFor='override-price'>
           <Input
             id='override-price'
             type='number'
@@ -184,13 +168,7 @@ function OverrideForm({
         <Field
           label={t('offerAtBranch')}
           htmlFor='override-offer'
-          end={
-            <Switch
-              id='override-offer'
-              checked={onOffer}
-              onCheckedChange={setOnOffer}
-            />
-          }
+          end={<Switch id='override-offer' checked={onOffer} onCheckedChange={setOnOffer} />}
         >
           <Input
             type='number'
@@ -222,12 +200,7 @@ function OverrideForm({
             {t('clearOverride')}
           </Button>
         )}
-        <Button
-          type='submit'
-          form={FORM_ID}
-          size='sm'
-          disabled={!dirty || isPending}
-        >
+        <Button type='submit' form={FORM_ID} size='sm' disabled={!dirty || isPending}>
           {isPending && <Spinner />}
           {t('save')}
         </Button>

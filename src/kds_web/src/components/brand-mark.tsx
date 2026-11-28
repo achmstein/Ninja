@@ -1,7 +1,7 @@
-import { useTheme } from '@/context/theme-provider'
 import { useBrand, useBrandName } from '@/lib/brand'
 import { useLanguage } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
+import { useTheme } from '@/context/theme-provider'
 
 /**
  * The business's mark on a staff surface: its logo when one is uploaded (the
@@ -32,7 +32,7 @@ export function BrandMark({ className }: { className?: string }) {
     <span
       aria-hidden
       className={cn(
-        'bg-foreground text-background grid shrink-0 place-items-center rounded-md font-semibold leading-none',
+        'bg-foreground text-background grid shrink-0 place-items-center rounded-md leading-none font-semibold',
         className
       )}
     >
@@ -56,13 +56,7 @@ export function useBrandLockup(): { url: string; chip: boolean } | null {
   // A brand cached by an older build has no wordmarks
   const w = brand.wordmarks ?? { en: null, enDark: null, ar: null, arDark: null }
   const words =
-    language === 'ar'
-      ? dark
-        ? [w.arDark, w.ar, w.enDark, w.en]
-        : [w.ar, w.en]
-      : dark
-        ? [w.enDark, w.en]
-        : [w.en]
+    language === 'ar' ? (dark ? [w.arDark, w.ar, w.enDark, w.en] : [w.ar, w.en]) : dark ? [w.enDark, w.en] : [w.en]
   // Only a light-page image on a dark page needs the paper chip
   const word = words.find((x) => x != null)
   if (word) return { url: word.url, chip: dark && word !== w.arDark && word !== w.enDark }

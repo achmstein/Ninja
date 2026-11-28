@@ -1,23 +1,18 @@
 import { useEffect, useState } from 'react'
 import { Award, MessageCircle, Phone, QrCode, User, Wallet } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import { Skeleton } from '@/components/ui/skeleton'
 import { useBrand, useFeatures } from '@/lib/brand'
 import { useT, type TranslationKey } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
-import { cn } from '@/lib/utils'
 import { showPhone, whatsAppLink } from '@/lib/phone'
-import { PayTabDialog } from './pay-tab-dialog'
-import { useLoyalty, useTab } from './use-customer-card'
+import { cn } from '@/lib/utils'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Skeleton } from '@/components/ui/skeleton'
 import { AppLinkDialog } from './app-link-dialog'
 import { useAddedAtCounter } from './counter-customers'
+import { PayTabDialog } from './pay-tab-dialog'
+import { useLoyalty, useTab } from './use-customer-card'
 
 /** Someone the till can look up: an identity account, with what it knows of them. */
 export type CardCustomer = {
@@ -74,7 +69,7 @@ export function CustomerCard({ customer, onOpenChange, footer }: CustomerCardPro
 
   const block = (icon: React.ReactNode, title: string, body: React.ReactNode) => (
     <div className='rounded-xl border p-3'>
-      <div className='text-muted-foreground mb-1 flex items-center gap-2 type-detail'>
+      <div className='text-muted-foreground type-detail mb-1 flex items-center gap-2'>
         {icon}
         {title}
       </div>
@@ -96,7 +91,7 @@ export function CustomerCard({ customer, onOpenChange, footer }: CustomerCardPro
       <Dialog open={open && !payOpen && !linkOpen} onOpenChange={onOpenChange}>
         <DialogContent className='flex flex-col gap-4'>
           <DialogHeader>
-            <DialogTitle className='flex items-center gap-2 type-title'>
+            <DialogTitle className='type-title flex items-center gap-2'>
               <User className='size-5 shrink-0' />
               <span className='truncate'>{customer?.name || t('guest')}</span>
               {addedAtCounter && (
@@ -106,7 +101,7 @@ export function CustomerCard({ customer, onOpenChange, footer }: CustomerCardPro
               )}
             </DialogTitle>
             {customer?.phone && (
-              <p className='text-muted-foreground flex items-center gap-1.5 type-detail' dir='ltr'>
+              <p className='text-muted-foreground type-detail flex items-center gap-1.5' dir='ltr'>
                 <Phone className='size-3.5' />
                 <span dir='ltr'>{showPhone(customer.phone)}</span>
                 {/* The customer on WhatsApp, from the cashier's own phone or this browser */}
@@ -139,18 +134,12 @@ export function CustomerCard({ customer, onOpenChange, footer }: CustomerCardPro
               ) : (
                 <div className='flex items-baseline justify-between gap-3'>
                   <span>
-                    <span className='type-figure'>
-                      {t('pointsBalance', { points })}
-                    </span>
-                    <span className='text-muted-foreground ms-2 type-detail tabular-nums'>
+                    <span className='type-figure'>{t('pointsBalance', { points })}</span>
+                    <span className='text-muted-foreground type-detail ms-2 tabular-nums'>
                       {t('pointsWorth', { amount: money(points / POINTS_PER_EGP) })}
                     </span>
                   </span>
-                  {tier && (
-                    <Badge variant='secondary'>
-                      {tierKey[tier] ? t(tierKey[tier]) : tier}
-                    </Badge>
-                  )}
+                  {tier && <Badge variant='secondary'>{tierKey[tier] ? t(tierKey[tier]) : tier}</Badge>}
                 </div>
               )
             )}
@@ -192,12 +181,7 @@ export function CustomerCard({ customer, onOpenChange, footer }: CustomerCardPro
 
           {/* Their points are theirs to see in the app once they claim the account */}
           {addedAtCounter && (
-            <Button
-              variant='secondary'
-              size='lg'
-              className='h-12 gap-2'
-              onClick={() => setLinkOpen(true)}
-            >
+            <Button variant='secondary' size='lg' className='h-12 gap-2' onClick={() => setLinkOpen(true)}>
               <QrCode className='size-5' />
               {t('sendAppLink')}
             </Button>
@@ -205,12 +189,7 @@ export function CustomerCard({ customer, onOpenChange, footer }: CustomerCardPro
 
           {footer}
 
-          <Button
-            variant='outline'
-            size='lg'
-            className='h-12'
-            onClick={() => onOpenChange(false)}
-          >
+          <Button variant='outline' size='lg' className='h-12' onClick={() => onOpenChange(false)}>
             {t('done')}
           </Button>
         </DialogContent>
@@ -222,12 +201,7 @@ export function CustomerCard({ customer, onOpenChange, footer }: CustomerCardPro
       />
 
       {features.tabs && customer && (
-        <PayTabDialog
-          customer={customer}
-          balance={owed}
-          open={payOpen}
-          onOpenChange={setPayOpen}
-        />
+        <PayTabDialog customer={customer} balance={owed} open={payOpen} onOpenChange={setPayOpen} />
       )}
     </>
   )

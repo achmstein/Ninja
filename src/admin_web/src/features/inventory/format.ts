@@ -52,30 +52,19 @@ const unitKeys: Record<string, TranslationKey> = {
 }
 
 /** Display label for a stock unit code: "pcs" → "قطعة", "Sachet" → "Sachet" */
-export function unitLabel(
-  unit: string | null | undefined,
-  t: Translate
-): string {
+export function unitLabel(unit: string | null | undefined, t: Translate): string {
   const raw = (unit ?? '').trim()
   const key = unitKeys[raw.toLowerCase()]
   return key ? t(key) : raw
 }
 
 /** "250 g", "1.5 L" — quantities are decimals in the item's base unit */
-export function formatQuantity(
-  value: number | string | null | undefined,
-  unit: string,
-  t: Translate
-): string {
+export function formatQuantity(value: number | string | null | undefined, unit: string, t: Translate): string {
   return `${quantityFormat.format(toNumber(value))} ${unitLabel(unit, t)}`
 }
 
 /** Same, with an explicit sign for ledger rows: "+250 g", "−1.5 L" */
-export function formatSignedQuantity(
-  value: number | string | null | undefined,
-  unit: string,
-  t: Translate
-): string {
+export function formatSignedQuantity(value: number | string | null | undefined, unit: string, t: Translate): string {
   const n = toNumber(value)
   const sign = n > 0 ? '+' : n < 0 ? '−' : ''
   return `${sign}${quantityFormat.format(Math.abs(n))} ${unitLabel(unit, t)}`
@@ -114,10 +103,7 @@ const referenceKeys: Record<string, TranslationKey> = {
 }
 
 /** "order:101" → "Order #101" (or the raw text for anything unknown) */
-export function referenceLabel(
-  reference: string | null | undefined,
-  t: Translate
-): string {
+export function referenceLabel(reference: string | null | undefined, t: Translate): string {
   if (!reference) return ''
   const [kind, id] = reference.split(':')
   const key = referenceKeys[kind]
@@ -125,10 +111,7 @@ export function referenceLabel(
 }
 
 /** Movements posted by the sale handler carry the literal actor "system" */
-export function actorLabel(
-  actor: string | null | undefined,
-  t: Translate
-): string {
+export function actorLabel(actor: string | null | undefined, t: Translate): string {
   return actor === 'system' ? t('systemActor') : (actor ?? '')
 }
 

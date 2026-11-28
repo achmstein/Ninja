@@ -53,7 +53,11 @@ export function useAddressSearch({ language, enabled = true }: { language: strin
     // The pick closes the session; the next search opens another
     setSession(null)
     try {
-      const { data } = await getPlace({ path: { placeId: suggestion.placeId }, query: { session: token, lang: language }, throwOnError: true })
+      const { data } = await getPlace({
+        path: { placeId: suggestion.placeId },
+        query: { session: token, lang: language },
+        throwOnError: true,
+      })
       const lat = Number(data.lat)
       const lng = Number(data.lng)
       if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null

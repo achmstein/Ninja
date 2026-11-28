@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Check, Copy } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 import { useT } from '@/lib/i18n'
+import { Button } from '@/components/ui/button'
 
 /** Copies a value to the clipboard; the icon confirms for a moment. */
 export function CopyButton({ value }: { value: string }) {

@@ -106,7 +106,10 @@ export function AppBuildCard({ slug }: { slug: string }) {
       <CardContent className='space-y-4'>
         <div className='flex flex-wrap items-center gap-2'>
           <BuildChoice platform={platform} track={track} onPlatform={setPlatform} onTrack={setTrack} />
-          <Button disabled={!s?.canBuild || start.isPending || running(run)} onClick={() => start.mutate({ path, body: { platform, track } })}>
+          <Button
+            disabled={!s?.canBuild || start.isPending || running(run)}
+            onClick={() => start.mutate({ path, body: { platform, track } })}
+          >
             {start.isPending ? <Spinner /> : <Hammer />}
             {t('buildStart')}
           </Button>
@@ -116,10 +119,18 @@ export function AppBuildCard({ slug }: { slug: string }) {
           <div className='space-y-2 rounded-lg border p-3 text-sm'>
             <div className='flex flex-wrap items-center justify-between gap-2'>
               <span>
-                {t('buildAsked', { when: format.dateTime(s.requestedAt), what: s.platform === 'all' ? t('buildPlatformAll') : (s.platform ?? '') })}
+                {t('buildAsked', {
+                  when: format.dateTime(s.requestedAt),
+                  what: s.platform === 'all' ? t('buildPlatformAll') : (s.platform ?? ''),
+                })}
               </span>
               {run && (
-                <a href={run.url} target='_blank' rel='noreferrer' className='text-muted-foreground inline-flex items-center gap-1 text-xs hover:underline'>
+                <a
+                  href={run.url}
+                  target='_blank'
+                  rel='noreferrer'
+                  className='text-muted-foreground inline-flex items-center gap-1 text-xs hover:underline'
+                >
                   {t('buildOnGitHub')}
                   <ExternalLink className='size-3' />
                 </a>
@@ -128,7 +139,9 @@ export function AppBuildCard({ slug }: { slug: string }) {
             {s.problem && <p className='text-destructive text-xs'>{s.problem}</p>}
             {!run && !s.problem && <p className='text-muted-foreground text-xs'>{t('buildWaiting')}</p>}
             {run && <RunLine run={run} />}
-            {run?.jobs.map((job) => <JobLine key={job.name} job={job} track={s.track ?? 'internal'} />)}
+            {run?.jobs.map((job) => (
+              <JobLine key={job.name} job={job} track={s.track ?? 'internal'} />
+            ))}
           </div>
         )}
       </CardContent>
@@ -138,7 +151,10 @@ export function AppBuildCard({ slug }: { slug: string }) {
 
 function RunLine({ run }: { run: BuildRun }) {
   const t = useT()
-  if (run.status !== 'completed') return <p className='text-muted-foreground text-xs'>{t(run.status === 'queued' ? 'buildQueued' : 'buildRunning')}</p>
+  if (run.status !== 'completed')
+    return (
+      <p className='text-muted-foreground text-xs'>{t(run.status === 'queued' ? 'buildQueued' : 'buildRunning')}</p>
+    )
   return run.conclusion === 'success' ? (
     <p className='text-xs text-emerald-600'>{t('buildDone')}</p>
   ) : (
@@ -162,7 +178,13 @@ function JobLine({ job, track }: { job: BuildJob; track: string }) {
     <div className='flex items-center gap-2'>
       {icon}
       <span className='font-medium'>{job.name}</span>
-      <span className='text-muted-foreground text-xs'>{job.status === 'completed' && job.conclusion === 'success' ? where : job.status === 'completed' ? job.conclusion : t('buildRunning')}</span>
+      <span className='text-muted-foreground text-xs'>
+        {job.status === 'completed' && job.conclusion === 'success'
+          ? where
+          : job.status === 'completed'
+            ? job.conclusion
+            : t('buildRunning')}
+      </span>
     </div>
   )
 }

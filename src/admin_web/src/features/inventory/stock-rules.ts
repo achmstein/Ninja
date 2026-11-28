@@ -2,10 +2,7 @@ import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { type CatalogItemDto } from '@/api/catalog'
 import { type RecipeCostView, type RecipeView } from '@/api/inventory'
-import {
-  getRecipeCostsOptions,
-  getRecipesOptions,
-} from '@/api/inventory/@tanstack/react-query.gen'
+import { getRecipeCostsOptions, getRecipesOptions } from '@/api/inventory/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useFeatures } from '@/lib/brand'
 import { toNumber } from '@/lib/money'
@@ -40,9 +37,7 @@ export type StockRuleBadge = {
  * branch, keyed by catalog item id, for the menu list's badges. Recipes
  * are global, costs follow X-Branch-Id.
  */
-export function useStockRuleBadges(
-  items: CatalogItemDto[]
-): Map<number, StockRuleBadge> {
+export function useStockRuleBadges(items: CatalogItemDto[]): Map<number, StockRuleBadge> {
   // Nothing to badge without inventory: the map stays empty
   const { inventory } = useFeatures()
   const recipes = useQuery({
@@ -54,9 +49,7 @@ export function useStockRuleBadges(
     enabled: inventory,
   })
   return useMemo(() => {
-    const costById = new Map<number, RecipeCostView>(
-      (costs.data ?? []).map((c) => [toNumber(c.catalogItemId), c])
-    )
+    const costById = new Map<number, RecipeCostView>((costs.data ?? []).map((c) => [toNumber(c.catalogItemId), c]))
     const itemById = new Map(items.map((item) => [toNumber(item.id), item]))
     const badges = new Map<number, StockRuleBadge>()
     for (const recipe of recipes.data ?? []) {
@@ -64,10 +57,7 @@ export function useStockRuleBadges(
       const cost = costById.get(id)
       const item = itemById.get(id)
       const price = toNumber(item?.price)
-      const foodCost =
-        cost && item && price > 0
-          ? Math.round((standardCost(cost, item) / price) * 100)
-          : null
+      const foodCost = cost && item && price > 0 ? Math.round((standardCost(cost, item) / price) * 100) : null
       badges.set(id, {
         kind: isUnitRecipe(recipe) ? 'unit' : 'recipe',
         foodCost,

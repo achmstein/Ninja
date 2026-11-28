@@ -3,8 +3,8 @@ import { ChevronDown, Timer } from 'lucide-react'
 import type { StayViewModel } from '@/api/spaces/types.gen'
 import { useMoney } from '@/lib/money'
 import { cn } from '@/lib/utils'
-import { StayBar } from './stay-bar'
 import { elapsedSeconds, estimateStayCost, formatClock } from './status'
+import { StayBar } from './stay-bar'
 import { useSecondsClock } from './use-places'
 
 /**
@@ -30,8 +30,13 @@ export function StayStrip({ stay }: { stay: StayViewModel }) {
       >
         <Timer className='text-primary size-5 shrink-0' aria-hidden />
         <span className='type-title tabular-nums'>{formatClock(elapsedSeconds(stay, now))}</span>
-        <span className='text-muted-foreground min-w-0 flex-1 type-detail truncate tabular-nums'>≈ {money(estimate.amount)}</span>
-        <ChevronDown className={cn('text-muted-foreground size-4 shrink-0 transition-transform', open && 'rotate-180')} aria-hidden />
+        <span className='text-muted-foreground type-detail min-w-0 flex-1 truncate tabular-nums'>
+          ≈ {money(estimate.amount)}
+        </span>
+        <ChevronDown
+          className={cn('text-muted-foreground size-4 shrink-0 transition-transform', open && 'rotate-180')}
+          aria-hidden
+        />
       </button>
       {open && (
         // The panel has its own clock line and its people are the names over the order: only the rate and the way to end it are new here

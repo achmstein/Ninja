@@ -73,42 +73,26 @@ export function RoutinesCard() {
   }
 
   return (
-    <SettingsCard
-      title={t('assistantRoutinesTitle')}
-      description={t('assistantRoutinesHint')}
-    >
+    <SettingsCard title={t('assistantRoutinesTitle')} description={t('assistantRoutinesHint')}>
       {/* No command name: each chat app names prompts its own way; they show by title */}
       <div className='grid gap-3 p-4 sm:grid-cols-2'>
         {ROUTINES.map(({ prompt, icon: Icon, title, about, ask }) => (
-          <div
-            key={prompt}
-            className='bg-background flex flex-col gap-3 rounded-xl border p-4'
-          >
+          <div key={prompt} className='bg-background flex flex-col gap-3 rounded-xl border p-4'>
             <div className='flex items-center gap-3'>
               <span className='bg-muted grid size-9 shrink-0 place-items-center rounded-lg'>
                 <Icon className='text-muted-foreground size-4' />
               </span>
-              <span className='min-w-0 flex-1 text-sm font-medium'>
-                {t(title)}
-              </span>
+              <span className='min-w-0 flex-1 text-sm font-medium'>{t(title)}</span>
             </div>
             <p className='text-muted-foreground flex-1 text-sm'>{t(about)}</p>
-            <Button
-              type='button'
-              size='sm'
-              variant='outline'
-              className='self-start'
-              onClick={() => copyAsk(t(ask))}
-            >
+            <Button type='button' size='sm' variant='outline' className='self-start' onClick={() => copyAsk(t(ask))}>
               <Copy />
               {t('assistantRoutineCopy')}
             </Button>
           </div>
         ))}
       </div>
-      <p className='text-muted-foreground px-5 py-3 text-xs'>
-        {t('assistantRoutinesBranch')}
-      </p>
+      <p className='text-muted-foreground px-5 py-3 text-xs'>{t('assistantRoutinesBranch')}</p>
     </SettingsCard>
   )
 }

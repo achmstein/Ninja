@@ -1,18 +1,16 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { motion, type MotionValue } from 'motion/react'
 import { Footprints, TimerReset, X } from 'lucide-react'
+import { motion, type MotionValue } from 'motion/react'
 import { type ReservationViewModel } from '@/api/spaces'
 import { cancelMyReservationMutation } from '@/api/spaces/@tanstack/react-query.gen'
-import { useSecondTick } from '@/lib/clock'
 import { useBrandName } from '@/lib/brand'
+import { useSecondTick } from '@/lib/clock'
 import { useLanguage, useLocalized, useT } from '@/lib/i18n'
 import { springOpen } from '@/lib/motion'
 import { PlaceIcon, placeNameId } from '@/lib/places'
 import { useTickBeat } from '@/lib/tick-beat'
 import { toast } from '@/lib/toast'
-import { Beat } from '@/components/motion/beats'
-import { MorphButton, type MorphPhase } from '@/components/motion/morph-button'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,6 +20,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import { Beat } from '@/components/motion/beats'
+import { MorphButton, type MorphPhase } from '@/components/motion/morph-button'
 import { CountdownRing } from './countdown-ring'
 
 /** Under this many seconds left, the ring and the time turn to a warning */
@@ -34,7 +34,13 @@ const HURRY = 120
  * place's name does not come in at all: it came with the card
  * (placeNameId), the way an item's photo stays on screen as it opens.
  */
-export function ReservationFace({ reservation, clock }: { reservation: ReservationViewModel; clock?: MotionValue<number> }) {
+export function ReservationFace({
+  reservation,
+  clock,
+}: {
+  reservation: ReservationViewModel
+  clock?: MotionValue<number>
+}) {
   const t = useT()
   const businessName = useBrandName()
   const localized = useLocalized()
@@ -42,13 +48,16 @@ export function ReservationFace({ reservation, clock }: { reservation: Reservati
   const { left, total } = useHoldTime(reservation)
   const hurry = left != null && left <= HURRY
   const forTime = reservation.for
-    ? new Date(reservation.for).toLocaleTimeString(language === 'ar' ? 'ar-EG' : 'en-US', { hour: 'numeric', minute: '2-digit' })
+    ? new Date(reservation.for).toLocaleTimeString(language === 'ar' ? 'ar-EG' : 'en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+      })
     : null
 
   return (
     <div className='flex min-h-full flex-col items-center justify-between gap-6 px-5 py-7 text-center'>
       <Beat clock={clock} at={0}>
-        <span className='flex items-center gap-1.5 rounded-full bg-amber-400/15 px-3 py-1.5 text-caption font-bold text-amber-500'>
+        <span className='text-caption flex items-center gap-1.5 rounded-full bg-amber-400/15 px-3 py-1.5 font-bold text-amber-500'>
           <span className='size-1.5 animate-pulse rounded-full bg-current motion-reduce:animate-none' />
           {t('ninjaHeldFor')}
         </span>
@@ -73,24 +82,28 @@ export function ReservationFace({ reservation, clock }: { reservation: Reservati
           </motion.span>
           {forTime && (
             <Beat clock={clock} at={0.3}>
-              <span className='text-muted-foreground text-note font-medium'>{t('ninjaHoldFor', { time: forTime })}</span>
+              <span className='text-muted-foreground text-note font-medium'>
+                {t('ninjaHoldFor', { time: forTime })}
+              </span>
             </Beat>
           )}
         </div>
       </div>
 
       <Beat clock={clock} at={0.45} className='flex flex-col items-center gap-2'>
-        <span className='flex items-center gap-2 text-body font-semibold'>
+        <span className='text-body flex items-center gap-2 font-semibold'>
           <Footprints className='size-4 shrink-0' />
           {left === 0 ? t('ninjaHoldRanOut', { name: businessName }) : t('ninjaHoldWalkOver')}
         </span>
         {reservation.startOnConfirm && (
-          <span className='text-muted-foreground flex flex-wrap items-center justify-center gap-1.5 text-caption'>
+          <span className='text-muted-foreground text-caption flex flex-wrap items-center justify-center gap-1.5'>
             <TimerReset className='size-3.5 shrink-0' />
             {t('timeStartsOnConfirm')}
             {/* The rate they asked to start at, where the tariff has a choice */}
             {reservation.requestedOptionName && (
-              <span className='bg-muted rounded-full px-2 py-0.5 text-caption font-semibold'>{localized(reservation.requestedOptionName)}</span>
+              <span className='bg-muted text-caption rounded-full px-2 py-0.5 font-semibold'>
+                {localized(reservation.requestedOptionName)}
+              </span>
             )}
           </span>
         )}
@@ -157,7 +170,10 @@ function CancelHold({ reservationId }: { reservationId: number }) {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
-            <AlertDialogAction className='bg-destructive hover:bg-destructive/90 text-white' onClick={() => cancel.mutate({ path: { id: reservationId } })}>
+            <AlertDialogAction
+              className='bg-destructive hover:bg-destructive/90 text-white'
+              onClick={() => cancel.mutate({ path: { id: reservationId } })}
+            >
               {t('cancelReservation')}
             </AlertDialogAction>
           </AlertDialogFooter>

@@ -13,7 +13,15 @@ import { extendTailwindMerge } from 'tailwind-merge'
 const merge = extendTailwindMerge<'type-role'>({
   extend: {
     classGroups: {
-      'type-role': ['type-title', 'type-heading', 'type-body', 'type-detail', 'type-caption', 'type-label', 'type-figure'],
+      'type-role': [
+        'type-title',
+        'type-heading',
+        'type-body',
+        'type-detail',
+        'type-caption',
+        'type-label',
+        'type-figure',
+      ],
     },
     conflictingClassGroups: {
       'type-role': ['font-size', 'font-weight', 'leading', 'tracking', 'text-transform'],

@@ -55,11 +55,7 @@ export function useModules(): Modules {
     places: !cloudKitchen,
     rooms: features.timeBilling === true && !cloudKitchen,
     talabatConnected: talabat.data?.connected === true,
-    talabat:
-      talabat.data?.connected === true &&
-      (talabat.data.branchIds?.length ?? 0) > 0,
-    couriers:
-      features.delivery === true &&
-      (couriers.data ?? []).some((c) => c.isActive),
+    talabat: talabat.data?.connected === true && (talabat.data.branchIds?.length ?? 0) > 0,
+    couriers: features.delivery === true && (couriers.data ?? []).some((c) => c.isActive),
   }
 }

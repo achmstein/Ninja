@@ -41,7 +41,10 @@ describe('brand tokens', () => {
   })
 
   it('the dark seeds replace what would be derived, and only in the dark scheme', () => {
-    const { light, dark } = brandColors({ primaryColor: '#0ea5e9', theme: { dark: { primary: '#7dd3fc', surface: '#1a1412' } } })
+    const { light, dark } = brandColors({
+      primaryColor: '#0ea5e9',
+      theme: { dark: { primary: '#7dd3fc', surface: '#1a1412' } },
+    })
     expect(oklchToHex(dark.primary!)).toBe('#7dd3fc')
     expect(dark.background!.l).toBeCloseTo(hexToOklch('#1a1412')!.l, 2)
     expect(light.background).toBeUndefined()

@@ -1,9 +1,9 @@
 import { createPortal } from 'react-dom'
 import type { ShiftView } from '@/api/sales/types.gen'
-import { tenderLabelKey } from '@/features/ticket/tenders'
 import { useBrandName } from '@/lib/brand'
 import { useLocale, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
+import { tenderLabelKey } from '@/features/ticket/tenders'
 import { drawerFormula } from './drawer'
 
 /**
@@ -22,12 +22,10 @@ export function ShiftReportSheet({ shift }: { shift: ShiftView }) {
     dateStyle: 'short',
     timeStyle: 'short',
   })
-  const formatAt = (value: string | null | undefined) =>
-    value ? dateTime.format(new Date(value)) : ''
+  const formatAt = (value: string | null | undefined) => (value ? dateTime.format(new Date(value)) : '')
   // Movements are inside the shift printed above: time only
   const time = new Intl.DateTimeFormat(locale, { timeStyle: 'short' })
-  const formatTime = (value: string | null | undefined) =>
-    value ? time.format(new Date(value)) : ''
+  const formatTime = (value: string | null | undefined) => (value ? time.format(new Date(value)) : '')
 
   const closed = shift.status === 'Closed'
   const overShort = toNumber(shift.overShort)
@@ -36,15 +34,9 @@ export function ShiftReportSheet({ shift }: { shift: ShiftView }) {
   const movements = shift.movements ?? []
   const drawer = drawerFormula(shift)
   const overShortText = (value: number) =>
-    value === 0
-      ? t('drawerBalanced')
-      : `${t(value > 0 ? 'drawerOver' : 'drawerShort')} ${money(Math.abs(value))}`
+    value === 0 ? t('drawerBalanced') : `${t(value > 0 ? 'drawerOver' : 'drawerShort')} ${money(Math.abs(value))}`
 
-  const row = (
-    label: string,
-    value: string,
-    options?: { bold?: boolean; size?: number }
-  ) => (
+  const row = (label: string, value: string, options?: { bold?: boolean; size?: number }) => (
     <div
       style={{
         display: 'flex',
@@ -65,12 +57,8 @@ export function ShiftReportSheet({ shift }: { shift: ShiftView }) {
     <div className='receipt-sheet'>
       <div style={{ textAlign: 'center', marginBottom: '4mm' }}>
         <div style={{ fontSize: 18, fontWeight: 700 }}>{brandName}</div>
-        <div style={{ fontSize: 14, fontWeight: 600 }}>
-          {t(closed ? 'zReportTitle' : 'xReportTitle')}
-        </div>
-        <div style={{ fontSize: 12 }}>
-          {t('shiftNumber', { id: toNumber(shift.id) })}
-        </div>
+        <div style={{ fontSize: 14, fontWeight: 600 }}>{t(closed ? 'zReportTitle' : 'xReportTitle')}</div>
+        <div style={{ fontSize: 12 }}>{t('shiftNumber', { id: toNumber(shift.id) })}</div>
       </div>
 
       <div style={{ fontSize: 11 }}>
@@ -91,9 +79,7 @@ export function ShiftReportSheet({ shift }: { shift: ShiftView }) {
 
       {dashed}
       <div style={{ fontWeight: 600 }}>{t('drawerFormula')}</div>
-      {drawer.terms.map((term) =>
-        row(t(term.key), `${term.sign < 0 ? '−' : '+'}${money(term.amount)}`)
-      )}
+      {drawer.terms.map((term) => row(t(term.key), `${term.sign < 0 ? '−' : '+'}${money(term.amount)}`))}
       {row(t('expectedInDrawer'), `= ${money(drawer.expected)}`, { bold: true })}
       {drawer.lateCash !== 0 && row(t('lateCash'), money(drawer.lateCash))}
       {drawer.lateCash !== 0 &&
@@ -107,9 +93,7 @@ export function ShiftReportSheet({ shift }: { shift: ShiftView }) {
           {tenders.map((total) =>
             row(
               `${
-                tenderLabelKey[total.tender]
-                  ? t(tenderLabelKey[total.tender])
-                  : total.tender
+                tenderLabelKey[total.tender] ? t(tenderLabelKey[total.tender]) : total.tender
               } × ${toNumber(total.count)}`,
               money(total.amount)
             )
@@ -124,9 +108,7 @@ export function ShiftReportSheet({ shift }: { shift: ShiftView }) {
           {tabPayments.map((total) =>
             row(
               `${
-                tenderLabelKey[total.tender]
-                  ? t(tenderLabelKey[total.tender])
-                  : total.tender
+                tenderLabelKey[total.tender] ? t(tenderLabelKey[total.tender]) : total.tender
               } × ${toNumber(total.count)}`,
               money(total.amount)
             )
@@ -140,13 +122,9 @@ export function ShiftReportSheet({ shift }: { shift: ShiftView }) {
           <div style={{ fontWeight: 600 }}>{t('drawerMovements')}</div>
           {movements.map((movement, index) => (
             <div key={index}>
-              {row(
-                movement.reason,
-                `${movement.type === 'PayOut' ? '−' : '+'}${money(movement.amount)}`
-              )}
+              {row(movement.reason, `${movement.type === 'PayOut' ? '−' : '+'}${money(movement.amount)}`)}
               <div style={{ fontSize: 10 }}>
-                <bdi>{movement.recordedBy}</bdi> ·{' '}
-                <bdi>{formatTime(movement.recordedAt)}</bdi>
+                <bdi>{movement.recordedBy}</bdi> · <bdi>{formatTime(movement.recordedAt)}</bdi>
               </div>
             </div>
           ))}
@@ -162,11 +140,7 @@ export function ShiftReportSheet({ shift }: { shift: ShiftView }) {
             size: 13,
           })}
           {row(t('counted'), money(shift.closingCount), { bold: true, size: 13 })}
-          {row(
-            t('overShort'),
-            overShortText(overShort),
-            { bold: true, size: 15 }
-          )}
+          {row(t('overShort'), overShortText(overShort), { bold: true, size: 15 })}
         </>
       ) : (
         row(t('expectedInDrawer'), money(shift.expectedInDrawer), {

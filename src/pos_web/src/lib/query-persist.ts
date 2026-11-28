@@ -1,9 +1,6 @@
-import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister'
 import type { Query, QueryClient } from '@tanstack/react-query'
-import type {
-  PersistedClient,
-  PersistQueryClientOptions,
-} from '@tanstack/react-query-persist-client'
+import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister'
+import type { PersistedClient, PersistQueryClientOptions } from '@tanstack/react-query-persist-client'
 import { del, get, set } from 'idb-keyval'
 
 /**
@@ -13,12 +10,7 @@ import { del, get, set } from 'idb-keyval'
  * else: bills, shifts and the rest are only true as the server says them
  * now. The brand has its own copy already (lib/brand.ts).
  */
-const PERSISTED = new Set([
-  'listCategories',
-  'listItems',
-  'getBranches',
-  'getBranchPricing',
-])
+const PERSISTED = new Set(['listCategories', 'listItems', 'getBranches', 'getBranchPricing'])
 
 /** A menu older than a week is not one to sell from */
 const MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000
@@ -30,11 +22,7 @@ const MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000
  */
 export function isPersistedQuery(query: Pick<Query, 'queryKey' | 'state'>): boolean {
   const id = (query.queryKey[0] as { _id?: unknown } | undefined)?._id
-  return (
-    query.state.data !== undefined &&
-    typeof id === 'string' &&
-    PERSISTED.has(id)
-  )
+  return query.state.data !== undefined && typeof id === 'string' && PERSISTED.has(id)
 }
 
 /**

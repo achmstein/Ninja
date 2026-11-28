@@ -3,18 +3,18 @@ import { keepPreviousData, useInfiniteQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { ArrowLeft, ArrowRight, ChevronRight, Loader2, Search } from 'lucide-react'
 import { getSettledTickets } from '@/api/sales/sdk.gen'
+import { API_VERSION } from '@/lib/api-client'
+import { dayKey, friendlyDay, friendlyTime } from '@/lib/friendly-day'
+import { useLanguage, useLocale, useLocalized, useT } from '@/lib/i18n'
+import { useMoney, toNumber } from '@/lib/money'
+import { cn } from '@/lib/utils'
+import { useIsMobile } from '@/hooks/use-is-mobile'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet'
 import { Skeleton } from '@/components/ui/skeleton'
 import { BillTitle } from '@/features/deliveries/bill-title'
 import { billLabel } from '@/features/deliveries/delivery-format'
-import { useIsMobile } from '@/hooks/use-is-mobile'
-import { API_VERSION } from '@/lib/api-client'
-import { dayKey, friendlyDay, friendlyTime } from '@/lib/friendly-day'
-import { useLanguage, useLocale, useLocalized, useT } from '@/lib/i18n'
-import { useMoney, toNumber } from '@/lib/money'
-import { cn } from '@/lib/utils'
 import { ReceiptPreview } from './receipt-preview'
 
 const PAGE_SIZE = 50
@@ -63,8 +63,7 @@ export function Receipts() {
       })
       return data ?? []
     },
-    getNextPageParam: (lastPage, allPages) =>
-      lastPage.length === PAGE_SIZE ? allPages.length : undefined,
+    getNextPageParam: (lastPage, allPages) => (lastPage.length === PAGE_SIZE ? allPages.length : undefined),
     placeholderData: keepPreviousData,
   })
 
@@ -93,12 +92,7 @@ export function Receipts() {
     // A delivery's bill reads "#42 · Mona" (older ones with a scooter
     // emoji first): drawn with the bike, never the emoji
     const label = billLabel(bill.label)
-    const typeLabel =
-      bill.type === 'Room'
-        ? t('room')
-        : bill.type === 'Table'
-          ? t('table')
-          : t('counter')
+    const typeLabel = bill.type === 'Room' ? t('room') : bill.type === 'Table' ? t('table') : t('counter')
     return {
       title: localized(bill.locationName) || label.text || typeLabel,
     }
@@ -186,7 +180,7 @@ export function Receipts() {
                     className={cn(
                       'hover:bg-accent/50 flex min-h-16 w-full items-center gap-3 border-b px-4 py-2 text-start',
                       // The one being read: tinted, and marked down its start edge
-                      reading && 'bg-accent hover:bg-accent border-s-primary border-s-[3px] ps-[calc(1rem-3px)]',
+                      reading && 'bg-accent hover:bg-accent border-s-primary border-s-[3px] ps-[calc(1rem-3px)]'
                     )}
                   >
                     <span className='min-w-0 flex-1'>
@@ -196,7 +190,9 @@ export function Receipts() {
                         {'#\u200F'}
                         {toNumber(bill.receiptNumber)}
                         {settled && ` · ${friendlyTime(settled, locale)}`}
-                        {refunded > 0 && <span className='text-destructive'>{` · ${t('refundedSoFar')} −${money(refunded)}`}</span>}
+                        {refunded > 0 && (
+                          <span className='text-destructive'>{` · ${t('refundedSoFar')} −${money(refunded)}`}</span>
+                        )}
                       </span>
                     </span>
                     <span className='type-heading shrink-0 tabular-nums'>{money(bill.total)}</span>
@@ -223,7 +219,9 @@ export function Receipts() {
     // width its rows read well at (narrower on a small tablet), and the receipt across all the
     // rest. A phone has the list alone, the receipt in a sheet over it
     <div className='flex md:h-[calc(100svh-4rem)]'>
-      <div className='flex min-w-0 flex-col max-md:flex-1 md:w-[clamp(20rem,32vw,28rem)] md:shrink-0 md:border-e'>{list}</div>
+      <div className='flex min-w-0 flex-col max-md:flex-1 md:w-[clamp(20rem,32vw,28rem)] md:shrink-0 md:border-e'>
+        {list}
+      </div>
 
       {isMobile ? (
         <Sheet
@@ -239,7 +237,9 @@ export function Receipts() {
         </Sheet>
       ) : (
         <section className='flex min-w-0 flex-1 flex-col'>
-          {preview || <p className='text-muted-foreground m-auto p-6 text-center'>{isLoading ? '' : t('noReceipts')}</p>}
+          {preview || (
+            <p className='text-muted-foreground m-auto p-6 text-center'>{isLoading ? '' : t('noReceipts')}</p>
+          )}
         </section>
       )}
     </div>

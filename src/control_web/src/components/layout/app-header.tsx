@@ -1,6 +1,9 @@
 import { Link } from '@tanstack/react-router'
-import { useAuth } from 'react-oidc-context'
+import { authority, loginPageParams } from '@/config/oidc-config'
 import { KeyRound, LogOut, Moon, Settings, ShieldCheck, Sun } from 'lucide-react'
+import { useAuth } from 'react-oidc-context'
+import { useT } from '@/lib/i18n'
+import { useTheme } from '@/context/theme-provider'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -10,9 +13,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Wordmark } from '@/components/wordmark'
-import { authority, loginPageParams } from '@/config/oidc-config'
-import { useT } from '@/lib/i18n'
-import { useTheme } from '@/context/theme-provider'
 
 /**
  * The single app-chrome row: the mark on the start side, the settings menu
@@ -41,16 +41,8 @@ export function AppHeader() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align='end' className='min-w-48 rounded-lg'>
-              <DropdownMenuItem
-                onSelect={() =>
-                  setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')
-                }
-              >
-                {resolvedTheme === 'dark' ? (
-                  <Moon className='size-4' />
-                ) : (
-                  <Sun className='size-4' />
-                )}
+              <DropdownMenuItem onSelect={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}>
+                {resolvedTheme === 'dark' ? <Moon className='size-4' /> : <Sun className='size-4' />}
                 <span className='flex-1'>{t('theme')}</span>
                 <span className='text-muted-foreground'>
                   {resolvedTheme === 'dark' ? t('themeDark') : t('themeLight')}
@@ -70,16 +62,17 @@ export function AppHeader() {
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 {/* Keycloak's account console: the authenticator app and the signed-in devices */}
-                <a href={`${authority}/account/account-security/signing-in?kc_locale=en`} target='_blank' rel='noreferrer'>
+                <a
+                  href={`${authority}/account/account-security/signing-in?kc_locale=en`}
+                  target='_blank'
+                  rel='noreferrer'
+                >
                   <ShieldCheck className='size-4' />
                   {t('securitySettings')}
                 </a>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem
-                variant='destructive'
-                onSelect={() => auth.signoutRedirect()}
-              >
+              <DropdownMenuItem variant='destructive' onSelect={() => auth.signoutRedirect()}>
                 <LogOut className='size-4' />
                 {t('signOut')}
               </DropdownMenuItem>

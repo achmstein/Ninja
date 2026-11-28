@@ -2,21 +2,13 @@
 // browser doesn't support push, permission is denied, or the Firebase web
 // config isn't provided.
 import { initializeApp, type FirebaseApp } from 'firebase/app'
-import {
-  getMessaging,
-  getToken,
-  isSupported,
-  onMessage,
-  type Messaging,
-} from 'firebase/messaging'
+import { getMessaging, getToken, isSupported, onMessage, type Messaging } from 'firebase/messaging'
 
 const config = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY as string | undefined,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN as string | undefined,
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID as string | undefined,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID as
-    | string
-    | undefined,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID as string | undefined,
   appId: import.meta.env.VITE_FIREBASE_APP_ID as string | undefined,
 }
 const vapidKey = import.meta.env.VITE_FIREBASE_VAPID_KEY as string | undefined
@@ -40,9 +32,7 @@ async function getMessagingInstance(): Promise<Messaging | null> {
  * Resolves the FCM token, asking for notification permission if needed.
  * Call from a user gesture (or right after login) — never on page load.
  */
-export async function ensurePushToken(
-  requestPermission = true
-): Promise<string | null> {
+export async function ensurePushToken(requestPermission = true): Promise<string | null> {
   try {
     const instance = await getMessagingInstance()
     if (!instance) return null
@@ -61,9 +51,7 @@ export async function ensurePushToken(
       messagingSenderId: config.messagingSenderId ?? '',
       appId: config.appId ?? '',
     })
-    const registration = await navigator.serviceWorker.register(
-      `/firebase-messaging-sw.js?${swParams}`
-    )
+    const registration = await navigator.serviceWorker.register(`/firebase-messaging-sw.js?${swParams}`)
     cachedToken = await getToken(instance, {
       vapidKey,
       serviceWorkerRegistration: registration,

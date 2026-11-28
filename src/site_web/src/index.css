@@ -8,7 +8,9 @@
 @import '@fontsource/original-surfer/latin-400.css';
 
 @theme {
-  --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter Variable', 'IBM Plex Sans Arabic', 'Helvetica Neue', sans-serif;
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter Variable', 'IBM Plex Sans Arabic', 'Helvetica Neue',
+    sans-serif;
   /* The `ninja` wordmark and nothing else */
   --font-wordmark: 'Original Surfer', cursive;
 

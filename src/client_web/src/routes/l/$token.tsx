@@ -1,17 +1,17 @@
 import { useState } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
-import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { Link2Off, Loader2, MapPin } from 'lucide-react'
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { getLocationShareStateOptions, shareLocationMutation } from '@/api/ordering/@tanstack/react-query.gen'
-import { DrawnCheck } from '@/components/motion/morph-button'
-import { NinjaPage, Rise, RiseItem } from '@/components/ninja/page/page'
-import { Empty, Slab } from '@/components/ninja/page/parts'
-import { Button } from '@/components/ui/button'
 import { API_VERSION } from '@/lib/api-client'
 import { useBrandName } from '@/lib/brand'
 import { useT } from '@/lib/i18n'
 import { blurSwap } from '@/lib/motion'
+import { Button } from '@/components/ui/button'
+import { DrawnCheck } from '@/components/motion/morph-button'
+import { NinjaPage, Rise, RiseItem } from '@/components/ninja/page/page'
+import { Empty, Slab } from '@/components/ninja/page/parts'
 
 export const Route = createFileRoute('/l/$token')({
   component: ShareLocationPage,
@@ -43,7 +43,11 @@ function locate(): Promise<Fix> {
     }
     const watch = navigator.geolocation.watchPosition(
       (position) => {
-        const fix = { latitude: position.coords.latitude, longitude: position.coords.longitude, accuracy: position.coords.accuracy }
+        const fix = {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          accuracy: position.coords.accuracy,
+        }
         if (!best || fix.accuracy < best.accuracy) best = fix
         if (fix.accuracy <= DOOR_ACCURACY_METERS) finish()
       },
@@ -54,7 +58,7 @@ function locate(): Promise<Fix> {
           reject(new Error('denied'))
         }
       },
-      { enableHighAccuracy: true, maximumAge: 0, timeout: WATCH_MS },
+      { enableHighAccuracy: true, maximumAge: 0, timeout: WATCH_MS }
     )
     const timer = setTimeout(finish, WATCH_MS)
   })
@@ -146,8 +150,17 @@ function ShareLocationPage() {
             </AnimatePresence>
 
             {!done && (
-              <Button size='lg' className='mt-2 h-14 w-full max-w-sm rounded-full text-base font-bold' onClick={start} disabled={busy}>
-                {busy ? <Loader2 className='size-5 animate-spin' aria-hidden /> : <MapPin className='size-5' aria-hidden />}
+              <Button
+                size='lg'
+                className='mt-2 h-14 w-full max-w-sm rounded-full text-base font-bold'
+                onClick={start}
+                disabled={busy}
+              >
+                {busy ? (
+                  <Loader2 className='size-5 animate-spin' aria-hidden />
+                ) : (
+                  <MapPin className='size-5' aria-hidden />
+                )}
                 {busy ? t('shareLocationFinding') : t('shareLocationButton')}
               </Button>
             )}

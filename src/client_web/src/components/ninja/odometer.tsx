@@ -12,7 +12,10 @@ export function Odometer({ value, className, clock = false }: { value: string; c
   const runs = odometerRuns(value)
   return (
     // A clock reads hours first in either language: its runs (6, :, 12) would otherwise be laid out right to left in Arabic
-    <span dir={clock ? 'ltr' : undefined} className={cn('relative inline-block leading-[1.2em] whitespace-nowrap tabular-nums', className)}>
+    <span
+      dir={clock ? 'ltr' : undefined}
+      className={cn('relative inline-block leading-[1.2em] whitespace-nowrap tabular-nums', className)}
+    >
       <span className='sr-only'>{value}</span>
       {runs.map((run, r) =>
         run.kind === 'text' ? (
@@ -23,7 +26,12 @@ export function Odometer({ value, className, clock = false }: { value: string; c
           <span key={`n${r}`} aria-hidden dir='ltr' className='inline-flex align-top'>
             {run.cells.map((cell, i) => {
               const key = run.cells.length - i
-              if (cell.kind === 'mark') return <span key={`m${key}`} className='align-top'>{cell.value}</span>
+              if (cell.kind === 'mark')
+                return (
+                  <span key={`m${key}`} className='align-top'>
+                    {cell.value}
+                  </span>
+                )
               return (
                 <span key={`d${key}`} className='relative inline-block h-[1.2em] overflow-hidden align-top'>
                   <span className='invisible'>{cell.digits[8]}</span>

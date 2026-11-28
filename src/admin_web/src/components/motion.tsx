@@ -1,11 +1,5 @@
 import { useEffect, useRef, type ReactNode } from 'react'
-import {
-  animate,
-  motion,
-  useInView,
-  useReducedMotion,
-  type Transition,
-} from 'motion/react'
+import { animate, motion, useInView, useReducedMotion, type Transition } from 'motion/react'
 import { cn } from '@/lib/utils'
 
 /**
@@ -55,13 +49,7 @@ export function Stagger({
 }
 
 /** One child of a Stagger */
-export function StaggerItem({
-  children,
-  className,
-}: {
-  children: ReactNode
-  className?: string
-}) {
+export function StaggerItem({ children, className }: { children: ReactNode; className?: string }) {
   return (
     <motion.div
       className={className}
@@ -129,13 +117,7 @@ export function CountUp({
  * than one switching off and another on. Put it inside the active item,
  * positioned; items of one set share `group`.
  */
-export function ActiveMarker({
-  group,
-  className,
-}: {
-  group: string
-  className?: string
-}) {
+export function ActiveMarker({ group, className }: { group: string; className?: string }) {
   return (
     <motion.span
       aria-hidden

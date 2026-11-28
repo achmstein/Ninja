@@ -9,6 +9,11 @@ import {
   retireNodeMutation,
   updateNodeMutation,
 } from '@/api/control/@tanstack/react-query.gen'
+import { megabytes } from '@/lib/format'
+import { useT } from '@/lib/i18n'
+import { problemDetail } from '@/lib/problem'
+import { toast } from '@/lib/toast'
+import { cn } from '@/lib/utils'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,19 +37,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import { megabytes } from '@/lib/format'
-import { useT } from '@/lib/i18n'
-import { problemDetail } from '@/lib/problem'
-import { toast } from '@/lib/toast'
-import { cn } from '@/lib/utils'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 
 const statusTone: Record<NodeStatus, string> = {
   Active: 'border-emerald-500/40 text-emerald-700 dark:text-emerald-400',
@@ -189,12 +182,22 @@ export function NodesTable() {
                 </TableCell>
                 <TableCell className='text-end whitespace-nowrap'>
                   {node.status === 'Active' && (
-                    <Button variant='ghost' size='sm' disabled={update.isPending} onClick={() => setStatus(node, 'Cordoned')}>
+                    <Button
+                      variant='ghost'
+                      size='sm'
+                      disabled={update.isPending}
+                      onClick={() => setStatus(node, 'Cordoned')}
+                    >
                       {t('nodeCordon')}
                     </Button>
                   )}
                   {node.status === 'Cordoned' && (
-                    <Button variant='ghost' size='sm' disabled={update.isPending} onClick={() => setStatus(node, 'Active')}>
+                    <Button
+                      variant='ghost'
+                      size='sm'
+                      disabled={update.isPending}
+                      onClick={() => setStatus(node, 'Active')}
+                    >
                       {t('nodeMakeActive')}
                     </Button>
                   )}
@@ -204,7 +207,12 @@ export function NodesTable() {
                     </Button>
                   )}
                   {node.status === 'Unreachable' && Number(node.tenants) > 0 && (
-                    <Button variant='ghost' size='sm' className='text-destructive' onClick={() => setAsking({ node, action: 'evacuate' })}>
+                    <Button
+                      variant='ghost'
+                      size='sm'
+                      className='text-destructive'
+                      onClick={() => setAsking({ node, action: 'evacuate' })}
+                    >
                       {t('nodeEvacuate')}
                     </Button>
                   )}
@@ -226,12 +234,29 @@ export function NodesTable() {
         <AlertDialogContent size='sm'>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {t(asking?.action === 'drain' ? 'nodeDrainTitle' : asking?.action === 'evacuate' ? 'nodeEvacuateTitle' : 'nodeRetireTitle', { name: asking?.node.name ?? '' })}
+              {t(
+                asking?.action === 'drain'
+                  ? 'nodeDrainTitle'
+                  : asking?.action === 'evacuate'
+                    ? 'nodeEvacuateTitle'
+                    : 'nodeRetireTitle',
+                { name: asking?.node.name ?? '' }
+              )}
             </AlertDialogTitle>
-            <AlertDialogDescription>{t(asking?.action === 'drain' ? 'nodeDrainNote' : asking?.action === 'evacuate' ? 'nodeEvacuateNote' : 'nodeRetireNote')}</AlertDialogDescription>
+            <AlertDialogDescription>
+              {t(
+                asking?.action === 'drain'
+                  ? 'nodeDrainNote'
+                  : asking?.action === 'evacuate'
+                    ? 'nodeEvacuateNote'
+                    : 'nodeRetireNote'
+              )}
+            </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={drain.isPending || retire.isPending || evacuate.isPending}>{t('cancel')}</AlertDialogCancel>
+            <AlertDialogCancel disabled={drain.isPending || retire.isPending || evacuate.isPending}>
+              {t('cancel')}
+            </AlertDialogCancel>
             <AlertDialogAction
               disabled={drain.isPending || retire.isPending || evacuate.isPending}
               onClick={(e) => {
@@ -243,7 +268,9 @@ export function NodesTable() {
                 else retire.mutate(path)
               }}
             >
-              {t(asking?.action === 'drain' ? 'nodeDrain' : asking?.action === 'evacuate' ? 'nodeEvacuate' : 'nodeRetire')}
+              {t(
+                asking?.action === 'drain' ? 'nodeDrain' : asking?.action === 'evacuate' ? 'nodeEvacuate' : 'nodeRetire'
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -313,7 +340,12 @@ function NodeDialog({
         <div className='grid gap-4'>
           <div className='grid gap-1.5'>
             <Label htmlFor='labels'>{t('nodeLabels')}</Label>
-            <Input id='labels' placeholder='demo, customer' value={labels} onChange={(e) => setLabels(e.target.value)} />
+            <Input
+              id='labels'
+              placeholder='demo, customer'
+              value={labels}
+              onChange={(e) => setLabels(e.target.value)}
+            />
           </div>
           <div className='grid grid-cols-2 gap-3'>
             {field('reserveMb', t('nodeReserveMb'))}
@@ -330,7 +362,10 @@ function NodeDialog({
             disabled={saving}
             onClick={() =>
               onSave({
-                labels: labels.split(',').map((l) => l.trim()).filter(Boolean),
+                labels: labels
+                  .split(',')
+                  .map((l) => l.trim())
+                  .filter(Boolean),
                 reserveMb: number(limits.reserveMb),
                 stackFootprintMb: number(limits.stackFootprintMb),
                 postgresMaxConnections: number(limits.postgresMaxConnections),

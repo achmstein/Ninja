@@ -1,14 +1,14 @@
 import { useState, type ElementType, type ReactNode, type RefObject } from 'react'
 import { ChevronRight, Loader2, Plus, Trash2 } from 'lucide-react'
 import type { CatalogItemDto } from '@/api/catalog/types.gen'
+import { useLocalized, useT } from '@/lib/i18n'
+import { useMoney, toNumber } from '@/lib/money'
+import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { StayStrip } from '@/features/places/stay-strip'
 import { SendingLines } from '@/features/sending/sending-lines'
 import { DiscountDialog } from '@/features/ticket/discount-dialog'
-import { useLocalized, useT } from '@/lib/i18n'
-import { useMoney, toNumber } from '@/lib/money'
-import { cn } from '@/lib/utils'
 import { BillMenu } from './bill-menu'
 import { BillPeopleRow } from './bill-people-row'
 import { lineKey, type SaleCustomer, type SaleLine } from './cart'
@@ -110,21 +110,26 @@ export function OrderPanel({
   const hasSent = sent.length > 0 || bill.mySends.length > 0
   // Money off the bill is said over its total, where it is taken off: never only inside a menu
   const discount = toNumber(bill.ticket?.discount)
-  const discountRate = bill.ticket?.discountRate != null ? Math.round(toNumber(bill.ticket.discountRate) * 10000) / 100 : null
+  const discountRate =
+    bill.ticket?.discountRate != null ? Math.round(toNumber(bill.ticket.discountRate) * 10000) / 100 : null
   const [discountOpen, setDiscountOpen] = useState(false)
 
   return (
     <>
       {/* Built like the item pad's search row (py-2, a size-12 button), so the two rules under them meet in one line */}
       <div className='flex shrink-0 items-center gap-2 border-b px-3 py-2 max-md:pe-14'>
-        <Heading className='flex min-w-0 flex-1 items-baseline type-title gap-2'>
+        <Heading className='type-title flex min-w-0 flex-1 items-baseline gap-2'>
           <span className='truncate'>{title}</span>
           {onBill ? (
             <span className='text-muted-foreground type-detail shrink-0 font-medium tabular-nums' dir='ltr'>
               #{ticketId}
             </span>
           ) : (
-            count > 0 && <span className='text-muted-foreground type-detail shrink-0 font-medium'>{t('linesCount', { count })}</span>
+            count > 0 && (
+              <span className='text-muted-foreground type-detail shrink-0 font-medium'>
+                {t('linesCount', { count })}
+              </span>
+            )
           )}
         </Heading>
         {/* The rest a bill can do (discount, print, void) opens here, over the order */}
@@ -215,10 +220,17 @@ export function OrderPanel({
           <div className='text-muted-foreground type-caption mb-1.5 font-medium'>{t('goesWellWith')}</div>
           <div className='no-scrollbar flex gap-2 overflow-x-auto pb-1'>
             {suggestions.map((item) => (
-              <Button key={String(item.id)} variant='outline' className='h-10 shrink-0 gap-1.5 px-3' onClick={() => onSuggestion(item)}>
+              <Button
+                key={String(item.id)}
+                variant='outline'
+                className='h-10 shrink-0 gap-1.5 px-3'
+                onClick={() => onSuggestion(item)}
+              >
                 <Plus className='size-4' />
                 {localized(item.name)}
-                <span className='text-muted-foreground tabular-nums'>{money(toNumber(item.effectivePrice ?? item.price))}</span>
+                <span className='text-muted-foreground tabular-nums'>
+                  {money(toNumber(item.effectivePrice ?? item.price))}
+                </span>
               </Button>
             ))}
           </div>
@@ -253,7 +265,9 @@ export function OrderPanel({
             {!bill.closed && <ChevronRight className='size-4 shrink-0 rtl:rotate-180' aria-hidden />}
           </button>
         )}
-        {onBill && bill.ticket && <DiscountDialog ticket={bill.ticket} open={discountOpen} onOpenChange={setDiscountOpen} />}
+        {onBill && bill.ticket && (
+          <DiscountDialog ticket={bill.ticket} open={discountOpen} onOpenChange={setDiscountOpen} />
+        )}
         <div className='flex items-baseline justify-between'>
           <span className='text-muted-foreground type-detail'>{t('total')}</span>
           <span className='type-figure'>{money(total)}</span>
@@ -261,8 +275,12 @@ export function OrderPanel({
         {/* Part of it is paid already: what was taken, and what is left to take */}
         {partPaid > 0 && (
           <div className='type-detail -mt-2 flex items-baseline justify-between'>
-            <span className='font-medium text-emerald-700 dark:text-emerald-400'>{t('partPaidSoFar', { amount: money(partPaid) })}</span>
-            <span className='font-semibold tabular-nums'>{t('leftToPay', { amount: money(Math.max(0, total - partPaid)) })}</span>
+            <span className='font-medium text-emerald-700 dark:text-emerald-400'>
+              {t('partPaidSoFar', { amount: money(partPaid) })}
+            </span>
+            <span className='font-semibold tabular-nums'>
+              {t('leftToPay', { amount: money(Math.max(0, total - partPaid)) })}
+            </span>
           </div>
         )}
         {lines.length > 0 && (
@@ -275,18 +293,18 @@ export function OrderPanel({
           />
         )}
         {footer ?? (
-        <Button
-          size='lg'
-          className={cn('h-14 w-full px-5 text-lg', primary.amount != null && 'justify-between')}
-          disabled={primary.disabled}
-          onClick={primary.onClick}
-        >
-          <span className='flex items-center gap-2'>
-            {primary.busy && <Loader2 className='size-5 animate-spin' />}
-            {primary.label}
-          </span>
-          {primary.amount != null && <span className='tabular-nums'>{money(primary.amount)}</span>}
-        </Button>
+          <Button
+            size='lg'
+            className={cn('h-14 w-full px-5 text-lg', primary.amount != null && 'justify-between')}
+            disabled={primary.disabled}
+            onClick={primary.onClick}
+          >
+            <span className='flex items-center gap-2'>
+              {primary.busy && <Loader2 className='size-5 animate-spin' />}
+              {primary.label}
+            </span>
+            {primary.amount != null && <span className='tabular-nums'>{money(primary.amount)}</span>}
+          </Button>
         )}
       </div>
     </>

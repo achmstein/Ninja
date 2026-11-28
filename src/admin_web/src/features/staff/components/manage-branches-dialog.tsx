@@ -19,10 +19,7 @@ import { Spinner } from '@/components/ui/spinner'
 import { Switch } from '@/components/ui/switch'
 import { SwitchRow } from '@/components/field'
 import { customersService } from '@/features/customers/services/customers-service'
-import {
-  type Customer,
-  getCustomerDisplayName,
-} from '@/features/customers/types'
+import { type Customer, getCustomerDisplayName } from '@/features/customers/types'
 
 interface ManageBranchesDialogProps {
   user: Customer | null
@@ -36,42 +33,27 @@ interface ManageBranchesDialogProps {
  * — per-switch writes would race each other. It reaches the user's token
  * on their next refresh. Owners aren't assignable — they hold every branch.
  */
-export function ManageBranchesDialog({
-  user,
-  onOpenChange,
-}: ManageBranchesDialogProps) {
+export function ManageBranchesDialog({ user, onOpenChange }: ManageBranchesDialogProps) {
   const t = useT()
   return (
     <Dialog open={!!user} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{t('assignedBranches')}</DialogTitle>
-          <DialogDescription>
-            {user ? getCustomerDisplayName(user) : ''}
-          </DialogDescription>
+          <DialogDescription>{user ? getCustomerDisplayName(user) : ''}</DialogDescription>
         </DialogHeader>
         {/* Keyed by the account so the form mounts from what it holds today */}
-        {user && (
-          <BranchesForm key={user.id} user={user} onOpenChange={onOpenChange} />
-        )}
+        {user && <BranchesForm key={user.id} user={user} onOpenChange={onOpenChange} />}
       </DialogContent>
     </Dialog>
   )
 }
 
-function BranchesForm({
-  user,
-  onOpenChange,
-}: {
-  user: Customer
-  onOpenChange: (open: boolean) => void
-}) {
+function BranchesForm({ user, onOpenChange }: { user: Customer; onOpenChange: (open: boolean) => void }) {
   const t = useT()
   const localized = useLocalized()
   const queryClient = useQueryClient()
-  const [selected, setSelected] = useState<Set<number>>(
-    () => new Set(user.branches ?? [])
-  )
+  const [selected, setSelected] = useState<Set<number>>(() => new Set(user.branches ?? []))
   // Every branch, new ones too: a call centre's account. Offered with the
   // call centre on, and shown to an account that already has it so it can be taken off
   const callCentre = Boolean(useFeatures().callCentre)
@@ -82,11 +64,7 @@ function BranchesForm({
 
   const save = useMutation({
     mutationFn: () =>
-      customersService.setBranches(
-        user.id,
-        allBranches ? [] : [...selected].sort((a, b) => a - b),
-        allBranches
-      ),
+      customersService.setBranches(user.id, allBranches ? [] : [...selected].sort((a, b) => a - b), allBranches),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['staff'] })
       toast.success(t('branchesUpdated'))
@@ -123,9 +101,7 @@ function BranchesForm({
           ))}
         </div>
       ) : branches.length === 0 ? (
-        <p className='text-muted-foreground py-8 text-center text-sm'>
-          {t('noBranchesFound')}
-        </p>
+        <p className='text-muted-foreground py-8 text-center text-sm'>{t('noBranchesFound')}</p>
       ) : (
         <div className='flex flex-col divide-y'>
           {branches.map((branch) => {
@@ -136,13 +112,9 @@ function BranchesForm({
                   <Store className='text-muted-foreground size-4' />
                 </div>
                 <div className='min-w-0 flex-1'>
-                  <div className='truncate text-sm font-medium'>
-                    {localized(branch.name)}
-                  </div>
+                  <div className='truncate text-sm font-medium'>{localized(branch.name)}</div>
                   {localized(branch.address) && (
-                    <div className='text-muted-foreground truncate text-xs'>
-                      {localized(branch.address)}
-                    </div>
+                    <div className='text-muted-foreground truncate text-xs'>{localized(branch.address)}</div>
                   )}
                 </div>
                 <Switch
@@ -158,18 +130,10 @@ function BranchesForm({
       )}
 
       <DialogFooter>
-        <Button
-          type='button'
-          variant='outline'
-          onClick={() => onOpenChange(false)}
-        >
+        <Button type='button' variant='outline' onClick={() => onOpenChange(false)}>
           {t('cancel')}
         </Button>
-        <Button
-          type='button'
-          disabled={save.isPending || branchesQuery.isLoading}
-          onClick={() => save.mutate()}
-        >
+        <Button type='button' disabled={save.isPending || branchesQuery.isLoading} onClick={() => save.mutate()}>
           {save.isPending && <Spinner />}
           {t('save')}
         </Button>

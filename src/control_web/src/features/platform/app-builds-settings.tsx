@@ -12,7 +12,6 @@ import {
 import { useT } from '@/lib/i18n'
 import { problemDetail } from '@/lib/problem'
 import { toast } from '@/lib/toast'
-import { BuildChoice } from '@/features/tenants/app-build'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,6 +28,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
+import { BuildChoice } from '@/features/tenants/app-build'
 
 /**
  * How the own apps are built from the control app: a GitHub token allowed to
@@ -57,7 +57,11 @@ export function AppBuildsSettings() {
     },
     onError: (e) => toast.error(problemDetail(e) || t('somethingWentWrong')),
   })
-  const run = useMutation({ ...testAppBuildSettingsMutation(), onSuccess: setTest, onError: (e) => toast.error(problemDetail(e) || t('somethingWentWrong')) })
+  const run = useMutation({
+    ...testAppBuildSettingsMutation(),
+    onSuccess: setTest,
+    onError: (e) => toast.error(problemDetail(e) || t('somethingWentWrong')),
+  })
   const all = useMutation({
     ...buildAllOwnAppsMutation(),
     onSuccess: (r) => {
@@ -80,11 +84,24 @@ export function AppBuildsSettings() {
         </CardHeader>
         <CardContent className='space-y-4'>
           <div className='max-w-md space-y-2'>
-            <Label htmlFor='github-token'>{saved.set ? t('buildsTokenReplace', { hint: saved.hint }) : t('buildsTokenLabel')}</Label>
-            <Input id='github-token' dir='ltr' type='password' autoComplete='off' placeholder='github_pat_…' value={token} onChange={(e) => setToken(e.target.value)} />
+            <Label htmlFor='github-token'>
+              {saved.set ? t('buildsTokenReplace', { hint: saved.hint }) : t('buildsTokenLabel')}
+            </Label>
+            <Input
+              id='github-token'
+              dir='ltr'
+              type='password'
+              autoComplete='off'
+              placeholder='github_pat_…'
+              value={token}
+              onChange={(e) => setToken(e.target.value)}
+            />
           </div>
           <div className='flex flex-wrap gap-2'>
-            <Button disabled={!token.trim() || save.isPending} onClick={() => save.mutate({ body: { gitHubToken: token.trim() } })}>
+            <Button
+              disabled={!token.trim() || save.isPending}
+              onClick={() => save.mutate({ body: { gitHubToken: token.trim() } })}
+            >
               {save.isPending && <Spinner />}
               {t('save')}
             </Button>
@@ -94,7 +111,11 @@ export function AppBuildsSettings() {
                   {run.isPending && <Spinner />}
                   {t('firebaseTest')}
                 </Button>
-                <Button variant='ghost' disabled={save.isPending} onClick={() => save.mutate({ body: { clearToken: true } })}>
+                <Button
+                  variant='ghost'
+                  disabled={save.isPending}
+                  onClick={() => save.mutate({ body: { clearToken: true } })}
+                >
                   {t('firebaseClear')}
                 </Button>
               </>
@@ -119,7 +140,9 @@ export function AppBuildsSettings() {
           </div>
           {result && (
             <div className='space-y-1 text-sm'>
-              {result.started.length > 0 && <p className='text-emerald-600'>{t('buildsAllStartedFor', { slugs: result.started.join(', ') })}</p>}
+              {result.started.length > 0 && (
+                <p className='text-emerald-600'>{t('buildsAllStartedFor', { slugs: result.started.join(', ') })}</p>
+              )}
               {result.refused.map((r) => (
                 <p key={r.slug} className='text-destructive'>
                   {r.slug}: {r.reason}
@@ -138,7 +161,9 @@ export function AppBuildsSettings() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
-            <AlertDialogAction onClick={() => all.mutate({ body: { platform, track } })}>{t('buildsAllStart')}</AlertDialogAction>
+            <AlertDialogAction onClick={() => all.mutate({ body: { platform, track } })}>
+              {t('buildsAllStart')}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

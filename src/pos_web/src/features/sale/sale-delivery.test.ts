@@ -32,7 +32,10 @@ describe('validatePhoneDelivery', () => {
   })
 
   it('wants a phone the rider can call and an address', () => {
-    expect(validatePhoneDelivery({ ...filled, phone: '12', address: ' ' }, 'Mona', true)).toEqual({ phone: true, address: true })
+    expect(validatePhoneDelivery({ ...filled, phone: '12', address: ' ' }, 'Mona', true)).toEqual({
+      phone: true,
+      address: true,
+    })
   })
 
   it('catches a part longer than the server keeps', () => {
@@ -45,7 +48,9 @@ describe('the pin source an order says', () => {
     expect(toPosDeliveryRequest({ ...filled, pinSource: 'Search' }).pinSource).toBeNull()
     expect(toPosDeliveryRequest({ ...filled, latitude: 30, longitude: 31 }).pinSource).toBe('Search')
     expect(toPosDeliveryRequest({ ...filled, latitude: 30, longitude: 31, pinSource: 'None' }).pinSource).toBe('Search')
-    expect(toPosDeliveryRequest({ ...filled, latitude: 30, longitude: 31, pinSource: 'Shared' }).pinSource).toBe('Shared')
+    expect(toPosDeliveryRequest({ ...filled, latitude: 30, longitude: 31, pinSource: 'Shared' }).pinSource).toBe(
+      'Shared'
+    )
   })
 
   it('carries the location link, so a location shared later lands on the order', () => {
@@ -64,7 +69,9 @@ describe('validateDeliveryWho', () => {
 
 describe('validateDeliveryWhere', () => {
   it('takes any street in the caller words, with no pin', () => {
-    expect(validateDeliveryWhere({ ...filled, address: 'Haret El Sheikh, behind the bakery', location: '' })).toEqual({})
+    expect(validateDeliveryWhere({ ...filled, address: 'Haret El Sheikh, behind the bakery', location: '' })).toEqual(
+      {}
+    )
   })
 
   it('wants a street, and nothing longer than the server keeps; never the phone or name', () => {
@@ -91,8 +98,14 @@ describe('toPosDeliveryRequest', () => {
   })
 
   it('sends the pin only when both coordinates are there', () => {
-    expect(toPosDeliveryRequest({ ...filled, latitude: 30.06, longitude: 31.47 })).toMatchObject({ latitude: 30.06, longitude: 31.47 })
-    expect(toPosDeliveryRequest({ ...filled, latitude: 30.06, longitude: null })).toMatchObject({ latitude: null, longitude: null })
+    expect(toPosDeliveryRequest({ ...filled, latitude: 30.06, longitude: 31.47 })).toMatchObject({
+      latitude: 30.06,
+      longitude: 31.47,
+    })
+    expect(toPosDeliveryRequest({ ...filled, latitude: 30.06, longitude: null })).toMatchObject({
+      latitude: null,
+      longitude: null,
+    })
   })
 })
 

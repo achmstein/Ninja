@@ -50,10 +50,7 @@ export const networkStatus = {
  * asks it again every few seconds with `probe` (any call through the shared
  * client, which reports the answer itself). Returns the stop function.
  */
-export function watchNetwork(
-  probe: () => Promise<unknown>,
-  intervalMs = PROBE_INTERVAL_MS,
-): () => void {
+export function watchNetwork(probe: () => Promise<unknown>, intervalMs = PROBE_INTERVAL_MS): () => void {
   const ask = () => {
     probe().catch(() => {})
   }

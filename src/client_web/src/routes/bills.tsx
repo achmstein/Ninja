@@ -1,24 +1,24 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useAuth } from 'react-oidc-context'
 import { CircleAlert, ReceiptText, Wallet } from 'lucide-react'
+import { useAuth } from 'react-oidc-context'
 import { getMyAccountOptions } from '@/api/accounts/@tanstack/react-query.gen'
+import { useGuestStore } from '@/stores/guest-store'
+import { takeAfterPayment, useBackTo } from '@/lib/back-to'
 import { useFeatures } from '@/lib/brand'
 import { usePrice, useT } from '@/lib/i18n'
-import { takeAfterPayment, useBackTo } from '@/lib/back-to'
 import { useLiveBills } from '@/lib/live-bills'
+import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
+import { SignInOptions } from '@/components/auth/sign-in-options'
 import { BillsByMonth } from '@/components/bills/bills-history'
 import { hasLiveBill, OpenBills } from '@/components/bills/open-bills'
 import { OrderGroup } from '@/components/bills/waiting-orders'
 import { NinjaPage, Rise, RiseItem } from '@/components/ninja/page/page'
 import { Empty } from '@/components/ninja/page/parts'
-import { PaySheet } from '@/components/pay/pay-sheet'
-import { SignInOptions } from '@/components/auth/sign-in-options'
 import { TileGroup, TileLink } from '@/components/ninja/page/tile-row'
-import { useGuestStore } from '@/stores/guest-store'
-import { Button } from '@/components/ui/button'
-import { Skeleton } from '@/components/ui/skeleton'
+import { PaySheet } from '@/components/pay/pay-sheet'
 
 export const Route = createFileRoute('/bills')({
   // ?pay=<ticketId> opens the pay sheet on that bill: where a guest comes
@@ -138,7 +138,11 @@ function OnYourTab() {
   const price = usePrice()
   const auth = useAuth()
   const features = useFeatures()
-  const accountQuery = useQuery({ ...getMyAccountOptions(), enabled: auth.isAuthenticated && features.tabs, retry: false })
+  const accountQuery = useQuery({
+    ...getMyAccountOptions(),
+    enabled: auth.isAuthenticated && features.tabs,
+    retry: false,
+  })
   const balance = accountQuery.isError ? 0 : Number(accountQuery.data?.balance ?? 0)
   if (!features.tabs || balance <= 0) return null
   return (

@@ -8,9 +8,7 @@ import { MovementTypeBadge } from './components/movement-type-badge'
 import { formatSignedQuantity, referenceLabel } from './format'
 
 type Translate = (key: TranslationKey, params?: TranslateParams) => string
-type Localized = (
-  text: { en?: string | null; ar?: string | null } | null | undefined
-) => string
+type Localized = (text: { en?: string | null; ar?: string | null } | null | undefined) => string
 
 type MovementColumnsContext = {
   t: Translate
@@ -31,11 +29,7 @@ export function movementTime(m: MovementView): string {
 
 /** Posted a minute or more after it happened: the posting time is worth saying */
 export function postedLater(m: MovementView): boolean {
-  return (
-    m.occurredAt != null &&
-    new Date(m.recordedAt).getTime() - new Date(m.occurredAt).getTime() >=
-      60_000
-  )
+  return m.occurredAt != null && new Date(m.recordedAt).getTime() - new Date(m.occurredAt).getTime() >= 60_000
 }
 
 /**
@@ -50,15 +44,10 @@ export function getMovementColumns({ t, localized }: MovementColumnsContext) {
       header: t('time'),
       cell: (info) => (
         <div className='flex flex-col leading-tight'>
-          <When
-            value={info.getValue()}
-            mode='time'
-            className='text-muted-foreground'
-          />
+          <When value={info.getValue()} mode='time' className='text-muted-foreground' />
           {postedLater(info.row.original) && (
             <span className='text-muted-foreground/80 text-xs'>
-              {t('postedAt')}{' '}
-              <When value={info.row.original.recordedAt} mode='time' />
+              {t('postedAt')} <When value={info.row.original.recordedAt} mode='time' />
             </span>
           )}
         </div>
@@ -98,29 +87,15 @@ export function getMovementColumns({ t, localized }: MovementColumnsContext) {
       meta: { align: 'end' },
       id: 'unitCost',
       header: () => <div className='text-end'>{t('unitCost')}</div>,
-      cell: (info) => (
-        <div className='text-muted-foreground text-end tabular-nums'>
-          {formatEgp(info.getValue())}
-        </div>
-      ),
+      cell: (info) => <div className='text-muted-foreground text-end tabular-nums'>{formatEgp(info.getValue())}</div>,
     }),
-    columnHelper.accessor(
-      (row) =>
-        [row.reason, referenceLabel(row.reference, t)]
-          .filter(Boolean)
-          .join(' '),
-      {
-        id: 'details',
-        header: t('details'),
-        cell: ({ row }) => {
-          const { reason, reference } = row.original
-          return (
-            <span className='text-muted-foreground'>
-              {reason || referenceLabel(reference, t)}
-            </span>
-          )
-        },
-      }
-    ),
+    columnHelper.accessor((row) => [row.reason, referenceLabel(row.reference, t)].filter(Boolean).join(' '), {
+      id: 'details',
+      header: t('details'),
+      cell: ({ row }) => {
+        const { reason, reference } = row.original
+        return <span className='text-muted-foreground'>{reason || referenceLabel(reference, t)}</span>
+      },
+    }),
   ])
 }

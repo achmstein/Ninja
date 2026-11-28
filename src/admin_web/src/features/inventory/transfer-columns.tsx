@@ -38,16 +38,12 @@ export function getTransferColumns({ t, branchName }: TransferColumnsContext) {
       meta: { align: 'end' },
       id: 'lines',
       header: () => <div className='text-end'>{t('lines')}</div>,
-      cell: (info) => (
-        <div className='text-end tabular-nums'>{info.getValue()}</div>
-      ),
+      cell: (info) => <div className='text-end tabular-nums'>{info.getValue()}</div>,
     }),
     columnHelper.accessor('note', {
       id: 'note',
       header: t('note'),
-      cell: (info) => (
-        <span className='text-muted-foreground'>{info.getValue()}</span>
-      ),
+      cell: (info) => <span className='text-muted-foreground'>{info.getValue()}</span>,
     }),
   ])
 }

@@ -16,13 +16,7 @@ import { useAllowedBranches } from '@/hooks/use-allowed-branches'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
 import { Combobox } from '@/components/combobox'
@@ -49,11 +43,7 @@ type EmployeeSheetProps = {
  * ledger of what they are owed, and whether they still work here. A new
  * employee is hired with their first pay terms in the same form.
  */
-export function EmployeeSheet({
-  employeeId,
-  isNew,
-  onClose,
-}: EmployeeSheetProps) {
+export function EmployeeSheet({ employeeId, isNew, onClose }: EmployeeSheetProps) {
   const t = useT()
   const open = isNew || employeeId !== null
 
@@ -80,12 +70,7 @@ export function EmployeeSheet({
       ) : employee.data ? (
         <>
           <Section title={t('details')}>
-            <EmployeeForm
-              key={String(employee.data.id)}
-              employee={employee.data}
-              onSaved={() => {}}
-              inSheet
-            />
+            <EmployeeForm key={String(employee.data.id)} employee={employee.data} onSaved={() => {}} inSheet />
           </Section>
           <Section title={t('pay')}>
             <PayTermsSection employee={employee.data} />
@@ -94,11 +79,7 @@ export function EmployeeSheet({
             <LedgerSection employee={employee.data} />
           </Section>
           <Section title={t('employment')}>
-            <EmploymentSection
-              employee={employee.data}
-              inSheet
-              onDeleted={onClose}
-            />
+            <EmploymentSection employee={employee.data} inSheet onDeleted={onClose} />
           </Section>
         </>
       ) : (
@@ -139,25 +120,18 @@ export function EmployeeForm({
   const [name, setName] = useState(employee?.name ?? '')
   const [jobTitle, setJobTitle] = useState(employee?.jobTitle ?? '')
   const [phone, setPhone] = useState(() => editablePhone(employee?.phone))
-  const [branchId, setBranchId] = useState(
-    String(employee?.branchId ?? activeBranchId ?? '')
-  )
+  const [branchId, setBranchId] = useState(String(employee?.branchId ?? activeBranchId ?? ''))
   const [userId, setUserId] = useState<string | null>(employee?.userId ?? null)
-  const [startedOn, setStartedOn] = useState(
-    employee?.startedOn ?? formatDay(new Date())
-  )
+  const [startedOn, setStartedOn] = useState(employee?.startedOn ?? formatDay(new Date()))
   const [scheme, setScheme] = useState(String(PAY_SCHEME.monthly))
   const [rate, setRate] = useState('')
-  const [paidDaysOff, setPaidDaysOff] = useState(
-    String(employee?.paidDaysOff ?? 4)
-  )
+  const [paidDaysOff, setPaidDaysOff] = useState(String(employee?.paidDaysOff ?? 4))
 
   // Staff accounts, for linking a login. Everyone with a staff role; the
   // ones already linked to someone else are refused by the API.
   const accounts = useQuery({
     queryKey: ['staff'],
-    queryFn: () =>
-      customersService.getCustomers({ role: 'Admin,Owner,Cashier', max: 200 }),
+    queryFn: () => customersService.getCustomers({ role: 'Admin,Owner,Cashier', max: 200 }),
   })
   const accountOptions = (accounts.data ?? []).map((account) => ({
     value: account.id,
@@ -211,10 +185,7 @@ export function EmployeeForm({
     }
   }
 
-  const canSubmit =
-    name.trim() !== '' &&
-    branchId !== '' &&
-    (employee !== null || parseFloat(rate) > 0)
+  const canSubmit = name.trim() !== '' && branchId !== '' && (employee !== null || parseFloat(rate) > 0)
 
   const saveButton = (
     <Button type='submit' form={formId} disabled={!canSubmit || isPending}>
@@ -228,13 +199,7 @@ export function EmployeeForm({
       <div className='grid gap-4 sm:grid-cols-2'>
         <div className='flex flex-col gap-1.5 sm:col-span-2'>
           <Label htmlFor='emp-name'>{t('name')}</Label>
-          <Input
-            id='emp-name'
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            autoFocus={!employee}
-            required
-          />
+          <Input id='emp-name' value={name} onChange={(e) => setName(e.target.value)} autoFocus={!employee} required />
         </div>
         <div className='flex flex-col gap-1.5'>
           <Label htmlFor='emp-job'>{t('jobTitle')}</Label>
@@ -247,13 +212,7 @@ export function EmployeeForm({
         </div>
         <div className='flex flex-col gap-1.5'>
           <Label htmlFor='emp-phone'>{t('phone')}</Label>
-          <Input
-            id='emp-phone'
-            value={phone}
-            inputMode='tel'
-            dir='ltr'
-            onChange={(e) => setPhone(e.target.value)}
-          />
+          <Input id='emp-phone' value={phone} inputMode='tel' dir='ltr' onChange={(e) => setPhone(e.target.value)} />
         </div>
         <div className='flex flex-col gap-1.5'>
           <Label>{t('homeBranch')}</Label>
@@ -316,11 +275,7 @@ export function EmployeeForm({
         <div className='grid gap-4 sm:grid-cols-3'>
           <div className='flex flex-col gap-1.5'>
             <Label htmlFor='emp-started'>{t('startedOn')}</Label>
-            <DatePicker
-              id='emp-started'
-              value={startedOn}
-              onChange={setStartedOn}
-            />
+            <DatePicker id='emp-started' value={startedOn} onChange={setStartedOn} />
           </div>
           <div className='flex flex-col gap-1.5'>
             <Label>{t('payScheme')}</Label>
@@ -329,20 +284,14 @@ export function EmployeeForm({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={String(PAY_SCHEME.monthly)}>
-                  {schemeLabel(PAY_SCHEME.monthly, t)}
-                </SelectItem>
-                <SelectItem value={String(PAY_SCHEME.daily)}>
-                  {schemeLabel(PAY_SCHEME.daily, t)}
-                </SelectItem>
+                <SelectItem value={String(PAY_SCHEME.monthly)}>{schemeLabel(PAY_SCHEME.monthly, t)}</SelectItem>
+                <SelectItem value={String(PAY_SCHEME.daily)}>{schemeLabel(PAY_SCHEME.daily, t)}</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div className='flex flex-col gap-1.5'>
             <Label htmlFor='emp-rate'>
-              {Number(scheme) === PAY_SCHEME.daily
-                ? t('ratePerDay')
-                : t('salaryPerMonth')}
+              {Number(scheme) === PAY_SCHEME.daily ? t('ratePerDay') : t('salaryPerMonth')}
             </Label>
             <Input
               id='emp-rate'
@@ -386,20 +335,12 @@ export function EmployeeForm({
               <Label htmlFor='emp-started'>{t('startedOn')}</Label>
               <InfoTip>{t('startedOnHint')}</InfoTip>
             </div>
-            <DatePicker
-              id='emp-started'
-              value={startedOn}
-              onChange={setStartedOn}
-            />
+            <DatePicker id='emp-started' value={startedOn} onChange={setStartedOn} />
           </div>
         )}
       </div>
 
-      {inSheet ? (
-        <SheetActions>{saveButton}</SheetActions>
-      ) : (
-        <div className='flex justify-end'>{saveButton}</div>
-      )}
+      {inSheet ? <SheetActions>{saveButton}</SheetActions> : <div className='flex justify-end'>{saveButton}</div>}
     </form>
   )
 }
@@ -415,9 +356,7 @@ export function PayTermsSection({ employee }: { employee: EmployeeView }) {
   const owner = isOwner(auth.user)
   const { setPayTerms, isPending } = usePayrollActions()
   const [editing, setEditing] = useState(false)
-  const [scheme, setScheme] = useState(
-    String(employee.currentTerms?.scheme ?? PAY_SCHEME.daily)
-  )
+  const [scheme, setScheme] = useState(String(employee.currentTerms?.scheme ?? PAY_SCHEME.daily))
   const [rate, setRate] = useState('')
   const [effectiveFrom, setEffectiveFrom] = useState(formatDay(new Date()))
 
@@ -439,16 +378,9 @@ export function PayTermsSection({ employee }: { employee: EmployeeView }) {
   return (
     <div className='space-y-3'>
       <div className='flex flex-wrap items-center justify-between gap-2'>
-        <span className='text-lg font-semibold tabular-nums'>
-          {payLabel(employee.currentTerms, t)}
-        </span>
+        <span className='text-lg font-semibold tabular-nums'>{payLabel(employee.currentTerms, t)}</span>
         {!editing && owner && (
-          <Button
-            type='button'
-            variant='outline'
-            size='sm'
-            onClick={() => setEditing(true)}
-          >
+          <Button type='button' variant='outline' size='sm' onClick={() => setEditing(true)}>
             {t('changePay')}
           </Button>
         )}
@@ -466,20 +398,14 @@ export function PayTermsSection({ employee }: { employee: EmployeeView }) {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={String(PAY_SCHEME.monthly)}>
-                  {schemeLabel(PAY_SCHEME.monthly, t)}
-                </SelectItem>
-                <SelectItem value={String(PAY_SCHEME.daily)}>
-                  {schemeLabel(PAY_SCHEME.daily, t)}
-                </SelectItem>
+                <SelectItem value={String(PAY_SCHEME.monthly)}>{schemeLabel(PAY_SCHEME.monthly, t)}</SelectItem>
+                <SelectItem value={String(PAY_SCHEME.daily)}>{schemeLabel(PAY_SCHEME.daily, t)}</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div className='flex flex-col gap-1.5'>
             <Label htmlFor='terms-rate'>
-              {Number(scheme) === PAY_SCHEME.daily
-                ? t('ratePerDay')
-                : t('salaryPerMonth')}
+              {Number(scheme) === PAY_SCHEME.daily ? t('ratePerDay') : t('salaryPerMonth')}
             </Label>
             <Input
               id='terms-rate'
@@ -495,26 +421,13 @@ export function PayTermsSection({ employee }: { employee: EmployeeView }) {
           </div>
           <div className='flex flex-col gap-1.5'>
             <Label htmlFor='terms-from'>{t('effectiveFrom')}</Label>
-            <DatePicker
-              id='terms-from'
-              value={effectiveFrom}
-              onChange={setEffectiveFrom}
-            />
+            <DatePicker id='terms-from' value={effectiveFrom} onChange={setEffectiveFrom} />
           </div>
           <div className='flex h-9 items-center gap-2'>
-            <Button
-              type='button'
-              variant='ghost'
-              size='sm'
-              onClick={() => setEditing(false)}
-            >
+            <Button type='button' variant='ghost' size='sm' onClick={() => setEditing(false)}>
               {t('cancel')}
             </Button>
-            <Button
-              type='submit'
-              size='sm'
-              disabled={isPending || !(parseFloat(rate) > 0)}
-            >
+            <Button type='submit' size='sm' disabled={isPending || !(parseFloat(rate) > 0)}>
               {isPending && <Spinner />}
               {t('save')}
             </Button>
@@ -525,10 +438,7 @@ export function PayTermsSection({ employee }: { employee: EmployeeView }) {
       {employee.terms.length > 1 && (
         <ul className='text-muted-foreground divide-y text-xs'>
           {employee.terms.map((terms) => (
-            <li
-              key={terms.effectiveFrom}
-              className='flex justify-between py-1 tabular-nums'
-            >
+            <li key={terms.effectiveFrom} className='flex justify-between py-1 tabular-nums'>
               <span>
                 {t('fromDate', {
                   date: readableDay(terms.effectiveFrom, locale, t),
@@ -602,12 +512,7 @@ export function EmploymentSection({
   )
 
   return (
-    <div
-      className={cn(
-        'flex flex-wrap items-center gap-2 text-sm',
-        showSince ? 'justify-between' : 'justify-end'
-      )}
-    >
+    <div className={cn('flex flex-wrap items-center gap-2 text-sm', showSince ? 'justify-between' : 'justify-end')}>
       {showSince && (
         <span className='text-muted-foreground'>
           {employee.isActive
@@ -623,11 +528,7 @@ export function EmploymentSection({
           <Button
             type='button'
             variant={employee.isActive ? 'ghost' : 'outline'}
-            className={
-              employee.isActive
-                ? 'text-destructive hover:text-destructive'
-                : undefined
-            }
+            className={employee.isActive ? 'text-destructive hover:text-destructive' : undefined}
             onClick={() => setLeaveOpen(true)}
           >
             {employee.isActive ? t('markLeft') : t('rehire')}
@@ -667,14 +568,8 @@ export function EmploymentSection({
         desc={
           <div className='space-y-3'>
             <div className='flex flex-col gap-1.5'>
-              <Label htmlFor='employment-date'>
-                {employee.isActive ? t('lastDay') : t('startedOn')}
-              </Label>
-              <DatePicker
-                id='employment-date'
-                value={date}
-                onChange={setDate}
-              />
+              <Label htmlFor='employment-date'>{employee.isActive ? t('lastDay') : t('startedOn')}</Label>
+              <DatePicker id='employment-date' value={date} onChange={setDate} />
             </div>
           </div>
         }

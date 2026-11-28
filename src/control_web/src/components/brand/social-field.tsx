@@ -7,7 +7,15 @@ import { Switch } from '@/components/ui/switch'
  * platform's own apps (the consent screen says Ninja), through the hub
  * realm, so nothing is set up per business. Off leaves email and phone.
  */
-export function SocialField({ id, checked, onChange }: { id: string; checked: boolean; onChange: (checked: boolean) => void }) {
+export function SocialField({
+  id,
+  checked,
+  onChange,
+}: {
+  id: string
+  checked: boolean
+  onChange: (checked: boolean) => void
+}) {
   const t = useT()
   return (
     <div className='flex items-start justify-between gap-4'>

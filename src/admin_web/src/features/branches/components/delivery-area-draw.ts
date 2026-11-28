@@ -11,9 +11,7 @@ import { areaOfRing, areaRing, type DeliveryArea } from '@/lib/maps'
 export const AREA_COLOUR = '#2563eb'
 
 type Adapter = ConstructorParameters<typeof TerraDraw>[0]['adapter']
-type Validation = NonNullable<
-  ConstructorParameters<typeof TerraDrawPolygonMode>[0]
->['validation']
+type Validation = NonNullable<ConstructorParameters<typeof TerraDrawPolygonMode>[0]>['validation']
 
 /** What the map's buttons do to the drawing */
 export interface AreaDraw {
@@ -26,9 +24,7 @@ export interface AreaDraw {
 const notCrossing =
   (always: boolean): Validation =>
   (feature, { updateType }) =>
-    always || String(updateType) !== 'provisional'
-      ? ValidateNotSelfIntersecting(feature)
-      : { valid: true }
+    always || String(updateType) !== 'provisional' ? ValidateNotSelfIntersecting(feature) : { valid: true }
 
 /**
  * One area drawn on either map through terra-draw: corners clicked one after
@@ -92,11 +88,7 @@ export function startAreaDraw(
   })
 
   const drawn = (): GeoJSONStoreFeatures | undefined =>
-    draw
-      .getSnapshot()
-      .find(
-        (f) => f.geometry.type === 'Polygon' && !f.properties.currentlyDrawing
-      )
+    draw.getSnapshot().find((f) => f.geometry.type === 'Polygon' && !f.properties.currentlyDrawing)
 
   const editing = (id: string | number) => {
     draw.setMode('select')

@@ -11,10 +11,7 @@ export type OrderUrgency = 'fresh' | 'warning' | 'delayed'
 /** What the ticket's bar and clock are saying: how late the order is, that it is done, or that it is off. */
 export type CardTone = OrderUrgency | 'ready' | 'cancelled'
 
-export function orderUrgency(
-  value: string | null | undefined,
-  nowMs: number
-): OrderUrgency {
+export function orderUrgency(value: string | null | undefined, nowMs: number): OrderUrgency {
   if (!value) return 'fresh'
   const minutes = (nowMs - new Date(value).getTime()) / 60_000
   if (minutes >= DELAYED_AFTER_MINUTES) return 'delayed'
@@ -94,15 +91,9 @@ export function allItemsCancelled(items: CancellableItem[] | null | undefined): 
  * Elapsed time as a kitchen clock: `4:12` under an hour, `1h 05m` past it.
  * Seconds matter on a board that is glanced at, not read.
  */
-export function formatElapsed(
-  value: string | null | undefined,
-  nowMs: number
-): string {
+export function formatElapsed(value: string | null | undefined, nowMs: number): string {
   if (!value) return ''
-  const totalSeconds = Math.max(
-    0,
-    Math.floor((nowMs - new Date(value).getTime()) / 1000)
-  )
+  const totalSeconds = Math.max(0, Math.floor((nowMs - new Date(value).getTime()) / 1000))
   const hours = Math.floor(totalSeconds / 3600)
   const minutes = Math.floor((totalSeconds % 3600) / 60)
   const seconds = totalSeconds % 60

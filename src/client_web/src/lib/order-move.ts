@@ -1,6 +1,6 @@
 import type { CatalogItemDto } from '@/api/catalog'
-import { effectiveBasePrice } from '@/components/menu/item-form'
 import type { CartLine } from '@/lib/cart'
+import { effectiveBasePrice } from '@/components/menu/item-form'
 
 /** What became of the order on its way to another branch */
 export type OrderMove = {

@@ -5,27 +5,14 @@ import { getRouteApi } from '@tanstack/react-router'
 import { useTable } from '@tanstack/react-table'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { type ShiftView } from '@/api/sales'
-import {
-  getClosedShiftsOptions,
-  getCurrentShiftOptions,
-} from '@/api/sales/@tanstack/react-query.gen'
+import { getClosedShiftsOptions, getCurrentShiftOptions } from '@/api/sales/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
-import {
-  useLanguage,
-  useT,
-  type TranslateParams,
-  type TranslationKey,
-} from '@/lib/i18n'
+import { useLanguage, useT, type TranslateParams, type TranslationKey } from '@/lib/i18n'
 import { formatEgp, toNumber } from '@/lib/money'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import {
-  DataTable,
-  createAppColumnHelper,
-  dataTableFeatures,
-  type AppRow,
-} from '@/components/data-table'
+import { DataTable, createAppColumnHelper, dataTableFeatures, type AppRow } from '@/components/data-table'
 import { ErrorState } from '@/components/error-state'
 import { InfoTip } from '@/components/info-tip'
 import { Dot, ListRow } from '@/components/list-row'
@@ -45,9 +32,7 @@ const PAGE_SIZE = 20
 
 /** A shift's net sales; an older server sent only the gross sales total */
 function shiftNetSales(shift: ShiftView): number {
-  return shift.netSales != null
-    ? toNumber(shift.netSales)
-    : toNumber(shift.salesTotal) - toNumber(shift.refundsTotal)
+  return shift.netSales != null ? toNumber(shift.netSales) : toNumber(shift.salesTotal) - toNumber(shift.refundsTotal)
 }
 
 const columnHelper = createAppColumnHelper<ShiftView>()
@@ -58,8 +43,7 @@ type Translate = (key: TranslationKey, params?: TranslateParams) => string
 function ShiftSpan({ shift }: { shift: ShiftView }) {
   return (
     <span className='tabular-nums'>
-      <When value={shift.openedAt} mode='dateTime' /> –{' '}
-      <When value={shift.closedAt} mode='time' />
+      <When value={shift.openedAt} mode='dateTime' /> – <When value={shift.closedAt} mode='time' />
     </span>
   )
 }
@@ -90,9 +74,7 @@ function getShiftColumns({ t }: { t: Translate }) {
             </span>
           </span>
           {shiftPeople(info.row.original) && (
-            <span className='text-muted-foreground text-xs'>
-              {shiftPeople(info.row.original)}
-            </span>
+            <span className='text-muted-foreground text-xs'>{shiftPeople(info.row.original)}</span>
           )}
         </div>
       ),
@@ -120,8 +102,7 @@ function getShiftColumns({ t }: { t: Translate }) {
         <div className='flex flex-col items-end gap-1'>
           <OverShortBadge value={toNumber(info.getValue())} />
           <span className='text-muted-foreground text-xs tabular-nums'>
-            {formatEgp(info.row.original.closingCount)} /{' '}
-            {formatEgp(info.row.original.expectedCash)}
+            {formatEgp(info.row.original.closingCount)} / {formatEgp(info.row.original.expectedCash)}
           </span>
         </div>
       ),
@@ -176,10 +157,7 @@ export function TillShifts() {
     retry: false,
     refetchInterval: 60_000,
   })
-  const noOpenShift =
-    current.isError &&
-    current.error instanceof AxiosError &&
-    current.error.response?.status === 404
+  const noOpenShift = current.isError && current.error instanceof AxiosError && current.error.response?.status === 404
   const shift = current.isError ? null : (current.data ?? null)
 
   const closed = useQuery({
@@ -233,9 +211,7 @@ export function TillShifts() {
         {/* The open shift, unboxed: its state, its one number, its report */}
         <section className='flex flex-col gap-3'>
           <div className='flex items-center gap-2'>
-            <span
-              className={`size-2 rounded-full ${shift ? 'bg-success' : 'bg-muted-foreground/40'}`}
-            />
+            <span className={`size-2 rounded-full ${shift ? 'bg-success' : 'bg-muted-foreground/40'}`} />
             <h2 className='text-sm font-semibold'>{t('currentShift')}</h2>
             {shift && <Badge>{t('shiftOpenBadge')}</Badge>}
           </div>
@@ -244,11 +220,7 @@ export function TillShifts() {
           ) : shift ? (
             <div className='flex flex-wrap items-end justify-between gap-4'>
               <div className='flex flex-col gap-1'>
-                <Stat
-                  size='hero'
-                  label={t('expectedInDrawer')}
-                  value={formatEgp(shift.expectedInDrawer)}
-                />
+                <Stat size='hero' label={t('expectedInDrawer')} value={formatEgp(shift.expectedInDrawer)} />
                 <p className='text-muted-foreground text-sm'>
                   {shift.openedAt && (
                     <>
@@ -274,11 +246,7 @@ export function TillShifts() {
               <InfoTip>{t('noShiftOpenHint')}</InfoTip>
             </p>
           ) : (
-            <ErrorState
-              className='py-6'
-              error={current.error}
-              onRetry={() => current.refetch()}
-            />
+            <ErrorState className='py-6' error={current.error} onRetry={() => current.refetch()} />
           )}
         </section>
 

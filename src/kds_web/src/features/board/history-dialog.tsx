@@ -1,14 +1,8 @@
 import { useMemo, useState } from 'react'
 import { History } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog'
 import { useT } from '@/lib/i18n'
+import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { OrderCard } from './order-card'
 import { useKitchenOrders, useNowMs } from './use-kitchen-orders'
 import { useReady } from './use-ready'
@@ -31,10 +25,7 @@ export function HistoryDialog() {
     () =>
       orders
         .filter((order) => order.readyAt != null)
-        .sort(
-          (a, b) =>
-            new Date(b.readyAt!).getTime() - new Date(a.readyAt!).getTime()
-        ),
+        .sort((a, b) => new Date(b.readyAt!).getTime() - new Date(a.readyAt!).getTime()),
     [orders]
   )
 
@@ -52,9 +43,7 @@ export function HistoryDialog() {
         </DialogHeader>
         <div className='bg-muted/60 dark:bg-background min-h-0 flex-1 overflow-y-auto p-4'>
           {finished.length === 0 ? (
-            <p className='text-muted-foreground type-item p-6 text-center'>
-              {t('noHistory')}
-            </p>
+            <p className='text-muted-foreground type-item p-6 text-center'>{t('noHistory')}</p>
           ) : (
             // Columns, as on the board: no holes under short cards
             <div className='columns-[18.75rem] gap-4'>

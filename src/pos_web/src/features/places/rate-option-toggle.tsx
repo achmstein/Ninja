@@ -54,20 +54,16 @@ export function RateOptionToggle({
                 // a white row did not say which was chosen
                 selected
                   ? 'border-primary bg-primary text-primary-foreground font-semibold'
-                  : 'bg-background hover:bg-muted',
+                  : 'bg-background hover:bg-muted'
               )}
             >
               <Icon className='size-5 shrink-0' />
-              <span className='min-w-0 flex-1 truncate text-start'>
-                {localized(option.name)}
-              </span>
+              <span className='min-w-0 flex-1 truncate text-start'>{localized(option.name)}</span>
               {rates?.[code] && (
                 <span
                   className={cn(
-                    'shrink-0 type-detail tabular-nums',
-                    selected
-                      ? 'text-primary-foreground/80'
-                      : 'text-muted-foreground',
+                    'type-detail shrink-0 tabular-nums',
+                    selected ? 'text-primary-foreground/80' : 'text-muted-foreground'
                   )}
                 >
                   {rates[code]}
@@ -104,9 +100,7 @@ export function RateOptionToggle({
               // or rate is cut inside its button, never pushed off a phone
               'flex min-w-0 items-center justify-center gap-2 rounded-lg border px-2 text-base font-medium transition-colors disabled:opacity-50',
               rates ? 'h-14' : 'h-12',
-              selected
-                ? 'border-primary bg-primary text-primary-foreground'
-                : 'hover:bg-muted',
+              selected ? 'border-primary bg-primary text-primary-foreground' : 'hover:bg-muted'
             )}
           >
             <Icon className='size-5 shrink-0' />
@@ -118,9 +112,7 @@ export function RateOptionToggle({
                 <span
                   className={cn(
                     'type-caption max-w-full truncate tabular-nums',
-                    selected
-                      ? 'text-primary-foreground/80'
-                      : 'text-muted-foreground',
+                    selected ? 'text-primary-foreground/80' : 'text-muted-foreground'
                   )}
                 >
                   {rates[code]}

@@ -4,11 +4,11 @@ import { Link, useNavigate } from '@tanstack/react-router'
 import { ArrowLeft, ArrowRight, User } from 'lucide-react'
 import { getClosedShiftsOptions } from '@/api/sales/@tanstack/react-query.gen'
 import type { ShiftView } from '@/api/sales/types.gen'
-import { Button } from '@/components/ui/button'
-import { Skeleton } from '@/components/ui/skeleton'
 import { API_VERSION } from '@/lib/api-client'
 import { useLanguage, useLocale, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
+import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
 import { OverShortBadge } from './shift-report'
 
 const PAGE_SIZE = 20
@@ -23,8 +23,7 @@ function ShiftRow({ shift }: { shift: ShiftView }) {
     dateStyle: 'short',
     timeStyle: 'short',
   })
-  const formatAt = (value: string | null | undefined) =>
-    value ? dateTime.format(new Date(value)) : ''
+  const formatAt = (value: string | null | undefined) => (value ? dateTime.format(new Date(value)) : '')
 
   return (
     <button
@@ -42,7 +41,7 @@ function ShiftRow({ shift }: { shift: ShiftView }) {
           {formatAt(shift.openedAt)} → {formatAt(shift.closedAt)}
         </div>
         {shift.openedBy && (
-          <div className='text-muted-foreground flex items-center gap-1 truncate type-detail'>
+          <div className='text-muted-foreground type-detail flex items-center gap-1 truncate'>
             <User className='size-4 shrink-0' />
             <span className='truncate'>{shift.openedBy}</span>
           </div>
@@ -50,9 +49,7 @@ function ShiftRow({ shift }: { shift: ShiftView }) {
       </div>
       {/* Net of the refunds issued in the shift, as the report labels it */}
       <span className='flex shrink-0 flex-col items-end'>
-        <span className='type-body font-semibold tabular-nums'>
-          {money(shift.netSales ?? shift.salesTotal)}
-        </span>
+        <span className='type-body font-semibold tabular-nums'>{money(shift.netSales ?? shift.salesTotal)}</span>
         <span className='text-muted-foreground type-caption'>{t('netSales')}</span>
       </span>
       <OverShortBadge value={toNumber(shift.overShort)} />
@@ -98,9 +95,7 @@ export function ShiftHistory() {
           ))}
         </div>
       ) : !shifts?.length ? (
-        <p className='text-muted-foreground py-24 text-center type-body'>
-          {t('noClosedShifts')}
-        </p>
+        <p className='text-muted-foreground type-body py-24 text-center'>{t('noClosedShifts')}</p>
       ) : (
         <div className='mt-3 divide-y rounded-xl border'>
           {shifts.map((shift) => (

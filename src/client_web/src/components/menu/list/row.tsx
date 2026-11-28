@@ -19,20 +19,43 @@ export const Row = memo(function Row({ scroller, item, onOpen, onQuickAdd }: Ite
   const itemState = useItem({ item, onOpen, onQuickAdd, photo })
 
   return (
-    <motion.div data-item={String(item.id)} {...rise(scroller)} className={cn('flex items-center gap-3', itemState.soldOut && 'opacity-75')}>
-      <button type='button' {...itemState.handlers} className='flex min-w-0 flex-1 items-center gap-3 text-start select-none [-webkit-touch-callout:none]'>
+    <motion.div
+      data-item={String(item.id)}
+      {...rise(scroller)}
+      className={cn('flex items-center gap-3', itemState.soldOut && 'opacity-75')}
+    >
+      <button
+        type='button'
+        {...itemState.handlers}
+        className='flex min-w-0 flex-1 items-center gap-3 text-start select-none [-webkit-touch-callout:none]'
+      >
         {/* Sized to leave the name and its line the room to read on a small phone, and a few items to a screen */}
-        <ItemPhotoBox item={item} itemState={itemState} photoRef={photo} radius={20} offerSmall className={SHORT ? 'size-18' : 'size-20'} />
+        <ItemPhotoBox
+          item={item}
+          itemState={itemState}
+          photoRef={photo}
+          radius={20}
+          offerSmall
+          className={SHORT ? 'size-18' : 'size-20'}
+        />
         <span className='flex min-w-0 flex-1 flex-col gap-0.5'>
           <span className={ITEM_NAME}>{localized(item.name)}</span>
-          {item.description && <span className={cn('text-muted-foreground line-clamp-2', ITEM_NOTE)}>{localized(item.description)}</span>}
+          {item.description && (
+            <span className={cn('text-muted-foreground line-clamp-2', ITEM_NOTE)}>{localized(item.description)}</span>
+          )}
           <ItemPrice item={item} onOffer={itemState.onOffer} className='mt-1.5' />
         </span>
       </button>
       {itemState.soldOut ? (
         <SoldOutTag />
       ) : (
-        <RowAction small item={item} quick={itemState.quick} onAdd={() => onQuickAdd(item, photo.current)} onOpen={itemState.open} />
+        <RowAction
+          small
+          item={item}
+          quick={itemState.quick}
+          onAdd={() => onQuickAdd(item, photo.current)}
+          onOpen={itemState.open}
+        />
       )}
     </motion.div>
   )

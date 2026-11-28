@@ -37,7 +37,9 @@ const KEYS: { name: KeyName; label: TranslationKey; hint: TranslationKey }[] = [
 type KeyEdit = { mode: 'keep' } | { mode: 'replace'; value: string } | { mode: 'clear' }
 
 const savedKey = (settings: MapsSettingsDto, name: KeyName): MapsKeyDto =>
-  ({ server: settings.serverKey, browser: settings.browserKey, android: settings.androidKey, ios: settings.iosKey })[name]
+  ({ server: settings.serverKey, browser: settings.browserKey, android: settings.androidKey, ios: settings.iosKey })[
+    name
+  ]
 
 /**
  * The platform's Google Maps: Ninja's one set of keys, the web map's switch
@@ -83,7 +85,9 @@ function MapsForm({ settings }: { settings: MapsSettingsDto }) {
     onError: (e) => toast.error(problemDetail(e) || t('somethingWentWrong')),
   })
 
-  const keysChanged = Object.values(keys).some((k) => k.mode === 'clear' || (k.mode === 'replace' && k.value.trim() !== ''))
+  const keysChanged = Object.values(keys).some(
+    (k) => k.mode === 'clear' || (k.mode === 'replace' && k.value.trim() !== '')
+  )
   const referrersChanged = referrers.join(',') !== settings.referrerDomains.join(',')
   const dirty = keysChanged || webTiles !== settings.webTiles || referrersChanged
 
@@ -110,7 +114,8 @@ function MapsForm({ settings }: { settings: MapsSettingsDto }) {
       clearIosKey: keys.ios.mode === 'clear',
       webTiles,
       // Something typed but not added yet goes in too, as it would be expected to
-      referrerDomains: typed.trim() !== '' && !referrers.includes(typed.trim()) ? [...referrers, typed.trim()] : referrers,
+      referrerDomains:
+        typed.trim() !== '' && !referrers.includes(typed.trim()) ? [...referrers, typed.trim()] : referrers,
     }
     save.mutate({ body })
   }
@@ -265,10 +270,21 @@ function KeyRow({
           )}
           {saved.set && edit.mode === 'keep' && (
             <>
-              <Button type='button' variant='outline' size='sm' onClick={() => onChange({ mode: 'replace', value: '' })}>
+              <Button
+                type='button'
+                variant='outline'
+                size='sm'
+                onClick={() => onChange({ mode: 'replace', value: '' })}
+              >
                 {t('mapsKeyReplace')}
               </Button>
-              <Button type='button' variant='ghost' size='sm' className='text-destructive' onClick={() => onChange({ mode: 'clear' })}>
+              <Button
+                type='button'
+                variant='ghost'
+                size='sm'
+                className='text-destructive'
+                onClick={() => onChange({ mode: 'clear' })}
+              >
                 {t('mapsKeyClear')}
               </Button>
             </>
@@ -303,7 +319,9 @@ function TestCard({ ready }: { ready: boolean }) {
         </Button>
         {!ready && <p className='text-muted-foreground text-xs'>{t('mapsTestSaveFirst')}</p>}
         {test.data && <TestLine result={test.data} />}
-        {test.isError && <p className='text-destructive text-xs'>{problemDetail(test.error) || t('somethingWentWrong')}</p>}
+        {test.isError && (
+          <p className='text-destructive text-xs'>{problemDetail(test.error) || t('somethingWentWrong')}</p>
+        )}
       </CardContent>
     </Card>
   )
@@ -314,7 +332,11 @@ function TestLine({ result }: { result: MapsTestResult }) {
   return (
     <p className={cn('text-xs', result.ok ? 'text-emerald-600 dark:text-emerald-400' : 'text-destructive')}>
       {result.ok
-        ? t('mapsTestOk', { count: Number(result.suggestions), ms: String(result.milliseconds), first: result.first ?? '' })
+        ? t('mapsTestOk', {
+            count: Number(result.suggestions),
+            ms: String(result.milliseconds),
+            first: result.first ?? '',
+          })
         : t('mapsTestFailed', { error: result.error ?? '' })}
     </p>
   )

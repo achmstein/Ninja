@@ -4,13 +4,13 @@ import { Armchair, ChevronRight, DoorOpen, Plus, ShoppingBag, Split, X, type Luc
 import { getOpenTicketsOptions } from '@/api/sales/@tanstack/react-query.gen'
 import type { TicketDetail, TicketSummary } from '@/api/sales/types.gen'
 import { listPlacesOptions } from '@/api/spaces/@tanstack/react-query.gen'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
 import { API_VERSION } from '@/lib/api-client'
 import { useIsCloudKitchen } from '@/lib/brand'
 import { useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
 
 const typeIcon: Record<string, LucideIcon> = {
   Room: DoorOpen,
@@ -49,7 +49,8 @@ const nameClass =
 /** The likeliest name, or the new one being typed */
 const nameLit = 'bg-primary text-primary-foreground border-primary hover:border-primary'
 
-const rowClass = 'hover:bg-muted flex min-h-14 w-full items-center gap-3 border-b px-4 py-2 text-start last:border-b-0 disabled:opacity-50'
+const rowClass =
+  'hover:bg-muted flex min-h-14 w-full items-center gap-3 border-b px-4 py-2 text-start last:border-b-0 disabled:opacity-50'
 
 /**
  * Moving the picked lines: every place they can go, one tap each. First a
@@ -109,7 +110,7 @@ export function MoveTargetDialog({
     .filter(
       (table) =>
         table.isActive !== false &&
-        !tickets.some((taken) => taken.type === 'Table' && toNumber(taken.placeId) === toNumber(table.id)),
+        !tickets.some((taken) => taken.type === 'Table' && toNumber(taken.placeId) === toNumber(table.id))
     )
     .filter((table) => !q || has(localized(table.name)) || has(t('table')))
   const canSplit = ticket.sessionId == null && !allSelected
@@ -159,7 +160,12 @@ export function MoveTargetDialog({
           <Caption>{t('moveNamedBill')}</Caption>
           <div className='flex flex-wrap gap-2 border-b px-4 pt-1 pb-3'>
             {fresh && (
-              <button type='button' disabled={isPending} onClick={() => named(typed)} className={cn(nameClass, nameLit)}>
+              <button
+                type='button'
+                disabled={isPending}
+                onClick={() => named(typed)}
+                className={cn(nameClass, nameLit)}
+              >
                 <bdi>{t('moveNewNamed', { name: typed })}</bdi>
               </button>
             )}
@@ -249,7 +255,6 @@ export function MoveTargetDialog({
               </div>
             </>
           )}
-
         </div>
       </DialogContent>
     </Dialog>

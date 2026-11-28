@@ -19,23 +19,12 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Spinner } from '@/components/ui/spinner'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { EntitySheet } from '@/components/entity-sheet'
 import { InfoTip } from '@/components/info-tip'
-import {
-  fromLocalizedValue,
-  isBlank,
-  LocalizedFields,
-  LocalizedInput,
-} from '@/components/localized-input'
+import { fromLocalizedValue, isBlank, LocalizedFields, LocalizedInput } from '@/components/localized-input'
 import { unitLabel } from '@/features/inventory/format'
 import { toApi } from '@/features/inventory/recipe-model'
 import { menuOptionsOf } from '../menu-options'
@@ -71,13 +60,7 @@ const UNITS = ['g', 'ml', 'pcs']
  * failure leaves the sheet open with what was done remembered, so a retry
  * never repeats it.
  */
-export function RecipeReviewSheet({
-  proposals,
-  items,
-  shelf,
-  onOpenChange,
-  onBack,
-}: RecipeReviewSheetProps) {
+export function RecipeReviewSheet({ proposals, items, shelf, onOpenChange, onBack }: RecipeReviewSheetProps) {
   const t = useT()
   const localized = useLocalized()
   const queryClient = useQueryClient()
@@ -86,28 +69,19 @@ export function RecipeReviewSheet({
   const trackByUnit = useMutation(trackByUnitMutation())
 
   const [review, setReview] = useState(() => toReview(proposals, items))
-  const [saving, setSaving] = useState<{ done: number; total: number } | null>(
-    null
-  )
+  const [saving, setSaving] = useState<{ done: number; total: number } | null>(null)
 
-  const itemById = useMemo(
-    () => new Map(items.map((item) => [toNumber(item.id), item])),
-    [items]
-  )
+  const itemById = useMemo(() => new Map(items.map((item) => [toNumber(item.id), item])), [items])
 
   const updateIngredient = (key: string, patch: Partial<ReviewIngredient>) =>
     setReview((prev) => ({
       ...prev,
-      ingredients: prev.ingredients.map((i) =>
-        i.key === key ? { ...i, ...patch } : i
-      ),
+      ingredients: prev.ingredients.map((i) => (i.key === key ? { ...i, ...patch } : i)),
     }))
   const updateRecipe = (catalogItemId: number, patch: Partial<ReviewRecipe>) =>
     setReview((prev) => ({
       ...prev,
-      recipes: prev.recipes.map((r) =>
-        r.catalogItemId === catalogItemId ? { ...r, ...patch } : r
-      ),
+      recipes: prev.recipes.map((r) => (r.catalogItemId === catalogItemId ? { ...r, ...patch } : r)),
     }))
 
   // Pickers: the shelf, then the proposed ingredients as "new" entries
@@ -117,9 +91,7 @@ export function RecipeReviewSheet({
         value: String(item.id),
         label: localized(item.name),
         unit: item.unit ?? '',
-        names: [item.name?.en, item.name?.ar].filter(
-          (n): n is string => !!n && n.trim() !== ''
-        ),
+        names: [item.name?.en, item.name?.ar].filter((n): n is string => !!n && n.trim() !== ''),
       })),
       ...review.ingredients.map((i) => ({
         value: NEW_PREFIX + i.key,
@@ -133,8 +105,7 @@ export function RecipeReviewSheet({
 
   const included = review.recipes.filter((r) => r.include && !r.done)
   const needed = neededIngredients(review.recipes, review.ingredients)
-  const total =
-    included.length + needed.filter((i) => i.createdId == null).length
+  const total = included.length + needed.filter((i) => i.createdId == null).length
 
   const confirm = async () => {
     if (included.length === 0) {
@@ -153,9 +124,7 @@ export function RecipeReviewSheet({
     let done = 0
     setSaving({ done, total })
     const createdIds = new Map<string, number>(
-      review.ingredients
-        .filter((i) => i.createdId != null)
-        .map((i) => [i.key, i.createdId!])
+      review.ingredients.filter((i) => i.createdId != null).map((i) => [i.key, i.createdId!])
     )
     try {
       // 1. The ingredients the included recipes need, once each
@@ -165,13 +134,8 @@ export function RecipeReviewSheet({
           body: {
             name: fromLocalizedValue(ingredient.name),
             unit: ingredient.unit,
-            packSize:
-              parseFloat(ingredient.packSize) > 0
-                ? parseFloat(ingredient.packSize)
-                : null,
-            packName: isBlank(ingredient.packName)
-              ? null
-              : fromLocalizedValue(ingredient.packName),
+            packSize: parseFloat(ingredient.packSize) > 0 ? parseFloat(ingredient.packSize) : null,
+            packName: isBlank(ingredient.packName) ? null : fromLocalizedValue(ingredient.packName),
             autoSoldOut: ingredient.autoSoldOut,
           },
           headers: { 'x-requestid': uuidv4() },
@@ -224,12 +188,7 @@ export function RecipeReviewSheet({
       title={t('reviewRecipes')}
       size='wide'
       danger={
-        <Button
-          type='button'
-          variant='ghost'
-          disabled={!!saving}
-          onClick={onBack}
-        >
+        <Button type='button' variant='ghost' disabled={!!saving} onClick={onBack}>
           <ArrowLeft className='rtl:rotate-180' />
           {t('back')}
         </Button>
@@ -245,11 +204,7 @@ export function RecipeReviewSheet({
         )
       }
       actions={
-        <Button
-          type='button'
-          disabled={!!saving || included.length === 0}
-          onClick={confirm}
-        >
+        <Button type='button' disabled={!!saving || included.length === 0} onClick={confirm}>
           {saving ? <Spinner /> : <Check />}
           {t('trackCount', { count: included.length })}
         </Button>
@@ -290,16 +245,12 @@ export function RecipeReviewSheet({
                     <LocalizedInput
                       ariaLabel={t('stockItemName')}
                       value={ingredient.name}
-                      onChange={(name) =>
-                        updateIngredient(ingredient.key, { name })
-                      }
+                      onChange={(name) => updateIngredient(ingredient.key, { name })}
                       compact
                     />
                     <Select
                       value={ingredient.unit}
-                      onValueChange={(unit) =>
-                        updateIngredient(ingredient.key, { unit })
-                      }
+                      onValueChange={(unit) => updateIngredient(ingredient.key, { unit })}
                     >
                       <SelectTrigger className='h-8' aria-label={t('unit')}>
                         <SelectValue />
@@ -330,9 +281,7 @@ export function RecipeReviewSheet({
                       ariaLabel={t('packName')}
                       placeholder={bilingual('packNameHint')}
                       value={ingredient.packName}
-                      onChange={(packName) =>
-                        updateIngredient(ingredient.key, { packName })
-                      }
+                      onChange={(packName) => updateIngredient(ingredient.key, { packName })}
                       compact
                     />
                     <div className='flex items-center gap-2'>
@@ -366,9 +315,7 @@ export function RecipeReviewSheet({
           <div className='space-y-3'>
             {review.recipes.map((recipe) => {
               const item = itemById.get(recipe.catalogItemId)
-              const menu = item
-                ? menuOptionsOf(item, localized)
-                : { groups: [], byId: new Map() }
+              const menu = item ? menuOptionsOf(item, localized) : { groups: [], byId: new Map() }
               return (
                 <div
                   key={recipe.catalogItemId}
@@ -408,16 +355,10 @@ export function RecipeReviewSheet({
                           })
                         }
                       >
-                        <ToggleGroupItem
-                          value='unit'
-                          className='h-7 px-2 text-xs'
-                        >
+                        <ToggleGroupItem value='unit' className='h-7 px-2 text-xs'>
                           {t('sellAsUnit')}
                         </ToggleGroupItem>
-                        <ToggleGroupItem
-                          value='recipe'
-                          className='h-7 px-2 text-xs'
-                        >
+                        <ToggleGroupItem value='recipe' className='h-7 px-2 text-xs'>
                           {t('usesIngredients')}
                         </ToggleGroupItem>
                       </ToggleGroup>
@@ -442,9 +383,7 @@ export function RecipeReviewSheet({
                     <div className='px-3 py-2'>
                       <RecipeBuilder
                         draft={recipe.draft}
-                        onChange={(draft) =>
-                          updateRecipe(recipe.catalogItemId, { draft })
-                        }
+                        onChange={(draft) => updateRecipe(recipe.catalogItemId, { draft })}
                         menu={menu}
                         ingredients={ingredients}
                       />

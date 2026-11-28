@@ -1,9 +1,9 @@
 import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { getKitchenStationsOptions } from '@/api/ordering/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useBranchStore } from '@/stores/branch-store'
 import { useStationStore } from '@/stores/station-store'
+import { API_VERSION } from '@/lib/api-client'
 
 /**
  * The branch's stations that show on a screen — the ones a kitchen display
@@ -22,10 +22,7 @@ export function useStation() {
     staleTime: 60_000,
   })
 
-  const screens = useMemo(
-    () => (query.data ?? []).filter((s) => s.showsOnScreen),
-    [query.data]
-  )
+  const screens = useMemo(() => (query.data ?? []).filter((s) => s.showsOnScreen), [query.data])
 
   const station = screens.find((s) => Number(s.id) === picked) ?? null
 

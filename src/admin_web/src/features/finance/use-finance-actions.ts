@@ -43,8 +43,7 @@ export function useFinanceActions() {
 
   const version = { 'api-version': API_VERSION }
   const idempotent = () => ({ headers: { 'x-requestid': uuidv4() } })
-  const fail = (key: Parameters<typeof t>[0]) => (error: unknown) =>
-    toast.error(domainMessage(error, t(key)))
+  const fail = (key: Parameters<typeof t>[0]) => (error: unknown) => toast.error(domainMessage(error, t(key)))
 
   const saveCategory = useMutation({
     ...saveExpenseCategoryMutation(),
@@ -137,10 +136,8 @@ export function useFinanceActions() {
   })
 
   return {
-    saveCategory: (body: CategoryRequest) =>
-      saveCategory.mutateAsync({ body, query: version }),
-    recordExpense: (body: ExpenseRequest) =>
-      recordExpense.mutateAsync({ body, ...idempotent(), query: version }),
+    saveCategory: (body: CategoryRequest) => saveCategory.mutateAsync({ body, query: version }),
+    recordExpense: (body: ExpenseRequest) => recordExpense.mutateAsync({ body, ...idempotent(), query: version }),
     voidExpense: (id: number, reason: string) =>
       voidExpense.mutateAsync({
         path: { id },
@@ -153,12 +150,9 @@ export function useFinanceActions() {
         body: { file },
         query: version,
       }),
-    removeReceipt: (id: number) =>
-      removeReceipt.mutateAsync({ path: { id }, query: version }),
-    saveRecurring: (body: RecurringExpenseRequest) =>
-      saveRecurring.mutateAsync({ body, query: version }),
-    saveSupplier: (body: SupplierRequest) =>
-      saveSupplier.mutateAsync({ body, query: version }),
+    removeReceipt: (id: number) => removeReceipt.mutateAsync({ path: { id }, query: version }),
+    saveRecurring: (body: RecurringExpenseRequest) => saveRecurring.mutateAsync({ body, query: version }),
+    saveSupplier: (body: SupplierRequest) => saveSupplier.mutateAsync({ body, query: version }),
     postSupplierEntry: (id: number, body: SupplierEntryRequest) =>
       postSupplierEntry.mutateAsync({
         path: { id },
@@ -166,8 +160,7 @@ export function useFinanceActions() {
         ...idempotent(),
         query: version,
       }),
-    savePartner: (body: PartnerRequest) =>
-      savePartner.mutateAsync({ body, query: version }),
+    savePartner: (body: PartnerRequest) => savePartner.mutateAsync({ body, query: version }),
     postPartnerEntry: (id: number, body: PartnerEntryRequest) =>
       postPartnerEntry.mutateAsync({
         path: { id },

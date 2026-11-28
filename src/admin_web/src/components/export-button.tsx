@@ -18,13 +18,7 @@ export function ExportButton({
 }) {
   const t = useT()
   return (
-    <Button
-      type='button'
-      variant='outline'
-      size={size}
-      onClick={onExport}
-      disabled={disabled}
-    >
+    <Button type='button' variant='outline' size={size} onClick={onExport} disabled={disabled}>
       <Download />
       {t('exportCsv')}
     </Button>

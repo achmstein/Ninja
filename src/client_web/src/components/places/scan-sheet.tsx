@@ -1,25 +1,15 @@
 import { useEffect } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useAuth } from 'react-oidc-context'
 import { Users } from 'lucide-react'
-import { toast } from '@/lib/toast'
-import {
-  getPlaceOptions,
-  joinStayMutation,
-  scanPlaceOptions,
-} from '@/api/spaces/@tanstack/react-query.gen'
+import { useAuth } from 'react-oidc-context'
+import { getPlaceOptions, joinStayMutation, scanPlaceOptions } from '@/api/spaces/@tanstack/react-query.gen'
 import { useLocalized, useT } from '@/lib/i18n'
 import { PLACE_AVAILABLE, PlaceIcon, STAY_RUNNING } from '@/lib/places'
+import { toast } from '@/lib/toast'
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { useProfileGate } from '@/components/auth/profile-gate'
 import { SignInOptions } from '@/components/auth/sign-in-options'
 import { MorphButton } from '@/components/motion/morph-button'
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet'
 import { HoldSheet } from './hold-sheet'
 import { TariffLine } from './place-card'
 
@@ -86,16 +76,11 @@ export function ScanSheet({
   // its status have both answered, or the info sheet would open and give
   // way to the hold sheet a moment later
   // (a status call that fails falls back to what the place itself says)
-  const settled =
-    place != null &&
-    (!auth.isAuthenticated || scan != null || scanQuery.isError)
+  const settled = place != null && (!auth.isAuthenticated || scan != null || scanQuery.isError)
   if (!settled || scan?.isAlreadyMember) return null
 
-  const running = scan
-    ? scan.hasRunningStay
-    : Number(place.currentStay?.status) === STAY_RUNNING
-  const available =
-    Number((scan ?? place).status) === PLACE_AVAILABLE && place.canReserve
+  const running = scan ? scan.hasRunningStay : Number(place.currentStay?.status) === STAY_RUNNING
+  const available = Number((scan ?? place).status) === PLACE_AVAILABLE && place.canReserve
   const memberCount = scan?.stay?.memberCount ?? place.currentStay?.memberCount
 
   // A free place: the hold sheet, with this place chosen
@@ -121,20 +106,19 @@ export function ScanSheet({
           if (!open) onDone()
         }}
       >
-        <SheetContent
-          className='gap-0 px-2 pb-2'
-        >
+        <SheetContent className='gap-0 px-2 pb-2'>
           {/* The place on its card, as the tab shows it */}
           <SheetHeader className='bg-foreground/[0.07] relative isolate overflow-hidden rounded-[1.4rem] p-5 text-start'>
-            <PlaceIcon kind={Number(place.kind)} className='pointer-events-none absolute -end-6 -bottom-8 -z-10 size-40 -rotate-12 opacity-[0.12]' />
-            <SheetTitle className='heading text-headline pe-8'>
-              {localized(place.name)}
-            </SheetTitle>
+            <PlaceIcon
+              kind={Number(place.kind)}
+              className='pointer-events-none absolute -end-6 -bottom-8 -z-10 size-40 -rotate-12 opacity-[0.12]'
+            />
+            <SheetTitle className='heading text-headline pe-8'>{localized(place.name)}</SheetTitle>
             <SheetDescription className='text-muted-foreground'>
               <TariffLine place={place} />
             </SheetDescription>
             {running && memberCount != null && (
-              <span className='bg-foreground/10 mt-1 flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1 text-caption font-semibold'>
+              <span className='bg-foreground/10 text-caption mt-1 flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1 font-semibold'>
                 <Users className='size-3.5' />
                 {t('memberCountFormat', { count: Number(memberCount) })}
               </span>

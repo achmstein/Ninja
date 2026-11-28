@@ -5,30 +5,16 @@ import { formatEgp } from '@/lib/money'
 import { cn } from '@/lib/utils'
 import { createAppColumnHelper } from '@/components/data-table'
 import { StatusChip } from '@/components/status-chip'
-import {
-  ADVICE_LABEL,
-  CLASS_LABEL,
-  CLASS_TONE,
-} from './menu-engineering-labels'
+import { ADVICE_LABEL, CLASS_LABEL, CLASS_TONE } from './menu-engineering-labels'
 import { type MenuEngineeringRow } from './menu-engineering-rows'
 
 type Translate = (key: TranslationKey, params?: TranslateParams) => string
-type Localized = (
-  text: { en?: string | null; ar?: string | null } | null | undefined
-) => string
+type Localized = (text: { en?: string | null; ar?: string | null } | null | undefined) => string
 
 /** Where an item stands, or why it could not be placed */
-export function ClassChip({
-  row,
-  t,
-}: {
-  row: MenuEngineeringRow
-  t: Translate
-}) {
+export function ClassChip({ row, t }: { row: MenuEngineeringRow; t: Translate }) {
   return row.menuClass ? (
-    <StatusChip tone={CLASS_TONE[row.menuClass]}>
-      {t(CLASS_LABEL[row.menuClass])}
-    </StatusChip>
+    <StatusChip tone={CLASS_TONE[row.menuClass]}>{t(CLASS_LABEL[row.menuClass])}</StatusChip>
   ) : (
     <StatusChip tone='muted' dot={false}>
       {t(row.status === 'incomplete' ? 'costIncomplete' : 'notPlaced', {
@@ -48,15 +34,12 @@ export function getMenuEngineeringColumns({
   localized: Localized
   advice: Map<number, ItemAdvice>
 }) {
-  const endHeader = (key: TranslationKey) => () => (
-    <div className='text-end'>{t(key)}</div>
-  )
+  const endHeader = (key: TranslationKey) => () => <div className='text-end'>{t(key)}</div>
 
   const columnHelper = createAppColumnHelper<MenuEngineeringRow>()
   return columnHelper.columns([
     columnHelper.accessor(
-      (row) =>
-        `${row.name?.en ?? ''} ${row.name?.ar ?? ''} ${row.category?.en ?? ''} ${row.category?.ar ?? ''}`,
+      (row) => `${row.name?.en ?? ''} ${row.name?.ar ?? ''} ${row.category?.en ?? ''} ${row.category?.ar ?? ''}`,
       {
         id: 'item',
         header: t('menuItem'),
@@ -69,9 +52,7 @@ export function getMenuEngineeringColumns({
             >
               {localized(row.original.name) || '—'}
             </Link>
-            <div className='text-muted-foreground truncate text-xs'>
-              {localized(row.original.category)}
-            </div>
+            <div className='text-muted-foreground truncate text-xs'>{localized(row.original.category)}</div>
           </div>
         ),
       }
@@ -103,12 +84,7 @@ export function getMenuEngineeringColumns({
       id: 'margin',
       header: endHeader('margin'),
       cell: ({ row }) => (
-        <div
-          className={cn(
-            'text-end tabular-nums',
-            row.original.margin < 0 && 'text-destructive'
-          )}
-        >
+        <div className={cn('text-end tabular-nums', row.original.margin < 0 && 'text-destructive')}>
           {formatEgp(row.original.margin)}
           <div className='text-muted-foreground text-xs'>
             {t('price')} {formatEgp(row.original.price)}
@@ -121,9 +97,7 @@ export function getMenuEngineeringColumns({
       id: 'contribution',
       header: endHeader('contribution'),
       cell: ({ row }) => (
-        <div className='text-end font-medium tabular-nums'>
-          {formatEgp(row.original.contribution)}
-        </div>
+        <div className='text-end font-medium tabular-nums'>{formatEgp(row.original.contribution)}</div>
       ),
     }),
     columnHelper.display({
@@ -137,9 +111,7 @@ export function getMenuEngineeringColumns({
             <div className='text-primary font-medium'>
               {ADVICE_LABEL[said.action] ? t(ADVICE_LABEL[said.action]) : ''}
             </div>
-            <div className='text-muted-foreground text-xs'>
-              {localized(said.advice)}
-            </div>
+            <div className='text-muted-foreground text-xs'>{localized(said.advice)}</div>
           </div>
         )
       },

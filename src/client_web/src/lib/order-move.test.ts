@@ -22,7 +22,15 @@ const item = (id: number, price: number, extra: Partial<CatalogItemDto> = {}): C
   id,
   price,
   isAvailable: true,
-  customizations: [{ id: 1, options: [{ id: 1, priceAdjustment: 0 }, { id: 2, priceAdjustment: 10 }] }],
+  customizations: [
+    {
+      id: 1,
+      options: [
+        { id: 1, priceAdjustment: 0 },
+        { id: 2, priceAdjustment: 10 },
+      ],
+    },
+  ],
   ...extra,
 })
 

@@ -51,11 +51,7 @@ export function usePageTitle() {
     ]
 
     const match = entries
-      .filter(
-        (entry) =>
-          pathname === entry.url ||
-          (entry.url !== '/' && pathname.startsWith(`${entry.url}/`))
-      )
+      .filter((entry) => pathname === entry.url || (entry.url !== '/' && pathname.startsWith(`${entry.url}/`)))
       .sort((a, b) => b.url.length - a.url.length)[0]
 
     const name = businessName || t('adminName')

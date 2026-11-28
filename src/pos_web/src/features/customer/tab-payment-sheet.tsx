@@ -1,8 +1,8 @@
 import { createPortal } from 'react-dom'
-import { tenderLabelKey } from '@/features/ticket/tenders'
 import { useBrand, useBrandName } from '@/lib/brand'
 import { useLocale, useT } from '@/lib/i18n'
 import { useMoney } from '@/lib/money'
+import { tenderLabelKey } from '@/features/ticket/tenders'
 
 export type TabPaymentSlip = {
   /** 0 when the slip was already recorded by an earlier attempt. */
@@ -47,9 +47,7 @@ export function TabPaymentSheet({ slip }: { slip: TabPaymentSlip }) {
         )}
         <div style={{ fontSize: 13, fontWeight: 600 }}>{t('tabPaymentSlip')}</div>
         {slip.number > 0 && (
-          <div style={{ fontSize: 13, fontWeight: 600 }}>
-            {t('tabPaymentNumber', { number: slip.number })}
-          </div>
+          <div style={{ fontSize: 13, fontWeight: 600 }}>{t('tabPaymentNumber', { number: slip.number })}</div>
         )}
         <div style={{ fontSize: 11 }}>
           {t('receiptDate')}:{' '}
@@ -79,9 +77,7 @@ export function TabPaymentSheet({ slip }: { slip: TabPaymentSlip }) {
         <span>{money(Math.max(0, slip.balanceAfter))}</span>
       </div>
 
-      <div style={{ textAlign: 'center', marginTop: '4mm', fontSize: 12 }}>
-        {t('receiptThanks')}
-      </div>
+      <div style={{ textAlign: 'center', marginTop: '4mm', fontSize: 12 }}>{t('receiptThanks')}</div>
     </div>,
     document.body
   )

@@ -1,19 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
-import { useAuth } from 'react-oidc-context'
-import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { Eye, EyeOff, Link2Off, Loader2 } from 'lucide-react'
-import { AppleIcon, GoogleIcon, useSocial } from '@/components/auth/sign-in-options'
-import { BrandMark } from '@/components/brand/brand-mark'
-import { DrawnCheck } from '@/components/motion/morph-button'
-import { NinjaPage, Rise, RiseItem } from '@/components/ninja/page/page'
-import { Empty, Panel, Slab } from '@/components/ninja/page/parts'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Skeleton } from '@/components/ui/skeleton'
-import { useTheme } from '@/context/theme-provider'
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
+import { useAuth } from 'react-oidc-context'
 import { showPhone, useBrandName } from '@/lib/brand'
 import {
   checkClaimForm,
@@ -29,6 +19,16 @@ import { useLanguage, useT, type TranslationKey } from '@/lib/i18n'
 import { blurSwap } from '@/lib/motion'
 import { loginPageParams } from '@/lib/oidc'
 import { claimAccount, claimWithSocial, previewClaim } from '@/lib/services/identity'
+import { useTheme } from '@/context/theme-provider'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Skeleton } from '@/components/ui/skeleton'
+import { AppleIcon, GoogleIcon, useSocial } from '@/components/auth/sign-in-options'
+import { BrandMark } from '@/components/brand/brand-mark'
+import { DrawnCheck } from '@/components/motion/morph-button'
+import { NinjaPage, Rise, RiseItem } from '@/components/ninja/page/page'
+import { Empty, Panel, Slab } from '@/components/ninja/page/parts'
 
 export const Route = createFileRoute('/claim')({
   component: ClaimPage,
@@ -215,7 +215,9 @@ function ClaimPage() {
                       )}
                     </div>
                   )}
-                  <p className='text-muted-foreground text-note'>{t(google || apple ? 'claimIntroChoose' : 'claimIntro', { name })}</p>
+                  <p className='text-muted-foreground text-note'>
+                    {t(google || apple ? 'claimIntroChoose' : 'claimIntro', { name })}
+                  </p>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -224,7 +226,11 @@ function ClaimPage() {
 
         <RiseItem>
           {claim.isSuccess ? (
-            <Button size='lg' className='h-[52px] w-full rounded-full text-body font-bold' onClick={() => signIn(claim.data.email)}>
+            <Button
+              size='lg'
+              className='text-body h-[52px] w-full rounded-full font-bold'
+              onClick={() => signIn(claim.data.email)}
+            >
               {t('signIn')}
             </Button>
           ) : social.isSuccess ? (
@@ -238,7 +244,12 @@ function ClaimPage() {
               {(google || apple) && (
                 <div className='flex flex-col gap-2.5'>
                   {google && (
-                    <Button size='lg' variant='outline' className='w-full rounded-pill' onClick={() => startSocial(google.hint)}>
+                    <Button
+                      size='lg'
+                      variant='outline'
+                      className='rounded-pill w-full'
+                      onClick={() => startSocial(google.hint)}
+                    >
                       <GoogleIcon />
                       {t('continueWithGoogle')}
                     </Button>
@@ -246,7 +257,7 @@ function ClaimPage() {
                   {apple && (
                     <Button
                       size='lg'
-                      className='bg-foreground text-background hover:bg-foreground/90 w-full rounded-pill'
+                      className='bg-foreground text-background hover:bg-foreground/90 rounded-pill w-full'
                       onClick={() => startSocial(apple.hint)}
                     >
                       <AppleIcon />
@@ -254,9 +265,9 @@ function ClaimPage() {
                     </Button>
                   )}
                   {fieldProblem === 'socialTaken' && (
-                    <p className='text-destructive text-center text-note'>{t('claimSocialTaken')}</p>
+                    <p className='text-destructive text-note text-center'>{t('claimSocialTaken')}</p>
                   )}
-                  <div className='text-muted-foreground flex items-center gap-3 px-2 pt-1.5 text-caption'>
+                  <div className='text-muted-foreground text-caption flex items-center gap-3 px-2 pt-1.5'>
                     <div className='bg-border h-px flex-1' />
                     {t('claimOrEmail')}
                     <div className='bg-border h-px flex-1' />
@@ -305,15 +316,24 @@ function ClaimPage() {
                       {showPassword ? <EyeOff className='size-4' /> : <Eye className='size-4' />}
                     </button>
                   </div>
-                  {fieldProblem === 'weakPassword' && <p className='text-destructive text-note'>{t('passwordMustBe8Chars')}</p>}
+                  {fieldProblem === 'weakPassword' && (
+                    <p className='text-destructive text-note'>{t('passwordMustBe8Chars')}</p>
+                  )}
                 </div>
 
                 {(fieldProblem === 'tooMany' || fieldProblem === 'failed') && (
-                  <p className='text-destructive text-center text-note'>{t(problemText[fieldProblem], { name })}</p>
+                  <p className='text-destructive text-note text-center'>{t(problemText[fieldProblem], { name })}</p>
                 )}
-                {auth.isAuthenticated && <p className='text-muted-foreground text-center text-note'>{t('claimSignedInNote')}</p>}
+                {auth.isAuthenticated && (
+                  <p className='text-muted-foreground text-note text-center'>{t('claimSignedInNote')}</p>
+                )}
 
-                <Button type='submit' size='lg' className='h-[52px] rounded-full text-body font-bold' disabled={claim.isPending}>
+                <Button
+                  type='submit'
+                  size='lg'
+                  className='text-body h-[52px] rounded-full font-bold'
+                  disabled={claim.isPending}
+                >
                   {claim.isPending && <Loader2 className='size-4 animate-spin' />}
                   {t('claimSubmit')}
                 </Button>

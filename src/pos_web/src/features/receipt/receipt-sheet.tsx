@@ -1,14 +1,14 @@
-import { createPortal } from 'react-dom'
 import { useQuery } from '@tanstack/react-query'
-import { getBranchesOptions } from '@/api/tenant/@tanstack/react-query.gen'
+import { createPortal } from 'react-dom'
 import type { TicketDetail } from '@/api/sales/types.gen'
+import { getBranchesOptions } from '@/api/tenant/@tanstack/react-query.gen'
 import { useBranchStore } from '@/stores/branch-store'
 import { useBrand, useBrandName } from '@/lib/brand'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
 import { showPhone } from '@/lib/phone'
-import { tenderLabelKey } from '@/features/ticket/tenders'
 import { useTakenByText } from '@/features/branch/use-branch-name'
+import { tenderLabelKey } from '@/features/ticket/tenders'
 
 export type ReceiptPayment = {
   tender: string
@@ -36,8 +36,7 @@ type ReceiptSheetProps = {
 
 const row = { display: 'flex', justifyContent: 'space-between', gap: 8 } as const
 
-const percent = (rate: number | string | undefined) =>
-  Math.round(toNumber(rate) * 10000) / 100
+const percent = (rate: number | string | undefined) => Math.round(toNumber(rate) * 10000) / 100
 
 /**
  * The 80mm printable receipt. Portaled to <body> and hidden on screen; the
@@ -121,15 +120,15 @@ export function ReceiptSheet({
         )}
         {provisionalNumber ? (
           <>
-            <div style={{ fontSize: 13, fontWeight: 600 }}>
-              {t('receiptNumber', { number: provisionalNumber })}
-            </div>
+            <div style={{ fontSize: 13, fontWeight: 600 }}>{t('receiptNumber', { number: provisionalNumber })}</div>
             <div style={{ fontSize: 10 }}>{t('offlineReceiptNote')}</div>
           </>
-        ) : receiptNumber != null && (
-          <div style={{ fontSize: 13, fontWeight: 600 }}>
-            {t('receiptNumber', { number: toNumber(receiptNumber) })}
-          </div>
+        ) : (
+          receiptNumber != null && (
+            <div style={{ fontSize: 13, fontWeight: 600 }}>
+              {t('receiptNumber', { number: toNumber(receiptNumber) })}
+            </div>
+          )
         )}
         <div style={{ fontSize: 11 }}>
           {t('receiptDate')}:{' '}
@@ -138,9 +137,7 @@ export function ReceiptSheet({
             timeStyle: 'short',
           }).format(date)}
         </div>
-        {localized(ticket.locationName) && (
-          <div style={{ fontSize: 11 }}>{localized(ticket.locationName)}</div>
-        )}
+        {localized(ticket.locationName) && <div style={{ fontSize: 11 }}>{localized(ticket.locationName)}</div>}
         {takenBy && <div style={{ fontSize: 11 }}>{takenBy}</div>}
       </div>
 
@@ -154,12 +151,9 @@ export function ReceiptSheet({
           </div>
           <div style={{ fontSize: 10, color: '#000' }}>
             {toNumber(line.qty)} × {money(line.unitPrice)}
-            {toNumber(line.discount) > 0 &&
-              ` − ${money(line.discount)} (${t('discount')})`}
+            {toNumber(line.discount) > 0 && ` − ${money(line.discount)} (${t('discount')})`}
           </div>
-          {localized(line.details) && (
-            <div style={{ fontSize: 10 }}>{localized(line.details)}</div>
-          )}
+          {localized(line.details) && <div style={{ fontSize: 10 }}>{localized(line.details)}</div>}
         </div>
       ))}
 
@@ -179,9 +173,7 @@ export function ReceiptSheet({
           )}
           {service > 0 && (
             <div style={row}>
-              <span>
-                {t('serviceCharge', { rate: percent(ticket.serviceChargeRate) })}
-              </span>
+              <span>{t('serviceCharge', { rate: percent(ticket.serviceChargeRate) })}</span>
               <span>{money(service)}</span>
             </div>
           )}
@@ -244,9 +236,7 @@ export function ReceiptSheet({
         </>
       )}
 
-      <div style={{ textAlign: 'center', marginTop: '4mm', fontSize: 12 }}>
-        {footer || t('receiptThanks')}
-      </div>
+      <div style={{ textAlign: 'center', marginTop: '4mm', fontSize: 12 }}>{footer || t('receiptThanks')}</div>
     </div>,
     document.body
   )

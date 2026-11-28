@@ -1,6 +1,6 @@
 import { Link, type LinkProps } from '@tanstack/react-router'
-import { motion } from 'motion/react'
 import { ChevronRight } from 'lucide-react'
+import { motion } from 'motion/react'
 import { springOpen } from '@/lib/motion'
 import { cn } from '@/lib/utils'
 import { pushTitleId } from './push'
@@ -16,7 +16,7 @@ export function TileGroup({ children, className }: { children: React.ReactNode; 
   return (
     <div
       className={cn(
-        'flex flex-col [&>*:not(:first-child)]:relative [&>*:not(:first-child)]:before:absolute [&>*:not(:first-child)]:before:start-14 [&>*:not(:first-child)]:before:end-2 [&>*:not(:first-child)]:before:top-0 [&>*:not(:first-child)]:before:border-t [&>*:not(:first-child)]:before:border-border/60',
+        '[&>*:not(:first-child)]:before:border-border/60 flex flex-col [&>*:not(:first-child)]:relative [&>*:not(:first-child)]:before:absolute [&>*:not(:first-child)]:before:start-14 [&>*:not(:first-child)]:before:end-2 [&>*:not(:first-child)]:before:top-0 [&>*:not(:first-child)]:before:border-t',
         className
       )}
     >
@@ -57,15 +57,20 @@ function TileContent({ icon: Icon, label, sublabel, value, destructive, trailing
         <motion.span
           layoutId={push ? pushTitleId(push) : undefined}
           transition={springOpen}
-          className={cn('inline-block max-w-full truncate align-top text-body font-semibold', destructive && 'text-destructive')}
+          className={cn(
+            'text-body inline-block max-w-full truncate align-top font-semibold',
+            destructive && 'text-destructive'
+          )}
         >
           {label}
         </motion.span>
-        {sublabel && <span className='text-muted-foreground block text-caption'>{sublabel}</span>}
+        {sublabel && <span className='text-muted-foreground text-caption block'>{sublabel}</span>}
       </span>
-      {value && <span className='text-muted-foreground shrink-0 text-caption'>{value}</span>}
+      {value && <span className='text-muted-foreground text-caption shrink-0'>{value}</span>}
       {trailing === undefined ? (
-        <ChevronRight className={cn('size-4 shrink-0 rtl:rotate-180', destructive ? 'text-destructive' : 'text-muted-foreground')} />
+        <ChevronRight
+          className={cn('size-4 shrink-0 rtl:rotate-180', destructive ? 'text-destructive' : 'text-muted-foreground')}
+        />
       ) : (
         trailing
       )}
@@ -103,7 +108,14 @@ export function TileButton({
 }: TileContentProps & React.ComponentProps<'button'>) {
   return (
     <button type='button' className={cn(rowClasses, 'disabled:opacity-50', className)} {...props}>
-      <TileContent icon={icon} label={label} sublabel={sublabel} value={value} destructive={destructive} trailing={trailing} />
+      <TileContent
+        icon={icon}
+        label={label}
+        sublabel={sublabel}
+        value={value}
+        destructive={destructive}
+        trailing={trailing}
+      />
     </button>
   )
 }
@@ -116,4 +128,3 @@ export function TileRow({ className, ...content }: TileContentProps & { classNam
     </div>
   )
 }
-

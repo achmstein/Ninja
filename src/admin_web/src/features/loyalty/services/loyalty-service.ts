@@ -13,8 +13,7 @@ import type {
 function normalizeAccount(account: LoyaltyAccount): LoyaltyAccount {
   return {
     ...account,
-    currentTier: (account.currentTier?.toLowerCase() ??
-      'bronze') as LoyaltyAccount['currentTier'],
+    currentTier: (account.currentTier?.toLowerCase() ?? 'bronze') as LoyaltyAccount['currentTier'],
   }
 }
 
@@ -32,9 +31,7 @@ export const loyaltyService = {
 
   // Get a single loyalty account by user ID
   async getAccount(userId: string): Promise<LoyaltyAccount> {
-    const response = await apiClient.get<LoyaltyAccount>(
-      `/api/loyalty/accounts/${userId}?api-version=1.0`
-    )
+    const response = await apiClient.get<LoyaltyAccount>(`/api/loyalty/accounts/${userId}?api-version=1.0`)
     return normalizeAccount(response.data)
   },
 
@@ -44,9 +41,7 @@ export const loyaltyService = {
     return {
       ...response.data,
       accountsByTier: Object.fromEntries(
-        Object.entries(response.data.accountsByTier ?? {}).map(
-          ([tier, count]) => [tier.toLowerCase(), count]
-        )
+        Object.entries(response.data.accountsByTier ?? {}).map(([tier, count]) => [tier.toLowerCase(), count])
       ),
     }
   },
@@ -63,9 +58,7 @@ export const loyaltyService = {
       max: String(max),
       'api-version': '1.0',
     })
-    const response = await apiClient.get<PointsTransaction[]>(
-      `/api/loyalty/transactions/${userId}?${params}`
-    )
+    const response = await apiClient.get<PointsTransaction[]>(`/api/loyalty/transactions/${userId}?${params}`)
     return response.data.map((transaction) => ({
       ...transaction,
       type: transaction.type?.toLowerCase() ?? '',
@@ -84,10 +77,7 @@ export const loyaltyService = {
 
   // Create a new loyalty account
   async createAccount(userId: string): Promise<LoyaltyAccount> {
-    const response = await apiClient.post<LoyaltyAccount>(
-      '/api/loyalty/accounts?api-version=1.0',
-      { userId }
-    )
+    const response = await apiClient.post<LoyaltyAccount>('/api/loyalty/accounts?api-version=1.0', { userId })
     return response.data
   },
 }

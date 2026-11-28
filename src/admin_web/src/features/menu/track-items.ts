@@ -5,18 +5,9 @@ import {
   type ProposedRecipeLine,
   type RecipesProposal,
 } from '@/api/inventory'
-import {
-  primaryText,
-  toLocalizedValue,
-  type LocalizedValue,
-} from '@/lib/localized-value'
+import { primaryText, toLocalizedValue, type LocalizedValue } from '@/lib/localized-value'
 import { toNumber } from '@/lib/money'
-import {
-  draftKey,
-  validateDraft,
-  type RecipeDraft,
-  type SlotDraft,
-} from '@/features/inventory/recipe-model'
+import { draftKey, validateDraft, type RecipeDraft, type SlotDraft } from '@/features/inventory/recipe-model'
 import { menuOptionsOf } from './menu-options'
 
 /**
@@ -29,17 +20,12 @@ export const PROPOSE_BATCH = 10
  * A menu item as the proposer wants it: names, options, price; Inventory keeps no copy of the menu.
  * `brief`: the owner's own words for the recipe, which the assistant follows over typical amounts
  */
-export function toMenuItemToTrack(
-  item: CatalogItemDto,
-  brief?: string
-): MenuItemToTrack {
+export function toMenuItemToTrack(item: CatalogItemDto, brief?: string): MenuItemToTrack {
   return {
     brief: brief?.trim() || null,
     catalogItemId: toNumber(item.id),
     name: { en: item.name?.en ?? null, ar: item.name?.ar ?? null },
-    description: item.description
-      ? { en: item.description.en ?? null, ar: item.description.ar ?? null }
-      : null,
+    description: item.description ? { en: item.description.en ?? null, ar: item.description.ar ?? null } : null,
     category: primaryText(item.catalogTypeName) || null,
     price: toNumber(item.price),
     options: (item.customizations ?? []).flatMap((group) =>
@@ -78,17 +64,10 @@ export type ReviewRecipe = {
 export const NEW_PREFIX = 'new:'
 
 const ingredientOf = (line: ProposedRecipeLine): string | null =>
-  line.stockItemId != null
-    ? String(toNumber(line.stockItemId))
-    : line.newItemKey
-      ? NEW_PREFIX + line.newItemKey
-      : null
+  line.stockItemId != null ? String(toNumber(line.stockItemId)) : line.newItemKey ? NEW_PREFIX + line.newItemKey : null
 
 /** A proposed recipe as a draft: lines grouped by slot, overrides under their groups, factors as typed */
-function draftOf(
-  recipe: ProposedRecipe,
-  item: CatalogItemDto | undefined
-): RecipeDraft {
+function draftOf(recipe: ProposedRecipe, item: CatalogItemDto | undefined): RecipeDraft {
   const menu = item ? menuOptionsOf(item, primaryText) : null
   const groupOf = (optionId: string) => {
     const option = menu?.byId.get(optionId)
@@ -100,8 +79,7 @@ function draftOf(
   const slots = new Map<string, ProposedRecipeLine[]>()
   let own = 0
   for (const line of recipe.lines) {
-    const key =
-      toNumber(line.slot) > 0 ? `s${toNumber(line.slot)}` : `o${own++}`
+    const key = toNumber(line.slot) > 0 ? `s${toNumber(line.slot)}` : `o${own++}`
     slots.set(key, [...(slots.get(key) ?? []), line])
   }
 
@@ -145,10 +123,7 @@ const foldName = (text: string | null | undefined): string =>
     .toLowerCase()
 
 /** The draft with every "new:<alias>" pointed at the ingredient it was merged into */
-function remapNew(
-  draft: RecipeDraft,
-  aliases: Map<string, string>
-): RecipeDraft {
+function remapNew(draft: RecipeDraft, aliases: Map<string, string>): RecipeDraft {
   const remap = (id: string | null) =>
     id?.startsWith(NEW_PREFIX) && aliases.has(id.slice(NEW_PREFIX.length))
       ? NEW_PREFIX + aliases.get(id.slice(NEW_PREFIX.length))
@@ -191,10 +166,8 @@ export function toReview(
       if (ingredients.has(item.key)) continue
       const same = [...ingredients.values()].find(
         (known) =>
-          (foldName(item.name.en) !== '' &&
-            foldName(known.name.en) === foldName(item.name.en)) ||
-          (foldName(item.name.ar) !== '' &&
-            foldName(known.name.ar) === foldName(item.name.ar))
+          (foldName(item.name.en) !== '' && foldName(known.name.en) === foldName(item.name.en)) ||
+          (foldName(item.name.ar) !== '' && foldName(known.name.ar) === foldName(item.name.ar))
       )
       if (same) {
         aliases.set(item.key, same.key)
@@ -216,10 +189,7 @@ export function toReview(
         catalogItemId: toNumber(recipe.catalogItemId),
         include: usable,
         kind: recipe.kind === 'unit' ? 'unit' : 'recipe',
-        draft: remapNew(
-          draftOf(recipe, itemById.get(toNumber(recipe.catalogItemId))),
-          aliases
-        ),
+        draft: remapNew(draftOf(recipe, itemById.get(toNumber(recipe.catalogItemId))), aliases),
         warnings: recipe.warnings,
         done: false,
       })
@@ -232,10 +202,7 @@ export function toReview(
 function newKeysOf(draft: RecipeDraft): string[] {
   const keys: string[] = []
   for (const slot of draft.slots) {
-    for (const id of [
-      slot.stockItemId,
-      ...slot.overrides.map((o) => o.stockItemId),
-    ]) {
+    for (const id of [slot.stockItemId, ...slot.overrides.map((o) => o.stockItemId)]) {
       if (id?.startsWith(NEW_PREFIX)) keys.push(id.slice(NEW_PREFIX.length))
     }
   }
@@ -243,10 +210,7 @@ function newKeysOf(draft: RecipeDraft): string[] {
 }
 
 /** The ingredients the included recipes still need created */
-export function neededIngredients(
-  recipes: ReviewRecipe[],
-  ingredients: ReviewIngredient[]
-): ReviewIngredient[] {
+export function neededIngredients(recipes: ReviewRecipe[], ingredients: ReviewIngredient[]): ReviewIngredient[] {
   const needed = new Set<string>()
   for (const recipe of recipes) {
     if (!recipe.include || recipe.kind !== 'recipe' || recipe.done) continue
@@ -261,14 +225,9 @@ export function isRecipeReady(recipe: ReviewRecipe): boolean {
 }
 
 /** The draft with every "new:<key>" ingredient replaced by the id it was created with */
-export function withCreatedIds(
-  draft: RecipeDraft,
-  createdIds: Map<string, number>
-): RecipeDraft {
+export function withCreatedIds(draft: RecipeDraft, createdIds: Map<string, number>): RecipeDraft {
   const resolveId = (id: string | null) =>
-    id?.startsWith(NEW_PREFIX)
-      ? String(createdIds.get(id.slice(NEW_PREFIX.length)) ?? id)
-      : id
+    id?.startsWith(NEW_PREFIX) ? String(createdIds.get(id.slice(NEW_PREFIX.length)) ?? id) : id
   return {
     ...draft,
     slots: draft.slots.map((slot) => ({

@@ -3,7 +3,18 @@ import type { TicketLineView } from '@/api/sales/types.gen'
 import { isCancellable } from './cancel-lines'
 
 const line = (over: Partial<TicketLineView>): TicketLineView =>
-  ({ id: 1, source: 'Order', description: { en: 'Burger' }, qty: 2, unitPrice: 100, discount: 0, total: 200, paid: false, cancelledQty: 0, ...over }) as TicketLineView
+  ({
+    id: 1,
+    source: 'Order',
+    description: { en: 'Burger' },
+    qty: 2,
+    unitPrice: 100,
+    discount: 0,
+    total: 200,
+    paid: false,
+    cancelledQty: 0,
+    ...over,
+  }) as TicketLineView
 
 describe('isCancellable', () => {
   it('takes an item from the kitchen, and a line keyed in by hand', () => {

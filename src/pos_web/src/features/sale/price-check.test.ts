@@ -53,7 +53,12 @@ describe('reviewPriceCheck', () => {
   it('takes off what the other branch ran out of, the item or one of its choices', () => {
     const review = reviewPriceCheck(
       [line(1, 65), line(2, 40, [9]), line(3, 30), line(4, 20)],
-      [result(1, 65), result(2, 40, { soldOutOptionIds: ['9'] }), result(3, 30, { outOfStock: true }), result(4, 0, { available: false })],
+      [
+        result(1, 65),
+        result(2, 40, { soldOutOptionIds: ['9'] }),
+        result(3, 30, { outOfStock: true }),
+        result(4, 0, { available: false }),
+      ]
     )
     expect(review.items.map((i) => i.kind)).toEqual(['optionsOut', 'soldOut', 'soldOut'])
     expect(review.items[0]).toMatchObject({ kind: 'optionsOut', optionIds: [9] })

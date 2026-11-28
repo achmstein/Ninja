@@ -123,16 +123,8 @@ export function ProfitWaterfall({
   return (
     <div className='grid gap-2.5'>
       {bars.map((bar, i) => (
-        <div
-          key={bar.key}
-          className='grid grid-cols-[minmax(6rem,9rem)_1fr_auto] items-center gap-3 text-sm'
-        >
-          <span
-            className={cn(
-              'truncate',
-              bar.kind !== 'cost' ? 'font-medium' : 'text-muted-foreground'
-            )}
-          >
+        <div key={bar.key} className='grid grid-cols-[minmax(6rem,9rem)_1fr_auto] items-center gap-3 text-sm'>
+          <span className={cn('truncate', bar.kind !== 'cost' ? 'font-medium' : 'text-muted-foreground')}>
             {bar.label}
           </span>
           <div className='bg-muted/50 relative h-7 overflow-hidden rounded-md'>
@@ -141,8 +133,7 @@ export function ProfitWaterfall({
                 'absolute inset-y-0 rounded-md',
                 bar.kind === 'total' && 'bg-foreground',
                 bar.kind === 'cost' && 'bg-destructive/70',
-                bar.kind === 'result' &&
-                  (bar.value < 0 ? 'bg-destructive' : 'bg-success')
+                bar.kind === 'result' && (bar.value < 0 ? 'bg-destructive' : 'bg-success')
               )}
               style={{ insetInlineStart: pct(bar.from) }}
               initial={{ width: 0 }}
@@ -161,9 +152,7 @@ export function ProfitWaterfall({
             {bar.kind === 'cost' ? (bar.value < 0 ? '+' : '−') : ''}
             {formatEgp(Math.abs(bar.value))}
             {bar.kind === 'cost' && sales > 0 && (
-              <span className='ms-1.5 text-xs'>
-                {formatShare(shareOf(Math.abs(bar.value), sales), locale)}
-              </span>
+              <span className='ms-1.5 text-xs'>{formatShare(shareOf(Math.abs(bar.value), sales), locale)}</span>
             )}
           </span>
         </div>

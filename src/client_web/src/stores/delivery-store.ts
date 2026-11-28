@@ -48,6 +48,6 @@ export const useDeliveryStore = create<DeliveryState>()(
       setAddress: (address) => set({ address }),
       claim: (owner) => set((s) => (s.owner === owner ? {} : { owner, address: null, wanted: true })),
     }),
-    { name: 'ninja-delivery' },
-  ),
+    { name: 'ninja-delivery' }
+  )
 )

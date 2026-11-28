@@ -1,19 +1,13 @@
 import { useEffect, useRef } from 'react'
 import { z } from 'zod'
 import { createFileRoute, useNavigate, useSearch } from '@tanstack/react-router'
-import { useAuth } from 'react-oidc-context'
-import { useTheme } from '@/context/theme-provider'
 import { loginPageParams } from '@/config/oidc-config'
 import { Loader2, RefreshCw } from 'lucide-react'
+import { useAuth } from 'react-oidc-context'
 import { useT } from '@/lib/i18n'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { useTheme } from '@/context/theme-provider'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Wordmark } from '@/components/wordmark'
 
 const searchSchema = z.object({
@@ -39,10 +33,7 @@ function SignIn() {
   // A renewal that failed is not a sign-in that did: the dead session is
   // dropped (DropRefusedSession) and Keycloak is asked afresh
   const signInError =
-    auth.error?.source === 'renewSilent' ||
-    auth.error?.source === 'signinSilent'
-      ? undefined
-      : auth.error
+    auth.error?.source === 'renewSilent' || auth.error?.source === 'signinSilent' ? undefined : auth.error
   const { resolvedTheme } = useTheme()
   const navigate = useNavigate()
   const { redirect, expired } = useSearch({ from: '/(auth)/sign-in' })
@@ -71,13 +62,7 @@ function SignIn() {
   }
 
   useEffect(() => {
-    if (
-      auth.isLoading ||
-      auth.isAuthenticated ||
-      signInError ||
-      auth.activeNavigator ||
-      redirectStarted.current
-    ) {
+    if (auth.isLoading || auth.isAuthenticated || signInError || auth.activeNavigator || redirectStarted.current) {
       return
     }
     redirectStarted.current = true
@@ -93,9 +78,7 @@ function SignIn() {
       <div className='grid h-svh place-items-center p-4'>
         <Card className='w-full max-w-sm gap-4'>
           <CardHeader className='text-center'>
-            <CardTitle className='text-xl tracking-tight'>
-              {t('signInFailed')}
-            </CardTitle>
+            <CardTitle className='text-xl tracking-tight'>{t('signInFailed')}</CardTitle>
             <CardDescription>{signInError.message}</CardDescription>
           </CardHeader>
           <CardContent>

@@ -25,9 +25,7 @@ export function TakenBy({
   const { data: branches = [] } = useQuery(getBranchesOptions())
   if (!order.takenByName) return null
   const at =
-    order.takenAtBranchId == null
-      ? null
-      : branches.find((b) => toNumber(b.id) === toNumber(order.takenAtBranchId))
+    order.takenAtBranchId == null ? null : branches.find((b) => toNumber(b.id) === toNumber(order.takenAtBranchId))
   return (
     <span className={cn('text-muted-foreground text-xs', className)}>
       {order.takenAtBranchId == null

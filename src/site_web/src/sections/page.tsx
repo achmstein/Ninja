@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react'
-import { useLang } from '@/lib/lang'
 import type { Script } from '@/live/driver'
 import { LiveApp, type Staff } from '@/live/live-app'
 import { includes, MODULES, PLANS } from '@/plans/plans'
+import { useLang } from '@/lib/lang'
 import { AskForm } from './ask'
 import { ContactButtons, Container } from './chrome'
 
@@ -14,7 +14,10 @@ function Phone({ script, label, className }: { script: Script; label: string; cl
   return (
     <div className={className}>
       {/* The corners are a share of each side, so the frame keeps its shape at any size */}
-      <div className='bg-[#1d1d1f] p-[2.6%] shadow-[0_50px_100px_-30px_rgb(0_0_0/.35),0_30px_60px_-30px_rgb(0_0_0/.3)]' style={{ borderRadius: '13.5% / 6.4%' }}>
+      <div
+        className='bg-[#1d1d1f] p-[2.6%] shadow-[0_50px_100px_-30px_rgb(0_0_0/.35),0_30px_60px_-30px_rgb(0_0_0/.3)]'
+        style={{ borderRadius: '13.5% / 6.4%' }}
+      >
         <LiveApp app='guest' path={path} width={390} height={844} script={script} label={label} radius='11.4% / 5.3%' />
       </div>
     </div>
@@ -22,10 +25,25 @@ function Phone({ script, label, className }: { script: Script; label: string; cl
 }
 
 /** A tablet on its side holding a staff app at 1280 x 800 */
-function Tablet({ app, staff, script, label, className }: { app: string; staff: Staff; script: Script; label: string; className?: string }) {
+function Tablet({
+  app,
+  staff,
+  script,
+  label,
+  className,
+}: {
+  app: string
+  staff: Staff
+  script: Script
+  label: string
+  className?: string
+}) {
   return (
     <div className={className}>
-      <div className='bg-[#1d1d1f] p-[1.5%] shadow-[0_50px_100px_-30px_rgb(0_0_0/.35),0_30px_60px_-30px_rgb(0_0_0/.3)]' style={{ borderRadius: '3.2% / 5%' }}>
+      <div
+        className='bg-[#1d1d1f] p-[1.5%] shadow-[0_50px_100px_-30px_rgb(0_0_0/.35),0_30px_60px_-30px_rgb(0_0_0/.3)]'
+        style={{ borderRadius: '3.2% / 5%' }}
+      >
         <LiveApp app={app} staff={staff} width={1280} height={800} script={script} label={label} radius='1.9% / 3%' />
       </div>
     </div>
@@ -36,7 +54,10 @@ function Tablet({ app, staff, script, label, className }: { app: string; staff: 
 function Browser({ script, label, className }: { script: Script; label: string; className?: string }) {
   return (
     <div className={className}>
-      <div className='overflow-hidden bg-[#e8e8ed] shadow-[0_0_0_1px_rgb(0_0_0/.08),0_50px_100px_-30px_rgb(0_0_0/.3)]' style={{ borderRadius: '1.1% / 1.7%' }}>
+      <div
+        className='overflow-hidden bg-[#e8e8ed] shadow-[0_0_0_1px_rgb(0_0_0/.08),0_50px_100px_-30px_rgb(0_0_0/.3)]'
+        style={{ borderRadius: '1.1% / 1.7%' }}
+      >
         <div dir='ltr' className='flex h-7 items-center gap-1.5 px-3 sm:h-9 sm:gap-2 sm:px-4'>
           {['#ff5f57', '#febc2e', '#28c840'].map((dot) => (
             <span key={dot} className='size-2 rounded-full sm:size-3' style={{ backgroundColor: dot }} />
@@ -122,7 +143,9 @@ export function Hero() {
     <section className='overflow-hidden pt-14 pb-24 sm:pt-20 sm:pb-32'>
       <Container className='text-center'>
         <h1 className='headline mx-auto max-w-[14ch] text-[clamp(2.75rem,8vw,6rem)]'>{words.title}</h1>
-        <p className='mx-auto mt-5 max-w-[30ch] text-[clamp(1.25rem,2.4vw,1.75rem)] leading-snug text-soft'>{words.lead}</p>
+        <p className='text-soft mx-auto mt-5 max-w-[30ch] text-[clamp(1.25rem,2.4vw,1.75rem)] leading-snug'>
+          {words.lead}
+        </p>
         <ContactButtons className='mt-8 justify-center' />
       </Container>
       <Phone script={ORDER} label={c.hero.watch} className='mx-auto mt-14 w-[min(78vw,360px)] sm:mt-20' />
@@ -134,10 +157,10 @@ export function Hero() {
 
 function Moment({ title, lead, mist, children }: { title: string; lead: string; mist?: boolean; children: ReactNode }) {
   return (
-    <section className={mist ? 'overflow-hidden bg-mist py-24 sm:py-36' : 'overflow-hidden py-24 sm:py-36'}>
+    <section className={mist ? 'bg-mist overflow-hidden py-24 sm:py-36' : 'overflow-hidden py-24 sm:py-36'}>
       <Container className='text-center'>
         <h2 className='headline mx-auto max-w-[16ch] text-[clamp(2.4rem,6.4vw,4.75rem)]'>{title}</h2>
-        <p className='mx-auto mt-4 max-w-[34ch] text-[clamp(1.15rem,2vw,1.5rem)] leading-snug text-soft'>{lead}</p>
+        <p className='text-soft mx-auto mt-4 max-w-[34ch] text-[clamp(1.15rem,2vw,1.5rem)] leading-snug'>{lead}</p>
       </Container>
       <div className='mx-auto mt-12 w-[min(92vw,1080px)] sm:mt-16'>{children}</div>
     </section>
@@ -164,7 +187,19 @@ export function Moments() {
 // ——— Plans ———————————————————————————————————————————————————————
 
 const Tick = ({ label }: { label: string }) => (
-  <svg width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2.6' strokeLinecap='round' strokeLinejoin='round' role='img' aria-label={label} className='mx-auto'>
+  <svg
+    width='20'
+    height='20'
+    viewBox='0 0 24 24'
+    fill='none'
+    stroke='currentColor'
+    strokeWidth='2.6'
+    strokeLinecap='round'
+    strokeLinejoin='round'
+    role='img'
+    aria-label={label}
+    className='mx-auto'
+  >
     <path d='M20 6 9 17l-5-5' />
   </svg>
 )
@@ -178,8 +213,8 @@ export function Plans() {
         <div className='no-bar -mx-5 mt-12 overflow-x-auto px-5 sm:mx-0 sm:mt-16 sm:px-0'>
           <table className='w-full min-w-[520px] border-collapse text-[1.0625rem]'>
             <thead>
-              <tr className='border-b border-ink/20'>
-                <th scope='col' className='py-3 pe-4 text-start text-sm font-normal text-soft'>
+              <tr className='border-ink/20 border-b'>
+                <th scope='col' className='text-soft py-3 pe-4 text-start text-sm font-normal'>
                   {c.plans.module}
                 </th>
                 {PLANS.map((plan) => (
@@ -190,7 +225,7 @@ export function Plans() {
               </tr>
             </thead>
             <tbody>
-              <tr className='border-b border-ink/10'>
+              <tr className='border-ink/10 border-b'>
                 <th scope='row' className='py-3.5 pe-4 text-start font-medium'>
                   {c.plans.base}
                 </th>
@@ -201,13 +236,17 @@ export function Plans() {
                 ))}
               </tr>
               {MODULES.map((module) => (
-                <tr key={module} className='border-b border-ink/10'>
+                <tr key={module} className='border-ink/10 border-b'>
                   <th scope='row' className='py-3.5 pe-4 text-start font-medium'>
                     {c.plans.modules[module]}
                   </th>
                   {PLANS.map((plan) => (
                     <td key={plan} className='px-2 text-center'>
-                      {includes(plan, module) ? <Tick label={c.plans.included} /> : <span className='text-sm text-soft'>{c.plans.addon}</span>}
+                      {includes(plan, module) ? (
+                        <Tick label={c.plans.included} />
+                      ) : (
+                        <span className='text-soft text-sm'>{c.plans.addon}</span>
+                      )}
                     </td>
                   ))}
                 </tr>
@@ -215,10 +254,10 @@ export function Plans() {
             </tbody>
           </table>
         </div>
-        <p className='mt-6 text-center text-[1.0625rem] text-soft'>{c.plans.price}</p>
+        <p className='text-soft mt-6 text-center text-[1.0625rem]'>{c.plans.price}</p>
 
         {/* The long list, for whoever wants every line of it; closed until asked for */}
-        <details className='group mt-14 border-y border-ink/20'>
+        <details className='group border-ink/20 mt-14 border-y'>
           <summary className='flex min-h-16 cursor-pointer list-none items-center justify-between gap-4 py-4 text-xl font-semibold [&::-webkit-details-marker]:hidden'>
             {c.all.summary}
             <span aria-hidden className='text-3xl leading-none font-light transition-transform group-open:rotate-45'>
@@ -231,7 +270,7 @@ export function Plans() {
                 <h3 className='pb-1 font-semibold'>{group.name}</h3>
                 <ul>
                   {group.items.map((item) => (
-                    <li key={item} className='py-1 text-[0.9375rem] leading-snug text-soft'>
+                    <li key={item} className='text-soft py-1 text-[0.9375rem] leading-snug'>
                       {item}
                     </li>
                   ))}
@@ -250,12 +289,14 @@ export function Plans() {
 export function Call() {
   const { c } = useLang()
   return (
-    <section id='talk' className='scroll-mt-6 bg-mist py-28 text-center sm:py-44'>
+    <section id='talk' className='bg-mist scroll-mt-6 py-28 text-center sm:py-44'>
       <Container>
         <h2 className='headline mx-auto max-w-[12ch] text-[clamp(2.75rem,8vw,6rem)]'>{c.cta.title}</h2>
-        <p className='mx-auto mt-5 max-w-[30ch] text-[clamp(1.15rem,2vw,1.5rem)] leading-snug text-soft'>{c.cta.lead}</p>
+        <p className='text-soft mx-auto mt-5 max-w-[30ch] text-[clamp(1.15rem,2vw,1.5rem)] leading-snug'>
+          {c.cta.lead}
+        </p>
         <AskForm className='mt-10' />
-        <p className='mt-14 text-[1.0625rem] text-soft'>{c.cta.or}</p>
+        <p className='text-soft mt-14 text-[1.0625rem]'>{c.cta.or}</p>
         <ContactButtons className='mt-4 justify-center' />
       </Container>
     </section>

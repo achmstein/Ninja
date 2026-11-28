@@ -13,12 +13,7 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import {
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  useSidebar,
-} from '@/components/ui/sidebar'
+import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from '@/components/ui/sidebar'
 import { LogoSlot } from './logo-slot'
 
 /**
@@ -52,22 +47,12 @@ export function useBranchSwitch() {
  * `bar` is the same switcher in the phone's top bar: the logo with the
  * branch under it, the same list on a tap, without the sidebar
  */
-export function BranchSwitcher({
-  variant = 'sidebar',
-}: {
-  variant?: 'sidebar' | 'bar'
-}) {
+export function BranchSwitcher({ variant = 'sidebar' }: { variant?: 'sidebar' | 'bar' }) {
   const bar = variant === 'bar'
   const t = useT()
   const localized = useLocalized()
   const { isMobile } = useSidebar()
-  const {
-    branches,
-    branchId,
-    active: activeBranch,
-    switchable,
-    select: handleSelect,
-  } = useBranchSwitch()
+  const { branches, branchId, active: activeBranch, switchable, select: handleSelect } = useBranchSwitch()
 
   const label = localized(activeBranch?.name) || t('branches')
   const businessName = useBrandName()
@@ -108,20 +93,12 @@ export function BranchSwitcher({
       side={isMobile || bar ? 'bottom' : 'right'}
       sideOffset={4}
     >
-      <DropdownMenuLabel className='text-muted-foreground text-xs'>
-        {t('branches')}
-      </DropdownMenuLabel>
+      <DropdownMenuLabel className='text-muted-foreground text-xs'>{t('branches')}</DropdownMenuLabel>
       {branches.map((branch, index) => (
-        <DropdownMenuItem
-          key={String(branch.id)}
-          onClick={() => handleSelect(Number(branch.id))}
-          className='gap-2 p-2'
-        >
+        <DropdownMenuItem key={String(branch.id)} onClick={() => handleSelect(Number(branch.id))} className='gap-2 p-2'>
           <span className='flex-1 truncate'>{localized(branch.name)}</span>
           {Number(branch.id) === branchId && <Check className='size-4' />}
-          {!bar && index < 9 && (
-            <DropdownMenuShortcut>⌘{index + 1}</DropdownMenuShortcut>
-          )}
+          {!bar && index < 9 && <DropdownMenuShortcut>⌘{index + 1}</DropdownMenuShortcut>}
         </DropdownMenuItem>
       ))}
     </DropdownMenuContent>

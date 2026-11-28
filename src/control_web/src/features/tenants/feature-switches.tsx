@@ -6,6 +6,10 @@ import {
   getTenantBrandQueryKey,
   updateTenantBrandMutation,
 } from '@/api/control/@tanstack/react-query.gen'
+import { useT, type TranslationKey } from '@/lib/i18n'
+import { problemDetail } from '@/lib/problem'
+import { tenantStatus } from '@/lib/tenant'
+import { toast } from '@/lib/toast'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -13,10 +17,6 @@ import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
 import { Switch } from '@/components/ui/switch'
-import { useT, type TranslationKey } from '@/lib/i18n'
-import { problemDetail } from '@/lib/problem'
-import { tenantStatus } from '@/lib/tenant'
-import { toast } from '@/lib/toast'
 
 const FEATURES: { key: keyof BrandFeatures; label: TranslationKey }[] = [
   { key: 'reservations', label: 'featureReservations' },
@@ -89,7 +89,14 @@ function Switches({ slug, brand }: { slug: string; brand: BrandDto }) {
         // The brand goes back whole, as the stack replaces it, with only the switches changed
         save.mutate({
           path: { slug },
-          body: { name: brand.name, primaryColor: brand.primaryColor ?? null, customerUrl: brand.customerUrl ?? null, features, theme: brand.theme, locale: brand.locale },
+          body: {
+            name: brand.name,
+            primaryColor: brand.primaryColor ?? null,
+            customerUrl: brand.customerUrl ?? null,
+            features,
+            theme: brand.theme,
+            locale: brand.locale,
+          },
         })
       }}
     >

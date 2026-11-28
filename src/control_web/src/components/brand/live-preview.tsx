@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { ExternalLink, RotateCw } from 'lucide-react'
-import { useT } from '@/lib/i18n'
-import type { Language } from '@/lib/language'
 import type { Scheme } from '@/lib/brand-slots'
 import type { BrandThemeInput } from '@/lib/brand-theme'
+import { useT } from '@/lib/i18n'
+import type { Language } from '@/lib/language'
 import { Button } from '@/components/ui/button'
 import { PhoneFrame } from './phone-frame'
 

@@ -41,9 +41,7 @@ export function useLocalizeAssist() {
 
   const localize = (args: LocalizeArgs): Promise<LocalizeResponse> => {
     const description =
-      args.description && hasText(args.description.en + args.description.ar)
-        ? toSide(args.description)
-        : null
+      args.description && hasText(args.description.en + args.description.ar) ? toSide(args.description) : null
     const body: LocalizeRequest = {
       kind: args.kind,
       name: toSide(args.name),
@@ -60,11 +58,7 @@ export function useLocalizeAssist() {
 }
 
 /** Why the button is disabled, or null when the name is ready to send */
-export function localizeBlocker(
-  name: LocalizedValue
-): 'assistNeedsOneSide' | 'assistBothFilled' | null {
+export function localizeBlocker(name: LocalizedValue): 'assistNeedsOneSide' | 'assistBothFilled' | null {
   if (halfFilled(name)) return null
-  return hasText(name.en) || hasText(name.ar)
-    ? 'assistBothFilled'
-    : 'assistNeedsOneSide'
+  return hasText(name.en) || hasText(name.ar) ? 'assistBothFilled' : 'assistNeedsOneSide'
 }

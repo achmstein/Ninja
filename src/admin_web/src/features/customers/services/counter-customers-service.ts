@@ -33,14 +33,8 @@ export function claimUrl(customerOrigin: string, token: string): string {
  * one-time link that hands such an account to its customer.
  */
 export const counterCustomersService = {
-  async lookup(
-    params: { phone?: string; name?: string },
-    signal?: AbortSignal
-  ): Promise<CustomerLookup> {
-    const { data } = await apiClient.get<CustomerLookup>(
-      '/api/identity/customers/lookup',
-      { params, signal }
-    )
+  async lookup(params: { phone?: string; name?: string }, signal?: AbortSignal): Promise<CustomerLookup> {
+    const { data } = await apiClient.get<CustomerLookup>('/api/identity/customers/lookup', { params, signal })
     return data
   },
 
@@ -53,9 +47,7 @@ export const counterCustomersService = {
   },
 
   async claimLink(userId: string): Promise<ClaimLink> {
-    const { data } = await apiClient.post<ClaimLink>(
-      `/api/identity/customers/${userId}/claim-link`
-    )
+    const { data } = await apiClient.post<ClaimLink>(`/api/identity/customers/${userId}/claim-link`)
     return data
   },
 }

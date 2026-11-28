@@ -3,34 +3,14 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { getRouteApi } from '@tanstack/react-router'
 import { useTable } from '@tanstack/react-table'
 import { type ReservationViewModel } from '@/api/spaces'
-import {
-  getReservationHistoryOptions,
-  listPlacesOptions,
-} from '@/api/spaces/@tanstack/react-query.gen'
+import { getReservationHistoryOptions, listPlacesOptions } from '@/api/spaces/@tanstack/react-query.gen'
 import { useNow } from '@/lib/business-clock'
 import { presetWindow } from '@/lib/business-day'
-import {
-  useLanguage,
-  useLocale,
-  useLocalized,
-  useT,
-  type TranslationKey,
-} from '@/lib/i18n'
+import { useLanguage, useLocale, useLocalized, useT, type TranslationKey } from '@/lib/i18n'
 import { dayHeading, dayKey } from '@/lib/when'
 import { useTableUrlState } from '@/hooks/use-table-url-state'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import {
-  createAppColumnHelper,
-  DataTable,
-  DataTablePagination,
-  dataTableFeatures,
-} from '@/components/data-table'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { createAppColumnHelper, DataTable, DataTablePagination, dataTableFeatures } from '@/components/data-table'
 import { Main } from '@/components/layout/main'
 import { Dot, ListRow } from '@/components/list-row'
 import { PageHeader } from '@/components/page-header'
@@ -69,11 +49,7 @@ function useRangeWindow(range: DateRange | undefined) {
 }
 
 /** How a closed reservation ended, as a badge. */
-export function ReservationOutcome({
-  reservation,
-}: {
-  reservation: ReservationViewModel
-}) {
+export function ReservationOutcome({ reservation }: { reservation: ReservationViewModel }) {
   const t = useT()
   switch (Number(reservation.status)) {
     case RESERVATION_SEATED:
@@ -101,22 +77,18 @@ export function ReservationHistory() {
   const search = route.useSearch()
   const navigate = route.useNavigate()
 
-  const { pagination, onPaginationChange, ensurePageInRange } =
-    useTableUrlState({
-      search,
-      navigate,
-      pagination: { defaultPageSize: 20 },
-      globalFilter: { enabled: false },
-    })
+  const { pagination, onPaginationChange, ensurePageInRange } = useTableUrlState({
+    search,
+    navigate,
+    pagination: { defaultPageSize: 20 },
+    globalFilter: { enabled: false },
+  })
 
   const { fromDate, toDate, ready } = useRangeWindow(search.range)
 
   // Any place can have been reserved; the filter lists them all
   const { data: places = [] } = useQuery(listPlacesOptions())
-  const sortedPlaces = useMemo(
-    () => [...places].sort(comparePlaces()),
-    [places]
-  )
+  const sortedPlaces = useMemo(() => [...places].sort(comparePlaces()), [places])
 
   const historyQuery = useQuery({
     ...getReservationHistoryOptions({
@@ -156,9 +128,7 @@ export function ReservationHistory() {
                 ) : null}
               </span>
               {localized(row.original.placeName) && (
-                <span className='text-muted-foreground text-xs'>
-                  {localized(row.original.placeName)}
-                </span>
+                <span className='text-muted-foreground text-xs'>{localized(row.original.placeName)}</span>
               )}
             </div>
           ),
@@ -176,13 +146,7 @@ export function ReservationHistory() {
             return (
               <div className='flex items-center gap-2'>
                 <ReservationOutcome reservation={row.original} />
-                {at && (
-                  <When
-                    value={at}
-                    mode='time'
-                    className='text-muted-foreground text-xs'
-                  />
-                )}
+                {at && <When value={at} mode='time' className='text-muted-foreground text-xs' />}
               </div>
             )
           },
@@ -282,10 +246,7 @@ export function ReservationHistory() {
                 <>
                   {r.customerName || t('walkIn')}
                   {r.partySize ? (
-                    <span className='text-muted-foreground font-normal'>
-                      {' '}
-                      · {t('partyOf', { count: r.partySize })}
-                    </span>
+                    <span className='text-muted-foreground font-normal'> · {t('partyOf', { count: r.partySize })}</span>
                   ) : null}
                 </>
               }

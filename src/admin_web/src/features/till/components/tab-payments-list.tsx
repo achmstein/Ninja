@@ -5,13 +5,7 @@ import { useTable } from '@tanstack/react-table'
 import { type TabPaymentView } from '@/api/sales'
 import { getTabPaymentsOptions } from '@/api/sales/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
-import {
-  useLanguage,
-  useLocale,
-  useT,
-  type TranslateParams,
-  type TranslationKey,
-} from '@/lib/i18n'
+import { useLanguage, useLocale, useT, type TranslateParams, type TranslationKey } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { dayHeading, dayKey } from '@/lib/when'
 import { useTableUrlState } from '@/hooks/use-table-url-state'
@@ -48,8 +42,7 @@ function getTabPaymentColumns({ t }: { t: Translate }) {
         <div className='flex flex-col leading-tight'>
           <span className='font-medium'>{info.getValue() || t('guest')}</span>
           <span className='text-muted-foreground text-xs tabular-nums'>
-            #{toNumber(info.row.original.number)} ·{' '}
-            <When value={info.row.original.recordedAt} mode='time' />
+            #{toNumber(info.row.original.number)} · <When value={info.row.original.recordedAt} mode='time' />
           </span>
         </div>
       ),
@@ -68,13 +61,7 @@ function getTabPaymentColumns({ t }: { t: Translate }) {
   ])
 }
 
-function TabPaymentListRow({
-  row,
-  t,
-}: {
-  row: AppRow<TabPaymentView>
-  t: Translate
-}) {
+function TabPaymentListRow({ row, t }: { row: AppRow<TabPaymentView>; t: Translate }) {
   const slip = row.original
   return (
     <ListRow
@@ -104,13 +91,12 @@ export function TabPaymentsList() {
   const navigate = route.useNavigate()
   const { dayWindow, fromIso, toIso } = useTillWindow(search)
 
-  const { pagination, onPaginationChange, ensurePageInRange } =
-    useTableUrlState({
-      search,
-      navigate,
-      pagination: { defaultPageSize: 20 },
-      globalFilter: { enabled: false },
-    })
+  const { pagination, onPaginationChange, ensurePageInRange } = useTableUrlState({
+    search,
+    navigate,
+    pagination: { defaultPageSize: 20 },
+    globalFilter: { enabled: false },
+  })
 
   const slipsQuery = useQuery({
     ...getTabPaymentsOptions({
@@ -155,10 +141,7 @@ export function TabPaymentsList() {
   return (
     <div className='flex flex-col gap-4'>
       {slipsQuery.isError ? (
-        <ErrorState
-          error={slipsQuery.error}
-          onRetry={() => slipsQuery.refetch()}
-        />
+        <ErrorState error={slipsQuery.error} onRetry={() => slipsQuery.refetch()} />
       ) : (
         <>
           <DataTable

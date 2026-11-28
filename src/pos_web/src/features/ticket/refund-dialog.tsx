@@ -1,6 +1,9 @@
 import { useEffect } from 'react'
 import { Banknote, Loader2, Minus, Plus, User } from 'lucide-react'
 import type { TicketDetail } from '@/api/sales/types.gen'
+import { useLocalized, useT } from '@/lib/i18n'
+import { useMoney, toNumber } from '@/lib/money'
+import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -12,9 +15,6 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { useLocalized, useT } from '@/lib/i18n'
-import { useMoney, toNumber } from '@/lib/money'
-import { cn } from '@/lib/utils'
 import { useRefund } from './use-refund'
 
 type RefundDialogProps = {
@@ -33,7 +33,21 @@ export function RefundDialog({ ticket, open, onOpenChange }: RefundDialogProps) 
   const localized = useLocalized()
   const money = useMoney()
   const making = useRefund(ticket, () => onOpenChange(false))
-  const { lines, remainder, preview, everythingPicked, reason, setReason, tender, setTender, holders, holder, setHolderId, offerAccount, canRefund } = making
+  const {
+    lines,
+    remainder,
+    preview,
+    everythingPicked,
+    reason,
+    setReason,
+    tender,
+    setTender,
+    holders,
+    holder,
+    setHolderId,
+    offerAccount,
+    canRefund,
+  } = making
   const pickEverything = making.pickEverything
   const submit = making.submit
   const refund = { isPending: making.pending }
@@ -56,29 +70,19 @@ export function RefundDialog({ ticket, open, onOpenChange }: RefundDialogProps) 
           <DialogTitle className='type-title'>
             {t('refundTitle', { number: toNumber(ticket.receiptNumber ?? 0) })}
           </DialogTitle>
-          <DialogDescription className='type-body'>
-            {t('refundHint', { amount: money(remainder) })}
-          </DialogDescription>
+          <DialogDescription className='type-body'>{t('refundHint', { amount: money(remainder) })}</DialogDescription>
         </DialogHeader>
 
         {lines.length === 0 ? (
-          <p className='text-muted-foreground py-6 text-center'>
-            {t('nothingLeftToRefund')}
-          </p>
+          <p className='text-muted-foreground py-6 text-center'>{t('nothingLeftToRefund')}</p>
         ) : (
           <div className='flex flex-col gap-2'>
             {lines.map((entry) => (
-              <div
-                key={entry.id}
-                className='flex items-center gap-3 rounded-xl border p-3'
-              >
+              <div key={entry.id} className='flex items-center gap-3 rounded-xl border p-3'>
                 <div className='min-w-0 flex-1'>
-                  <div className='truncate font-medium'>
-                    {localized(entry.line.description)}
-                  </div>
+                  <div className='truncate font-medium'>{localized(entry.line.description)}</div>
                   <div className='text-muted-foreground type-detail tabular-nums'>
-                    {t('leftToRefund', { count: entry.left })} ·{' '}
-                    {money(entry.line.unitPrice)}
+                    {t('leftToRefund', { count: entry.left })} · {money(entry.line.unitPrice)}
                   </div>
                 </div>
                 <div className='flex items-center gap-1'>
@@ -92,9 +96,7 @@ export function RefundDialog({ ticket, open, onOpenChange }: RefundDialogProps) 
                   >
                     <Minus className='size-4' />
                   </Button>
-                  <span className='w-8 text-center type-body font-semibold tabular-nums'>
-                    {entry.picked}
-                  </span>
+                  <span className='type-body w-8 text-center font-semibold tabular-nums'>{entry.picked}</span>
                   <Button
                     variant='outline'
                     size='icon'
@@ -108,12 +110,7 @@ export function RefundDialog({ ticket, open, onOpenChange }: RefundDialogProps) 
                 </div>
               </div>
             ))}
-            <Button
-              variant='ghost'
-              className='h-11 self-end'
-              disabled={everythingPicked}
-              onClick={pickEverything}
-            >
+            <Button variant='ghost' className='h-11 self-end' disabled={everythingPicked} onClick={pickEverything}>
               {t('refundEverything')}
             </Button>
           </div>
@@ -137,29 +134,25 @@ export function RefundDialog({ ticket, open, onOpenChange }: RefundDialogProps) 
             onClick={() => setTender('Cash')}
             className={cn(
               'flex h-12 items-center justify-center gap-2 rounded-lg border text-base font-medium',
-              tender === 'Cash'
-                ? 'border-primary bg-primary text-primary-foreground'
-                : 'hover:bg-muted'
+              tender === 'Cash' ? 'border-primary bg-primary text-primary-foreground' : 'hover:bg-muted'
             )}
           >
             <Banknote className='size-5' />
             {t('cash')}
           </button>
           {offerAccount && (
-          <button
-            type='button'
-            disabled={holders.length === 0}
-            onClick={() => setTender('Account')}
-            className={cn(
-              'flex h-12 items-center justify-center gap-2 rounded-lg border text-base font-medium disabled:opacity-40',
-              tender === 'Account'
-                ? 'border-primary bg-primary text-primary-foreground'
-                : 'hover:bg-muted'
-            )}
-          >
-            <User className='size-5' />
-            {t('account')}
-          </button>
+            <button
+              type='button'
+              disabled={holders.length === 0}
+              onClick={() => setTender('Account')}
+              className={cn(
+                'flex h-12 items-center justify-center gap-2 rounded-lg border text-base font-medium disabled:opacity-40',
+                tender === 'Account' ? 'border-primary bg-primary text-primary-foreground' : 'hover:bg-muted'
+              )}
+            >
+              <User className='size-5' />
+              {t('account')}
+            </button>
           )}
         </div>
         {tender === 'Account' && holders.length > 1 && (
@@ -171,9 +164,7 @@ export function RefundDialog({ ticket, open, onOpenChange }: RefundDialogProps) 
                 onClick={() => setHolderId(h.id)}
                 className={cn(
                   'h-10 rounded-full border px-4 text-sm font-medium',
-                  holder?.id === h.id
-                    ? 'border-primary bg-primary text-primary-foreground'
-                    : 'hover:bg-muted'
+                  holder?.id === h.id ? 'border-primary bg-primary text-primary-foreground' : 'hover:bg-muted'
                 )}
               >
                 {h.name || h.id}
@@ -183,21 +174,10 @@ export function RefundDialog({ ticket, open, onOpenChange }: RefundDialogProps) 
         )}
 
         <DialogFooter className='gap-2'>
-          <Button
-            variant='outline'
-            size='lg'
-            className='h-12'
-            onClick={() => onOpenChange(false)}
-          >
+          <Button variant='outline' size='lg' className='h-12' onClick={() => onOpenChange(false)}>
             {t('cancel')}
           </Button>
-          <Button
-            variant='destructive'
-            size='lg'
-            className='h-12 px-6'
-            disabled={!canRefund}
-            onClick={submit}
-          >
+          <Button variant='destructive' size='lg' className='h-12 px-6' disabled={!canRefund} onClick={submit}>
             {refund.isPending && <Loader2 className='size-5 animate-spin' />}
             {t('confirmRefund', { amount: money(preview) })}
           </Button>

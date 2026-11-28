@@ -3,32 +3,15 @@ import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { RefreshCw } from 'lucide-react'
 import { listAuditOptions } from '@/api/control/@tanstack/react-query.gen'
-import { Button } from '@/components/ui/button'
-import { Empty, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { Skeleton } from '@/components/ui/skeleton'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
 import { useFormat } from '@/lib/format'
 import { useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
+import { Empty, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 
 const TAKES = ['50', '200', '500'] as const
 type Take = (typeof TAKES)[number]
@@ -90,9 +73,7 @@ export function AuditTable({ slug }: AuditTableProps) {
           disabled={audit.isFetching}
           aria-label={t('refresh')}
         >
-          <RefreshCw
-            className={cn('size-4', audit.isFetching && 'animate-spin')}
-          />
+          <RefreshCw className={cn('size-4', audit.isFetching && 'animate-spin')} />
           {t('refresh')}
         </Button>
       </div>
@@ -131,24 +112,14 @@ export function AuditTable({ slug }: AuditTableProps) {
                     {format.dateTime(entry.at)}
                   </TableCell>
                   <TableCell className='text-xs'>
-                    {entry.actor === 'system'
-                      ? t('system')
-                      : (entry.actorEmail ?? entry.actor)}
+                    {entry.actor === 'system' ? t('system') : (entry.actorEmail ?? entry.actor)}
                   </TableCell>
-                  <TableCell className='text-muted-foreground text-xs'>
-                    {entry.source}
-                  </TableCell>
-                  <TableCell className='font-mono text-xs'>
-                    {entry.action}
-                  </TableCell>
+                  <TableCell className='text-muted-foreground text-xs'>{entry.source}</TableCell>
+                  <TableCell className='font-mono text-xs'>{entry.action}</TableCell>
                   {!slug && (
                     <TableCell className='font-mono text-xs'>
                       {entry.slug && (
-                        <Link
-                          to='/t/$slug'
-                          params={{ slug: entry.slug }}
-                          className='hover:underline'
-                        >
+                        <Link to='/t/$slug' params={{ slug: entry.slug }} className='hover:underline'>
                           {entry.slug}
                         </Link>
                       )}
@@ -167,7 +138,7 @@ export function AuditTable({ slug }: AuditTableProps) {
                         <TooltipContent className='max-w-96'>
                           <pre
                             dir='ltr'
-                            className='max-h-80 overflow-auto text-start font-mono text-xs whitespace-pre-wrap break-all'
+                            className='max-h-80 overflow-auto text-start font-mono text-xs break-all whitespace-pre-wrap'
                           >
                             {pretty(entry.details)}
                           </pre>

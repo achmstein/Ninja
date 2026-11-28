@@ -19,9 +19,7 @@ type SectionProps = {
  */
 export function Section({ title, icon: Icon, actions, children, className }: SectionProps) {
   return (
-    <section
-      className={cn('space-y-3 border-b p-5 last:border-b-0', className)}
-    >
+    <section className={cn('space-y-3 border-b p-5 last:border-b-0', className)}>
       <div className='flex items-center justify-between gap-2'>
         <h3 className='flex items-center gap-2 text-sm font-medium'>
           {Icon && <Icon className='text-muted-foreground size-4' />}

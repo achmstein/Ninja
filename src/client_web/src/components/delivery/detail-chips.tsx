@@ -49,7 +49,10 @@ export function DetailChips({
       <div className='no-scrollbar -mx-5 flex gap-2 overflow-x-auto px-5'>
         {details.map((detail, index) =>
           editing === detail.key ? (
-            <label key={detail.key} className='border-primary text-note flex h-11 shrink-0 items-center gap-2 rounded-full border-2 ps-4 pe-3'>
+            <label
+              key={detail.key}
+              className='border-primary text-note flex h-11 shrink-0 items-center gap-2 rounded-full border-2 ps-4 pe-3'
+            >
               <span className='text-muted-foreground shrink-0'>{detail.label}</span>
               <input
                 autoFocus
@@ -91,7 +94,7 @@ export function DetailChips({
               <Plus className='size-3.5' />
               {detail.label}
             </button>
-          ),
+          )
         )}
       </div>
       {note &&
@@ -106,7 +109,11 @@ export function DetailChips({
             maxLength={note.maxLength}
           />
         ) : (
-          <button type='button' onClick={() => setNoting(true)} className='text-muted-foreground text-note flex min-h-11 items-center gap-1.5 self-start px-1'>
+          <button
+            type='button'
+            onClick={() => setNoting(true)}
+            className='text-muted-foreground text-note flex min-h-11 items-center gap-1.5 self-start px-1'
+          >
             <Plus className='size-3.5' />
             {note.label}
           </button>

@@ -5,7 +5,12 @@
  * which closes it. A room whose clock still runs has more to come, so there
  * any amount is taken.
  */
-export function partAmountProblem(amount: number, items: number, left: number, clockRunning: boolean): 'none' | 'empty' | 'belowItems' | 'paysAll' {
+export function partAmountProblem(
+  amount: number,
+  items: number,
+  left: number,
+  clockRunning: boolean
+): 'none' | 'empty' | 'belowItems' | 'paysAll' {
   if (!(amount > 0)) return 'empty'
   if (amount < items) return 'belowItems'
   if (!clockRunning && amount >= left) return 'paysAll'

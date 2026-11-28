@@ -1,11 +1,7 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { Loader2, MapPin, Search, X } from 'lucide-react'
 import type { GeoJSONSource, Map as MapLibre } from 'maplibre-gl'
-import {
-  googleWebKey,
-  useAddressSearch,
-  type LatLng,
-} from '@/lib/address-search'
+import { googleWebKey, useAddressSearch, type LatLng } from '@/lib/address-search'
 import { useBrand } from '@/lib/brand'
 import { useLanguage, useT } from '@/lib/i18n'
 import { circleRing } from '@/lib/maps'
@@ -53,18 +49,11 @@ export function BranchMap({
   const [googleFailed, setGoogleFailed] = useState(false)
   const country = brand?.locale.country ?? 'EG'
   const startAt = start ?? COUNTRY_CENTRES[country] ?? COUNTRY_CENTRES.EG
-  const apiKey = googleFailed
-    ? null
-    : googleWebKey(brand?.maps, window.location.hostname)
+  const apiKey = googleFailed ? null : googleWebKey(brand?.maps, window.location.hostname)
 
   if (!open)
     return (
-      <Button
-        type='button'
-        variant='outline'
-        size='sm'
-        onClick={() => setOpen(true)}
-      >
+      <Button type='button' variant='outline' size='sm' onClick={() => setOpen(true)}>
         <MapPin />
         {start ? t('branchMovePinOnMap') : t('branchPinOnMap')}
       </Button>
@@ -101,12 +90,7 @@ export function BranchMap({
             />
           </Suspense>
         ) : (
-          <FreeMap
-            start={startAt}
-            to={to}
-            radiusKm={radiusKm}
-            onSettle={settle}
-          />
+          <FreeMap start={startAt} to={to} radiusKm={radiusKm} onSettle={settle} />
         )}
       </div>
       <p className='text-muted-foreground text-xs'>
@@ -120,20 +104,9 @@ export function BranchMap({
 /** The pin that stays put while the map moves under it; its tip is the point */
 export function CentrePin({ moving }: { moving: boolean }) {
   return (
-    <div
-      aria-hidden
-      className='pointer-events-none absolute inset-0 grid place-items-center'
-    >
-      <div
-        className={cn(
-          '-mt-8 transition-transform duration-150',
-          moving && '-translate-y-2'
-        )}
-      >
-        <MapPin
-          className='fill-primary text-primary-foreground size-8 drop-shadow-md'
-          strokeWidth={1.5}
-        />
+    <div aria-hidden className='pointer-events-none absolute inset-0 grid place-items-center'>
+      <div className={cn('-mt-8 transition-transform duration-150', moving && '-translate-y-2')}>
+        <MapPin className='fill-primary text-primary-foreground size-8 drop-shadow-md' strokeWidth={1.5} />
       </div>
       <span
         className={cn(
@@ -221,11 +194,7 @@ function PlaceSearch({
                 )}
                 <span className='flex min-w-0 flex-col'>
                   <span className='truncate font-medium'>{s.primaryText}</span>
-                  {s.secondaryText && (
-                    <span className='text-muted-foreground truncate text-xs'>
-                      {s.secondaryText}
-                    </span>
-                  )}
+                  {s.secondaryText && <span className='text-muted-foreground truncate text-xs'>{s.secondaryText}</span>}
                 </span>
               </button>
             </li>
@@ -268,10 +237,7 @@ function FreeMap({
 
   useEffect(() => {
     let disposed = false
-    Promise.all([
-      import('maplibre-gl'),
-      import('maplibre-gl/dist/maplibre-gl.css'),
-    ])
+    Promise.all([import('maplibre-gl'), import('maplibre-gl/dist/maplibre-gl.css')])
       .then(([{ default: maplibre }]) => {
         if (disposed || !box.current) return
         if (maplibre.getRTLTextPluginStatus() === 'unavailable')
@@ -293,9 +259,7 @@ function FreeMap({
             properties: {},
             geometry: {
               type: 'Polygon' as const,
-              coordinates: [
-                circleRing({ lat: c.lat, lng: c.lng }, radius.current),
-              ],
+              coordinates: [circleRing({ lat: c.lat, lng: c.lng }, radius.current)],
             },
           }
         }
@@ -327,18 +291,12 @@ function FreeMap({
         })
         m.on('movestart', () => setMoving(true))
         m.on('move', () => {
-          if (radius.current > 0)
-            (
-              m.getSource('delivery-area') as GeoJSONSource | undefined
-            )?.setData(ring())
+          if (radius.current > 0) (m.getSource('delivery-area') as GeoJSONSource | undefined)?.setData(ring())
         })
         m.on('moveend', (e) => {
           setMoving(false)
           const c = m.getCenter()
-          settle.current(
-            { lat: c.lat, lng: c.lng },
-            'originalEvent' in e && e.originalEvent != null
-          )
+          settle.current({ lat: c.lat, lng: c.lng }, 'originalEvent' in e && e.originalEvent != null)
         })
         map.current = m
       })
@@ -356,8 +314,7 @@ function FreeMap({
   useEffect(() => {
     if (!to) return
     const m = map.current
-    if (m && m.loaded())
-      m.flyTo({ center: [to.lng, to.lat], zoom: STREET_ZOOM })
+    if (m && m.loaded()) m.flyTo({ center: [to.lng, to.lat], zoom: STREET_ZOOM })
     else pending.current = to
   }, [to])
 

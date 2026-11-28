@@ -71,7 +71,8 @@ export function LiveApp({
           .then(async () => {
             // The apps were never meant to share a browser's storage, and here they do (one site, four apps):
             // what another app kept under the same name would be read as this one's. Each starts from nothing
-            for (const key of Object.keys(localStorage)) if (!key.endsWith('-language') && !key.startsWith('oidc.')) localStorage.removeItem(key)
+            for (const key of Object.keys(localStorage))
+              if (!key.endsWith('-language') && !key.startsWith('oidc.')) localStorage.removeItem(key)
             if (staff) {
               const [key, user] = await signedIn(staff.client)
               localStorage.setItem(key, user)
@@ -102,7 +103,17 @@ export function LiveApp({
   }, [loaded, onScreen, script])
 
   return (
-    <div ref={box} role='img' aria-label={label} className={cn('relative w-full overflow-hidden bg-white [contain:paint]', className)} style={{ aspectRatio: `${width} / ${height}`, borderRadius: radius, clipPath: radius ? `inset(0 round ${radius})` : undefined }}>
+    <div
+      ref={box}
+      role='img'
+      aria-label={label}
+      className={cn('relative w-full overflow-hidden bg-white [contain:paint]', className)}
+      style={{
+        aspectRatio: `${width} / ${height}`,
+        borderRadius: radius,
+        clipPath: radius ? `inset(0 round ${radius})` : undefined,
+      }}
+    >
       {src && scale !== null && (
         <iframe
           ref={frame}

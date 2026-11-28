@@ -2,13 +2,13 @@ import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { ArrowLeft, ArrowRight, Printer } from 'lucide-react'
 import { getShiftOptions } from '@/api/sales/@tanstack/react-query.gen'
+import { API_VERSION } from '@/lib/api-client'
+import { useLanguage, useT } from '@/lib/i18n'
+import { toNumber } from '@/lib/money'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
-import { API_VERSION } from '@/lib/api-client'
-import { useLanguage, useT } from '@/lib/i18n'
-import { toNumber } from '@/lib/money'
 import { printSheets } from '@/features/printing/print-sheets'
 import { ShiftReport } from './shift-report'
 import { ShiftReportSheet } from './shift-report-sheet'
@@ -62,9 +62,7 @@ export function ShiftDetail({ shiftId }: { shiftId: number }) {
             <BackIcon className='size-6' />
           </Link>
         </Button>
-        <h1 className='min-w-0 flex-1 truncate type-title'>
-          {t('shiftNumber', { id: toNumber(shift.id) })}
-        </h1>
+        <h1 className='type-title min-w-0 flex-1 truncate'>{t('shiftNumber', { id: toNumber(shift.id) })}</h1>
         <Badge className='h-8 px-3 text-sm' variant='secondary'>
           {t(closed ? 'shiftClosedBadge' : 'shiftOpenBadge')}
         </Badge>

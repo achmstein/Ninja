@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef, useState } from 'react'
-import { useReducedMotion } from 'motion/react'
 import { GalleryVertical, LayoutGrid } from 'lucide-react'
+import { useReducedMotion } from 'motion/react'
 import { useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { LiquidPill } from '../ninja/liquid-pill'
@@ -75,7 +75,7 @@ export function LiquidTabs({
               aria-selected={i === active}
               onClick={() => (i === active && !zoomed && onZoomOut ? onZoomOut() : onSelect(i))}
               className={cn(
-                'relative z-10 h-9 shrink-0 rounded-full px-4 text-note font-semibold whitespace-nowrap transition-colors duration-200',
+                'text-note relative z-10 h-9 shrink-0 rounded-full px-4 font-semibold whitespace-nowrap transition-colors duration-200',
                 i === active ? 'text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
               )}
             >

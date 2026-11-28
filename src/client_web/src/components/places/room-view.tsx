@@ -1,11 +1,11 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useAuth } from 'react-oidc-context'
 import { Loader2, LogOut } from 'lucide-react'
+import { useAuth } from 'react-oidc-context'
 import { type StayViewModel } from '@/api/spaces'
 import { leaveStayMutation } from '@/api/spaces/@tanstack/react-query.gen'
 import { useSecondTick } from '@/lib/clock'
-import { type LiveBills } from '@/lib/live-bills'
 import { useT } from '@/lib/i18n'
+import { type LiveBills } from '@/lib/live-bills'
 import { toast } from '@/lib/toast'
 import {
   AlertDialog,
@@ -62,7 +62,7 @@ function LeaveStay({ stay, onLeft }: { stay: StayViewModel; onLeft: () => void }
       <AlertDialogTrigger asChild>
         <button
           type='button'
-          className='bg-destructive/10 text-destructive flex h-12 w-full items-center justify-center gap-2 rounded-full text-body font-semibold transition-transform active:scale-[0.98] disabled:opacity-50 motion-reduce:transform-none'
+          className='bg-destructive/10 text-destructive text-body flex h-12 w-full items-center justify-center gap-2 rounded-full font-semibold transition-transform active:scale-[0.98] disabled:opacity-50 motion-reduce:transform-none'
           disabled={leave.isPending}
         >
           {leave.isPending ? <Loader2 className='size-4 animate-spin' /> : <LogOut className='size-4 rtl:rotate-180' />}

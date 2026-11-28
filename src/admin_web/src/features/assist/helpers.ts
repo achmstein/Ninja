@@ -1,7 +1,6 @@
 import { type LocalizedValue } from '@/components/localized-input'
 
-export const hasText = (value: string | null | undefined) =>
-  (value ?? '').trim() !== ''
+export const hasText = (value: string | null | undefined) => (value ?? '').trim() !== ''
 
 /** The one language that is filled in, or null when it is none or both */
 export function halfFilled(value: LocalizedValue): 'en' | 'ar' | null {

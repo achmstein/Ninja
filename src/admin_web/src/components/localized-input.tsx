@@ -13,11 +13,7 @@ import {
 import { Label } from '@/components/ui/label'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { NinjaMark } from '@/components/ninja-mark'
-import {
-  localizedFields,
-  mergeLocalized,
-  useFormFill,
-} from '@/features/assist/use-form-fill'
+import { localizedFields, mergeLocalized, useFormFill } from '@/features/assist/use-form-fill'
 
 // The pure helpers live with the value's type, so logic that only shapes
 // text needs no component; re-exported here for the forms
@@ -81,11 +77,7 @@ export function LocalizedFields({
     setOwn(next)
     onLangChange?.(next)
   }
-  return (
-    <LangContext.Provider value={{ lang, setLang }}>
-      {children}
-    </LangContext.Provider>
-  )
+  return <LangContext.Provider value={{ lang, setLang }}>{children}</LangContext.Provider>
 }
 
 function useLang(): [Lang, (lang: Lang) => void] {
@@ -169,15 +161,11 @@ export function LocalizedInput({
 
   // The field's own assistant: the other language of what is typed
   const formFill = useFormFill()
-  const [ownSuggested, setOwnSuggested] = useState<
-    Partial<Record<Lang, boolean>>
-  >({})
+  const [ownSuggested, setOwnSuggested] = useState<Partial<Record<Lang, boolean>>>({})
   const hasEn = value.en.trim() !== ''
   const hasAr = value.ar.trim() !== ''
-  const missing: Lang | null =
-    hasEn && !hasAr ? 'ar' : hasAr && !hasEn ? 'en' : null
-  const named =
-    typeof label === 'string' ? label : (ariaLabel ?? t('assistOtherLanguage'))
+  const missing: Lang | null = hasEn && !hasAr ? 'ar' : hasAr && !hasEn ? 'en' : null
+  const named = typeof label === 'string' ? label : (ariaLabel ?? t('assistOtherLanguage'))
   const ownAssist: AssistSlot | undefined =
     assist === undefined && !only && !disabled && missing && formFill.available
       ? {
@@ -185,10 +173,7 @@ export function LocalizedInput({
           pending: formFill.isPending,
           onClick: async () => {
             try {
-              const filled = await formFill.fill(
-                named,
-                localizedFields('text', named, value, multiline)
-              )
+              const filled = await formFill.fill(named, localizedFields('text', named, value, multiline))
               const merged = mergeLocalized('text', value, filled)
               if (merged[missing] === value[missing]) return
               onChange(merged, missing)
@@ -211,9 +196,7 @@ export function LocalizedInput({
     autoFocus,
     disabled,
     'aria-invalid': !!error || undefined,
-    onChange: (
-      e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-    ) => {
+    onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
       setOwnSuggested((prev) => ({ ...prev, [lang]: false }))
       onChange({ ...value, [lang]: e.target.value }, lang)
     },
@@ -229,16 +212,8 @@ export function LocalizedInput({
       aria-label={t('language')}
       className={cn(LANG_TRACK, compact ? 'h-6' : 'h-7')}
     >
-      <LangItem
-        lang='en'
-        filled={value.en.trim() !== ''}
-        suggested={!!suggested?.en || !!ownSuggested.en}
-      />
-      <LangItem
-        lang='ar'
-        filled={value.ar.trim() !== ''}
-        suggested={!!suggested?.ar || !!ownSuggested.ar}
-      />
+      <LangItem lang='en' filled={value.en.trim() !== ''} suggested={!!suggested?.en || !!ownSuggested.en} />
+      <LangItem lang='ar' filled={value.ar.trim() !== ''} suggested={!!suggested?.ar || !!ownSuggested.ar} />
     </ToggleGroup>
   )
 
@@ -257,9 +232,7 @@ export function LocalizedInput({
   return (
     <div className={cn(label && 'space-y-2', className)}>
       {label && <Label htmlFor={fieldId}>{label}</Label>}
-      <InputGroup
-        className={cn(compact && 'h-8', isSuggested && 'bg-primary/5')}
-      >
+      <InputGroup className={cn(compact && 'h-8', isSuggested && 'bg-primary/5')}>
         {multiline ? (
           <>
             <InputGroupTextarea rows={rows} {...control} />
@@ -298,22 +271,10 @@ const LANG_TRACK = 'bg-muted h-7 gap-0.5 rounded-md p-0.5'
 const LANG_CHIP =
   'text-muted-foreground hover:text-foreground data-[state=on]:bg-background data-[state=on]:text-foreground h-full min-w-0 gap-1 rounded-sm px-2 first:rounded-sm last:rounded-sm data-[spacing=0]:first:rounded-sm data-[spacing=0]:last:rounded-sm text-xs font-semibold hover:bg-transparent data-[state=on]:shadow-sm'
 
-function LangItem({
-  lang,
-  filled,
-  suggested,
-}: {
-  lang: Lang
-  filled: boolean
-  suggested: boolean
-}) {
+function LangItem({ lang, filled, suggested }: { lang: Lang; filled: boolean; suggested: boolean }) {
   const t = useT()
   return (
-    <ToggleGroupItem
-      value={lang}
-      className={LANG_CHIP}
-      aria-label={lang === 'en' ? t('english') : t('arabic')}
-    >
+    <ToggleGroupItem value={lang} className={LANG_CHIP} aria-label={lang === 'en' ? t('english') : t('arabic')}>
       {lang === 'en' ? 'EN' : 'ع'}
       {suggested ? (
         <NinjaMark className='text-primary size-3.5' />

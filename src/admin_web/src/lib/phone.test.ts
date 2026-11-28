@@ -102,9 +102,7 @@ describe('internationalDigits', () => {
   })
 
   it('carries a message', () => {
-    expect(whatsAppLink('01012345678', 'EG', 'hi there')).toBe(
-      'https://wa.me/201012345678?text=hi%20there'
-    )
+    expect(whatsAppLink('01012345678', 'EG', 'hi there')).toBe('https://wa.me/201012345678?text=hi%20there')
   })
 })
 

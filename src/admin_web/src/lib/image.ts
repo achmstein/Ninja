@@ -27,10 +27,7 @@ export async function downscaleImage(file: File): Promise<File> {
   }
 
   try {
-    const scale = Math.min(
-      1,
-      Math.sqrt(MAX_PIXELS / (bitmap.width * bitmap.height))
-    )
+    const scale = Math.min(1, Math.sqrt(MAX_PIXELS / (bitmap.width * bitmap.height)))
     if (scale === 1 && file.type === 'image/jpeg') return file
 
     const canvas = document.createElement('canvas')
@@ -40,9 +37,7 @@ export async function downscaleImage(file: File): Promise<File> {
     if (!context) return file
     context.drawImage(bitmap, 0, 0, canvas.width, canvas.height)
 
-    const blob = await new Promise<Blob | null>((resolve) =>
-      canvas.toBlob(resolve, 'image/jpeg', JPEG_QUALITY)
-    )
+    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', JPEG_QUALITY))
     if (!blob) return file
 
     const name = file.name.replace(/\.[^.]+$/, '') + '.jpg'

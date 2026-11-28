@@ -14,13 +14,7 @@ type QueueCardProps = React.HTMLAttributes<HTMLDivElement> & {
  * This is one of the few places a bordered box is the right container: each
  * card is a self-contained thing to act on.
  */
-export function QueueCard({
-  urgency = 'fresh',
-  animate = true,
-  className,
-  children,
-  ...props
-}: QueueCardProps) {
+export function QueueCard({ urgency = 'fresh', animate = true, className, children, ...props }: QueueCardProps) {
   return (
     <div
       className={cn(
@@ -49,12 +43,7 @@ export function urgencyTextClass(urgency: Urgency): string {
 }
 
 /** Age → urgency, with the thresholds each queue picks (minutes). */
-export function urgencyFor(
-  since: string | undefined,
-  nowMs: number,
-  warnAfter: number,
-  delayedAfter: number
-): Urgency {
+export function urgencyFor(since: string | undefined, nowMs: number, warnAfter: number, delayedAfter: number): Urgency {
   if (!since) return 'fresh'
   const minutes = (nowMs - new Date(since).getTime()) / 60_000
   if (minutes >= delayedAfter) return 'delayed'

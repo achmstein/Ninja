@@ -1,8 +1,5 @@
 import { type StockItemView, type StockLevelView } from '@/api/inventory'
-import {
-  getStockItemsOptions,
-  getStockLevelsOptions,
-} from '@/api/inventory/@tanstack/react-query.gen'
+import { getStockItemsOptions, getStockLevelsOptions } from '@/api/inventory/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { type Translate } from '@/lib/i18n'
 import { type ComboboxOption } from '@/components/combobox'
@@ -15,10 +12,7 @@ export const stockItemsQueryOptions = (includeInactive = false) =>
     query: { 'api-version': API_VERSION, includeInactive },
   })
 
-export const stockLevelsQueryOptions = (options?: {
-  low?: boolean
-  includeRetired?: boolean
-}) =>
+export const stockLevelsQueryOptions = (options?: { low?: boolean; includeRetired?: boolean }) =>
   getStockLevelsOptions({
     query: {
       'api-version': API_VERSION,
@@ -27,9 +21,7 @@ export const stockLevelsQueryOptions = (options?: {
     },
   })
 
-type Localized = (
-  text: { en?: string | null; ar?: string | null } | null | undefined
-) => string
+type Localized = (text: { en?: string | null; ar?: string | null } | null | undefined) => string
 
 /** Combobox rows for a stock item picker, unit as the hint */
 export function toStockItemOptions(

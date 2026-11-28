@@ -29,15 +29,20 @@ export const en = {
       label: 'Game lounges',
       meta: {
         title: 'Ninja for game lounges and PlayStation cafés',
-        description: 'Rooms by the hour, bookings, and snacks and drinks on the same bill, with a till and an app in your lounge’s own name. Free to start.',
+        description:
+          'Rooms by the hour, bookings, and snacks and drinks on the same bill, with a till and an app in your lounge’s own name. Free to start.',
       },
-      hero: { title: 'Every room. Every hour. One bill.', lead: 'Time, food and bookings for your lounge, in one app.' },
+      hero: {
+        title: 'Every room. Every hour. One bill.',
+        lead: 'Time, food and bookings for your lounge, in one app.',
+      },
     },
     cafes: {
       label: 'Cafés',
       meta: {
         title: 'Ninja for cafés: menu, till and loyalty in one app',
-        description: 'A menu guests order from at the table, a till, a bar screen, loyalty points and stock, in your café’s own name. Free to start.',
+        description:
+          'A menu guests order from at the table, a till, a bar screen, loyalty points and stock, in your café’s own name. Free to start.',
       },
       hero: { title: 'Your café, in one app.', lead: 'Orders from the table, a till, loyalty and stock.' },
     },
@@ -45,7 +50,8 @@ export const en = {
       label: 'Restaurants',
       meta: {
         title: 'Ninja for restaurants: tables, kitchen and delivery',
-        description: 'Ordering from the table, bookings, a kitchen screen, your own delivery riders, stock and profit, in your restaurant’s own name. Free to start.',
+        description:
+          'Ordering from the table, bookings, a kitchen screen, your own delivery riders, stock and profit, in your restaurant’s own name. Free to start.',
       },
       hero: { title: 'From the table to the kitchen.', lead: 'Orders, bookings, delivery and the books, in one app.' },
     },
@@ -129,15 +135,31 @@ export const en = {
       },
       {
         name: 'In the kitchen',
-        items: ['A station for each part of the menu', 'Screen, printer or both', 'Colour by how long an order has waited', 'Ready in one tap'],
+        items: [
+          'A station for each part of the menu',
+          'Screen, printer or both',
+          'Colour by how long an order has waited',
+          'Ready in one tap',
+        ],
       },
       {
         name: 'Rooms and time',
-        items: ['Rooms, tables and stations like pool', 'An hourly rate per number of players', 'Bookings and holds that expire by themselves', 'Food and time on one bill'],
+        items: [
+          'Rooms, tables and stations like pool',
+          'An hourly rate per number of players',
+          'Bookings and holds that expire by themselves',
+          'Food and time on one bill',
+        ],
       },
       {
         name: 'Delivery',
-        items: ['Your own riders and their app', 'An area drawn on the map', 'A fee and a least order', 'Cash carried and settled', 'One call centre for every branch'],
+        items: [
+          'Your own riders and their app',
+          'An area drawn on the map',
+          'A fee and a least order',
+          'Cash carried and settled',
+          'One call centre for every branch',
+        ],
       },
       {
         name: 'Stock and money',
@@ -153,11 +175,23 @@ export const en = {
       },
       {
         name: 'Your business',
-        items: ['Branches with their own prices and hours', 'Your colours, type and logo', 'Codes to print for every table', 'Your own web address', 'Your own app in the stores'],
+        items: [
+          'Branches with their own prices and hours',
+          'Your colours, type and logo',
+          'Codes to print for every table',
+          'Your own web address',
+          'Your own app in the stores',
+        ],
       },
       {
         name: 'Done for you by Ninja',
-        items: ['A menu read from photos or a PDF', 'A photo for every menu item', 'Names filled in and translated', 'A promotion designed from your photo', 'An assistant in Claude or ChatGPT'],
+        items: [
+          'A menu read from photos or a PDF',
+          'A photo for every menu item',
+          'Names filled in and translated',
+          'A promotion designed from your photo',
+          'An assistant in Claude or ChatGPT',
+        ],
       },
     ],
   },
@@ -183,7 +217,14 @@ export const en = {
     done: 'Got it. We will message you on WhatsApp.',
     failed: 'That did not go through. Message us on WhatsApp instead.',
   },
-  footer: { made: 'Made for', rights: '© 2026 Ninja', privacy: 'Privacy', terms: 'Terms', support: 'Support', apps: 'Apps' },
+  footer: {
+    made: 'Made for',
+    rights: '© 2026 Ninja',
+    privacy: 'Privacy',
+    terms: 'Terms',
+    support: 'Support',
+    apps: 'Apps',
+  },
 }
 
 export type Content = typeof en

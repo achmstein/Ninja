@@ -2,18 +2,12 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import jsQR from 'jsqr'
 import { CameraOff, QrCode, ScanLine } from 'lucide-react'
+import { useActivePlace } from '@/stores/place-store'
 import { useT } from '@/lib/i18n'
 import { useActiveStay } from '@/lib/stays'
-import { useActivePlace } from '@/stores/place-store'
 import { toast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 
 /**
  * The table's id in a scanned code, when the code is one of this business's
@@ -146,7 +140,7 @@ export function TableScanner({ open, onOpenChange }: { open: boolean; onOpenChan
           <DialogDescription>{t('ninjaScanCodeHint')}</DialogDescription>
         </DialogHeader>
         {blocked || unsupported ? (
-          <div className='bg-muted text-muted-foreground flex aspect-square flex-col items-center justify-center gap-3 rounded-xl p-6 text-center text-note'>
+          <div className='bg-muted text-muted-foreground text-note flex aspect-square flex-col items-center justify-center gap-3 rounded-xl p-6 text-center'>
             <CameraOff className='h-8 w-8' />
             {t('cameraBlocked')}
           </div>
@@ -154,10 +148,13 @@ export function TableScanner({ open, onOpenChange }: { open: boolean; onOpenChan
           <div className='relative aspect-square overflow-hidden rounded-xl bg-black'>
             {/* muted and playsInline: iOS plays a camera stream only inline and silent */}
             <video ref={video} muted playsInline autoPlay className='size-full object-cover' />
-            <div aria-hidden className='pointer-events-none absolute inset-[18%] rounded-2xl border-2 border-white/80 shadow-[0_0_0_100vmax_rgb(0_0_0/0.35)]' />
+            <div
+              aria-hidden
+              className='pointer-events-none absolute inset-[18%] rounded-2xl border-2 border-white/80 shadow-[0_0_0_100vmax_rgb(0_0_0/0.35)]'
+            />
           </div>
         )}
-        <Button variant='outline' className='w-full rounded-pill' onClick={() => onOpenChange(false)}>
+        <Button variant='outline' className='rounded-pill w-full' onClick={() => onOpenChange(false)}>
           {t('cancel')}
         </Button>
       </DialogContent>
@@ -166,7 +163,13 @@ export function TableScanner({ open, onOpenChange }: { open: boolean; onOpenChan
 }
 
 /** The button that opens the scanner, for wherever a guest is told to scan their table. */
-export function ScanTableButton({ className, variant = 'default' }: { className?: string; variant?: 'default' | 'outline' }) {
+export function ScanTableButton({
+  className,
+  variant = 'default',
+}: {
+  className?: string
+  variant?: 'default' | 'outline'
+}) {
   const t = useT()
   const [open, setOpen] = useState(false)
   return (

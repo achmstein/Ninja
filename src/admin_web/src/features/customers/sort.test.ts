@@ -33,48 +33,23 @@ describe('sortRows', () => {
   ]
 
   it('puts the latest order first and those who never ordered last, by name', () => {
-    expect(names(sortRows(rows, 'lastOrder'))).toEqual([
-      'Karim',
-      'Mona',
-      'ahmed',
-      'Zeina',
-    ])
+    expect(names(sortRows(rows, 'lastOrder'))).toEqual(['Karim', 'Mona', 'ahmed', 'Zeina'])
   })
 
   it('sorts by what was spent, most first', () => {
-    expect(names(sortRows(rows, 'spent'))).toEqual([
-      'Mona',
-      'Karim',
-      'ahmed',
-      'Zeina',
-    ])
+    expect(names(sortRows(rows, 'spent'))).toEqual(['Mona', 'Karim', 'ahmed', 'Zeina'])
   })
 
   it('counts a credit as owing nothing', () => {
-    expect(names(sortRows(rows, 'owes'))).toEqual([
-      'ahmed',
-      'Karim',
-      'Mona',
-      'Zeina',
-    ])
+    expect(names(sortRows(rows, 'owes'))).toEqual(['ahmed', 'Karim', 'Mona', 'Zeina'])
   })
 
   it('puts members before non-members, even a member with no points', () => {
-    expect(names(sortRows(rows, 'points'))).toEqual([
-      'Karim',
-      'ahmed',
-      'Mona',
-      'Zeina',
-    ])
+    expect(names(sortRows(rows, 'points'))).toEqual(['Karim', 'ahmed', 'Mona', 'Zeina'])
   })
 
   it('sorts names without minding their case, and leaves the list given untouched', () => {
-    expect(names(sortRows(rows, 'name'))).toEqual([
-      'ahmed',
-      'Karim',
-      'Mona',
-      'Zeina',
-    ])
+    expect(names(sortRows(rows, 'name'))).toEqual(['ahmed', 'Karim', 'Mona', 'Zeina'])
     expect(names(rows)).toEqual(['Mona', 'ahmed', 'Karim', 'Zeina'])
   })
 })

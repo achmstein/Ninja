@@ -1,20 +1,20 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
-import { AnimatePresence, motion } from 'motion/react'
 import { ArrowDownLeft, ArrowUpRight, Check, ChevronRight, CircleAlert, Wallet } from 'lucide-react'
+import { AnimatePresence, motion } from 'motion/react'
 import { type TransactionViewModel } from '@/api/accounts'
 import { getMyAccountOptions, getMyTransactionsOptions } from '@/api/accounts/@tanstack/react-query.gen'
-import { NinjaPage, Rise, RiseItem } from '@/components/ninja/page/page'
-import { Panel, SectionLabel, Slab } from '@/components/ninja/page/parts'
-import { Odometer } from '@/components/ninja/odometer'
-import { RequireAuth } from '@/components/auth/require-auth'
-import { RequireFeature } from '@/components/require-feature'
-import { Skeleton } from '@/components/ui/skeleton'
 import { useLanguage, usePrice, useT } from '@/lib/i18n'
 import { springSoft } from '@/lib/motion'
 import { cn } from '@/lib/utils'
+import { Skeleton } from '@/components/ui/skeleton'
+import { RequireAuth } from '@/components/auth/require-auth'
 import { BillReceipt } from '@/components/bills/receipt-view'
+import { Odometer } from '@/components/ninja/odometer'
+import { NinjaPage, Rise, RiseItem } from '@/components/ninja/page/page'
+import { Panel, SectionLabel, Slab } from '@/components/ninja/page/parts'
+import { RequireFeature } from '@/components/require-feature'
 
 export const Route = createFileRoute('/account')({
   component: () => (
@@ -59,7 +59,7 @@ function AccountPage() {
               <Skeleton className='h-48 rounded-[1.5rem]' />
             ) : transactions.length === 0 ? (
               <Panel>
-                <p className='text-muted-foreground py-8 text-center text-note'>{t('noTransactionsYet')}</p>
+                <p className='text-muted-foreground text-note py-8 text-center'>{t('noTransactionsYet')}</p>
               </Panel>
             ) : (
               <Panel className='divide-border/60 flex flex-col divide-y overflow-hidden'>
@@ -103,11 +103,11 @@ function BalanceSlab({ balance }: { balance: number }) {
           )}
         />
       )}
-      <span className={cn('relative flex items-center gap-2 text-note font-semibold', tone || 'text-muted-foreground')}>
+      <span className={cn('text-note relative flex items-center gap-2 font-semibold', tone || 'text-muted-foreground')}>
         <Icon className='size-4' />
         {owes ? t('amountDue') : hasCredit ? t('creditBalance') : t('yourBalance')}
       </span>
-      <Odometer value={price(Math.abs(balance))} className={cn('relative text-display-lg font-extrabold', tone)} />
+      <Odometer value={price(Math.abs(balance))} className={cn('text-display-lg relative font-extrabold', tone)} />
     </Slab>
   )
 }
@@ -150,16 +150,23 @@ function LedgerRow({ tx, nowMs }: { tx: TransactionViewModel; nowMs: number }) {
           isCharge ? 'bg-destructive/10 text-destructive' : 'bg-emerald-600/10 text-emerald-600 dark:text-emerald-400'
         )}
       >
-        {isCharge ? <ArrowUpRight className='size-[18px] rtl:-scale-x-100' /> : <ArrowDownLeft className='size-[18px] rtl:-scale-x-100' />}
+        {isCharge ? (
+          <ArrowUpRight className='size-[18px] rtl:-scale-x-100' />
+        ) : (
+          <ArrowDownLeft className='size-[18px] rtl:-scale-x-100' />
+        )}
       </span>
       <span className='flex min-w-0 flex-1 flex-col'>
         <span className='text-body font-semibold'>{isCharge ? t('charge') : t('payment')}</span>
-        <span className='text-muted-foreground line-clamp-2 text-caption'>
+        <span className='text-muted-foreground text-caption line-clamp-2'>
           {[tx.createdAt && relativeDate(tx.createdAt), detail].filter(Boolean).join(' · ')}
         </span>
       </span>
       <span
-        className={cn('shrink-0 text-body font-bold tabular-nums', isCharge ? 'text-destructive' : 'text-emerald-600 dark:text-emerald-400')}
+        className={cn(
+          'text-body shrink-0 font-bold tabular-nums',
+          isCharge ? 'text-destructive' : 'text-emerald-600 dark:text-emerald-400'
+        )}
       >
         {isCharge ? '+' : '−'}
         {amountFormat.format(Math.abs(Number(tx.amount ?? 0)))}
@@ -178,7 +185,11 @@ function LedgerRow({ tx, nowMs }: { tx: TransactionViewModel; nowMs: number }) {
         className='active:bg-foreground/[0.06] flex items-center gap-3 px-4 py-3 text-start transition-colors'
       >
         {row}
-        <motion.span animate={{ rotate: open ? 90 : 0 }} transition={springSoft} className='text-muted-foreground shrink-0 rtl:-scale-x-100'>
+        <motion.span
+          animate={{ rotate: open ? 90 : 0 }}
+          transition={springSoft}
+          className='text-muted-foreground shrink-0 rtl:-scale-x-100'
+        >
           <ChevronRight className='size-4' />
         </motion.span>
       </button>

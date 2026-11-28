@@ -30,7 +30,7 @@ export function StockDispositionChoice({
   ]
   return (
     <fieldset className='flex flex-col gap-2' disabled={disabled}>
-      <legend className='mb-2 type-detail font-medium'>{t('stockWasMade')}</legend>
+      <legend className='type-detail mb-2 font-medium'>{t('stockWasMade')}</legend>
       <div className='grid grid-cols-2 gap-2'>
         {options.map(({ value: option, label, hint, Icon }) => (
           <label
@@ -38,10 +38,10 @@ export function StockDispositionChoice({
             className={cn(
               'flex cursor-pointer flex-col gap-1 rounded-lg border p-3 text-start transition-colors',
               'has-[:focus-visible]:ring-ring has-[:focus-visible]:ring-2',
-              value === option ? 'border-primary bg-primary/5' : 'hover:bg-muted',
+              value === option ? 'border-primary bg-primary/5' : 'hover:bg-muted'
             )}
           >
-            <span className='flex items-center gap-2 type-body font-medium'>
+            <span className='type-body flex items-center gap-2 font-medium'>
               <input
                 type='radio'
                 name={name}

@@ -1,4 +1,5 @@
 import { forwardRef, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { Minus, Plus, UtensilsCrossed, X } from 'lucide-react'
 import {
   animate,
   AnimatePresence,
@@ -9,14 +10,14 @@ import {
   useTransform,
   type AnimationPlaybackControls,
 } from 'motion/react'
-import { Minus, Plus, UtensilsCrossed, X } from 'lucide-react'
 import type { CatalogItemDto, ItemCustomizationDto } from '@/api/catalog'
 import type { CartCustomization } from '@/lib/cart'
 import { useLocalized, usePrice, useT } from '@/lib/i18n'
 import { blurSwap, ease, fade } from '@/lib/motion'
 import { revealField } from '@/lib/reveal'
 import { cn } from '@/lib/utils'
-import { itemPictureUrl } from './item-picture'
+import { Odometer } from '../ninja/odometer'
+import { sortedOptions, TONE_CLASS } from './deck/deck-model'
 import {
   effectiveBasePrice,
   preferenceSelections,
@@ -25,9 +26,8 @@ import {
   withoutOutOfStock,
   type Selections,
 } from './item-form'
-import { sortedOptions, TONE_CLASS } from './deck/deck-model'
+import { itemPictureUrl } from './item-picture'
 import { FLIGHT_SPRING, flightAt, planFlight, type Flight } from './photo-flight'
-import { Odometer } from '../ninja/odometer'
 
 export type TuneResult = {
   customizations: CartCustomization[]
@@ -89,13 +89,18 @@ export function Tune({
   const [instructions, setInstructions] = useState('')
   const [noteOpen, setNoteOpen] = useState(false)
 
-  const selections = withoutOutOfStock(item.customizations, overrides ?? preferenceSelections(item.customizations, preference))
+  const selections = withoutOutOfStock(
+    item.customizations,
+    overrides ?? preferenceSelections(item.customizations, preference)
+  )
   const chosen = selectionsToCustomizations(item, selections)
   const unitPrice = effectiveBasePrice(item) + chosen.reduce((sum, c) => sum + c.priceAdjustment, 0)
   const soldOut = item.isAvailable === false
 
   // The questions, all on the one scroll: in the business's order, the ones that must be answered first
-  const byOrder = [...(item.customizations ?? [])].sort((a, b) => Number(a.displayOrder ?? 0) - Number(b.displayOrder ?? 0))
+  const byOrder = [...(item.customizations ?? [])].sort(
+    (a, b) => Number(a.displayOrder ?? 0) - Number(b.displayOrder ?? 0)
+  )
   const steps = [...byOrder.filter((c) => c.isRequired), ...byOrder.filter((c) => !c.isRequired)]
   const picked = (c: ItemCustomizationDto) => selections[String(c.id)] ?? []
   const missing = steps.findIndex((c) => c.isRequired && picked(c).length === 0)
@@ -113,7 +118,10 @@ export function Tune({
     const key = String(customization.id)
     const current = selections[key] ?? []
     if (customization.allowMultiple) {
-      setOverrides({ ...selections, [key]: current.includes(optionId) ? current.filter((id) => id !== optionId) : [...current, optionId] })
+      setOverrides({
+        ...selections,
+        [key]: current.includes(optionId) ? current.filter((id) => id !== optionId) : [...current, optionId],
+      })
       return
     }
     // One choice: tapping it again clears it only when the question is optional
@@ -223,7 +231,13 @@ export function Tune({
   }, [isPresent])
 
   return (
-    <div ref={sheet} role='dialog' aria-modal='true' aria-label={localized(item.name)} className='absolute inset-0 z-30 flex flex-col overflow-hidden'>
+    <div
+      ref={sheet}
+      role='dialog'
+      aria-modal='true'
+      aria-label={localized(item.name)}
+      className='absolute inset-0 z-30 flex flex-col overflow-hidden'
+    >
       <motion.div aria-hidden style={{ opacity: veil }} className='bg-background absolute inset-0' />
       <div className='no-scrollbar relative flex-1 overflow-y-auto overscroll-contain'>
         {/* The banner: a short strip across the top, every item alike, low enough that the options start on the first screen */}
@@ -252,11 +266,15 @@ export function Tune({
         <motion.div style={{ opacity: bodyOpacity, y: bodyY }} className='flex flex-col gap-5 px-5 pt-4 pb-6'>
           <div>
             <h2 className='heading text-headline'>{localized(item.name)}</h2>
-            {item.description && <p className='text-muted-foreground text-note mt-1 line-clamp-3'>{localized(item.description)}</p>}
+            {item.description && (
+              <p className='text-muted-foreground text-note mt-1 line-clamp-3'>{localized(item.description)}</p>
+            )}
           </div>
 
           {loadingPreference
-            ? steps.length > 0 && <div className='bg-muted h-40 animate-pulse rounded-[1.5rem] motion-reduce:animate-none' />
+            ? steps.length > 0 && (
+                <div className='bg-muted h-40 animate-pulse rounded-[1.5rem] motion-reduce:animate-none' />
+              )
             : steps.map((customization, i) => (
                 <QuestionBlock
                   key={String(customization.id)}
@@ -270,7 +288,9 @@ export function Tune({
                 />
               ))}
 
-          {canOrder && !soldOut && suggestions.length > 0 && onSuggest && <GoesWellWith items={suggestions} onPick={onSuggest} />}
+          {canOrder && !soldOut && suggestions.length > 0 && onSuggest && (
+            <GoesWellWith items={suggestions} onPick={onSuggest} />
+          )}
 
           <div>
             {noteOpen ? (
@@ -283,7 +303,11 @@ export function Tune({
                 className='border-input bg-background focus-visible:ring-ring/50 h-11 w-full rounded-2xl border px-4 text-base outline-none focus-visible:ring-[3px]'
               />
             ) : (
-              <button type='button' onClick={() => setNoteOpen(true)} className='text-muted-foreground self-start text-note font-medium underline-offset-4 hover:underline'>
+              <button
+                type='button'
+                onClick={() => setNoteOpen(true)}
+                className='text-muted-foreground text-note self-start font-medium underline-offset-4 hover:underline'
+              >
                 {t('ninjaAddNote')}
               </button>
             )}
@@ -292,7 +316,10 @@ export function Tune({
       </div>
 
       {/* The one action: how many, and add at a price that rolls as the choices change; until the answers are in, the one left */}
-      <motion.div style={{ opacity: footOpacity, y: footY }} className='bg-background relative flex items-center gap-3 border-t px-4 py-3'>
+      <motion.div
+        style={{ opacity: footOpacity, y: footY }}
+        className='bg-background relative flex items-center gap-3 border-t px-4 py-3'
+      >
         <div className='flex items-center gap-1'>
           <button
             type='button'
@@ -303,16 +330,31 @@ export function Tune({
           >
             <Minus className='size-4' />
           </button>
-          <span className='w-7 text-center text-headline font-bold tabular-nums'>{quantity}</span>
-          <button type='button' aria-label={t('ninjaMore')} onClick={() => setQuantity((q) => q + 1)} className='bg-muted grid size-10 place-items-center rounded-full'>
+          <span className='text-headline w-7 text-center font-bold tabular-nums'>{quantity}</span>
+          <button
+            type='button'
+            aria-label={t('ninjaMore')}
+            onClick={() => setQuantity((q) => q + 1)}
+            className='bg-muted grid size-10 place-items-center rounded-full'
+          >
             <Plus className='size-4' />
           </button>
         </div>
         <AddButton
           disabled={!canOrder || soldOut || loadingPreference}
-          label={soldOut ? t('unavailable') : ready ? t('addToCart') : t('ninjaChoose', { name: localized(steps[missing]?.name) })}
+          label={
+            soldOut
+              ? t('unavailable')
+              : ready
+                ? t('addToCart')
+                : t('ninjaChoose', { name: localized(steps[missing]?.name) })
+          }
           total={!soldOut && ready ? price(unitPrice * quantity) : null}
-          onClick={() => (ready ? onAdd({ customizations: chosen, quantity, instructions: instructions.trim(), unitPrice }, photo.current) : show(missing))}
+          onClick={() =>
+            ready
+              ? onAdd({ customizations: chosen, quantity, instructions: instructions.trim(), unitPrice }, photo.current)
+              : show(missing)
+          }
         />
       </motion.div>
 
@@ -351,7 +393,17 @@ export function Tune({
 }
 
 /** The main button: Add at the price, or the question still to answer; its words swap with a short blur */
-function AddButton({ disabled, label, total, onClick }: { disabled: boolean; label: string; total: string | null; onClick: () => void }) {
+function AddButton({
+  disabled,
+  label,
+  total,
+  onClick,
+}: {
+  disabled: boolean
+  label: string
+  total: string | null
+  onClick: () => void
+}) {
   const swap = blurSwap(useReducedMotion())
   return (
     <button
@@ -383,10 +435,7 @@ const QuestionBlock = forwardRef<
   const localized = useLocalized()
   const unanswered = customization.isRequired && selected.length === 0
   return (
-    <fieldset
-      ref={ref}
-      className='relative flex scroll-mt-24 flex-col'
-    >
+    <fieldset ref={ref} className='relative flex scroll-mt-24 flex-col'>
       {/* The glow: a ring that lights and fades, keyed so each send lights it again */}
       {flash > 0 && (
         <motion.span
@@ -400,7 +449,9 @@ const QuestionBlock = forwardRef<
       )}
       <legend className='mb-2.5 flex w-full items-baseline justify-between gap-3'>
         <span className='heading text-name'>{localized(customization.name)}</span>
-        <span className={cn('shrink-0 text-caption font-medium', unanswered ? 'text-destructive' : 'text-muted-foreground')}>
+        <span
+          className={cn('text-caption shrink-0 font-medium', unanswered ? 'text-destructive' : 'text-muted-foreground')}
+        >
           {customization.isRequired ? t('required') : t('ninjaOptional')}
         </span>
       </legend>
@@ -453,7 +504,7 @@ function OptionPills({ customization, selected, onPick }: ControlProps) {
             )}
           >
             <span className='min-w-0 break-words'>{name}</span>
-            {extra && <span className='shrink-0 text-caption tabular-nums opacity-75'>{extra}</span>}
+            {extra && <span className='text-caption shrink-0 tabular-nums opacity-75'>{extra}</span>}
           </button>
         )
       })}
@@ -461,13 +512,18 @@ function OptionPills({ customization, selected, onPick }: ControlProps) {
   )
 }
 
-
 /**
  * What goes well with the item: a small card each, in the business's order,
  * sideways when there are more than fit. A tap adds one with nothing to
  * choose straight to the order, or opens one that asks a question first.
  */
-function GoesWellWith({ items, onPick }: { items: CatalogItemDto[]; onPick: (item: CatalogItemDto, photo: HTMLElement | null) => void }) {
+function GoesWellWith({
+  items,
+  onPick,
+}: {
+  items: CatalogItemDto[]
+  onPick: (item: CatalogItemDto, photo: HTMLElement | null) => void
+}) {
   const t = useT()
   const localized = useLocalized()
   const price = usePrice()
@@ -476,7 +532,13 @@ function GoesWellWith({ items, onPick }: { items: CatalogItemDto[]; onPick: (ite
       <h3 className='heading text-name mb-2.5'>{t('goesWellWith')}</h3>
       <div className='no-scrollbar -mx-5 flex gap-2.5 overflow-x-auto px-5'>
         {items.map((item) => (
-          <SuggestionCard key={String(item.id)} item={item} name={localized(item.name)} price={price(effectiveBasePrice(item))} onPick={onPick} />
+          <SuggestionCard
+            key={String(item.id)}
+            item={item}
+            name={localized(item.name)}
+            price={price(effectiveBasePrice(item))}
+            onPick={onPick}
+          />
         ))}
       </div>
     </section>
@@ -504,9 +566,20 @@ function SuggestionCard({
       aria-label={t('addSuggestion', { name })}
       className='bg-muted/60 flex w-36 shrink-0 flex-col overflow-hidden rounded-[1.25rem] text-start active:scale-[0.98] motion-safe:transition-transform'
     >
-      <div ref={photo} className={cn('aspect-[4/3] w-full overflow-hidden', (!item.pictureUri || failed) && TONE_CLASS.primary)}>
+      <div
+        ref={photo}
+        className={cn('aspect-[4/3] w-full overflow-hidden', (!item.pictureUri || failed) && TONE_CLASS.primary)}
+      >
         {item.pictureUri && !failed ? (
-          <img src={itemPictureUrl(item, 320)} alt='' loading='lazy' decoding='async' draggable={false} onError={() => setFailed(true)} className='size-full object-cover' />
+          <img
+            src={itemPictureUrl(item, 320)}
+            alt=''
+            loading='lazy'
+            decoding='async'
+            draggable={false}
+            onError={() => setFailed(true)}
+            className='size-full object-cover'
+          />
         ) : (
           <div className='grid size-full place-items-center'>
             <UtensilsCrossed className='size-6 opacity-50' />
@@ -515,7 +588,7 @@ function SuggestionCard({
       </div>
       <div className='flex items-center gap-2 px-3 py-2'>
         <div className='min-w-0 flex-1'>
-          <div className='truncate text-note font-medium'>{name}</div>
+          <div className='text-note truncate font-medium'>{name}</div>
           <div className='text-muted-foreground text-caption tabular-nums'>{price}</div>
         </div>
         <span className='bg-primary text-primary-foreground grid size-7 shrink-0 place-items-center rounded-full'>

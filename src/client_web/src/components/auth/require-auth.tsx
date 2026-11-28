@@ -1,7 +1,7 @@
-import { useAuth } from 'react-oidc-context'
 import { Loader2 } from 'lucide-react'
-import { SignInOptions } from './sign-in-options'
+import { useAuth } from 'react-oidc-context'
 import { useT } from '@/lib/i18n'
+import { SignInOptions } from './sign-in-options'
 
 // Wraps pages that need a signed-in customer. Browsing stays public.
 export function RequireAuth({ children }: { children: React.ReactNode }) {

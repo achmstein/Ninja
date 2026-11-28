@@ -7,15 +7,7 @@ import { formatEgp, toNumber } from '@/lib/money'
 import { formatWhen } from '@/lib/when'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableFooter,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { EntitySheet } from '@/components/entity-sheet'
 import { formatQuantity } from '../format'
 
@@ -29,10 +21,7 @@ type PurchaseSheetProps = {
  * the parties and references on top, the lines with quantity, unit cost
  * and line total, the grand total at the foot. Prints as is.
  */
-export function PurchaseSheet({
-  purchaseId,
-  onOpenChange,
-}: PurchaseSheetProps) {
+export function PurchaseSheet({ purchaseId, onOpenChange }: PurchaseSheetProps) {
   const t = useT()
   const locale = useLocale()
   const localized = useLocalized()
@@ -53,12 +42,7 @@ export function PurchaseSheet({
         id: toNumber(purchase?.id ?? purchaseId),
       })}
       headerAction={
-        <Button
-          variant='outline'
-          size='sm'
-          className='print:hidden'
-          onClick={() => window.print()}
-        >
+        <Button variant='outline' size='sm' className='print:hidden' onClick={() => window.print()}>
           <Printer />
           {t('print')}
         </Button>
@@ -76,10 +60,7 @@ export function PurchaseSheet({
           <dl className='grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-3'>
             <Field label={t('supplier')} value={purchase.supplier} />
             <Field label={t('invoiceRef')} value={purchase.invoiceRef} />
-            <Field
-              label={t('receivedAt')}
-              value={formatWhen(purchase.receivedAt, 'dateTime', locale, t)}
-            />
+            <Field label={t('receivedAt')} value={formatWhen(purchase.receivedAt, 'dateTime', locale, t)} />
           </dl>
 
           <Table>
@@ -94,18 +75,12 @@ export function PurchaseSheet({
             <TableBody>
               {purchase.lines.map((line, index) => (
                 <TableRow key={`${line.stockItemId}-${index}`}>
-                  <TableCell className='font-medium'>
-                    {localized(line.name)}
-                  </TableCell>
-                  <TableCell className='text-end tabular-nums'>
-                    {formatQuantity(line.quantity, line.unit, t)}
-                  </TableCell>
+                  <TableCell className='font-medium'>{localized(line.name)}</TableCell>
+                  <TableCell className='text-end tabular-nums'>{formatQuantity(line.quantity, line.unit, t)}</TableCell>
                   <TableCell className='text-muted-foreground text-end tabular-nums'>
                     {formatEgp(line.unitCost)}
                   </TableCell>
-                  <TableCell className='text-end font-medium tabular-nums'>
-                    {formatEgp(line.total)}
-                  </TableCell>
+                  <TableCell className='text-end font-medium tabular-nums'>{formatEgp(line.total)}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -124,13 +99,7 @@ export function PurchaseSheet({
   )
 }
 
-function Field({
-  label,
-  value,
-}: {
-  label: string
-  value: string | null | undefined
-}) {
+function Field({ label, value }: { label: string; value: string | null | undefined }) {
   if (!value) return null
   return (
     <div className='min-w-0'>

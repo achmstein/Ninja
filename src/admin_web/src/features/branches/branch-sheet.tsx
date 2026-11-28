@@ -41,8 +41,7 @@ export type BranchSetting =
   | 'isDeliveryEnabled'
   | 'requireSignInForDelivery'
 
-const percent = (rate: number | string | undefined) =>
-  String(Math.round(Number(rate ?? 0) * 10000) / 100)
+const percent = (rate: number | string | undefined) => String(Math.round(Number(rate ?? 0) * 10000) / 100)
 
 /**
  * One branch, everything about it in one place: what customers can do from
@@ -108,9 +107,7 @@ export function BranchSheet({
   if (!branch) return null
 
   const zones = zonesQuery.data
-  const zonesDrawn = (zones ?? []).filter(
-    (z) => (z.shape?.length ?? 0) >= 3
-  ).length
+  const zonesDrawn = (zones ?? []).filter((z) => (z.shape?.length ?? 0) >= 3).length
   const stations = stationsQuery.data?.length ?? 0
   const pricing = pricingQuery.data
   const address = localized(branch.address)
@@ -127,9 +124,7 @@ export function BranchSheet({
       open={open}
       onOpenChange={onOpenChange}
       title={localized(branch.name)}
-      subtitle={
-        [address, showPhone(branch.phone)].filter(Boolean).join(' · ') || null
-      }
+      subtitle={[address, showPhone(branch.phone)].filter(Boolean).join(' · ') || null}
       status={
         <StatusChip tone={branch.isActive ? 'success' : 'muted'}>
           {branch.isActive ? t('active') : t('inactive')}
@@ -197,11 +192,7 @@ export function BranchSheet({
           <ToggleRow
             icon={Bike}
             title={t('deliveryEnabled')}
-            hint={
-              located && reaches
-                ? t('deliveryEnabledHint')
-                : t('deliveryNeedsLocation')
-            }
+            hint={located && reaches ? t('deliveryEnabledHint') : t('deliveryNeedsLocation')}
             checked={branch.isDeliveryEnabled ?? false}
             disabled={savingSettings || !located || !reaches}
             onChange={(v) => onToggle('isDeliveryEnabled', v)}
@@ -222,9 +213,7 @@ export function BranchSheet({
             value={
               reaches
                 ? [
-                    hasArea
-                      ? t('deliveryAreaShort')
-                      : t('deliveryWithinKm', { km: radiusKm }),
+                    hasArea ? t('deliveryAreaShort') : t('deliveryWithinKm', { km: radiusKm }),
                     fee > 0 ? formatEgp(fee) : t('deliveryFree'),
                     minimum > 0
                       ? t('deliveryMinimumShort', {
@@ -249,9 +238,7 @@ export function BranchSheet({
                 ) : (
                   [
                     t('deliveryZonesCount', { count: zones.length }),
-                    zonesDrawn > 0
-                      ? t('deliveryZonesOnMap', { n: zonesDrawn })
-                      : null,
+                    zonesDrawn > 0 ? t('deliveryZonesOnMap', { n: zonesDrawn }) : null,
                   ]
                     .filter(Boolean)
                     .join(' · ')
@@ -318,19 +305,10 @@ export function BranchSheet({
         <OpenRow
           icon={Clock}
           title={t('dayStartTime')}
-          value={
-            <span className='font-mono tabular-nums'>
-              {branch.dayStartTime?.slice(0, 5)}
-            </span>
-          }
+          value={<span className='font-mono tabular-nums'>{branch.dayStartTime?.slice(0, 5)}</span>}
           onClick={onEdit}
         />
-        <OpenRow
-          icon={MapPin}
-          title={t('branchAddress')}
-          value={address || t('branchNotSet')}
-          onClick={onEdit}
-        />
+        <OpenRow icon={MapPin} title={t('branchAddress')} value={address || t('branchNotSet')} onClick={onEdit} />
         <OpenRow
           icon={Navigation}
           title={t('branchLocation')}
@@ -340,13 +318,7 @@ export function BranchSheet({
         <OpenRow
           icon={Phone}
           title={t('phone')}
-          value={
-            branch.phone ? (
-              <span dir='ltr'>{showPhone(branch.phone)}</span>
-            ) : (
-              t('branchNotSet')
-            )
-          }
+          value={branch.phone ? <span dir='ltr'>{showPhone(branch.phone)}</span> : t('branchNotSet')}
           onClick={onEdit}
         />
       </Group>
@@ -355,21 +327,11 @@ export function BranchSheet({
 }
 
 /** A group of rows under a small label, as one bordered list: no card in the sheet */
-function Group({
-  label,
-  children,
-}: {
-  label: React.ReactNode
-  children: React.ReactNode
-}) {
+function Group({ label, children }: { label: React.ReactNode; children: React.ReactNode }) {
   return (
     <section className='flex flex-col gap-2'>
-      <h3 className='text-muted-foreground px-1 text-xs font-medium'>
-        {label}
-      </h3>
-      <div className='divide-border/60 divide-y overflow-hidden rounded-xl border'>
-        {children}
-      </div>
+      <h3 className='text-muted-foreground px-1 text-xs font-medium'>{label}</h3>
+      <div className='divide-border/60 divide-y overflow-hidden rounded-xl border'>{children}</div>
     </section>
   )
 }
@@ -399,11 +361,7 @@ function ToggleRow({
         <span className='truncate'>{title}</span>
         {hint && <InfoTip>{hint}</InfoTip>}
       </span>
-      <Switch
-        checked={checked}
-        disabled={disabled}
-        onCheckedChange={onChange}
-      />
+      <Switch checked={checked} disabled={disabled} onCheckedChange={onChange} />
     </div>
   )
 }
@@ -421,20 +379,10 @@ function OpenRow({
   onClick: () => void
 }) {
   return (
-    <button
-      type='button'
-      onClick={onClick}
-      className={cn(ROW, 'hover:bg-muted/40 transition-colors')}
-    >
+    <button type='button' onClick={onClick} className={cn(ROW, 'hover:bg-muted/40 transition-colors')}>
       <Icon className='text-muted-foreground size-4 shrink-0' />
-      <span className='min-w-0 flex-1 truncate text-sm font-medium'>
-        {title}
-      </span>
-      {value != null && (
-        <span className='text-muted-foreground max-w-[50%] truncate text-end text-sm'>
-          {value}
-        </span>
-      )}
+      <span className='min-w-0 flex-1 truncate text-sm font-medium'>{title}</span>
+      {value != null && <span className='text-muted-foreground max-w-[50%] truncate text-end text-sm'>{value}</span>}
       <ChevronRight className='text-muted-foreground/60 size-4 shrink-0 rtl:rotate-180' />
     </button>
   )

@@ -1,7 +1,7 @@
-import { useBranchFlags } from '@/features/branch/use-branch-flags'
-import { Switch } from '@/components/ui/switch'
 import { useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
+import { Switch } from '@/components/ui/switch'
+import { useBranchFlags } from '@/features/branch/use-branch-flags'
 
 type FlagRowProps = {
   label: string
@@ -14,26 +14,11 @@ type FlagRowProps = {
 function FlagRow({ label, on, disabled, onChange, className }: FlagRowProps) {
   const t = useT()
   return (
-    <label
-      className={cn(
-        'flex min-h-14 cursor-pointer items-center justify-between gap-4 px-4 py-2',
-        className
-      )}
-    >
-      <span className='flex items-center gap-2 type-body font-medium'>
-        <span
-          aria-hidden
-          className={cn(
-            'size-2 rounded-full',
-            on ? 'bg-emerald-500' : 'bg-amber-500'
-          )}
-        />
+    <label className={cn('flex min-h-14 cursor-pointer items-center justify-between gap-4 px-4 py-2', className)}>
+      <span className='type-body flex items-center gap-2 font-medium'>
+        <span aria-hidden className={cn('size-2 rounded-full', on ? 'bg-emerald-500' : 'bg-amber-500')} />
         {label}
-        {!on && (
-          <span className='text-muted-foreground type-caption'>
-            {t('paused')}
-          </span>
-        )}
+        {!on && <span className='text-muted-foreground type-caption'>{t('paused')}</span>}
       </span>
       <Switch checked={on} disabled={disabled} onCheckedChange={onChange} />
     </label>
@@ -55,12 +40,7 @@ export function TradingSwitches({ className }: { className?: string }) {
 
   return (
     <div className={cn('bg-card rounded-xl border', className)}>
-      <FlagRow
-        label={t('takingOrders')}
-        on={flags.takingOrders}
-        disabled={disabled}
-        onChange={flags.setTakingOrders}
-      />
+      <FlagRow label={t('takingOrders')} on={flags.takingOrders} disabled={disabled} onChange={flags.setTakingOrders} />
       {reservations && (
         <FlagRow
           label={t('takingReservations')}

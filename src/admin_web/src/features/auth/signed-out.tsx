@@ -5,12 +5,7 @@ import { useAuth } from 'react-oidc-context'
 import { useLanguage, useT } from '@/lib/i18n'
 import { useTheme } from '@/context/theme-provider'
 import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { AuthLayout } from './auth-layout'
 
 /**
@@ -29,26 +24,18 @@ export function SignedOut() {
     <AuthLayout>
       <Card className='gap-4'>
         <CardHeader className='text-center'>
-          <CardTitle className='text-xl tracking-tight'>
-            {t('signedOutTitle')}
-          </CardTitle>
+          <CardTitle className='text-xl tracking-tight'>{t('signedOutTitle')}</CardTitle>
         </CardHeader>
         <CardContent>
           {auth.isAuthenticated ? (
-            <Button
-              size='lg'
-              className='w-full'
-              onClick={() => navigate({ to: '/', replace: true })}
-            >
+            <Button size='lg' className='w-full' onClick={() => navigate({ to: '/', replace: true })}>
               {t('backToDashboard')}
             </Button>
           ) : (
             <Button
               size='lg'
               className='w-full'
-              onClick={() =>
-                auth.signinRedirect(loginPageParams(resolvedTheme, language))
-              }
+              onClick={() => auth.signinRedirect(loginPageParams(resolvedTheme, language))}
             >
               <LogIn />
               {t('signInAgain')}

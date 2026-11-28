@@ -2,36 +2,13 @@ import { useMemo, useState } from 'react'
 import { Check, ChevronsUpDown } from 'lucide-react'
 import { useT } from '@/lib/i18n'
 import type { Language } from '@/lib/language'
-import {
-  COUNTRIES,
-  CURRENCIES,
-  CURRENCY_LABELS,
-  allTimeZones,
-  countryOf,
-  type Country,
-} from '@/lib/locale'
+import { COUNTRIES, CURRENCIES, CURRENCY_LABELS, allTimeZones, countryOf, type Country } from '@/lib/locale'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import {
-  Command,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from '@/components/ui/command'
+import { Command, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
 import { Label } from '@/components/ui/label'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 
 export type LocaleValue = {
@@ -262,10 +239,7 @@ function TimeZoneField({ id, zones, value, onChange }: TimeZoneFieldProps) {
           <ChevronsUpDown className='size-4 shrink-0 opacity-50' />
         </Button>
       </PopoverTrigger>
-      <PopoverContent
-        align='start'
-        className='w-(--radix-popover-trigger-width) p-0'
-      >
+      <PopoverContent align='start' className='w-(--radix-popover-trigger-width) p-0'>
         <Command>
           <CommandInput placeholder={t('timeZone')} />
           <CommandList>
@@ -280,12 +254,7 @@ function TimeZoneField({ id, zones, value, onChange }: TimeZoneFieldProps) {
                     setOpen(false)
                   }}
                 >
-                  <Check
-                    className={cn(
-                      'size-4',
-                      zone === value ? 'opacity-100' : 'opacity-0'
-                    )}
-                  />
+                  <Check className={cn('size-4', zone === value ? 'opacity-100' : 'opacity-0')} />
                   <span dir='ltr'>{zone}</span>
                 </CommandItem>
               ))}

@@ -2,10 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { type StockLevelView } from '@/api/inventory'
 import { daysLeft, sortLevels } from './stock-sort'
 
-const level = (
-  name: string,
-  over: Partial<StockLevelView> = {}
-): StockLevelView => ({
+const level = (name: string, over: Partial<StockLevelView> = {}): StockLevelView => ({
   stockItemId: name.length,
   name: { en: name, ar: null },
   unit: 'g',
@@ -46,35 +43,15 @@ describe('sortLevels', () => {
   ]
 
   it('puts low items first, then names, retired last', () => {
-    expect(names(sortLevels(levels, 'low', nameOf))).toEqual([
-      'beans',
-      'Cups',
-      'Sugar',
-      'Old syrup',
-    ])
+    expect(names(sortLevels(levels, 'low', nameOf))).toEqual(['beans', 'Cups', 'Sugar', 'Old syrup'])
   })
   it('puts the fewest days left first, items with no use after', () => {
-    expect(names(sortLevels(levels, 'daysLeft', nameOf))).toEqual([
-      'beans',
-      'Sugar',
-      'Cups',
-      'Old syrup',
-    ])
+    expect(names(sortLevels(levels, 'daysLeft', nameOf))).toEqual(['beans', 'Sugar', 'Cups', 'Old syrup'])
   })
   it('puts the most valuable first', () => {
-    expect(names(sortLevels(levels, 'value', nameOf))).toEqual([
-      'beans',
-      'Cups',
-      'Sugar',
-      'Old syrup',
-    ])
+    expect(names(sortLevels(levels, 'value', nameOf))).toEqual(['beans', 'Cups', 'Sugar', 'Old syrup'])
   })
   it('sorts by name whatever the case', () => {
-    expect(names(sortLevels(levels, 'name', nameOf))).toEqual([
-      'beans',
-      'Cups',
-      'Sugar',
-      'Old syrup',
-    ])
+    expect(names(sortLevels(levels, 'name', nameOf))).toEqual(['beans', 'Cups', 'Sugar', 'Old syrup'])
   })
 })

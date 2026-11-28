@@ -3,11 +3,7 @@ import { type OrderSummary } from '@/api/ordering'
 import { type TranslateParams, type TranslationKey } from '@/lib/i18n'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
-import {
-  createAppColumnHelper,
-  DataTableColumnHeader,
-  type AppRow,
-} from '@/components/data-table'
+import { createAppColumnHelper, DataTableColumnHeader, type AppRow } from '@/components/data-table'
 import { Dot, ListRow } from '@/components/list-row'
 import { Money } from '@/components/money'
 import { RowActions } from '@/components/row-actions'
@@ -20,9 +16,7 @@ import { getOrderStatus, isCancelled, orderSourceKey } from './status'
 const columnHelper = createAppColumnHelper<OrderSummary>()
 
 type Translate = (key: TranslationKey, params?: TranslateParams) => string
-type Localize = (
-  text: { en?: string | null; ar?: string | null } | null | undefined
-) => string
+type Localize = (text: { en?: string | null; ar?: string | null } | null | undefined) => string
 
 type OrdersColumnsCallbacks = {
   onDelete: (orderNumber: number) => void
@@ -45,11 +39,7 @@ function OrderStatus({ status, t }: { status?: string | null; t: Translate }) {
 function OrderSource({ order, t }: { order: OrderSummary; t: Translate }) {
   if (order.platform) return <PlatformBadge platform={order.platform} />
   const key = orderSourceKey(order)
-  return key ? (
-    <Badge variant='muted'>{t(key)}</Badge>
-  ) : (
-    <span className='text-muted-foreground'>—</span>
-  )
+  return key ? <Badge variant='muted'>{t(key)}</Badge> : <span className='text-muted-foreground'>—</span>
 }
 
 function Rating({ value }: { value?: number | string | null }) {
@@ -72,12 +62,7 @@ function Rating({ value }: { value?: number | string | null }) {
  * opens; a cancelled order can be deleted from its ⋯. Placed and Total sort
  * server-side.
  */
-export function getOrdersColumns({
-  onDelete,
-  isActing,
-  t,
-  localized,
-}: OrdersColumnsCallbacks) {
+export function getOrdersColumns({ onDelete, isActing, t, localized }: OrdersColumnsCallbacks) {
   return columnHelper.columns([
     // Only cancelled orders are deletable, so only they are selectable;
     // enableRowSelection on the table enforces it, the checkbox reflects it
@@ -85,10 +70,7 @@ export function getOrdersColumns({
       id: 'select',
       header: ({ table }) => (
         <Checkbox
-          checked={
-            table.getIsAllPageRowsSelected() ||
-            (table.getIsSomePageRowsSelected() && 'indeterminate')
-          }
+          checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && 'indeterminate')}
           onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
           aria-label={t('selectAll')}
         />
@@ -106,16 +88,11 @@ export function getOrdersColumns({
     }),
     columnHelper.accessor('date', {
       id: 'date',
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t('orderHash')} />
-      ),
+      header: ({ column }) => <DataTableColumnHeader column={column} title={t('orderHash')} />,
       cell: (info) => (
         <div className='flex flex-col leading-tight'>
           <span className='font-medium'>#{info.row.original.orderNumber}</span>
-          <When
-            value={info.getValue()}
-            className='text-muted-foreground text-xs'
-          />
+          <When value={info.getValue()} className='text-muted-foreground text-xs' />
         </div>
       ),
     }),
@@ -127,14 +104,8 @@ export function getOrdersColumns({
         const place = localized(info.row.original.placeName)
         return (
           <div className='flex max-w-56 flex-col leading-tight'>
-            <span className='truncate'>
-              {info.getValue() || t('guestBadge')}
-            </span>
-            {place && (
-              <span className='text-muted-foreground truncate text-xs'>
-                {place}
-              </span>
-            )}
+            <span className='truncate'>{info.getValue() || t('guestBadge')}</span>
+            {place && <span className='text-muted-foreground truncate text-xs'>{place}</span>}
           </div>
         )
       },
@@ -164,13 +135,7 @@ export function getOrdersColumns({
     columnHelper.accessor('total', {
       meta: { align: 'end' },
       id: 'total',
-      header: ({ column }) => (
-        <DataTableColumnHeader
-          column={column}
-          title={t('total')}
-          className='justify-end'
-        />
-      ),
+      header: ({ column }) => <DataTableColumnHeader column={column} title={t('total')} className='justify-end' />,
       cell: (info) => <Money value={info.getValue()} strong />,
     }),
     columnHelper.display({
@@ -196,15 +161,7 @@ export function getOrdersColumns({
 }
 
 /** An order as a phone lists it: number and who, then when, where and from where; the total over its state */
-export function OrderListRow({
-  row,
-  t,
-  localized,
-}: {
-  row: AppRow<OrderSummary>
-  t: Translate
-  localized: Localize
-}) {
+export function OrderListRow({ row, t, localized }: { row: AppRow<OrderSummary>; t: Translate; localized: Localize }) {
   const order = row.original
   const place = localized(order.placeName)
   return (
@@ -212,12 +169,7 @@ export function OrderListRow({
       title={
         <>
           #{order.orderNumber}
-          {order.userName && (
-            <span className='text-muted-foreground font-normal'>
-              {' '}
-              · {order.userName}
-            </span>
-          )}
+          {order.userName && <span className='text-muted-foreground font-normal'> · {order.userName}</span>}
         </>
       }
       meta={

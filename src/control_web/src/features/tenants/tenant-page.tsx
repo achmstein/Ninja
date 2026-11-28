@@ -1,7 +1,7 @@
 import { lazy, Suspense, useState } from 'react'
+import { AxiosError } from 'axios'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate } from '@tanstack/react-router'
-import { AxiosError } from 'axios'
 import {
   ArrowRightLeft,
   AlertCircle,
@@ -45,20 +45,6 @@ import {
   stopTenantMutation,
   upgradeTenantMutation,
 } from '@/api/control/@tanstack/react-query.gen'
-import { PageHeader } from '@/components/page-header'
-import { KindBadge, StatusBadge, SubscriptionBadge, UpdateBadge } from '@/components/tenant-badges'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { Spinner } from '@/components/ui/spinner'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useT, type TranslationKey } from '@/lib/i18n'
 import { problemDetail } from '@/lib/problem'
 import {
@@ -81,22 +67,57 @@ import {
   tenantStatus,
 } from '@/lib/tenant'
 import { toast } from '@/lib/toast'
-import { BringBackDialog, ConvertDialog, DestroyDialog, ExtendDialog, ForgetDialog, MoveDialog, RollbackDialog, RotateDialog, UpgradeDialog } from './dialogs'
-import { AuditTab } from './tabs/audit'
-import { SubscriptionTab } from './tabs/subscription'
-import { BackupsTab } from './tabs/backups'
-import { HealthTab } from './tabs/health'
-import { OverviewTab } from './tabs/overview'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { Spinner } from '@/components/ui/spinner'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { PageHeader } from '@/components/page-header'
+import { KindBadge, StatusBadge, SubscriptionBadge, UpdateBadge } from '@/components/tenant-badges'
+import { JobLabel } from '@/features/platform/queue-table'
+import {
+  BringBackDialog,
+  ConvertDialog,
+  DestroyDialog,
+  ExtendDialog,
+  ForgetDialog,
+  MoveDialog,
+  RollbackDialog,
+  RotateDialog,
+  UpgradeDialog,
+} from './dialogs'
 import { AppTab } from './tabs/app'
+import { AuditTab } from './tabs/audit'
+import { BackupsTab } from './tabs/backups'
 import { BusinessTab } from './tabs/business'
 import { ConnectionsTab } from './tabs/connections'
-import { JobLabel } from '@/features/platform/queue-table'
+import { HealthTab } from './tabs/health'
+import { OverviewTab } from './tabs/overview'
+import { SubscriptionTab } from './tabs/subscription'
 
 // Recharts and the brand editor only load once their tab opens
 const BrandTab = lazy(() => import('./tabs/brand').then((m) => ({ default: m.BrandTab })))
 const MetricsTab = lazy(() => import('./tabs/metrics').then((m) => ({ default: m.MetricsTab })))
 
-export const TENANT_TABS = ['overview', 'business', 'brand', 'subscription', 'connections', 'app', 'health', 'metrics', 'backups', 'audit'] as const
+export const TENANT_TABS = [
+  'overview',
+  'business',
+  'brand',
+  'subscription',
+  'connections',
+  'app',
+  'health',
+  'metrics',
+  'backups',
+  'audit',
+] as const
 export type TenantTab = (typeof TENANT_TABS)[number]
 
 const TAB_LABELS: Record<TenantTab, TranslationKey> = {
@@ -112,7 +133,8 @@ const TAB_LABELS: Record<TenantTab, TranslationKey> = {
   audit: 'tabAudit',
 }
 
-type OpenDialog = 'extend' | 'upgrade' | 'destroy' | 'forget' | 'bringBack' | 'convert' | 'rotate' | 'rollback' | 'move' | null
+type OpenDialog =
+  'extend' | 'upgrade' | 'destroy' | 'forget' | 'bringBack' | 'convert' | 'rotate' | 'rollback' | 'move' | null
 
 function Loading() {
   return (
@@ -154,8 +176,7 @@ export function TenantPage({ slug, tab }: { slug: string; tab: TenantTab }) {
     setDialog(null)
     refresh()
   }
-  const failed = (e: unknown) =>
-    toast.error(problemDetail(e) || t('somethingWentWrong'))
+  const failed = (e: unknown) => toast.error(problemDetail(e) || t('somethingWentWrong'))
 
   const provision = useMutation({ ...provisionTenantMutation(), onSuccess: queued, onError: failed })
   const stop = useMutation({ ...stopTenantMutation(), onSuccess: queued, onError: failed })
@@ -231,13 +252,10 @@ export function TenantPage({ slug, tab }: { slug: string; tab: TenantTab }) {
 
   const tenant = query.data
   if (!tenant) {
-    const notFound =
-      query.error instanceof AxiosError && query.error.response?.status === 404
+    const notFound = query.error instanceof AxiosError && query.error.response?.status === 404
     return (
       <div className='flex flex-col items-center justify-center gap-4 py-24'>
-        <h1 className='text-2xl font-bold'>
-          {notFound ? t('notFound') : t('somethingWentWrong')}
-        </h1>
+        <h1 className='text-2xl font-bold'>{notFound ? t('notFound') : t('somethingWentWrong')}</h1>
         <Button asChild variant='outline'>
           <Link to='/'>{t('backToTenants')}</Link>
         </Button>
@@ -260,7 +278,14 @@ export function TenantPage({ slug, tab }: { slug: string; tab: TenantTab }) {
     bringBack.isPending
   const path = { path: { slug } }
   const alive = status !== 'Destroying' && status !== 'Destroyed'
-  const showMore = (kind === 'Demo' && alive) || canUpgrade(status) || canConvert(kind, status) || canDestroy(status) || canForget(status) || canSecure(status) || canImpersonate(status)
+  const showMore =
+    (kind === 'Demo' && alive) ||
+    canUpgrade(status) ||
+    canConvert(kind, status) ||
+    canDestroy(status) ||
+    canForget(status) ||
+    canSecure(status) ||
+    canImpersonate(status)
 
   return (
     <div className='flex flex-col gap-6'>
@@ -272,8 +297,12 @@ export function TenantPage({ slug, tab }: { slug: string; tab: TenantTab }) {
             <StatusBadge status={tenant.status} />
             <KindBadge kind={tenant.kind} isDrill={tenant.isDrill} />
             <Badge variant='outline'>{t(planLabelKey[tenant.record.plan])}</Badge>
-            {!['Active', 'Trialing'].includes(subscriptionStatus(tenant.subscription.status)) && <SubscriptionBadge status={tenant.subscription.status} />}
-            {tenant.update?.behind && <UpdateBadge services={tenant.update.services} newerTag={tenant.update.newerTag} />}
+            {!['Active', 'Trialing'].includes(subscriptionStatus(tenant.subscription.status)) && (
+              <SubscriptionBadge status={tenant.subscription.status} />
+            )}
+            {tenant.update?.behind && (
+              <UpdateBadge services={tenant.update.services} newerTag={tenant.update.newerTag} />
+            )}
             {tenant.jobs.map((job) => (
               <Badge key={job.id} variant='outline' className='gap-1.5'>
                 <Spinner className='size-3' />
@@ -328,12 +357,7 @@ export function TenantPage({ slug, tab }: { slug: string; tab: TenantTab }) {
               </Button>
             )}
             {canImpersonate(status) && (
-              <Button
-                size='sm'
-                variant='outline'
-                disabled={impersonate.isPending}
-                onClick={signInAsOwner}
-              >
+              <Button size='sm' variant='outline' disabled={impersonate.isPending} onClick={signInAsOwner}>
                 {impersonate.isPending ? <Spinner /> : <LogIn />}
                 {t('signInAsOwner')}
               </Button>
@@ -353,7 +377,10 @@ export function TenantPage({ slug, tab }: { slug: string; tab: TenantTab }) {
                     </DropdownMenuItem>
                   )}
                   {kind === 'Demo' && status === 'Running' && (
-                    <DropdownMenuItem disabled={busy || fillDemo.isPending} onSelect={() => fillDemo.mutate({ path: { slug } })}>
+                    <DropdownMenuItem
+                      disabled={busy || fillDemo.isPending}
+                      onSelect={() => fillDemo.mutate({ path: { slug } })}
+                    >
                       <DatabaseZap />
                       {t('fillDemoData')}
                     </DropdownMenuItem>
@@ -403,11 +430,7 @@ export function TenantPage({ slug, tab }: { slug: string; tab: TenantTab }) {
                   {canDestroy(status) && (
                     <>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        variant='destructive'
-                        disabled={busy}
-                        onSelect={() => setDialog('destroy')}
-                      >
+                      <DropdownMenuItem variant='destructive' disabled={busy} onSelect={() => setDialog('destroy')}>
                         <Trash2 />
                         {t('destroy')}
                       </DropdownMenuItem>
@@ -437,7 +460,12 @@ export function TenantPage({ slug, tab }: { slug: string; tab: TenantTab }) {
           <AlertTitle>{t('sharedCredentials')}</AlertTitle>
           <AlertDescription className='flex flex-wrap items-center justify-between gap-2'>
             <span>{t('sharedCredentialsNote')}</span>
-            <Button size='sm' variant='outline' disabled={busy} onClick={() => secure.mutate({ ...path, query: { rotate: false } })}>
+            <Button
+              size='sm'
+              variant='outline'
+              disabled={busy}
+              onClick={() => secure.mutate({ ...path, query: { rotate: false } })}
+            >
               {t('secureNow')}
             </Button>
           </AlertDescription>
@@ -450,8 +478,15 @@ export function TenantPage({ slug, tab }: { slug: string; tab: TenantTab }) {
           <Undo2 />
           <AlertTitle>{t('rolledBack')}</AlertTitle>
           <AlertDescription className='flex flex-wrap items-center justify-between gap-2'>
-            <span className='font-mono text-xs break-all' dir='ltr'>{tenant.lastError}</span>
-            <Button size='sm' variant='outline' disabled={busy || dismiss.isPending} onClick={() => dismiss.mutate(path)}>
+            <span className='font-mono text-xs break-all' dir='ltr'>
+              {tenant.lastError}
+            </span>
+            <Button
+              size='sm'
+              variant='outline'
+              disabled={busy || dismiss.isPending}
+              onClick={() => dismiss.mutate(path)}
+            >
               {t('dismiss')}
             </Button>
           </AlertDescription>
@@ -481,7 +516,7 @@ export function TenantPage({ slug, tab }: { slug: string; tab: TenantTab }) {
       >
         {/* The list scrolls sideways on a phone; its wrapper keeps the active
             tab's underline (drawn below the list) inside the scroll box */}
-        <div className='max-w-full overflow-x-auto overflow-y-hidden pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden'>
+        <div className='max-w-full [scrollbar-width:none] overflow-x-auto overflow-y-hidden pb-2 [&::-webkit-scrollbar]:hidden'>
           <TabsList variant='line'>
             {TENANT_TABS.map((key) => (
               <TabsTrigger key={key} value={key}>
@@ -538,9 +573,7 @@ export function TenantPage({ slug, tab }: { slug: string; tab: TenantTab }) {
         isPending={upgrade.isPending}
         currentTag={tenant.imageTag}
         update={tenant.update}
-        onConfirm={(imageTag) =>
-          upgrade.mutate({ ...path, body: imageTag ? { imageTag } : null })
-        }
+        onConfirm={(imageTag) => upgrade.mutate({ ...path, body: imageTag ? { imageTag } : null })}
       />
       <ConvertDialog
         open={dialog === 'convert'}
@@ -548,7 +581,9 @@ export function TenantPage({ slug, tab }: { slug: string; tab: TenantTab }) {
         isPending={convert.isPending}
         name={name}
         currentPlan={tenant.record.plan}
-        onConfirm={(plan, paidThrough) => convert.mutate({ ...path, body: { plan, paidThrough: new Date(paidThrough).toISOString() } })}
+        onConfirm={(plan, paidThrough) =>
+          convert.mutate({ ...path, body: { plan, paidThrough: new Date(paidThrough).toISOString() } })
+        }
       />
       <RollbackDialog
         open={dialog === 'rollback'}

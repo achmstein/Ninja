@@ -21,38 +21,24 @@ export const TENANT_STATUSES = [
 ] as const
 export type TenantStatusName = (typeof TENANT_STATUSES)[number]
 
-export const STEP_STATUSES = [
-  'Pending',
-  'Running',
-  'Done',
-  'Failed',
-  'Skipped',
-] as const
+export const STEP_STATUSES = ['Pending', 'Running', 'Done', 'Failed', 'Skipped'] as const
 export type StepStatusName = (typeof STEP_STATUSES)[number]
 
-function nameOf<T extends string>(
-  names: readonly T[],
-  value: number | string | null | undefined,
-  fallback: T
-): T {
+function nameOf<T extends string>(names: readonly T[], value: number | string | null | undefined, fallback: T): T {
   if (typeof value === 'number') return names[value] ?? fallback
   if (typeof value === 'string') {
     const asNumber = Number(value)
-    if (Number.isInteger(asNumber) && value.trim() !== '')
-      return names[asNumber] ?? fallback
+    if (Number.isInteger(asNumber) && value.trim() !== '') return names[asNumber] ?? fallback
     return (names as readonly string[]).includes(value) ? (value as T) : fallback
   }
   return fallback
 }
 
-export const tenantKind = (value: number | string | null | undefined) =>
-  nameOf(TENANT_KINDS, value, 'Demo')
+export const tenantKind = (value: number | string | null | undefined) => nameOf(TENANT_KINDS, value, 'Demo')
 
-export const tenantStatus = (value: number | string | null | undefined) =>
-  nameOf(TENANT_STATUSES, value, 'Requested')
+export const tenantStatus = (value: number | string | null | undefined) => nameOf(TENANT_STATUSES, value, 'Requested')
 
-export const stepStatus = (value: number | string | null | undefined) =>
-  nameOf(STEP_STATUSES, value, 'Pending')
+export const stepStatus = (value: number | string | null | undefined) => nameOf(STEP_STATUSES, value, 'Pending')
 
 /** The wire value for a kind the form picked. */
 
@@ -128,8 +114,7 @@ export function billingStanding(
   },
   now: Date = new Date()
 ): BillingStanding {
-  const due =
-    tenantKind(tenant.kind) === 'Demo' ? tenant.expiresAt : tenant.paidThrough
+  const due = tenantKind(tenant.kind) === 'Demo' ? tenant.expiresAt : tenant.paidThrough
   const days = due ? calendarDaysBetween(now, new Date(due)) : null
 
   switch (subscriptionStatus(tenant.subscription)) {
@@ -148,11 +133,23 @@ export function billingStanding(
 }
 
 /** The tenants an operator should chase today, as opposed to keep an eye on. */
-export const needsPayment = (tone: BillingTone) =>
-  tone === 'overdue' || tone === 'stopped'
+export const needsPayment = (tone: BillingTone) => tone === 'overdue' || tone === 'stopped'
 
 /** The switches as modules a plan includes or sells; the order the API's enum has. */
-export const MODULES = ['Reservations', 'TimeBilling', 'Loyalty', 'Tabs', 'Inventory', 'Finance', 'Payroll', 'Kds', 'OnlinePayments', 'Delivery', 'Ai', 'CallCentre'] as const
+export const MODULES = [
+  'Reservations',
+  'TimeBilling',
+  'Loyalty',
+  'Tabs',
+  'Inventory',
+  'Finance',
+  'Payroll',
+  'Kds',
+  'OnlinePayments',
+  'Delivery',
+  'Ai',
+  'CallCentre',
+] as const
 export type ModuleName = (typeof MODULES)[number]
 
 export const moduleLabelKey: Record<ModuleName, TranslationKey> = {
@@ -185,21 +182,17 @@ export const stepLabelKey: Record<StepStatusName, TranslationKey> = {
 export const isBusy = (status: TenantStatusName) =>
   status === 'Provisioning' || status === 'Destroying' || status === 'Upgrading'
 
-export const canProvision = (status: TenantStatusName) =>
-  status === 'Requested' || status === 'Failed'
+export const canProvision = (status: TenantStatusName) => status === 'Requested' || status === 'Failed'
 /** Destroyed, it comes back under its own slug; a drill's scratch tenant does not. */
 export const canBringBack = (status: TenantStatusName, isDrill: boolean) => status === 'Destroyed' && !isDrill
 export const canStop = (status: TenantStatusName) => status === 'Running'
 export const canStart = (status: TenantStatusName) => status === 'Stopped'
-export const canUpgrade = (status: TenantStatusName) =>
-  status === 'Running' || status === 'Stopped'
-export const canDestroy = (status: TenantStatusName) =>
-  status !== 'Destroying' && status !== 'Destroyed'
+export const canUpgrade = (status: TenantStatusName) => status === 'Running' || status === 'Stopped'
+export const canDestroy = (status: TenantStatusName) => status !== 'Destroying' && status !== 'Destroyed'
 /** A destroyed tenant is a row nobody needs on the list any more. */
 export const canForget = (status: TenantStatusName) => status === 'Destroyed'
 /** Stopped for non-payment; back with a payment or a resume. */
-export const canSuspend = (status: TenantStatusName) =>
-  status === 'Running' || status === 'Stopped'
+export const canSuspend = (status: TenantStatusName) => status === 'Running' || status === 'Stopped'
 export const canResume = (status: TenantStatusName) => status === 'Suspended'
 /** A demo becomes a customer; a customer already is one. */
 export const canConvert = (kind: TenantKindName, status: TenantStatusName) =>
@@ -212,7 +205,12 @@ export const canSecure = (status: TenantStatusName) =>
   status === 'Running' || status === 'Stopped' || status === 'Failed'
 /** A stack exists on the box: containers and logs can be read. */
 export const isStamped = (status: TenantStatusName) =>
-  status === 'Running' || status === 'Stopped' || status === 'Failed' || status === 'Provisioning' || status === 'Upgrading' || status === 'Suspended'
+  status === 'Running' ||
+  status === 'Stopped' ||
+  status === 'Failed' ||
+  status === 'Provisioning' ||
+  status === 'Upgrading' ||
+  status === 'Suspended'
 
 export const TENANT_SEEDS = ['None', 'Sample'] as const
 export type TenantSeedName = (typeof TENANT_SEEDS)[number]
@@ -249,7 +247,6 @@ export function slugFrom(name: string): string {
     .replace(/-+$/g, '')
 }
 
-export const isValidSlug = (slug: string) =>
-  /^[a-z0-9](?:[a-z0-9-]{1,22}[a-z0-9])?$/.test(slug) && !slug.includes('--')
+export const isValidSlug = (slug: string) => /^[a-z0-9](?:[a-z0-9-]{1,22}[a-z0-9])?$/.test(slug) && !slug.includes('--')
 
 export const isHexColor = (value: string) => /^#[0-9a-f]{6}$/i.test(value)

@@ -1,7 +1,6 @@
 import { useState, type KeyboardEvent } from 'react'
-import { motion } from 'motion/react'
 import { Bike, ChevronRight, Loader2, LogIn, MapPin, ShoppingBag, Store } from 'lucide-react'
-import { GuestSignInChoices } from '@/components/auth/sign-in-options'
+import { motion } from 'motion/react'
 import { addressRow, shownLabel } from '@/lib/address-line'
 import { useAtBranch } from '@/lib/at-branch'
 import { useBranches, useSelectedBranch } from '@/lib/branch'
@@ -10,6 +9,7 @@ import { useDistance } from '@/lib/geo'
 import { useLanguage, useLocalized, usePrice, useT } from '@/lib/i18n'
 import { useBranchesByDistance, useBranchSwitch } from '@/lib/use-branch-switch'
 import { cn } from '@/lib/utils'
+import { GuestSignInChoices } from '@/components/auth/sign-in-options'
 import { BranchSheet } from '@/components/branch-switcher'
 import { AddressSheet } from './address-sheet'
 
@@ -26,7 +26,12 @@ export function showDeliveryNote() {
   if (!note) return
   const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches
   note.scrollIntoView({ block: 'center', behavior: calm ? 'auto' : 'smooth' })
-  if (!calm) note.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.05)' }, { transform: 'scale(1)' }], { duration: 450, delay: 250, easing: 'ease-out' })
+  if (!calm)
+    note.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.05)' }, { transform: 'scale(1)' }], {
+      duration: 450,
+      delay: 250,
+      easing: 'ease-out',
+    })
 }
 
 /**
@@ -49,12 +54,22 @@ export function DeliveryChoice({ delivery, cloudKitchen }: { delivery: DeliveryS
   const words = { building: t('deliveryBuilding'), floor: t('deliveryFloor'), apartment: t('deliveryApartment') }
   // The address as its row says it: its name over the whole address, or its street over the rest of it
   const row = address
-    ? addressRow(address, shownLabel(address.label, { home: t('deliveryLabelHome'), work: t('deliveryLabelWork') }), words, language)
+    ? addressRow(
+        address,
+        shownLabel(address.label, { home: t('deliveryLabelHome'), work: t('deliveryLabelWork') }),
+        words,
+        language
+      )
     : null
   const area = localized(delivery.zoneName)
   const off = delivery.problem === 'areaOff'
   // The area and about how long it takes, whichever the branch said: "Maadi Degla · about 45 min"
-  const areaLine = [area, delivery.etaMinutes != null ? t('deliveryAboutMinutes', { minutes: delivery.etaMinutes }) : null].filter(Boolean).join(' · ')
+  const areaLine = [
+    area,
+    delivery.etaMinutes != null ? t('deliveryAboutMinutes', { minutes: delivery.etaMinutes }) : null,
+  ]
+    .filter(Boolean)
+    .join(' · ')
 
   // A radio group: one stop for Tab, the arrows move between the two (and choose), as a native one does
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
@@ -85,7 +100,7 @@ export function DeliveryChoice({ delivery, cloudKitchen }: { delivery: DeliveryS
               aria-checked={on}
               tabIndex={on ? 0 : -1}
               onClick={() => delivery.setWanted(mode === 'delivery')}
-              className='relative flex h-10 items-center justify-center gap-2 rounded-full text-note font-semibold'
+              className='text-note relative flex h-10 items-center justify-center gap-2 rounded-full font-semibold'
             >
               {on && (
                 <motion.span
@@ -108,7 +123,7 @@ export function DeliveryChoice({ delivery, cloudKitchen }: { delivery: DeliveryS
           for a guest to fill in, but the way to sign in, right here */}
       {delivery.problem === 'signIn' && (
         <div className='bg-background/10 flex flex-col gap-3 rounded-2xl p-3' role='status'>
-          <span className='flex items-center gap-2 text-note font-semibold'>
+          <span className='text-note flex items-center gap-2 font-semibold'>
             <LogIn className='size-4 shrink-0' />
             {t('deliveryNeedsAccount')}
           </span>
@@ -131,12 +146,12 @@ export function DeliveryChoice({ delivery, cloudKitchen }: { delivery: DeliveryS
             <span className='min-w-0 flex-1'>
               {row ? (
                 <>
-                  <span className='block truncate text-note font-semibold'>{row.title}</span>
+                  <span className='text-note block truncate font-semibold'>{row.title}</span>
                   {/* Only when there is more to say than the line above already does */}
-                  {row.line && <span className='block truncate text-caption opacity-70'>{row.line}</span>}
+                  {row.line && <span className='text-caption block truncate opacity-70'>{row.line}</span>}
                 </>
               ) : (
-                <span className='block text-note font-semibold'>{t('deliveryAddAddress')}</span>
+                <span className='text-note block font-semibold'>{t('deliveryAddAddress')}</span>
               )}
             </span>
             <ChevronRight className='size-4 shrink-0 opacity-60 rtl:rotate-180' />
@@ -144,7 +159,7 @@ export function DeliveryChoice({ delivery, cloudKitchen }: { delivery: DeliveryS
 
           {/* What stands in the way of the delivery is said here, as text. The order button, pressed while it
               cannot send, brings these lines into sight (showDeliveryNote), however long the order is */}
-          <div data-delivery-note className='flex flex-col gap-1 px-1 text-caption'>
+          <div data-delivery-note className='text-caption flex flex-col gap-1 px-1'>
             {delivery.problem === 'checking' && (
               <span className='flex items-center gap-2 opacity-70'>
                 <Loader2 className='size-3.5 animate-spin' />
@@ -169,13 +184,17 @@ export function DeliveryChoice({ delivery, cloudKitchen }: { delivery: DeliveryS
               <>
                 <span className='flex items-center justify-between opacity-80'>
                   <span>{t('deliveryFee')}</span>
-                  <span className='font-semibold tabular-nums'>{delivery.fee > 0 ? price(delivery.fee) : t('deliveryFree')}</span>
+                  <span className='font-semibold tabular-nums'>
+                    {delivery.fee > 0 ? price(delivery.fee) : t('deliveryFree')}
+                  </span>
                 </span>
                 {areaLine && <span className='opacity-70'>{areaLine}</span>}
               </>
             )}
             {delivery.problem === 'minimum' && (
-              <span className='font-semibold text-amber-300'>{t('deliveryAddMore', { amount: price(delivery.short) })}</span>
+              <span className='font-semibold text-amber-300'>
+                {t('deliveryAddMore', { amount: price(delivery.short) })}
+              </span>
             )}
           </div>
         </>
@@ -206,7 +225,11 @@ function OutOfRange({ delivery }: { delivery: DeliveryState }) {
     <>
       <span className='font-semibold text-amber-300'>{t('deliveryOutOfRange', { name: localized(branch?.name) })}</span>
       {other && otherBranch && (
-        <button type='button' onClick={() => request(other.branchId)} className='self-start font-semibold underline underline-offset-4'>
+        <button
+          type='button'
+          onClick={() => request(other.branchId)}
+          className='self-start font-semibold underline underline-offset-4'
+        >
           {t('deliveryTryBranch', { name: localized(otherBranch.name), distance: distance(other.meters) })}
         </button>
       )}
@@ -237,9 +260,11 @@ export function PickupFrom({ onlyWithChoice = false }: { onlyWithChoice?: boolea
     <>
       <Store className='size-5 shrink-0' />
       <span className='min-w-0 flex-1'>
-        <span className='block truncate text-note font-semibold'>{t('pickupFrom', { name: localized(branch.name) })}</span>
+        <span className='text-note block truncate font-semibold'>
+          {t('pickupFrom', { name: localized(branch.name) })}
+        </span>
         {(meters != null || localized(branch.address)) && (
-          <span className='block truncate text-caption opacity-70'>
+          <span className='text-caption block truncate opacity-70'>
             {[meters != null ? distance(meters) : null, localized(branch.address)].filter(Boolean).join(' · ')}
           </span>
         )}

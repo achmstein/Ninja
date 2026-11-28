@@ -8,7 +8,6 @@ import {
   savePaymentSettingsMutation,
 } from '@/api/sales/@tanstack/react-query.gen'
 import type { PaymentSettingsView } from '@/api/sales/types.gen'
-import { PaymentsAttention } from './attention'
 import { API_VERSION } from '@/lib/api-client'
 import { useT, type TranslationKey } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
@@ -26,6 +25,7 @@ import { SettingRow, SettingsCard } from '@/components/kit'
 import { Main } from '@/components/layout/main'
 import { PageHeader } from '@/components/page-header'
 import { StatusChip } from '@/components/status-chip'
+import { PaymentsAttention } from './attention'
 import {
   FEE_BUSINESS,
   FEE_GUEST,
@@ -148,9 +148,7 @@ function SettingsForm({ settings }: { settings: PaymentSettingsView }) {
       {settings.simulated && (
         <Alert>
           <FlaskConical />
-          <AlertDescription className='text-foreground'>
-            {t('payDemoNotice')}
-          </AlertDescription>
+          <AlertDescription className='text-foreground'>{t('payDemoNotice')}</AlertDescription>
         </Alert>
       )}
 
@@ -218,9 +216,7 @@ function SettingsForm({ settings }: { settings: PaymentSettingsView }) {
         <div className='grid gap-3 px-5 py-4'>
           <div>
             <div className='text-sm font-medium'>{t('payIntegrations')}</div>
-            <p className='text-muted-foreground mt-0.5 text-sm'>
-              {t('payIntegrationsHint')}
-            </p>
+            <p className='text-muted-foreground mt-0.5 text-sm'>{t('payIntegrationsHint')}</p>
           </div>
           <FieldGrid cols={3}>
             {(
@@ -258,11 +254,7 @@ function SettingsForm({ settings }: { settings: PaymentSettingsView }) {
           </Field>
         </div>
         <div className='px-5 py-4'>
-          <Field
-            label={t('payCallbackUrl')}
-            htmlFor='pay-callback'
-            hint={t('payCallbackHint')}
-          >
+          <Field label={t('payCallbackUrl')} htmlFor='pay-callback' hint={t('payCallbackHint')}>
             <div className='flex gap-2'>
               <Input
                 id='pay-callback'
@@ -299,9 +291,7 @@ function SettingsForm({ settings }: { settings: PaymentSettingsView }) {
             </ToggleGroupItem>
           </ToggleGroup>
           <p className='text-muted-foreground text-sm'>
-            {form.feeMode === FEE_GUEST
-              ? t('payFeeGuestHint')
-              : t('payFeeBusinessHint')}
+            {form.feeMode === FEE_GUEST ? t('payFeeGuestHint') : t('payFeeBusinessHint')}
           </p>
         </div>
         <FieldGrid className='px-5 py-4'>
@@ -327,10 +317,7 @@ function SettingsForm({ settings }: { settings: PaymentSettingsView }) {
       </SettingsCard>
 
       {/* What guests see on their phones */}
-      <SettingsCard
-        title={t('paySplitModes')}
-        description={t('paySplitModesHint')}
-      >
+      <SettingsCard title={t('paySplitModes')} description={t('paySplitModesHint')}>
         {(
           [
             ['allowItems', 'paySplitItems'],
@@ -355,9 +342,7 @@ function SettingsForm({ settings }: { settings: PaymentSettingsView }) {
 
       {/* One Save for the whole page: the three cards are one settings form */}
       <div className='flex flex-wrap items-center justify-end gap-3'>
-        {problem && (
-          <p className='text-destructive me-auto text-sm'>{problem}</p>
-        )}
+        {problem && <p className='text-destructive me-auto text-sm'>{problem}</p>}
         <Button type='submit' disabled={save.isPending}>
           {save.isPending && <Spinner />}
           {t('save')}
@@ -406,16 +391,10 @@ function SecretField({
             disabled={disabled}
             value={edit.mode === 'replace' ? edit.value : ''}
             placeholder={isSet ? t('payReplacePlaceholder') : undefined}
-            onChange={(e) =>
-              onChange({ mode: 'replace', value: e.target.value })
-            }
+            onChange={(e) => onChange({ mode: 'replace', value: e.target.value })}
           />
           {isSet && (
-            <Button
-              type='button'
-              variant='ghost'
-              onClick={() => onChange({ mode: 'keep' })}
-            >
+            <Button type='button' variant='ghost' onClick={() => onChange({ mode: 'keep' })}>
               {t('cancel')}
             </Button>
           )}
@@ -423,12 +402,7 @@ function SecretField({
       ) : edit.mode === 'remove' ? (
         <div className='flex items-center justify-between gap-2 rounded-md border border-dashed px-3 py-1.5 text-sm'>
           <span className='text-destructive'>{t('payWillRemove')}</span>
-          <Button
-            type='button'
-            variant='ghost'
-            size='sm'
-            onClick={() => onChange({ mode: 'keep' })}
-          >
+          <Button type='button' variant='ghost' size='sm' onClick={() => onChange({ mode: 'keep' })}>
             {t('cancel')}
           </Button>
         </div>

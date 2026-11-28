@@ -57,5 +57,4 @@ export async function openCashDrawer() {
 }
 
 /** Whether any of the payments is cash: what opens the drawer */
-export const takesCash = (payments: readonly { tender: number }[]) =>
-  payments.some((p) => p.tender === 0)
+export const takesCash = (payments: readonly { tender: number }[]) => payments.some((p) => p.tender === 0)

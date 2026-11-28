@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { apiClient } from '@/lib/api-client'
 import { useBranchStore } from '@/stores/branch-store'
+import { apiClient } from '@/lib/api-client'
 import { cashiersOf, ROSTER_KEY, type StaffUser } from './roster'
 
 const TILL_ROLES = 'Admin,Owner,Cashier'

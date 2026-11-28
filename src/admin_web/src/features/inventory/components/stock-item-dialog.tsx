@@ -5,13 +5,7 @@ import { bilingual, useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Spinner } from '@/components/ui/spinner'
 import { EntitySheet, SheetActions } from '@/components/entity-sheet'
 import { Field, FieldGrid, SwitchRow } from '@/components/field'
@@ -25,11 +19,7 @@ import {
   type LocalizedValue,
 } from '@/components/localized-input'
 import { FormFillButton } from '@/features/assist/form-fill-button'
-import {
-  localizedFields,
-  mergeLocalized,
-  type FillField,
-} from '@/features/assist/use-form-fill'
+import { localizedFields, mergeLocalized, type FillField } from '@/features/assist/use-form-fill'
 import { LOCALIZE_STOCK_ITEM } from '@/features/assist/use-localize-assist'
 import { useNameAssist } from '@/features/assist/use-name-assist'
 import { CUSTOM_UNIT, UNITS, unitLabel } from '../format'
@@ -41,11 +31,7 @@ interface StockItemDialogProps {
   item: StockItemView | null
 }
 
-export function StockItemDialog({
-  open,
-  onOpenChange,
-  item,
-}: StockItemDialogProps) {
+export function StockItemDialog({ open, onOpenChange, item }: StockItemDialogProps) {
   const t = useT()
   const isEditing = !!item
   // The form owns its fields; its "Fill in with AI" is drawn into the header
@@ -59,12 +45,7 @@ export function StockItemDialog({
       headerAction={<div ref={setFillSlot} className='contents' />}
     >
       {/* Keyed so form state resets per item; closing unmounts and resets */}
-      <StockItemForm
-        key={String(item?.id ?? 'new')}
-        item={item}
-        onOpenChange={onOpenChange}
-        fillSlot={fillSlot}
-      />
+      <StockItemForm key={String(item?.id ?? 'new')} item={item} onOpenChange={onOpenChange} fillSlot={fillSlot} />
     </EntitySheet>
   )
 }
@@ -117,9 +98,7 @@ function StockItemForm({
   // may pick the fitting one from the name
   const [unitPicked, setUnitPicked] = useState(!!item)
   /** Name languages "Fill in with AI" wrote and nobody has edited since */
-  const [nameFilled, setNameFilled] = useState<Partial<Record<Lang, boolean>>>(
-    {}
-  )
+  const [nameFilled, setNameFilled] = useState<Partial<Record<Lang, boolean>>>({})
 
   const fillFields: FillField[] = [
     ...localizedFields('name', 'Name', form.name),
@@ -141,27 +120,18 @@ function StockItemForm({
         ]
       : []),
     // The pack's name only once there is a pack: its size is never guessed
-    ...(form.packSize
-      ? localizedFields('packName', 'What a pack is called', form.packName)
-      : []),
+    ...(form.packSize ? localizedFields('packName', 'What a pack is called', form.packName) : []),
   ]
 
   const applyFill = (filled: Record<string, string>) => {
     const name = mergeLocalized('name', form.name, filled)
-    const wrote = (['en', 'ar'] as const).filter(
-      (lang) => name[lang] !== form.name[lang]
-    )
+    const wrote = (['en', 'ar'] as const).filter((lang) => name[lang] !== form.name[lang])
     const unit = filled.unit
     setForm((prev) => ({
       ...prev,
       name: mergeLocalized('name', prev.name, filled),
-      unitChoice:
-        !unitPicked && unit && (UNITS as readonly string[]).includes(unit)
-          ? unit
-          : prev.unitChoice,
-      customUnit: prev.customUnit.trim()
-        ? prev.customUnit
-        : (filled.customUnit ?? prev.customUnit),
+      unitChoice: !unitPicked && unit && (UNITS as readonly string[]).includes(unit) ? unit : prev.unitChoice,
+      customUnit: prev.customUnit.trim() ? prev.customUnit : (filled.customUnit ?? prev.customUnit),
       packName: mergeLocalized('packName', prev.packName, filled),
     }))
     if (unit) setUnitPicked(true)
@@ -174,8 +144,7 @@ function StockItemForm({
     }
   }
 
-  const unit =
-    form.unitChoice === CUSTOM_UNIT ? form.customUnit.trim() : form.unitChoice
+  const unit = form.unitChoice === CUSTOM_UNIT ? form.customUnit.trim() : form.unitChoice
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -190,10 +159,7 @@ function StockItemForm({
       name: fromLocalizedValue(form.name),
       unit,
       packSize: packSize > 0 ? packSize : null,
-      packName:
-        packSize > 0 && !isBlank(form.packName)
-          ? fromLocalizedValue(form.packName)
-          : null,
+      packName: packSize > 0 && !isBlank(form.packName) ? fromLocalizedValue(form.packName) : null,
       autoSoldOut: form.autoSoldOut,
       // Retire/restore are actions on the panel, not a field here
       isActive: item?.isActive,
@@ -216,7 +182,7 @@ function StockItemForm({
         {fillSlot &&
           createPortal(
             <FormFillButton
-              form='a stock item (an ingredient or supply a café keeps)'
+              form='a stock item (an ingredient or supply a cafï¿½ keeps)'
               fields={fillFields}
               onFilled={applyFill}
             />,
@@ -267,9 +233,7 @@ function StockItemForm({
                 id='customUnit'
                 placeholder={t('unitCustomPlaceholder')}
                 value={form.customUnit}
-                onChange={(e) =>
-                  setForm({ ...form, customUnit: e.target.value })
-                }
+                onChange={(e) => setForm({ ...form, customUnit: e.target.value })}
               />
             </Field>
           )}
@@ -303,17 +267,11 @@ function StockItemForm({
           title={t('autoSoldOut')}
           description={t('autoSoldOutHint')}
           checked={form.autoSoldOut}
-          onCheckedChange={(checked) =>
-            setForm({ ...form, autoSoldOut: checked })
-          }
+          onCheckedChange={(checked) => setForm({ ...form, autoSoldOut: checked })}
         />
 
         <SheetActions>
-          <Button
-            type='button'
-            variant='outline'
-            onClick={() => onOpenChange(false)}
-          >
+          <Button type='button' variant='outline' onClick={() => onOpenChange(false)}>
             {t('cancel')}
           </Button>
           <Button type='submit' form='stock-item-form' disabled={isPending}>

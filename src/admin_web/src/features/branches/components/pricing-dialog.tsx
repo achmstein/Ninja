@@ -2,22 +2,13 @@ import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Receipt } from 'lucide-react'
 import { type PricingView } from '@/api/sales'
-import {
-  getBranchPricingOptions,
-  setBranchPricingMutation,
-} from '@/api/sales/@tanstack/react-query.gen'
+import { getBranchPricingOptions, setBranchPricingMutation } from '@/api/sales/@tanstack/react-query.gen'
 import { type BranchResponse } from '@/api/tenant'
 import { API_VERSION } from '@/lib/api-client'
 import { useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
@@ -28,8 +19,7 @@ interface PricingDialogProps {
   onOpenChange: (open: boolean) => void
 }
 
-const toPercent = (rate: number | string | undefined) =>
-  String(Math.round(Number(rate ?? 0) * 10000) / 100)
+const toPercent = (rate: number | string | undefined) => String(Math.round(Number(rate ?? 0) * 10000) / 100)
 
 /**
  * How this branch's menu prices become the bill: VAT and whether it already
@@ -79,21 +69,11 @@ export function PricingDialog({ branch, onOpenChange }: PricingDialogProps) {
   )
 }
 
-function PricingForm({
-  branchId,
-  pricing,
-  onClose,
-}: {
-  branchId: number
-  pricing: PricingView
-  onClose: () => void
-}) {
+function PricingForm({ branchId, pricing, onClose }: { branchId: number; pricing: PricingView; onClose: () => void }) {
   const t = useT()
   const queryClient = useQueryClient()
   const [vat, setVat] = useState(toPercent(pricing.vatRate))
-  const [includesVat, setIncludesVat] = useState(
-    pricing.pricesIncludeVat !== false
-  )
+  const [includesVat, setIncludesVat] = useState(pricing.pricesIncludeVat !== false)
   const [service, setService] = useState(toPercent(pricing.serviceChargeRate))
   const [cap, setCap] = useState(toPercent(pricing.maxCashierDiscountRate))
 
@@ -149,11 +129,7 @@ function PricingForm({
           </Field>
         </FieldGrid>
 
-        <SwitchRow
-          title={t('pricesIncludeVat')}
-          checked={includesVat}
-          onCheckedChange={setIncludesVat}
-        />
+        <SwitchRow title={t('pricesIncludeVat')} checked={includesVat} onCheckedChange={setIncludesVat} />
 
         <Field label={t('cashierDiscountCap')} htmlFor='cashier-discount-cap'>
           <Input

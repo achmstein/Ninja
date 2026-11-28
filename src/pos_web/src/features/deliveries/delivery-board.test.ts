@@ -33,9 +33,20 @@ describe('the board', () => {
     const withCourier = (orderNumber: number, stage: string, courierCollected: number | null) => ({
       orderNumber,
       paidAt: null,
-      delivery: { stage, riderUserId: null, riderName: null, courierProviderId: 7, courierProvider: 'Fast Couriers', courierCollected },
+      delivery: {
+        stage,
+        riderUserId: null,
+        riderName: null,
+        courierProviderId: 7,
+        courierProvider: 'Fast Couriers',
+        courierCollected,
+      },
     })
-    const lanes = byLane([withCourier(1, 'Assigned', null), withCourier(2, 'Delivered', 115), withCourier(3, 'Delivered', 0)])
+    const lanes = byLane([
+      withCourier(1, 'Assigned', null),
+      withCourier(2, 'Delivered', 115),
+      withCourier(3, 'Delivered', 0),
+    ])
     expect(lanes.withRiders.map((o) => o.orderNumber)).toEqual([1])
     expect(lanes.cashDue).toEqual([])
   })
@@ -43,8 +54,28 @@ describe('the board', () => {
   it('groups a courier company apart from the riders, under its name', () => {
     const groups = byRider([
       order(1, 'Assigned', 'ali'),
-      { orderNumber: 2, paidAt: null, delivery: { stage: 'Assigned', riderUserId: null, riderName: null, courierProviderId: 7, courierProvider: 'Fast Couriers' } },
-      { orderNumber: 3, paidAt: null, delivery: { stage: 'OnTheWay', riderUserId: null, riderName: null, courierProviderId: 7, courierProvider: 'Fast Couriers' } },
+      {
+        orderNumber: 2,
+        paidAt: null,
+        delivery: {
+          stage: 'Assigned',
+          riderUserId: null,
+          riderName: null,
+          courierProviderId: 7,
+          courierProvider: 'Fast Couriers',
+        },
+      },
+      {
+        orderNumber: 3,
+        paidAt: null,
+        delivery: {
+          stage: 'OnTheWay',
+          riderUserId: null,
+          riderName: null,
+          courierProviderId: 7,
+          courierProvider: 'Fast Couriers',
+        },
+      },
     ])
     expect(groups.map((g) => [g.riderName, g.orders.map((o) => o.orderNumber)])).toEqual([
       ['ALI', [1]],
@@ -96,9 +127,9 @@ describe("a rider's hand-in", () => {
             { orderNumber: 1, total: 0.1 },
             { orderNumber: 2, total: 0.2 },
           ],
-          0.3,
-        ),
-      ),
+          0.3
+        )
+      )
     ).toEqual({ 1: 0.1, 2: 0.2 })
   })
 })

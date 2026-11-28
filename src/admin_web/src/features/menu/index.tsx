@@ -10,12 +10,7 @@ import {
   useSensors,
   type DragEndEvent,
 } from '@dnd-kit/core'
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable'
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import {
   Coffee,
   CookingPot,
@@ -70,10 +65,7 @@ import { ImageWithFallback } from '@/components/image-fallback'
 import { InfoBadge } from '@/components/info-badge'
 import { Grip, Sortable } from '@/components/sortable'
 import { DEFAULT_FOOD_COST_TARGET } from '@/features/inventory/menu-cost-rows'
-import {
-  type StockRuleBadge,
-  useStockRuleBadges,
-} from '@/features/inventory/stock-rules'
+import { type StockRuleBadge, useStockRuleBadges } from '@/features/inventory/stock-rules'
 import { CategoryDialog } from './components/category-dialog'
 import { ItemSheet, type ItemSheetState } from './components/item-sheet'
 import { MenuReviewSheet } from './components/menu-review-sheet'
@@ -117,36 +109,24 @@ export function MenuManagement() {
   const [categoryDialog, setCategoryDialog] = useState<{
     category: CatalogTypeDto | null
   } | null>(null)
-  const [deleteCategory, setDeleteCategory] = useState<CatalogTypeDto | null>(
-    null
-  )
+  const [deleteCategory, setDeleteCategory] = useState<CatalogTypeDto | null>(null)
 
   // The menu's pages (photos or a PDF) become a proposal the review sheet
   // saves as categories and items; hidden when the assistant is not set up
   const scan = useMenuScan()
   const scanInputRef = useRef<HTMLInputElement>(null)
 
-  const itemsQuery = useQuery(
-    listItemsOptions({ query: { 'api-version': API_VERSION } })
-  )
+  const itemsQuery = useQuery(listItemsOptions({ query: { 'api-version': API_VERSION } }))
   const items = itemsQuery.data ?? NO_ITEMS
   const features = useFeatures()
   // Which items the storeroom tracks, and what a sale of each costs here
   const stockRules = useStockRuleBadges(items)
   const [trackOpen, setTrackOpen] = useState(false)
-  const untracked = useMemo(
-    () => items.filter((item) => !stockRules.has(toNumber(item.id))),
-    [items, stockRules]
-  )
-  const categoriesQuery = useQuery(
-    listCategoriesOptions({ query: { 'api-version': API_VERSION } })
-  )
+  const untracked = useMemo(() => items.filter((item) => !stockRules.has(toNumber(item.id))), [items, stockRules])
+  const categoriesQuery = useQuery(listCategoriesOptions({ query: { 'api-version': API_VERSION } }))
   const categories = categoriesQuery.data ?? NO_CATEGORIES
   const orderedCategories = useMemo(
-    () =>
-      [...categories].sort(
-        (a, b) => toNumber(a.displayOrder) - toNumber(b.displayOrder)
-      ),
+    () => [...categories].sort((a, b) => toNumber(a.displayOrder) - toNumber(b.displayOrder)),
     [categories]
   )
 
@@ -157,8 +137,7 @@ export function MenuManagement() {
       (item.name?.en ?? '').toLowerCase().includes(query) ||
       (item.name?.ar ?? '').toLowerCase().includes(query)
     const byOrder = (a: CatalogItemDto, b: CatalogItemDto) =>
-      toNumber(a.displayOrder) - toNumber(b.displayOrder) ||
-      localized(a.name).localeCompare(localized(b.name))
+      toNumber(a.displayOrder) - toNumber(b.displayOrder) || localized(a.name).localeCompare(localized(b.name))
     const known = new Set(categories.map((c) => toNumber(c.id)))
     const result: Section[] = orderedCategories.map((category) => ({
       category,
@@ -176,10 +155,8 @@ export function MenuManagement() {
     return query ? result.filter((s) => s.items.length > 0) : result
   }, [items, categories, orderedCategories, query, localized])
 
-  const invalidateItems = () =>
-    queryClient.invalidateQueries({ queryKey: [{ _id: 'listItems' }] })
-  const invalidateCategories = () =>
-    queryClient.invalidateQueries({ queryKey: [{ _id: 'listCategories' }] })
+  const invalidateItems = () => queryClient.invalidateQueries({ queryKey: [{ _id: 'listItems' }] })
+  const invalidateCategories = () => queryClient.invalidateQueries({ queryKey: [{ _id: 'listCategories' }] })
 
   // Availability flips optimistically: update the cached list first, roll
   // back if the server rejects it.
@@ -190,9 +167,7 @@ export function MenuManagement() {
       const previous = queryClient.getQueryData<CatalogItemDto[]>(ITEMS_KEY)
       queryClient.setQueryData<CatalogItemDto[]>(ITEMS_KEY, (old) =>
         old?.map((item) =>
-          Number(item.id) === variables.path.id
-            ? { ...item, isAvailable: variables.body?.isAvailable ?? false }
-            : item
+          Number(item.id) === variables.path.id ? { ...item, isAvailable: variables.body?.isAvailable ?? false } : item
         )
       )
       return { previous }
@@ -257,9 +232,7 @@ export function MenuManagement() {
     const from = orderedCategories.findIndex((c) => `cat-${c.id}` === active.id)
     const to = orderedCategories.findIndex((c) => `cat-${c.id}` === over.id)
     if (from < 0 || to < 0) return
-    const next = arrayMove(orderedCategories, from, to).map(
-      (c, displayOrder) => ({ ...c, displayOrder })
-    )
+    const next = arrayMove(orderedCategories, from, to).map((c, displayOrder) => ({ ...c, displayOrder }))
     queryClient.setQueryData<CatalogTypeDto[]>(CATEGORIES_KEY, next)
     reorderCategoriesMut.mutate({
       body: {
@@ -280,11 +253,7 @@ export function MenuManagement() {
     }))
     const order = new Map(next.map((i) => [toNumber(i.id), i.displayOrder]))
     queryClient.setQueryData<CatalogItemDto[]>(ITEMS_KEY, (old) =>
-      old?.map((i) =>
-        order.has(toNumber(i.id))
-          ? { ...i, displayOrder: order.get(toNumber(i.id)) }
-          : i
-      )
+      old?.map((i) => (order.has(toNumber(i.id)) ? { ...i, displayOrder: order.get(toNumber(i.id)) } : i))
     )
     reorderItemsMut.mutate({
       body: {
@@ -301,10 +270,8 @@ export function MenuManagement() {
       query: { 'api-version': API_VERSION },
     })
 
-  const openItem = (item: CatalogItemDto) =>
-    setSheet({ mode: 'edit', itemId: toNumber(item.id) })
-  const newItem = (categoryId?: number) =>
-    setSheet({ mode: 'create', categoryId })
+  const openItem = (item: CatalogItemDto) => setSheet({ mode: 'edit', itemId: toNumber(item.id) })
+  const newItem = (categoryId?: number) => setSheet({ mode: 'create', categoryId })
 
   // A filtered list has no complete order to save, so dragging waits
   const dragDisabled = query !== ''
@@ -328,12 +295,7 @@ export function MenuManagement() {
             {/* One button for the page; the rest is behind More */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button
-                  variant='outline'
-                  size='icon'
-                  className='relative size-9'
-                  aria-label={t('moreActions')}
-                >
+                <Button variant='outline' size='icon' className='relative size-9' aria-label={t('moreActions')}>
                   <MoreHorizontal className='h-4 w-4' />
                   {features.inventory && untracked.length > 0 && (
                     <span className='bg-primary absolute -end-0.5 -top-0.5 size-2 rounded-full' />
@@ -341,17 +303,12 @@ export function MenuManagement() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align='end'>
-                <DropdownMenuItem
-                  onClick={() => setCategoryDialog({ category: null })}
-                >
+                <DropdownMenuItem onClick={() => setCategoryDialog({ category: null })}>
                   <Tag className='h-4 w-4' />
                   {t('addCategory')}
                 </DropdownMenuItem>
                 {scan.available && (
-                  <DropdownMenuItem
-                    disabled={scan.isScanning}
-                    onClick={() => scanInputRef.current?.click()}
-                  >
+                  <DropdownMenuItem disabled={scan.isScanning} onClick={() => scanInputRef.current?.click()}>
                     <ScanLine className='h-4 w-4' />
                     {t('scanMenu')}
                   </DropdownMenuItem>
@@ -363,10 +320,7 @@ export function MenuManagement() {
                       <CookingPot className='h-4 w-4' />
                       {t('trackItems')}
                       {untracked.length > 0 && (
-                        <Badge
-                          variant='secondary'
-                          className='ms-auto tabular-nums'
-                        >
+                        <Badge variant='secondary' className='ms-auto tabular-nums'>
                           {untracked.length}
                         </Badge>
                       )}
@@ -465,21 +419,14 @@ export function MenuManagement() {
             action={
               <div className='flex flex-wrap justify-center gap-2'>
                 {scan.available && (
-                  <Button
-                    disabled={scan.isScanning}
-                    onClick={() => scanInputRef.current?.click()}
-                  >
+                  <Button disabled={scan.isScanning} onClick={() => scanInputRef.current?.click()}>
                     {scan.isScanning ? <Spinner /> : <ScanLine />}
                     {scan.isScanning ? t('readingMenu') : t('scanMenuPages')}
                   </Button>
                 )}
                 <Button
                   variant='outline'
-                  onClick={() =>
-                    categories.length > 0
-                      ? newItem()
-                      : setCategoryDialog({ category: null })
-                  }
+                  onClick={() => (categories.length > 0 ? newItem() : setCategoryDialog({ category: null }))}
                 >
                   <Plus />
                   {scan.available ? t('orBuildByHand') : t('addItem')}
@@ -493,10 +440,7 @@ export function MenuManagement() {
             title={query ? t('noItemsFound') : t('noCategoriesYet')}
             action={
               query ? undefined : (
-                <Button
-                  variant='outline'
-                  onClick={() => setCategoryDialog({ category: null })}
-                >
+                <Button variant='outline' onClick={() => setCategoryDialog({ category: null })}>
                   <Tag />
                   {t('addCategory')}
                 </Button>
@@ -504,22 +448,15 @@ export function MenuManagement() {
             }
           />
         ) : (
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={onCategoryDragEnd}
-          >
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onCategoryDragEnd}>
             <SortableContext
-              items={sections.map((s) =>
-                s.category ? `cat-${s.category.id}` : 'orphans'
-              )}
+              items={sections.map((s) => (s.category ? `cat-${s.category.id}` : 'orphans'))}
               strategy={verticalListSortingStrategy}
             >
               <div className='flex flex-col gap-6'>
                 {sections.map((section) => {
                   const category = section.category
-                  const categoryId =
-                    category != null ? toNumber(category.id) : undefined
+                  const categoryId = category != null ? toNumber(category.id) : undefined
                   return (
                     <Sortable
                       key={categoryId ?? 'orphans'}
@@ -532,47 +469,28 @@ export function MenuManagement() {
                         <>
                           <div className='flex items-center gap-1 border-b pb-2'>
                             {category && !dragDisabled && (
-                              <Grip
-                                activator={activator}
-                                grip={grip}
-                                label={t('dragToReorder')}
-                              />
+                              <Grip activator={activator} grip={grip} label={t('dragToReorder')} />
                             )}
                             <h2 className='text-sm font-semibold'>
-                              {category
-                                ? localized(category.name)
-                                : t('uncategorized')}
+                              {category ? localized(category.name) : t('uncategorized')}
                             </h2>
                             <span className='text-muted-foreground ms-1 text-sm tabular-nums'>
                               {section.items.length}
                             </span>
                             {category && (
                               <div className='ms-auto flex items-center gap-1'>
-                                <Button
-                                  variant='ghost'
-                                  size='sm'
-                                  onClick={() => newItem(categoryId)}
-                                >
+                                <Button variant='ghost' size='sm' onClick={() => newItem(categoryId)}>
                                   <Plus />
                                   {t('addItem')}
                                 </Button>
                                 <DropdownMenu>
                                   <DropdownMenuTrigger asChild>
-                                    <Button
-                                      variant='ghost'
-                                      size='icon'
-                                      className='size-9'
-                                      aria-label={t('actions')}
-                                    >
+                                    <Button variant='ghost' size='icon' className='size-9' aria-label={t('actions')}>
                                       <MoreHorizontal className='h-4 w-4' />
                                     </Button>
                                   </DropdownMenuTrigger>
                                   <DropdownMenuContent align='end'>
-                                    <DropdownMenuItem
-                                      onClick={() =>
-                                        setCategoryDialog({ category })
-                                      }
-                                    >
+                                    <DropdownMenuItem onClick={() => setCategoryDialog({ category })}>
                                       <Pencil className='h-4 w-4' />
                                       {t('editCategory')}
                                     </DropdownMenuItem>
@@ -580,9 +498,7 @@ export function MenuManagement() {
                                     <DropdownMenuItem
                                       variant='destructive'
                                       disabled={section.items.length > 0}
-                                      onClick={() =>
-                                        setDeleteCategory(category)
-                                      }
+                                      onClick={() => setDeleteCategory(category)}
                                     >
                                       <Trash2 className='h-4 w-4' />
                                       {t('deleteCategory')}
@@ -594,9 +510,7 @@ export function MenuManagement() {
                           </div>
 
                           {section.items.length === 0 ? (
-                            <p className='text-muted-foreground py-4 text-sm'>
-                              {t('emptyCategory')}
-                            </p>
+                            <p className='text-muted-foreground py-4 text-sm'>{t('emptyCategory')}</p>
                           ) : photos ? (
                             <div className='mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4'>
                               {section.items.map((item) => (
@@ -604,9 +518,7 @@ export function MenuManagement() {
                                   key={toNumber(item.id)}
                                   item={item}
                                   onOpen={() => openItem(item)}
-                                  onAvailable={(checked) =>
-                                    setAvailable(item, checked)
-                                  }
+                                  onAvailable={(checked) => setAvailable(item, checked)}
                                 />
                               ))}
                             </div>
@@ -614,9 +526,7 @@ export function MenuManagement() {
                             <DndContext
                               sensors={sensors}
                               collisionDetection={closestCenter}
-                              onDragEnd={(event) =>
-                                onItemDragEnd(section, event)
-                              }
+                              onDragEnd={(event) => onItemDragEnd(section, event)}
                             >
                               <SortableContext
                                 items={section.items.map((i) => `item-${i.id}`)}
@@ -627,14 +537,10 @@ export function MenuManagement() {
                                     <MenuRow
                                       key={toNumber(item.id)}
                                       item={item}
-                                      stockRule={stockRules.get(
-                                        toNumber(item.id)
-                                      )}
+                                      stockRule={stockRules.get(toNumber(item.id))}
                                       draggable={!!category && !dragDisabled}
                                       onOpen={() => openItem(item)}
-                                      onAvailable={(checked) =>
-                                        setAvailable(item, checked)
-                                      }
+                                      onAvailable={(checked) => setAvailable(item, checked)}
                                     />
                                   ))}
                                 </ul>
@@ -660,9 +566,7 @@ export function MenuManagement() {
         onDelete={setDeleteItem}
       />
 
-      {trackOpen && (
-        <TrackItemsSheet untracked={untracked} onOpenChange={setTrackOpen} />
-      )}
+      {trackOpen && <TrackItemsSheet untracked={untracked} onOpenChange={setTrackOpen} />}
 
       {scan.proposal && (
         <MenuReviewSheet
@@ -731,13 +635,7 @@ type MenuRowProps = {
 }
 
 /** One item: grip, the row itself opens it, and the availability switch */
-function MenuRow({
-  item,
-  stockRule,
-  draggable,
-  onOpen,
-  onAvailable,
-}: MenuRowProps) {
+function MenuRow({ item, stockRule, draggable, onOpen, onAvailable }: MenuRowProps) {
   const t = useT()
   const localized = useLocalized()
   const onOffer = item.isOnOffer && item.offerPrice != null
@@ -755,48 +653,24 @@ function MenuRow({
     >
       {(activator, grip) => (
         <>
-          {draggable && (
-            <Grip
-              activator={activator}
-              grip={grip}
-              label={t('dragToReorder')}
-            />
-          )}
-          <button
-            type='button'
-            className='flex min-w-0 flex-1 items-center gap-3 py-2 text-start'
-            onClick={onOpen}
-          >
+          {draggable && <Grip activator={activator} grip={grip} label={t('dragToReorder')} />}
+          <button type='button' className='flex min-w-0 flex-1 items-center gap-3 py-2 text-start' onClick={onOpen}>
             <ImageWithFallback
-              src={
-                item.pictureUri
-                  ? itemPictureUrl(item.id, item.pictureUri, 160)
-                  : null
-              }
+              src={item.pictureUri ? itemPictureUrl(item.id, item.pictureUri, 160) : null}
               className='h-10 w-10 shrink-0 rounded-md'
-              fallbackIcon={
-                <Coffee className='text-muted-foreground h-4 w-4' />
-              }
+              fallbackIcon={<Coffee className='text-muted-foreground h-4 w-4' />}
             />
             <div className='min-w-0 flex-1'>
               <div className='flex flex-wrap items-center gap-2'>
                 {/* The app's list sizes: the name at 14px, its line at 12px */}
-                <span className='truncate text-sm font-medium'>
-                  {localized(item.name) || '—'}
-                </span>
+                <span className='truncate text-sm font-medium'>{localized(item.name) || '—'}</span>
                 {item.isPopular && (
-                  <InfoBadge
-                    badge={<Badge variant='secondary'>{t('popular')}</Badge>}
-                    title={t('popular')}
-                  >
+                  <InfoBadge badge={<Badge variant='secondary'>{t('popular')}</Badge>} title={t('popular')}>
                     {t('popularWhy')}
                   </InfoBadge>
                 )}
                 {item.isOutOfStock && (
-                  <InfoBadge
-                    badge={<Badge variant='danger'>{t('outOfStock')}</Badge>}
-                    title={t('outOfStock')}
-                  >
+                  <InfoBadge badge={<Badge variant='danger'>{t('outOfStock')}</Badge>} title={t('outOfStock')}>
                     {t('outOfStockWhy')}
                   </InfoBadge>
                 )}
@@ -807,8 +681,7 @@ function MenuRow({
                         variant='outline'
                         className={cn(
                           'gap-1 font-normal',
-                          stockRule.overTarget &&
-                            'border-destructive text-destructive'
+                          stockRule.overTarget && 'border-destructive text-destructive'
                         )}
                       >
                         {stockRule.kind === 'unit' ? (
@@ -824,20 +697,10 @@ function MenuRow({
                         )}
                       </Badge>
                     }
-                    title={
-                      stockRule.kind === 'unit'
-                        ? t('soldAsUnitBadge')
-                        : t('trackedRecipeTitle')
-                    }
+                    title={stockRule.kind === 'unit' ? t('soldAsUnitBadge') : t('trackedRecipeTitle')}
                   >
-                    <p>
-                      {stockRule.kind === 'unit'
-                        ? t('trackedUnitWhy')
-                        : t('trackedRecipeWhy')}
-                    </p>
-                    {stockRule.foodCost !== null && (
-                      <p>{t('foodCostWhy', { cost: stockRule.foodCost })}</p>
-                    )}
+                    <p>{stockRule.kind === 'unit' ? t('trackedUnitWhy') : t('trackedRecipeWhy')}</p>
+                    {stockRule.foodCost !== null && <p>{t('foodCostWhy', { cost: stockRule.foodCost })}</p>}
                     {stockRule.overTarget && (
                       <p>
                         {t('foodCostOverWhy', {
@@ -845,27 +708,15 @@ function MenuRow({
                         })}
                       </p>
                     )}
-                    {stockRule.incomplete && (
-                      <p>{t('foodCostIncompleteWhy')}</p>
-                    )}
+                    {stockRule.incomplete && <p>{t('foodCostIncompleteWhy')}</p>}
                   </InfoBadge>
                 )}
               </div>
-              {description && (
-                <div className='text-muted-foreground truncate text-xs'>
-                  {description}
-                </div>
-              )}
+              {description && <div className='text-muted-foreground truncate text-xs'>{description}</div>}
             </div>
             <div className='shrink-0 text-end tabular-nums'>
-              <div className='text-sm font-medium'>
-                {formatEgp(onOffer ? item.offerPrice : item.price)}
-              </div>
-              {onOffer && (
-                <div className='text-muted-foreground text-xs line-through'>
-                  {formatEgp(item.price)}
-                </div>
-              )}
+              <div className='text-sm font-medium'>{formatEgp(onOffer ? item.offerPrice : item.price)}</div>
+              {onOffer && <div className='text-muted-foreground text-xs line-through'>{formatEgp(item.price)}</div>}
             </div>
           </button>
 
@@ -897,13 +748,8 @@ function MenuCard({
 }) {
   const t = useT()
   const localized = useLocalized()
-  const onOffer =
-    !!item.isOnOffer &&
-    item.offerPrice != null &&
-    toNumber(item.offerPrice) < toNumber(item.price)
-  const saving = onOffer
-    ? Math.round((1 - toNumber(item.offerPrice) / toNumber(item.price)) * 100)
-    : 0
+  const onOffer = !!item.isOnOffer && item.offerPrice != null && toNumber(item.offerPrice) < toNumber(item.price)
+  const saving = onOffer ? Math.round((1 - toNumber(item.offerPrice) / toNumber(item.price)) * 100) : 0
   return (
     <div
       className={cn(
@@ -911,17 +757,9 @@ function MenuCard({
         !item.isAvailable && 'opacity-60'
       )}
     >
-      <button
-        type='button'
-        onClick={onOpen}
-        className='relative block aspect-[4/3] w-full overflow-hidden text-start'
-      >
+      <button type='button' onClick={onOpen} className='relative block aspect-[4/3] w-full overflow-hidden text-start'>
         <ImageWithFallback
-          src={
-            item.pictureUri
-              ? itemPictureUrl(item.id, item.pictureUri, 320)
-              : null
-          }
+          src={item.pictureUri ? itemPictureUrl(item.id, item.pictureUri, 320) : null}
           className='size-full'
           fallbackIcon={<Coffee className='text-muted-foreground size-6' />}
         />
@@ -937,23 +775,13 @@ function MenuCard({
         )}
       </button>
       <div className='flex items-center gap-2 p-3'>
-        <button
-          type='button'
-          onClick={onOpen}
-          className='min-w-0 flex-1 text-start'
-        >
-          <div className='truncate text-sm font-medium'>
-            {localized(item.name) || '—'}
-          </div>
+        <button type='button' onClick={onOpen} className='min-w-0 flex-1 text-start'>
+          <div className='truncate text-sm font-medium'>{localized(item.name) || '—'}</div>
           <div className='flex items-baseline gap-1.5 text-sm tabular-nums'>
             <span className={cn('font-semibold', onOffer && 'text-foreground')}>
               {formatEgp(onOffer ? item.offerPrice : item.price)}
             </span>
-            {onOffer && (
-              <span className='text-muted-foreground text-xs line-through'>
-                {formatEgp(item.price)}
-              </span>
-            )}
+            {onOffer && <span className='text-muted-foreground text-xs line-through'>{formatEgp(item.price)}</span>}
           </div>
         </button>
         <Switch

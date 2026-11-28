@@ -1,16 +1,16 @@
 import { useEffect } from 'react'
-import { HubConnectionBuilder, HubConnectionState } from '@microsoft/signalr'
 import { useQueryClient, type QueryClient } from '@tanstack/react-query'
+import { getStoredUser } from '@/config/oidc-config'
+import { HubConnectionBuilder, HubConnectionState } from '@microsoft/signalr'
 import { getBranchesQueryKey } from '@/api/tenant/@tanstack/react-query.gen'
 import type { BranchResponse } from '@/api/tenant/types.gen'
-import { getStoredUser } from '@/config/oidc-config'
-import { renewSession } from '@/context/session'
+import { getActiveBranchId } from '@/stores/branch-store'
+import { noteOpenBills } from '@/stores/fresh-bills'
 import { translate, useLanguage } from '@/lib/i18n'
 import { isOwnOrder } from '@/lib/own-orders'
 import { playAlertSound } from '@/lib/sound'
 import { toast } from '@/lib/toast'
-import { getActiveBranchId } from '@/stores/branch-store'
-import { noteOpenBills } from '@/stores/fresh-bills'
+import { renewSession } from '@/context/session'
 
 /** A phone delivery another branch's till took and sent to one of the business's branches */
 type OrderSentToBranchEvent = {
@@ -135,7 +135,7 @@ export function usePosNotifications() {
             toast.info(
               event.takenBy
                 ? translate('tillOrderToastBy', { orderId, name: event.takenBy })
-                : translate('tillOrderToast', { orderId }),
+                : translate('tillOrderToast', { orderId })
             )
             return
           }
@@ -146,7 +146,7 @@ export function usePosNotifications() {
                   orderId,
                   name: event.buyerName,
                 })
-              : translate('newOrderToast', { orderId }),
+              : translate('newOrderToast', { orderId })
           )
         })
       }
@@ -157,7 +157,7 @@ export function usePosNotifications() {
           translate('orderWaitingToast', {
             orderId: event.orderId ?? 0,
             minutes: event.minutesPending ?? 0,
-          }),
+          })
         )
       }
     })
@@ -173,7 +173,7 @@ export function usePosNotifications() {
       toast.info(
         event.takenBy
           ? translate('newSentDeliveryToast', { orderId: event.orderId ?? 0, branch, name: event.takenBy })
-          : translate('newSentDeliveryToastNoName', { orderId: event.orderId ?? 0, branch }),
+          : translate('newSentDeliveryToastNoName', { orderId: event.orderId ?? 0, branch })
       )
     })
 
@@ -188,8 +188,7 @@ export function usePosNotifications() {
       refresh('getRiders')
     })
 
-    const invalidatePlaces = () =>
-      refresh('listPlaces', 'getOpenStays', 'getOpenReservations', 'getStay')
+    const invalidatePlaces = () => refresh('listPlaces', 'getOpenStays', 'getOpenReservations', 'getStay')
 
     // Sessions start, end and get cancelled from the till, the admin apps
     // and the customers' phones alike; the rooms group carries all of it
@@ -240,11 +239,8 @@ export function usePosNotifications() {
     })
 
     const joinGroup = () =>
-      Promise.all([
-        connection.invoke('JoinAdminGroup'),
-        connection.invoke('JoinRoomsGroup'),
-      ]).catch((error) =>
-        console.warn('[signalr] joining the staff groups failed:', error),
+      Promise.all([connection.invoke('JoinAdminGroup'), connection.invoke('JoinRoomsGroup')]).catch((error) =>
+        console.warn('[signalr] joining the staff groups failed:', error)
       )
 
     let disposed = false
@@ -272,10 +268,7 @@ export function usePosNotifications() {
         // Back-off retry (backend still booting, transient network); the
         // visibility handler below also retries, and queries keep their
         // fallback poll.
-        if (
-          !disposed &&
-          connection.state === HubConnectionState.Disconnected
-        ) {
+        if (!disposed && connection.state === HubConnectionState.Disconnected) {
           // Never giving up while the page is open: a till left on all day
           // must come back by itself when the network does
           setTimeout(() => start(attempt + 1), Math.min(5_000 * (attempt + 1), 30_000))
@@ -305,10 +298,7 @@ export function usePosNotifications() {
     // Automatic reconnect gives up after long background periods; reconnect
     // when the tab becomes visible again (hard-learned on the mobile apps).
     const handleVisibility = () => {
-      if (
-        document.visibilityState === 'visible' &&
-        connection.state === HubConnectionState.Disconnected
-      ) {
+      if (document.visibilityState === 'visible' && connection.state === HubConnectionState.Disconnected) {
         start()
       }
     }

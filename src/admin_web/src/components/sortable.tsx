@@ -30,15 +30,10 @@ export function Sortable({
   style?: React.CSSProperties
   children: (activator: Activator, grip: GripProps) => React.ReactNode
 }) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    setActivatorNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id, disabled })
+  const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({
+    id,
+    disabled,
+  })
   return (
     <Tag
       ref={setNodeRef}
@@ -47,10 +42,7 @@ export function Sortable({
         transform: CSS.Translate.toString(transform),
         transition,
       }}
-      className={cn(
-        className,
-        isDragging && 'bg-background relative z-10 shadow-md'
-      )}
+      className={cn(className, isDragging && 'bg-background relative z-10 shadow-md')}
     >
       {children(setActivatorNodeRef, { attributes, listeners })}
     </Tag>

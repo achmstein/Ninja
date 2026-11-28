@@ -1,19 +1,13 @@
 import { useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Banknote, Download, Printer, RotateCw } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import { Switch } from '@/components/ui/switch'
 import { useBrand, useBrandName } from '@/lib/brand'
 import { useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Switch } from '@/components/ui/switch'
 import { connectorStatus, openDrawer, printImage } from './connector'
 import { usePrintSettings } from './print-settings'
 import { sheetImage } from './sheet-image'
@@ -30,13 +24,7 @@ const selectClass =
  * offline the kitchen's chit. Asking the connector here is also when Edge
  * asks, once, to let the till reach it.
  */
-export function PrintSettingsDialog({
-  open,
-  onOpenChange,
-}: {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-}) {
+export function PrintSettingsDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
   const t = useT()
   const brand = useBrand()
   const brandName = useBrandName()
@@ -57,9 +45,7 @@ export function PrintSettingsDialog({
   const printers = [
     ...new Set([
       ...(connector?.printers ?? []),
-      ...[settings.receiptPrinter, settings.kitchenPrinter].filter(
-        (p): p is string => !!p,
-      ),
+      ...[settings.receiptPrinter, settings.kitchenPrinter].filter((p): p is string => !!p),
     ]),
   ]
   const download = brand?.appsUrl ? `${brand.appsUrl}/${CONNECTOR_FILE}` : null
@@ -96,7 +82,7 @@ export function PrintSettingsDialog({
               aria-hidden
               className={cn(
                 'mt-1.5 size-2.5 shrink-0 rounded-full',
-                connector ? 'bg-emerald-500' : 'bg-muted-foreground/40',
+                connector ? 'bg-emerald-500' : 'bg-muted-foreground/40'
               )}
             />
             <div className='flex min-w-0 flex-1 flex-col gap-1 text-sm'>
@@ -112,9 +98,7 @@ export function PrintSettingsDialog({
               ) : (
                 <>
                   <span className='font-medium'>{t('printConnectorMissing')}</span>
-                  <span className='text-muted-foreground'>
-                    {t('printConnectorInstallHint')}
-                  </span>
+                  <span className='text-muted-foreground'>{t('printConnectorInstallHint')}</span>
                   {download && (
                     <a
                       href={download}
@@ -126,9 +110,7 @@ export function PrintSettingsDialog({
                   )}
                 </>
               )}
-              <span className='text-muted-foreground text-xs'>
-                {t('printConnectorAllowHint')}
-              </span>
+              <span className='text-muted-foreground text-xs'>{t('printConnectorAllowHint')}</span>
             </div>
             <Button
               variant='ghost'
@@ -207,17 +189,11 @@ export function PrintSettingsDialog({
 
         {/* What the test print prints: drawn off screen, never shown */}
         <div ref={testSheet} style={{ display: 'none' }}>
-          <div style={{ textAlign: 'center', fontSize: 16, fontWeight: 700 }}>
-            {brandName}
-          </div>
-          <div style={{ textAlign: 'center', fontSize: 14, fontWeight: 700, margin: '2mm 0' }}>
-            {t('testPrint')}
-          </div>
+          <div style={{ textAlign: 'center', fontSize: 16, fontWeight: 700 }}>{brandName}</div>
+          <div style={{ textAlign: 'center', fontSize: 14, fontWeight: 700, margin: '2mm 0' }}>{t('testPrint')}</div>
           <div style={{ borderTop: '1px dashed #000', margin: '2mm 0' }} />
           <div style={{ textAlign: 'center' }}>{t('testPrintBody')}</div>
-          <div style={{ textAlign: 'center', fontSize: 11, marginTop: '2mm' }}>
-            {new Date().toLocaleString()}
-          </div>
+          <div style={{ textAlign: 'center', fontSize: 11, marginTop: '2mm' }}>{new Date().toLocaleString()}</div>
         </div>
       </DialogContent>
     </Dialog>

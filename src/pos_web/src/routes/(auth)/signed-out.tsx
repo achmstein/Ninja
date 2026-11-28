@@ -1,22 +1,14 @@
 import { useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useAuth } from 'react-oidc-context'
-import { useTheme } from '@/context/theme-provider'
-import { useLanguage } from '@/lib/i18n'
 import { loginPageParams } from '@/config/oidc-config'
 import { Loader2, LogIn } from 'lucide-react'
+import { useAuth } from 'react-oidc-context'
+import { useLanguage } from '@/lib/i18n'
 import { useT } from '@/lib/i18n'
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { useTheme } from '@/context/theme-provider'
 import { Button } from '@/components/ui/button'
-import {
-  readCashierRoster,
-  rememberPickedCashier,
-} from '@/features/cashiers/roster'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { readCashierRoster, rememberPickedCashier } from '@/features/cashiers/roster'
 
 export const Route = createFileRoute('/(auth)/signed-out')({
   component: SignedOut,
@@ -54,16 +46,10 @@ function SignedOut() {
       <div className='grid h-svh place-items-center p-4'>
         <Card className='w-full max-w-sm gap-4'>
           <CardHeader className='text-center'>
-            <CardTitle className='type-title'>
-              {t('signedOutTitle')}
-            </CardTitle>
+            <CardTitle className='type-title'>{t('signedOutTitle')}</CardTitle>
           </CardHeader>
           <CardContent>
-            <Button
-              size='lg'
-              className='w-full'
-              onClick={() => navigate({ to: '/', replace: true })}
-            >
+            <Button size='lg' className='w-full' onClick={() => navigate({ to: '/', replace: true })}>
               {t('backToPos')}
             </Button>
           </CardContent>
@@ -76,9 +62,7 @@ function SignedOut() {
     <div className='grid min-h-svh place-items-center p-4'>
       <Card className='w-full max-w-md gap-4'>
         <CardHeader className='text-center'>
-          <CardTitle className='type-title'>
-            {roster.length > 0 ? t('whoIsSelling') : t('signedOutTitle')}
-          </CardTitle>
+          <CardTitle className='type-title'>{roster.length > 0 ? t('whoIsSelling') : t('signedOutTitle')}</CardTitle>
         </CardHeader>
         <CardContent className='flex flex-col gap-4'>
           {roster.length > 0 && (

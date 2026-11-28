@@ -5,36 +5,14 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardAction, CardContent, CardHeader } from '@/components/ui/card'
-import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from '@/components/ui/empty'
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupInput,
-  InputGroupText,
-} from '@/components/ui/input-group'
+import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty'
+import { InputGroup, InputGroupAddon, InputGroupInput, InputGroupText } from '@/components/ui/input-group'
 import { Label } from '@/components/ui/label'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { Combobox, type ComboboxOption } from '@/components/combobox'
 import { unitLabel } from '@/features/inventory/format'
-import {
-  optionSetKey,
-  type RecipeDraft,
-} from '@/features/inventory/recipe-model'
+import { optionSetKey, type RecipeDraft } from '@/features/inventory/recipe-model'
 import { type MenuGroup, type MenuOptions } from '../menu-options'
 import {
   combos,
@@ -71,22 +49,16 @@ type Props = {
 
 /** The groups a value is split by, as the menu has them */
 const groupsOf = (varying: Varying<unknown>, menu: MenuOptions): MenuGroup[] =>
-  varying.groupIds
-    .map((id) => menu.groups.find((g) => g.id === id))
-    .filter((g): g is MenuGroup => !!g)
+  varying.groupIds.map((id) => menu.groups.find((g) => g.id === id)).filter((g): g is MenuGroup => !!g)
 
 /** What the menu's choices are, as one string: it changes when a customization is edited */
 const menuSignature = (menu: MenuOptions) =>
-  menu.groups
-    .map((g) => `${g.id}:${g.options.map((o) => o.id).join(',')}`)
-    .join('|')
+  menu.groups.map((g) => `${g.id}:${g.options.map((o) => o.id).join(',')}`).join('|')
 
 export function RecipeBuilder({ draft, onChange, menu, ingredients }: Props) {
   const t = useT()
   const [advanced, setAdvanced] = useState(false)
-  const [state, setState] = useState<BuilderState>(() =>
-    reconstruct(draft, menu)
-  )
+  const [state, setState] = useState<BuilderState>(() => reconstruct(draft, menu))
 
   // The cards hold option ids, so editing a customization on its own page
   // leaves them stale; re-read from the draft when the choices move
@@ -111,9 +83,7 @@ export function RecipeBuilder({ draft, onChange, menu, ingredients }: Props) {
   const update = (key: number, patch: Partial<IngredientSpec>) =>
     commit({
       ...state,
-      ingredients: state.ingredients.map((i) =>
-        i.key === key ? { ...i, ...patch } : i
-      ),
+      ingredients: state.ingredients.map((i) => (i.key === key ? { ...i, ...patch } : i)),
     })
   const add = () =>
     commit({
@@ -124,12 +94,7 @@ export function RecipeBuilder({ draft, onChange, menu, ingredients }: Props) {
   if (advanced) {
     return (
       <div className='flex flex-col gap-3'>
-        <RecipeSlotsEditor
-          draft={draft}
-          onChange={onChange}
-          menu={menu}
-          ingredients={ingredients}
-        />
+        <RecipeSlotsEditor draft={draft} onChange={onChange} menu={menu} ingredients={ingredients} />
         <Button
           type='button'
           variant='link'
@@ -189,18 +154,10 @@ export function RecipeBuilder({ draft, onChange, menu, ingredients }: Props) {
       {state.custom.length > 0 && (
         <Alert>
           <SlidersHorizontal />
-          <AlertTitle>
-            {t('customRulesCount', { count: state.custom.length })}
-          </AlertTitle>
+          <AlertTitle>{t('customRulesCount', { count: state.custom.length })}</AlertTitle>
           <AlertDescription>
             <div className='flex flex-wrap items-center gap-4'>
-              <Button
-                type='button'
-                variant='link'
-                size='sm'
-                className='h-auto p-0'
-                onClick={() => setAdvanced(true)}
-              >
+              <Button type='button' variant='link' size='sm' className='h-auto p-0' onClick={() => setAdvanced(true)}>
                 {t('advancedEditor')}
               </Button>
               <Button
@@ -261,8 +218,7 @@ function IngredientCard({
   const itemGroups = groupsOf(spec.item, menu)
   const amountGroups = groupsOf(spec.amount, menu)
 
-  const setItemGroups = (groupIds: string[]) =>
-    onChange({ item: resplitItem(spec.item, groupIds, menu, ingredients) })
+  const setItemGroups = (groupIds: string[]) => onChange({ item: resplitItem(spec.item, groupIds, menu, ingredients) })
 
   // One bag picked in any cell: the empty cells are guessed from its name
   const setItemCell = (key: string, value: string | null) => {
@@ -313,9 +269,7 @@ function IngredientCard({
           control={
             <Combobox
               value={spec.item.cells[ONE] ?? null}
-              onChange={(value) =>
-                onChange({ item: { groupIds: [], cells: { [ONE]: value } } })
-              }
+              onChange={(value) => onChange({ item: { groupIds: [], cells: { [ONE]: value } } })}
               options={options}
               placeholder={t('pickStockItem')}
               wrap
@@ -345,16 +299,12 @@ function IngredientCard({
           // how an ingredient is left out of a sale entirely
           groups={menu.groups}
           split={spec.amount.groupIds}
-          onSplit={(groupIds) =>
-            onChange({ amount: resplit(spec.amount, groupIds, menu) })
-          }
+          onSplit={(groupIds) => onChange({ amount: resplit(spec.amount, groupIds, menu) })}
           control={
             <Quantity
               value={spec.amount.cells[ONE] ?? ''}
               unit={unit}
-              onChange={(value) =>
-                onChange({ amount: { groupIds: [], cells: { [ONE]: value } } })
-              }
+              onChange={(value) => onChange({ amount: { groupIds: [], cells: { [ONE]: value } } })}
             />
           }
           cells={
@@ -362,11 +312,7 @@ function IngredientCard({
               <Cells
                 groups={amountGroups}
                 render={(key) => (
-                  <Quantity
-                    value={spec.amount.cells[key] ?? ''}
-                    unit={unit}
-                    onChange={(v) => setAmountCell(key, v)}
-                  />
+                  <Quantity value={spec.amount.cells[key] ?? ''} unit={unit} onChange={(v) => setAmountCell(key, v)} />
                 )}
               />
             )
@@ -403,16 +349,8 @@ function FieldRow({
         <Label className='text-sm'>{label}</Label>
         {groups.length > 0 && (
           <div className='flex flex-wrap items-center gap-2'>
-            <span className='text-muted-foreground text-xs'>
-              {t('splitBy')}
-            </span>
-            <ToggleGroup
-              type='multiple'
-              variant='outline'
-              size='sm'
-              value={split}
-              onValueChange={onSplit}
-            >
+            <span className='text-muted-foreground text-xs'>{t('splitBy')}</span>
+            <ToggleGroup type='multiple' variant='outline' size='sm' value={split} onValueChange={onSplit}>
               {groups.map((group) => (
                 <ToggleGroupItem key={group.id} value={group.id}>
                   {group.label}
@@ -446,13 +384,7 @@ function Cells({
   )
 }
 
-function Grid({
-  groups,
-  render,
-}: {
-  groups: MenuGroup[]
-  render: (key: string) => React.ReactNode
-}) {
+function Grid({ groups, render }: { groups: MenuGroup[]; render: (key: string) => React.ReactNode }) {
   if (groups.length === 1) {
     const [group] = groups
     return (
@@ -461,9 +393,7 @@ function Grid({
           <div key={o.id} className='flex items-center gap-3'>
             {/* Not truncate: with Label's leading-none its overflow-hidden
                 cuts the tail off an Arabic letter */}
-            <Label className='text-muted-foreground w-24 shrink-0 leading-normal font-normal'>
-              {o.label}
-            </Label>
+            <Label className='text-muted-foreground w-24 shrink-0 leading-normal font-normal'>{o.label}</Label>
             <div className='min-w-0 flex-1'>{render(optionSetKey([o.id]))}</div>
           </div>
         ))}
@@ -489,13 +419,9 @@ function Grid({
           <TableBody>
             {rows.options.map((r) => (
               <TableRow key={r.id} className='hover:bg-transparent'>
-                <TableCell className='text-muted-foreground font-medium'>
-                  {r.label}
-                </TableCell>
+                <TableCell className='text-muted-foreground font-medium'>{r.label}</TableCell>
                 {cols.options.map((c) => (
-                  <TableCell key={c.id}>
-                    {render(optionSetKey([r.id, c.id]))}
-                  </TableCell>
+                  <TableCell key={c.id}>{render(optionSetKey([r.id, c.id]))}</TableCell>
                 ))}
               </TableRow>
             ))}
@@ -510,10 +436,7 @@ function Grid({
       {combos(groups).map((combo) => {
         const ids = combo.map((o) => o.id)
         return (
-          <div
-            key={optionSetKey(ids)}
-            className='flex flex-wrap items-center gap-2'
-          >
+          <div key={optionSetKey(ids)} className='flex flex-wrap items-center gap-2'>
             <div className='flex min-w-44 flex-wrap items-center gap-1'>
               {combo.map((o) => (
                 <Badge key={o.id} variant='secondary' className='font-normal'>
@@ -529,15 +452,7 @@ function Grid({
   )
 }
 
-function Quantity({
-  value,
-  unit,
-  onChange,
-}: {
-  value: string
-  unit: string
-  onChange: (value: string) => void
-}) {
+function Quantity({ value, unit, onChange }: { value: string; unit: string; onChange: (value: string) => void }) {
   const t = useT()
   return (
     <InputGroup>

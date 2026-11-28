@@ -75,9 +75,13 @@ export function FirebaseSettings() {
           {saved.set && (
             <dl className='grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm'>
               <dt className='text-muted-foreground'>{t('firebaseServiceAccount')}</dt>
-              <dd className='truncate font-mono' dir='ltr'>{saved.clientEmail}</dd>
+              <dd className='truncate font-mono' dir='ltr'>
+                {saved.clientEmail}
+              </dd>
               <dt className='text-muted-foreground'>{t('firebaseProject')}</dt>
-              <dd className='font-mono' dir='ltr'>{saved.projectId}</dd>
+              <dd className='font-mono' dir='ltr'>
+                {saved.projectId}
+              </dd>
               {saved.updatedAt && (
                 <>
                   <dt className='text-muted-foreground'>{t('firebaseUpdated')}</dt>
@@ -101,7 +105,10 @@ export function FirebaseSettings() {
             <p className='text-muted-foreground text-xs'>{t('firebaseKeyFileHint')}</p>
           </div>
           <div className='flex flex-wrap gap-2'>
-            <Button disabled={!file || save.isPending} onClick={() => file && save.mutate({ body: { serviceAccountJson: file } })}>
+            <Button
+              disabled={!file || save.isPending}
+              onClick={() => file && save.mutate({ body: { serviceAccountJson: file } })}
+            >
               {save.isPending && <Spinner />}
               {t('save')}
               {fileName && <span className='text-xs opacity-70'>({fileName})</span>}
@@ -112,7 +119,11 @@ export function FirebaseSettings() {
                   {run.isPending && <Spinner />}
                   {t('firebaseTest')}
                 </Button>
-                <Button variant='ghost' disabled={save.isPending} onClick={() => save.mutate({ body: { clear: true } })}>
+                <Button
+                  variant='ghost'
+                  disabled={save.isPending}
+                  onClick={() => save.mutate({ body: { clear: true } })}
+                >
                   {t('firebaseClear')}
                 </Button>
               </>

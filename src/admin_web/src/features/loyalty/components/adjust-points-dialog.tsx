@@ -2,13 +2,7 @@ import { useState } from 'react'
 import { RefreshCw } from 'lucide-react'
 import { useLocale, useT } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -22,12 +16,7 @@ interface AdjustPointsDialogProps {
   currentBalance: number
 }
 
-export function AdjustPointsDialog({
-  open,
-  onOpenChange,
-  userId,
-  currentBalance,
-}: AdjustPointsDialogProps) {
+export function AdjustPointsDialog({ open, onOpenChange, userId, currentBalance }: AdjustPointsDialogProps) {
   const t = useT()
   const locale = useLocale()
   const [points, setPoints] = useState('')
@@ -84,9 +73,7 @@ export function AdjustPointsDialog({
           <div className='grid gap-4 py-4'>
             <div className='bg-muted rounded-lg p-3'>
               <div className='flex justify-between text-sm'>
-                <span className='text-muted-foreground'>
-                  {t('currentBalance')}
-                </span>
+                <span className='text-muted-foreground'>{t('currentBalance')}</span>
                 <span className='font-medium'>
                   {t('pointsCount', {
                     count: currentBalance,
@@ -97,14 +84,8 @@ export function AdjustPointsDialog({
               {pointsValue !== 0 && (
                 <>
                   <div className='mt-1 flex justify-between text-sm'>
-                    <span className='text-muted-foreground'>
-                      {t('transactionTypeAdjustment')}
-                    </span>
-                    <span
-                      className={`font-medium ${
-                        pointsValue > 0 ? 'text-green-600' : 'text-red-600'
-                      }`}
-                    >
+                    <span className='text-muted-foreground'>{t('transactionTypeAdjustment')}</span>
+                    <span className={`font-medium ${pointsValue > 0 ? 'text-green-600' : 'text-red-600'}`}>
                       {pointsValue > 0 ? '+' : '−'}
                       {t('pointsCount', {
                         count: Math.abs(pointsValue),
@@ -113,9 +94,7 @@ export function AdjustPointsDialog({
                     </span>
                   </div>
                   <div className='mt-2 flex justify-between border-t pt-2 text-sm'>
-                    <span className='text-muted-foreground'>
-                      {t('newBalance')}
-                    </span>
+                    <span className='text-muted-foreground'>{t('newBalance')}</span>
                     <span className='font-bold'>
                       {t('pointsCount', {
                         count: newBalance,
@@ -155,19 +134,10 @@ export function AdjustPointsDialog({
           </div>
 
           <DialogFooter>
-            <Button
-              type='button'
-              variant='outline'
-              onClick={() => handleOpenChange(false)}
-            >
+            <Button type='button' variant='outline' onClick={() => handleOpenChange(false)}>
               {t('cancel')}
             </Button>
-            <Button
-              type='submit'
-              disabled={
-                adjustPoints.isPending || pointsValue === 0 || !reason.trim()
-              }
-            >
+            <Button type='submit' disabled={adjustPoints.isPending || pointsValue === 0 || !reason.trim()}>
               {adjustPoints.isPending ? t('saving') : t('adjustPoints')}
             </Button>
           </DialogFooter>

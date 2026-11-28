@@ -1,21 +1,15 @@
 import { useEffect, useState } from 'react'
-import { useMutation } from '@tanstack/react-query'
 import { AxiosError } from 'axios'
+import { useMutation } from '@tanstack/react-query'
 import { Copy, MessageCircle } from 'lucide-react'
 import { QRCodeSVG } from 'qrcode.react'
-import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import { Skeleton } from '@/components/ui/skeleton'
 import { useBrand, useBrandName, useCustomerOrigin } from '@/lib/brand'
 import { useLocale, useT } from '@/lib/i18n'
 import { whatsAppLink } from '@/lib/phone'
 import { toast } from '@/lib/toast'
+import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Skeleton } from '@/components/ui/skeleton'
 import { claimUrl, issueClaimLink } from './counter-customers'
 
 type AppLinkDialogProps = {
@@ -39,8 +33,7 @@ export function AppLinkDialog({ customer, onOpenChange }: AppLinkDialogProps) {
 
   const issue = useMutation({
     mutationFn: (id: string) => issueClaimLink(id),
-    onSuccess: (claim) =>
-      setLink({ url: claimUrl(origin, claim.token), expiresAt: new Date(claim.expiresAt) }),
+    onSuccess: (claim) => setLink({ url: claimUrl(origin, claim.token), expiresAt: new Date(claim.expiresAt) }),
   })
 
   const customerId = customer?.id
@@ -72,17 +65,13 @@ export function AppLinkDialog({ customer, onOpenChange }: AppLinkDialogProps) {
     }
   }
 
-  const message = link
-    ? t('appLinkMessage', { name: customer?.name ?? '', business, url: link.url })
-    : ''
+  const message = link ? t('appLinkMessage', { name: customer?.name ?? '', business, url: link.url }) : ''
 
   return (
     <Dialog open={customer !== null} onOpenChange={onOpenChange}>
       <DialogContent className='flex flex-col items-center gap-4' size='sm'>
         <DialogHeader className='w-full'>
-          <DialogTitle className='type-title'>
-            {t('appLinkTitle', { name: customer?.name ?? '' })}
-          </DialogTitle>
+          <DialogTitle className='type-title'>{t('appLinkTitle', { name: customer?.name ?? '' })}</DialogTitle>
           <DialogDescription>{t('appLinkHint')}</DialogDescription>
         </DialogHeader>
 

@@ -2,13 +2,7 @@ import type { ComponentType, ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 
-export type ChipTone =
-  | 'success'
-  | 'warning'
-  | 'info'
-  | 'danger'
-  | 'muted'
-  | 'outline'
+export type ChipTone = 'success' | 'warning' | 'info' | 'danger' | 'muted' | 'outline'
 
 /**
  * A state at a glance (Paid, Pending, No-show, Expired…): a soft tint of its
@@ -29,13 +23,8 @@ export function StatusChip({
   className?: string
 }) {
   return (
-    <Badge
-      variant={tone}
-      className={cn('gap-1.5 rounded-full px-2', className)}
-    >
-      {dot && !Icon && (
-        <span aria-hidden className='size-1.5 rounded-full bg-current' />
-      )}
+    <Badge variant={tone} className={cn('gap-1.5 rounded-full px-2', className)}>
+      {dot && !Icon && <span aria-hidden className='size-1.5 rounded-full bg-current' />}
       {Icon && <Icon className='size-3' />}
       {children}
     </Badge>

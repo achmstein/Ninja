@@ -1,16 +1,16 @@
 import { useRef, useState } from 'react'
 import { useAuth } from 'react-oidc-context'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import { pillAction } from '@/components/ui/ninja-sheet'
-import { useTheme } from '@/context/theme-provider'
+import type { GuestContact } from '@/stores/guest-store'
 import { usePhoneRule } from '@/lib/brand'
 import { useLanguage, useT } from '@/lib/i18n'
 import { loginPageParams } from '@/lib/oidc'
 import { formatPhone, isValidPhone, normalizePhone } from '@/lib/phone'
 import { guestDetailsParams } from '@/lib/services/identity'
 import { cn } from '@/lib/utils'
-import type { GuestContact } from '@/stores/guest-store'
+import { useTheme } from '@/context/theme-provider'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { pillAction } from '@/components/ui/ninja-sheet'
 
 /**
  * Whether this visit sees the dock's preview panel (lib/dock-preview): only
@@ -103,7 +103,15 @@ export function usePhoneGate() {
   return { signInByPhone, phoneGateDialog: dialog }
 }
 
-function PhoneGateDialog({ open, onClose, onPhone }: { open: boolean; onClose: () => void; onPhone: (phone: string) => void }) {
+function PhoneGateDialog({
+  open,
+  onClose,
+  onPhone,
+}: {
+  open: boolean
+  onClose: () => void
+  onPhone: (phone: string) => void
+}) {
   const t = useT()
   const country = usePhoneRule((s) => s.country)
   const phonePlaceholder = usePhoneRule((s) => s.placeholder)

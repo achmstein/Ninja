@@ -31,23 +31,17 @@ export type ServiceRequest = {
 
 export const serviceRequestsService = {
   async pending(): Promise<ServiceRequest[]> {
-    const response = await apiClient.get<ServiceRequest[]>(
-      '/api/notifications/service-requests/pending',
-    )
+    const response = await apiClient.get<ServiceRequest[]>('/api/notifications/service-requests/pending')
     return response.data
   },
 
   async acknowledge(id: number): Promise<ServiceRequest> {
-    const response = await apiClient.put<ServiceRequest>(
-      `/api/notifications/service-requests/${id}/acknowledge`,
-    )
+    const response = await apiClient.put<ServiceRequest>(`/api/notifications/service-requests/${id}/acknowledge`)
     return response.data
   },
 
   async complete(id: number): Promise<ServiceRequest> {
-    const response = await apiClient.put<ServiceRequest>(
-      `/api/notifications/service-requests/${id}/complete`,
-    )
+    const response = await apiClient.put<ServiceRequest>(`/api/notifications/service-requests/${id}/complete`)
     return response.data
   },
 }

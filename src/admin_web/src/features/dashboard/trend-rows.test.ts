@@ -9,34 +9,18 @@ describe('the sales chart’s windows', () => {
     const now = new Date('2026-11-02T08:00:00+02:00')
     const w = trendWindows(now, MORNING, 7)
     expect(w.first).toEqual({ year: 2026, month: 10, day: 27 })
-    expect(w.current.from.toISOString()).toBe(
-      new Date('2026-10-27T06:00:00+03:00').toISOString()
-    )
-    expect(w.current.to.toISOString()).toBe(
-      new Date('2026-11-03T06:00:00+02:00').toISOString()
-    )
+    expect(w.current.from.toISOString()).toBe(new Date('2026-10-27T06:00:00+03:00').toISOString())
+    expect(w.current.to.toISOString()).toBe(new Date('2026-11-03T06:00:00+02:00').toISOString())
     // The seven days before, across the clock change, and only as far as
     // today has gone into its own seven: six whole days and two hours
     expect(w.previousFirst).toEqual({ year: 2026, month: 10, day: 20 })
-    expect(w.previous.from.toISOString()).toBe(
-      new Date('2026-10-20T06:00:00+03:00').toISOString()
-    )
-    expect(w.previous.to.getTime() - w.previous.from.getTime()).toBe(
-      now.getTime() - w.current.from.getTime()
-    )
+    expect(w.previous.from.toISOString()).toBe(new Date('2026-10-20T06:00:00+03:00').toISOString())
+    expect(w.previous.to.getTime() - w.previous.from.getTime()).toBe(now.getTime() - w.current.from.getTime())
   })
 
   it('rolls over at the day start, not at midnight', () => {
-    const before = trendWindows(
-      new Date('2026-11-02T05:59:00+02:00'),
-      MORNING,
-      7
-    )
-    const after = trendWindows(
-      new Date('2026-11-02T06:00:00+02:00'),
-      MORNING,
-      7
-    )
+    const before = trendWindows(new Date('2026-11-02T05:59:00+02:00'), MORNING, 7)
+    const after = trendWindows(new Date('2026-11-02T06:00:00+02:00'), MORNING, 7)
     expect(before.first).toEqual({ year: 2026, month: 10, day: 26 })
     expect(after.first).toEqual({ year: 2026, month: 10, day: 27 })
   })

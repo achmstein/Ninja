@@ -9,11 +9,7 @@ import { API_VERSION } from '@/lib/api-client'
 import { useLanguage, useLocale, useLocalized, useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { useTableUrlState } from '@/hooks/use-table-url-state'
-import {
-  DataTable,
-  DataTablePagination,
-  dataTableFeatures,
-} from '@/components/data-table'
+import { DataTable, DataTablePagination, dataTableFeatures } from '@/components/data-table'
 import { Dot, ListRow } from '@/components/list-row'
 import { When } from '@/components/when'
 import { TransferSheet } from './components/transfer-sheet'
@@ -40,13 +36,12 @@ export function Transfers() {
     return branch ? localized(branch.name) : t('unknownBranch')
   }
 
-  const { pagination, onPaginationChange, ensurePageInRange } =
-    useTableUrlState({
-      search,
-      navigate,
-      pagination: { defaultPageSize: 20 },
-      globalFilter: { enabled: false },
-    })
+  const { pagination, onPaginationChange, ensurePageInRange } = useTableUrlState({
+    search,
+    navigate,
+    pagination: { defaultPageSize: 20 },
+    globalFilter: { enabled: false },
+  })
 
   const query = useQuery({
     ...getTransfersOptions({
@@ -112,9 +107,7 @@ export function Transfers() {
                 </>
               }
               trailing={
-                <span className='text-muted-foreground tabular-nums'>
-                  {t('linesCount', { count: x.lines.length })}
-                </span>
+                <span className='text-muted-foreground tabular-nums'>{t('linesCount', { count: x.lines.length })}</span>
               }
             />
           )}

@@ -1,10 +1,10 @@
 import { useRef, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { Button } from '@/components/ui/button'
-import { Skeleton } from '@/components/ui/skeleton'
-import { cn } from '@/lib/utils'
 import { useLocale, useT } from '@/lib/i18n'
 import { useNetworkStatus } from '@/lib/network-status'
+import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
 import { OpenShiftDialog } from './open-shift-dialog'
 import { useCurrentShift } from './use-current-shift'
 
@@ -31,14 +31,10 @@ export function ShiftChip() {
   // Keep showing the last definite answer through any transient gap — a tab
   // regaining focus refetches (and may briefly re-auth), a branch switch
   // resets every query — so the chip never blinks out once it has loaded.
-  const lastRef = useRef<{ shift: typeof liveShift; noShift: boolean } | null>(
-    null
-  )
+  const lastRef = useRef<{ shift: typeof liveShift; noShift: boolean } | null>(null)
   const settled = liveShift != null || liveNoShift
   if (settled) lastRef.current = { shift: liveShift, noShift: liveNoShift }
-  const view = settled
-    ? { shift: liveShift, noShift: liveNoShift }
-    : lastRef.current
+  const view = settled ? { shift: liveShift, noShift: liveNoShift } : lastRef.current
 
   // Opened offline, no answer will come until the internet does: the
   // offline chip beside it says so, and a placeholder would wait forever
@@ -57,9 +53,7 @@ export function ShiftChip() {
   const shift = view.shift
 
   const openedAt = shift?.openedAt
-    ? new Intl.DateTimeFormat(locale, { timeStyle: 'short' }).format(
-        new Date(shift.openedAt)
-      )
+    ? new Intl.DateTimeFormat(locale, { timeStyle: 'short' }).format(new Date(shift.openedAt))
     : ''
 
   return (
@@ -69,19 +63,12 @@ export function ShiftChip() {
       <Button
         variant='outline'
         className='h-12 gap-2 px-4 max-sm:w-12 max-sm:px-0'
-        title={
-          shift ? `${t('shiftTitle')} ${openedAt}` : t('noShiftChip')
-        }
-        onClick={() =>
-          shift ? navigate({ to: '/shift' }) : setOpenShiftOpen(true)
-        }
+        title={shift ? `${t('shiftTitle')} ${openedAt}` : t('noShiftChip')}
+        onClick={() => (shift ? navigate({ to: '/shift' }) : setOpenShiftOpen(true))}
       >
         <span
           aria-hidden
-          className={cn(
-            'size-2 rounded-full max-sm:size-3',
-            !shift ? 'bg-muted-foreground/40' : 'bg-emerald-500'
-          )}
+          className={cn('size-2 rounded-full max-sm:size-3', !shift ? 'bg-muted-foreground/40' : 'bg-emerald-500')}
         />
         <span className='type-detail font-medium tabular-nums max-sm:sr-only'>
           {shift ? `${t('shiftTitle')} ${openedAt}` : t('noShiftChip')}

@@ -29,7 +29,9 @@ export function OrderTypeSwitch({
       onClick={onClick}
       className={cn(
         'flex h-12 min-w-0 flex-1 items-center justify-center gap-2 rounded-md px-3 text-base font-medium transition-colors',
-        active ? 'bg-background text-foreground shadow-sm ring-1 ring-black/5 dark:ring-white/10' : 'text-muted-foreground hover:text-foreground',
+        active
+          ? 'bg-background text-foreground shadow-sm ring-1 ring-black/5 dark:ring-white/10'
+          : 'text-muted-foreground hover:text-foreground'
       )}
     >
       {icon}
@@ -49,7 +51,7 @@ export function OrderTypeSwitch({
             onCounter()
           },
           <Store className='size-5 shrink-0' aria-hidden />,
-          t('orderTypeCounter'),
+          t('orderTypeCounter')
         )}
         {option(
           delivering,
@@ -58,11 +60,11 @@ export function OrderTypeSwitch({
             onDelivery()
           },
           <Bike className='size-5 shrink-0' aria-hidden />,
-          t('deliverIt'),
+          t('deliverIt')
         )}
       </div>
       {armed && (
-        <p className='text-center type-detail font-medium text-amber-700 dark:text-amber-400' role='status'>
+        <p className='type-detail text-center font-medium text-amber-700 dark:text-amber-400' role='status'>
           {t('orderTypeCounterConfirm')}
         </p>
       )}

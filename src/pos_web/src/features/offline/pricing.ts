@@ -22,7 +22,7 @@ export function toPricingRules(
         serviceChargeRate?: number | string | null
       }
     | null
-    | undefined,
+    | undefined
 ): PricingRules {
   if (!view) return NO_PRICING
   return {
@@ -50,9 +50,7 @@ const money = (value: number) => Math.round(value * 100) / 100
  */
 export function counterBill(subtotal: number, rules: PricingRules): CounterBill {
   const taxable = subtotal
-  const vat = rules.pricesIncludeVat
-    ? money(taxable - taxable / (1 + rules.vatRate))
-    : money(taxable * rules.vatRate)
+  const vat = rules.pricesIncludeVat ? money(taxable - taxable / (1 + rules.vatRate)) : money(taxable * rules.vatRate)
   const total = rules.pricesIncludeVat ? taxable : taxable + vat
   return { subtotal, serviceCharge: 0, vat, total }
 }

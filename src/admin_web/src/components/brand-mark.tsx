@@ -1,6 +1,6 @@
-import { useTheme } from '@/context/theme-provider'
 import { useBrand, useBrandName } from '@/lib/brand'
 import { cn } from '@/lib/utils'
+import { useTheme } from '@/context/theme-provider'
 
 /**
  * The business's mark on a staff surface: its logo when one is uploaded (the
@@ -22,7 +22,7 @@ export function BrandMark({ className }: { className?: string }) {
     <span
       aria-hidden
       className={cn(
-        'bg-foreground text-background grid shrink-0 place-items-center rounded-md font-semibold leading-none',
+        'bg-foreground text-background grid shrink-0 place-items-center rounded-md leading-none font-semibold',
         className
       )}
     >

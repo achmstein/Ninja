@@ -27,39 +27,22 @@ import {
 } from '@/lib/brand-fonts'
 import { imageOf, isMark, isPhoto, type ImageSlot } from '@/lib/brand-slots'
 import { RADII } from '@/lib/brand-theme'
-import {
-  contentLanguagesOf,
-  type ContentLanguages,
-} from '@/lib/content-languages'
+import { contentLanguagesOf, type ContentLanguages } from '@/lib/content-languages'
 import { useT, type TranslationKey } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { Input } from '@/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
 import { ContrastNotice } from '@/components/brand/contrast-notice'
 import { FontOptions } from '@/components/brand/font-options'
 import { LivePreview } from '@/components/brand/live-preview'
 import { useLogoCleanup } from '@/components/brand/logo-cleanup'
-import {
-  PreviewToggles,
-  usePreviewState,
-  type PreviewDraft,
-} from '@/components/brand/phone-preview'
+import { PreviewToggles, usePreviewState, type PreviewDraft } from '@/components/brand/phone-preview'
 import { Field, FieldGrid, SwitchRow } from '@/components/field'
 import { ImageField } from '@/components/image-field'
 import { SettingsCard } from '@/components/kit'
@@ -172,15 +155,11 @@ const toThemeForm = (t: TenantThemeDto): ThemeForm => ({
   darkSurface: t.dark?.surface ?? '',
   slab: t.slab === 'neutral' ? 'neutral' : '',
   // Rows are what a business gets when it chooses nothing, so a saved 'row' reads as that
-  menuItem: ['card', 'compact', 'hero', 'deck', 'tiles'].includes(
-    t.layout?.menuItem ?? ''
-  )
+  menuItem: ['card', 'compact', 'hero', 'deck', 'tiles'].includes(t.layout?.menuItem ?? '')
     ? (t.layout?.menuItem ?? '')
     : '',
   // Cards are what a business gets when it chooses nothing, so a saved 'cards' reads as that
-  places: ['list', 'grid'].includes(t.layout?.places ?? '')
-    ? (t.layout?.places ?? '')
-    : '',
+  places: ['list', 'grid'].includes(t.layout?.places ?? '') ? (t.layout?.places ?? '') : '',
 })
 
 const orNull = (v: string) => v.trim().toLowerCase() || null
@@ -228,11 +207,7 @@ export function BrandSettings() {
     <Main>
       <PageHeader title={t('brandNav')} />
       {/* Keyed on the version so a save elsewhere re-seeds the form */}
-      {brand ? (
-        <BrandForm key={String(brand.version)} brand={brand} />
-      ) : (
-        <Skeleton className='h-96 w-full' />
-      )}
+      {brand ? <BrandForm key={String(brand.version)} brand={brand} /> : <Skeleton className='h-96 w-full' />}
     </Main>
   )
 }
@@ -241,9 +216,7 @@ function BrandForm({ brand }: { brand: Brand }) {
   const t = useT()
   const queryClient = useQueryClient()
 
-  const [arabicStyle, setArabicStyle] = useState<string>(
-    brand.locale.arabicStyle ?? 'egyptian'
-  )
+  const [arabicStyle, setArabicStyle] = useState<string>(brand.locale.arabicStyle ?? 'egyptian')
   const [contentLanguages, setContentLanguages] = useState<ContentLanguages>(
     contentLanguagesOf(brand.locale.contentLanguages)
   )
@@ -253,15 +226,9 @@ function BrandForm({ brand }: { brand: Brand }) {
   const [customerUrl, setCustomerUrl] = useState(brand.customerUrl ?? '')
   const [features, setFeatures] = useState<TenantFeatures>(brand.features)
   const cloudKitchen = useIsCloudKitchen()
-  const [guestOrdersAnywhere, setGuestOrdersAnywhere] = useState(
-    brand.guestOrdersAnywhere ?? false
-  )
-  const [tillItems, setTillItems] = useState<TillItems>(
-    tillItemsOf(brand.tillItems)
-  )
-  const [hideSoldOutItems, setHideSoldOutItems] = useState(
-    brand.hideSoldOutItems ?? false
-  )
+  const [guestOrdersAnywhere, setGuestOrdersAnywhere] = useState(brand.guestOrdersAnywhere ?? false)
+  const [tillItems, setTillItems] = useState<TillItems>(tillItemsOf(brand.tillItems))
+  const [hideSoldOutItems, setHideSoldOutItems] = useState(brand.hideSoldOutItems ?? false)
   const [error, setError] = useState<string | null>(null)
 
   const put = (next: Brand) => queryClient.setQueryData(brandQueryKey(), next)
@@ -306,15 +273,7 @@ function BrandForm({ brand }: { brand: Brand }) {
     logoCleanup.busySlot
   // A mark is square, a wordmark wide, the cover a cropped photo; an SVG is
   // drawn as a PNG before it is uploaded, and a photo is never a vector
-  const imageSlot = ({
-    slot,
-    label,
-    hint,
-  }: {
-    slot: ImageSlot
-    label: TranslationKey
-    hint?: TranslationKey
-  }) => (
+  const imageSlot = ({ slot, label, hint }: { slot: ImageSlot; label: TranslationKey; hint?: TranslationKey }) => (
     <ImageField
       key={slot}
       label={t(label)}
@@ -322,11 +281,7 @@ function BrandForm({ brand }: { brand: Brand }) {
       src={imageOf(brand, slot)?.url ?? null}
       shape={isPhoto(slot) ? 'photo' : isMark(slot) ? 'square' : 'wide'}
       contain={!isPhoto(slot)}
-      accept={
-        isPhoto(slot)
-          ? undefined
-          : 'image/png,image/jpeg,image/webp,image/svg+xml'
-      }
+      accept={isPhoto(slot) ? undefined : 'image/png,image/jpeg,image/webp,image/svg+xml'}
       busy={busySlot === slot}
       onFile={(file) => logoCleanup.pick(slot, file)}
       onRemove={() => deleteImage.mutate({ path: { slot } })}
@@ -399,9 +354,7 @@ function BrandForm({ brand }: { brand: Brand }) {
                 onChange={setName}
                 error={error ?? undefined}
               />
-              <div className='grid gap-6 sm:grid-cols-2'>
-                {MAIN_SLOTS.map(imageSlot)}
-              </div>
+              <div className='grid gap-6 sm:grid-cols-2'>{MAIN_SLOTS.map(imageSlot)}</div>
               {/* Only the banner header shows it */}
               {imageSlot({
                 slot: 'cover',
@@ -410,12 +363,7 @@ function BrandForm({ brand }: { brand: Brand }) {
               })}
               <Collapsible>
                 <CollapsibleTrigger asChild>
-                  <Button
-                    type='button'
-                    variant='ghost'
-                    size='sm'
-                    className='group -ms-2'
-                  >
+                  <Button type='button' variant='ghost' size='sm' className='group -ms-2'>
                     <ChevronDown className='transition-transform group-data-[state=open]:rotate-180' />
                     {t('brandVariants')}
                   </Button>
@@ -454,16 +402,10 @@ function BrandForm({ brand }: { brand: Brand }) {
                   fallback='#ffffff'
                   hint={t('surfaceColorHint')}
                 />
-                <Field
-                  label={t('cornerRadius')}
-                  htmlFor='brand-radius'
-                  hint={t('cornerRadiusHint')}
-                >
+                <Field label={t('cornerRadius')} htmlFor='brand-radius' hint={t('cornerRadiusHint')}>
                   <Select
                     value={theme.radius || NONE}
-                    onValueChange={(v) =>
-                      setTheme({ ...theme, radius: v === NONE ? '' : v })
-                    }
+                    onValueChange={(v) => setTheme({ ...theme, radius: v === NONE ? '' : v })}
                   >
                     <SelectTrigger id='brand-radius' className='w-full'>
                       <SelectValue />
@@ -478,16 +420,10 @@ function BrandForm({ brand }: { brand: Brand }) {
                     </SelectContent>
                   </Select>
                 </Field>
-                <Field
-                  label={t('dockColour')}
-                  htmlFor='brand-dock'
-                  hint={t('dockColourHint')}
-                >
+                <Field label={t('dockColour')} htmlFor='brand-dock' hint={t('dockColourHint')}>
                   <Select
                     value={theme.slab || NONE}
-                    onValueChange={(v) =>
-                      setTheme({ ...theme, slab: v === NONE ? '' : v })
-                    }
+                    onValueChange={(v) => setTheme({ ...theme, slab: v === NONE ? '' : v })}
                   >
                     <SelectTrigger id='brand-dock' className='w-full'>
                       <SelectValue />
@@ -498,114 +434,65 @@ function BrandForm({ brand }: { brand: Brand }) {
                     </SelectContent>
                   </Select>
                 </Field>
-                <Field
-                  label={t('menuLayout')}
-                  htmlFor='brand-menu'
-                  hint={t('menuLayoutHint')}
-                >
+                <Field label={t('menuLayout')} htmlFor='brand-menu' hint={t('menuLayoutHint')}>
                   <Select
                     value={theme.menuItem || NONE}
-                    onValueChange={(v) =>
-                      setTheme({ ...theme, menuItem: v === NONE ? '' : v })
-                    }
+                    onValueChange={(v) => setTheme({ ...theme, menuItem: v === NONE ? '' : v })}
                   >
                     <SelectTrigger id='brand-menu' className='w-full'>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value={NONE}>
-                        {t('menuLayoutClassic')}
-                      </SelectItem>
-                      <SelectItem value='card'>
-                        {t('menuLayoutGrid')}
-                      </SelectItem>
-                      <SelectItem value='compact'>
-                        {t('menuLayoutCompact')}
-                      </SelectItem>
-                      <SelectItem value='hero'>
-                        {t('menuLayoutMagazine')}
-                      </SelectItem>
-                      <SelectItem value='deck'>
-                        {t('menuLayoutCards')}
-                      </SelectItem>
-                      <SelectItem value='tiles'>
-                        {t('menuLayoutTiles')}
-                      </SelectItem>
+                      <SelectItem value={NONE}>{t('menuLayoutClassic')}</SelectItem>
+                      <SelectItem value='card'>{t('menuLayoutGrid')}</SelectItem>
+                      <SelectItem value='compact'>{t('menuLayoutCompact')}</SelectItem>
+                      <SelectItem value='hero'>{t('menuLayoutMagazine')}</SelectItem>
+                      <SelectItem value='deck'>{t('menuLayoutCards')}</SelectItem>
+                      <SelectItem value='tiles'>{t('menuLayoutTiles')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </Field>
                 {/* The Book tab is there only where places are booked or timed */}
-                {!cloudKitchen &&
-                  (features.reservations || features.timeBilling) && (
-                    <Field
-                      label={t('placesLayout')}
-                      htmlFor='brand-places'
-                      hint={t('placesLayoutHint')}
+                {!cloudKitchen && (features.reservations || features.timeBilling) && (
+                  <Field label={t('placesLayout')} htmlFor='brand-places' hint={t('placesLayoutHint')}>
+                    <Select
+                      value={theme.places || NONE}
+                      onValueChange={(v) => setTheme({ ...theme, places: v === NONE ? '' : v })}
                     >
-                      <Select
-                        value={theme.places || NONE}
-                        onValueChange={(v) =>
-                          setTheme({ ...theme, places: v === NONE ? '' : v })
-                        }
-                      >
-                        <SelectTrigger id='brand-places' className='w-full'>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value={NONE}>
-                            {t('placesLayoutCards')}
-                          </SelectItem>
-                          <SelectItem value='list'>
-                            {t('placesLayoutList')}
-                          </SelectItem>
-                          <SelectItem value='grid'>
-                            {t('placesLayoutGrid')}
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </Field>
-                  )}
-                <Field
-                  label={t('startingTheme')}
-                  htmlFor='brand-mode'
-                  hint={t('startingThemeHint')}
-                >
+                      <SelectTrigger id='brand-places' className='w-full'>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={NONE}>{t('placesLayoutCards')}</SelectItem>
+                        <SelectItem value='list'>{t('placesLayoutList')}</SelectItem>
+                        <SelectItem value='grid'>{t('placesLayoutGrid')}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </Field>
+                )}
+                <Field label={t('startingTheme')} htmlFor='brand-mode' hint={t('startingThemeHint')}>
                   <Select
                     value={theme.mode || NONE}
-                    onValueChange={(v) =>
-                      setTheme({ ...theme, mode: v === NONE ? '' : v })
-                    }
+                    onValueChange={(v) => setTheme({ ...theme, mode: v === NONE ? '' : v })}
                   >
                     <SelectTrigger id='brand-mode' className='w-full'>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value={NONE}>{t('followDevice')}</SelectItem>
-                      <SelectItem value='light'>
-                        {t('themeLightOption')}
-                      </SelectItem>
-                      <SelectItem value='dark'>
-                        {t('themeDarkOption')}
-                      </SelectItem>
+                      <SelectItem value='light'>{t('themeLightOption')}</SelectItem>
+                      <SelectItem value='dark'>{t('themeDarkOption')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </Field>
-                <Field
-                  label={t('arabicStyleLabel')}
-                  htmlFor='brand-arabic'
-                  hint={t('arabicStyleLabelHint')}
-                >
+                <Field label={t('arabicStyleLabel')} htmlFor='brand-arabic' hint={t('arabicStyleLabelHint')}>
                   <Select value={arabicStyle} onValueChange={setArabicStyle}>
                     <SelectTrigger id='brand-arabic' className='w-full'>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value='standard'>
-                        {t('arabicStandardOption')}
-                      </SelectItem>
-                      <SelectItem value='egyptian'>
-                        {t('arabicEgyptianOption')}
-                      </SelectItem>
+                      <SelectItem value='standard'>{t('arabicStandardOption')}</SelectItem>
+                      <SelectItem value='egyptian'>{t('arabicEgyptianOption')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </Field>
@@ -616,39 +503,22 @@ function BrandForm({ brand }: { brand: Brand }) {
                 >
                   <Select
                     value={contentLanguages}
-                    onValueChange={(value) =>
-                      setContentLanguages(value as ContentLanguages)
-                    }
+                    onValueChange={(value) => setContentLanguages(value as ContentLanguages)}
                   >
-                    <SelectTrigger
-                      id='brand-content-languages'
-                      className='w-full'
-                    >
+                    <SelectTrigger id='brand-content-languages' className='w-full'>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value='both'>
-                        {t('contentLanguagesBoth')}
-                      </SelectItem>
-                      <SelectItem value='ar'>
-                        {t('contentLanguagesAr')}
-                      </SelectItem>
-                      <SelectItem value='en'>
-                        {t('contentLanguagesEn')}
-                      </SelectItem>
+                      <SelectItem value='both'>{t('contentLanguagesBoth')}</SelectItem>
+                      <SelectItem value='ar'>{t('contentLanguagesAr')}</SelectItem>
+                      <SelectItem value='en'>{t('contentLanguagesEn')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </Field>
-                <Field
-                  label={t('headerSize')}
-                  htmlFor='brand-header'
-                  hint={t('headerSizeHint')}
-                >
+                <Field label={t('headerSize')} htmlFor='brand-header' hint={t('headerSizeHint')}>
                   <Select
                     value={theme.headerSize || NONE}
-                    onValueChange={(v) =>
-                      setTheme({ ...theme, headerSize: v === NONE ? '' : v })
-                    }
+                    onValueChange={(v) => setTheme({ ...theme, headerSize: v === NONE ? '' : v })}
                   >
                     <SelectTrigger id='brand-header' className='w-full'>
                       <SelectValue />
@@ -676,18 +546,9 @@ function BrandForm({ brand }: { brand: Brand }) {
                   fonts={ARABIC_FONT_CATALOG}
                 />
               </FieldGrid>
-              <Collapsible
-                defaultOpen={Boolean(
-                  theme.darkPrimary || theme.darkAccent || theme.darkSurface
-                )}
-              >
+              <Collapsible defaultOpen={Boolean(theme.darkPrimary || theme.darkAccent || theme.darkSurface)}>
                 <CollapsibleTrigger asChild>
-                  <Button
-                    type='button'
-                    variant='ghost'
-                    size='sm'
-                    className='group -ms-2'
-                  >
+                  <Button type='button' variant='ghost' size='sm' className='group -ms-2'>
                     <ChevronDown className='transition-transform group-data-[state=open]:rotate-180' />
                     {t('darkScheme')}
                   </Button>
@@ -698,27 +559,21 @@ function BrandForm({ brand }: { brand: Brand }) {
                       id='brand-dark-primary'
                       label={t('brandColor')}
                       value={theme.darkPrimary}
-                      onChange={(darkPrimary) =>
-                        setTheme({ ...theme, darkPrimary })
-                      }
+                      onChange={(darkPrimary) => setTheme({ ...theme, darkPrimary })}
                       placeholder={t('derived')}
                     />
                     <ColorField
                       id='brand-dark-accent'
                       label={t('accentColor')}
                       value={theme.darkAccent}
-                      onChange={(darkAccent) =>
-                        setTheme({ ...theme, darkAccent })
-                      }
+                      onChange={(darkAccent) => setTheme({ ...theme, darkAccent })}
                       placeholder={t('derived')}
                     />
                     <ColorField
                       id='brand-dark-surface'
                       label={t('surfaceColor')}
                       value={theme.darkSurface}
-                      onChange={(darkSurface) =>
-                        setTheme({ ...theme, darkSurface })
-                      }
+                      onChange={(darkSurface) => setTheme({ ...theme, darkSurface })}
                       fallback='#111111'
                       placeholder={t('derived')}
                     />
@@ -773,9 +628,7 @@ function BrandForm({ brand }: { brand: Brand }) {
           {/* Which parts of the platform are on */}
           <SettingsCard title={t('features')}>
             {FEATURE_ROWS.filter(
-              (row) =>
-                (!row.needsPlaces || !cloudKitchen) &&
-                (!row.addon || brand.entitlements?.[row.key] === true)
+              (row) => (!row.needsPlaces || !cloudKitchen) && (!row.addon || brand.entitlements?.[row.key] === true)
             ).map((row) => {
               // What the plan allows: a module outside it stays off, and says why
               const entitled = brand.entitlements?.[row.key] ?? true
@@ -798,9 +651,7 @@ function BrandForm({ brand }: { brand: Brand }) {
                   }
                   checked={Boolean(entitled && !blocked && features[row.key])}
                   disabled={!entitled || blocked}
-                  onCheckedChange={(v) =>
-                    setFeatures({ ...features, [row.key]: v })
-                  }
+                  onCheckedChange={(v) => setFeatures({ ...features, [row.key]: v })}
                 />
               )
             })}
@@ -823,20 +674,14 @@ function BrandForm({ brand }: { brand: Brand }) {
               onLanguage={preview.setLanguage}
               onScheme={preview.setScheme}
             />
-            <Badge variant={dirty ? 'secondary' : 'outline'}>
-              {t(dirty ? 'draft' : 'previewLive')}
-            </Badge>
+            <Badge variant={dirty ? 'secondary' : 'outline'}>{t(dirty ? 'draft' : 'previewLive')}</Badge>
           </div>
           <LivePreview
             customerUrl={customerOrigin}
             version={brand.version}
             language={preview.language}
             scheme={preview.scheme}
-            draft={
-              dirty
-                ? { primaryColor: draft.primaryColor, theme: draft.theme }
-                : null
-            }
+            draft={dirty ? { primaryColor: draft.primaryColor, theme: draft.theme } : null}
           />
         </div>
       </div>
@@ -847,8 +692,7 @@ function BrandForm({ brand }: { brand: Brand }) {
 type TillItems = 'photos' | 'compact'
 
 /** A stored style the till draws; anything else (none yet, an older stack) is photos. */
-const tillItemsOf = (v: string | null | undefined): TillItems =>
-  v === 'compact' ? 'compact' : 'photos'
+const tillItemsOf = (v: string | null | undefined): TillItems => (v === 'compact' ? 'compact' : 'photos')
 
 const TILL_ITEM_CHOICES: {
   value: TillItems
@@ -880,10 +724,7 @@ const TILL_ITEM_CHOICES: {
     sketch: (
       <div className='grid grid-cols-6 gap-1'>
         {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((i) => (
-          <div
-            key={i}
-            className='bg-card flex h-5 flex-col justify-center gap-0.5 rounded-sm border ps-0.5'
-          >
+          <div key={i} className='bg-card flex h-5 flex-col justify-center gap-0.5 rounded-sm border ps-0.5'>
             <div className='bg-muted-foreground/40 h-0.5 w-3/4 rounded-full' />
             <div className='bg-muted-foreground/25 h-0.5 w-1/3 rounded-full' />
           </div>
@@ -894,20 +735,10 @@ const TILL_ITEM_CHOICES: {
 ]
 
 /** Photos or compact, side by side, each with a sketch of the sale pad it gives. */
-function TillItemsChoice({
-  value,
-  onChange,
-}: {
-  value: TillItems
-  onChange: (v: TillItems) => void
-}) {
+function TillItemsChoice({ value, onChange }: { value: TillItems; onChange: (v: TillItems) => void }) {
   const t = useT()
   return (
-    <div
-      role='radiogroup'
-      aria-label={t('tillItems')}
-      className='grid gap-3 px-5 py-4 sm:grid-cols-2'
-    >
+    <div role='radiogroup' aria-label={t('tillItems')} className='grid gap-3 px-5 py-4 sm:grid-cols-2'>
       {TILL_ITEM_CHOICES.map((choice) => {
         const checked = value === choice.value
         return (
@@ -919,24 +750,17 @@ function TillItemsChoice({
             onClick={() => onChange(choice.value)}
             className={cn(
               'focus-visible:ring-ring/50 grid content-start gap-3 rounded-lg border p-3 text-start transition-colors focus-visible:ring-[3px] focus-visible:outline-none',
-              checked
-                ? 'border-primary bg-primary/5 ring-primary ring-1'
-                : 'hover:bg-muted/50'
+              checked ? 'border-primary bg-primary/5 ring-primary ring-1' : 'hover:bg-muted/50'
             )}
           >
             {/* One height for every sketch, the sketch centred in it, so the
                 names and hints under them start on one line */}
-            <div
-              aria-hidden
-              className='bg-muted flex h-24 flex-col justify-center rounded-md p-2'
-            >
+            <div aria-hidden className='bg-muted flex h-24 flex-col justify-center rounded-md p-2'>
               {choice.sketch}
             </div>
             <div className='grid gap-0.5'>
               <span className='text-sm font-medium'>{t(choice.label)}</span>
-              <span className='text-muted-foreground text-xs'>
-                {t(choice.hint)}
-              </span>
+              <span className='text-muted-foreground text-xs'>{t(choice.hint)}</span>
             </div>
           </button>
         )

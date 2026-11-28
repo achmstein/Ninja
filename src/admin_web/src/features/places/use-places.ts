@@ -2,11 +2,7 @@ import { useMemo } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { type OrderSummary } from '@/api/ordering'
 import { getPendingOrdersOptions } from '@/api/ordering/@tanstack/react-query.gen'
-import {
-  type PlaceViewModel,
-  type ReservationViewModel,
-  type StayViewModel,
-} from '@/api/spaces'
+import { type PlaceViewModel, type ReservationViewModel, type StayViewModel } from '@/api/spaces'
 import {
   addStayMemberMutation,
   assignReservationCustomerMutation,
@@ -58,10 +54,7 @@ export function usePlaces() {
     refetchInterval: 60_000,
   })
 
-  const places = useMemo(
-    () => [...(placesQuery.data ?? NO_PLACES)].sort(comparePlaces()),
-    [placesQuery.data]
-  )
+  const places = useMemo(() => [...(placesQuery.data ?? NO_PLACES)].sort(comparePlaces()), [placesQuery.data])
   const stays = staysQuery.data ?? NO_STAYS
   const reservations = reservationsQuery.data ?? NO_RESERVATIONS
 
@@ -69,10 +62,8 @@ export function usePlaces() {
     places,
     stays,
     reservations,
-    stayFor: (placeId: number | string | undefined) =>
-      stayForPlace(stays, placeId),
-    reservationFor: (placeId: number | string | undefined) =>
-      reservationForPlace(reservations, placeId),
+    stayFor: (placeId: number | string | undefined) => stayForPlace(stays, placeId),
+    reservationFor: (placeId: number | string | undefined) => reservationForPlace(reservations, placeId),
     isLoading: placesQuery.isLoading,
     isPending: placesQuery.isPending || staysQuery.isPending,
     error: placesQuery.error ?? staysQuery.error ?? reservationsQuery.error,
@@ -101,16 +92,12 @@ export function usePendingOrders() {
   })
   const pending = useMemo(
     () =>
-      [...(query.data ?? NO_ORDERS)].sort(
-        (a, b) =>
-          new Date(a.date ?? 0).getTime() - new Date(b.date ?? 0).getTime()
-      ),
+      [...(query.data ?? NO_ORDERS)].sort((a, b) => new Date(a.date ?? 0).getTime() - new Date(b.date ?? 0).getTime()),
     [query.data]
   )
   return {
     pending,
-    ordersAt: (place: PlaceViewModel) =>
-      pending.filter((order) => orderIsAt(order, place)),
+    ordersAt: (place: PlaceViewModel) => pending.filter((order) => orderIsAt(order, place)),
     isLoading: query.isLoading,
     error: query.error,
     refetch: () => query.refetch(),
@@ -119,8 +106,7 @@ export function usePendingOrders() {
 
 /** The server's reason when it refuses, else the fallback. */
 export function problemDetail(error: unknown, fallback: string): string {
-  const problem = (error as { response?: { data?: { detail?: string } } })
-    ?.response?.data
+  const problem = (error as { response?: { data?: { detail?: string } } })?.response?.data
   return problem?.detail ?? fallback
 }
 
@@ -155,10 +141,7 @@ export function useStayActions() {
     })
   }
 
-  const feedback = (
-    success: TranslationKey | null,
-    failure: TranslationKey
-  ) => ({
+  const feedback = (success: TranslationKey | null, failure: TranslationKey) => ({
     onSuccess: () => {
       invalidate()
       if (success) toast.success(t(success))
@@ -273,22 +256,10 @@ export function useStayActions() {
         partySize?: number | null
       },
       done?: { onSuccess?: (reservationId: number) => void }
-    ) =>
-      reserve.mutate(
-        { body: { placeId, ...body } },
-        { onSuccess: (id) => done?.onSuccess?.(Number(id)) }
-      ),
-    walkIn: (
-      placeId: number,
-      body: { optionCode: string | null; notes: string | null },
-      done?: Done
-    ) => walkIn.mutate({ path: { id: placeId }, body }, done),
-    seat: (
-      reservationId: number,
-      optionCode: string | null,
-      timed: boolean,
-      done?: Done
-    ) =>
+    ) => reserve.mutate({ body: { placeId, ...body } }, { onSuccess: (id) => done?.onSuccess?.(Number(id)) }),
+    walkIn: (placeId: number, body: { optionCode: string | null; notes: string | null }, done?: Done) =>
+      walkIn.mutate({ path: { id: placeId }, body }, done),
+    seat: (reservationId: number, optionCode: string | null, timed: boolean, done?: Done) =>
       seat.mutate(
         { path: { id: reservationId }, body: { optionCode } },
         {
@@ -298,12 +269,7 @@ export function useStayActions() {
           },
         }
       ),
-    confirm: (
-      reservationId: number,
-      optionCode: string | null,
-      startsClock: boolean,
-      done?: Done
-    ) =>
+    confirm: (reservationId: number, optionCode: string | null, startsClock: boolean, done?: Done) =>
       confirm.mutate(
         { path: { id: reservationId }, body: { optionCode } },
         {
@@ -313,20 +279,13 @@ export function useStayActions() {
           },
         }
       ),
-    endStay: (stayId: number, done?: Done) =>
-      endStay.mutate({ path: { id: stayId } }, done),
-    cancelStay: (stayId: number, done?: Done) =>
-      cancelStay.mutate({ path: { id: stayId } }, done),
+    endStay: (stayId: number, done?: Done) => endStay.mutate({ path: { id: stayId } }, done),
+    cancelStay: (stayId: number, done?: Done) => cancelStay.mutate({ path: { id: stayId } }, done),
     cancelReservation: (reservationId: number, done?: Done) =>
       cancelReservation.mutate({ path: { id: reservationId } }, done),
     completeReservation: (reservationId: number, done?: Done) =>
       completeReservation.mutate({ path: { id: reservationId } }, done),
-    assignReservationCustomer: (
-      reservationId: number,
-      customerId: string,
-      customerName: string | null,
-      done?: Done
-    ) =>
+    assignReservationCustomer: (reservationId: number, customerId: string, customerName: string | null, done?: Done) =>
       assignReservationCustomer.mutate(
         {
           path: { id: reservationId },
@@ -336,33 +295,16 @@ export function useStayActions() {
       ),
     changeOption: (stayId: number, optionCode: string, done?: Done) =>
       changeOption.mutate({ path: { id: stayId }, body: { optionCode } }, done),
-    assignCustomer: (
-      stayId: number,
-      customerId: string,
-      customerName: string | null,
-      done?: Done
-    ) =>
-      assignCustomer.mutate(
-        { path: { id: stayId }, body: customer(customerId, customerName) },
-        done
-      ),
-    addMember: (
-      stayId: number,
-      customerId: string,
-      customerName: string | null,
-      done?: Done
-    ) =>
-      addMember.mutate(
-        { path: { id: stayId }, body: customer(customerId, customerName) },
-        done
-      ),
+    assignCustomer: (stayId: number, customerId: string, customerName: string | null, done?: Done) =>
+      assignCustomer.mutate({ path: { id: stayId }, body: customer(customerId, customerName) }, done),
+    addMember: (stayId: number, customerId: string, customerName: string | null, done?: Done) =>
+      addMember.mutate({ path: { id: stayId }, body: customer(customerId, customerName) }, done),
     removeMember: (stayId: number, customerId: string, done?: Done) =>
       removeMember.mutate({ path: { id: stayId, customerId } }, done),
     setActive: (placeId: number, isActive: boolean, done?: Done) =>
       setActive.mutate({ path: { id: placeId }, body: { isActive } }, done),
     setStatus: (placeId: number, status: number, done?: Done) =>
       setStatus.mutate({ path: { id: placeId }, query: { status } }, done),
-    deletePlace: (placeId: number, done?: Done) =>
-      deletePlace.mutate({ path: { id: placeId } }, done),
+    deletePlace: (placeId: number, done?: Done) => deletePlace.mutate({ path: { id: placeId } }, done),
   }
 }

@@ -1,11 +1,5 @@
 import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 
 type ConfirmDialogProps = {
   open: boolean
@@ -51,23 +45,14 @@ export function ConfirmDialog({
       <DialogContent className='gap-4'>
         <DialogHeader>
           <DialogTitle className='type-title'>{title}</DialogTitle>
-          {description && (
-            <DialogDescription className='type-body'>
-              {description}
-            </DialogDescription>
-          )}
+          {description && <DialogDescription className='type-body'>{description}</DialogDescription>}
         </DialogHeader>
 
         {/* Two answers side by side; a quiet third one (cancel with no charge) goes under them, full width,
             rather than squeezing three buttons into a row the dialog cannot hold */}
         <div className='flex flex-col gap-2'>
           <div className='flex gap-2'>
-            <Button
-              variant='outline'
-              size='lg'
-              className='h-12 min-w-0 flex-1'
-              onClick={() => onOpenChange(false)}
-            >
+            <Button variant='outline' size='lg' className='h-12 min-w-0 flex-1' onClick={() => onOpenChange(false)}>
               {cancelLabel}
             </Button>
             <Button

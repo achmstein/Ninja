@@ -5,11 +5,7 @@ import {
   type RecipeDraft,
   type SlotDraft,
 } from '@/features/inventory/recipe-model'
-import {
-  type MenuGroup,
-  type MenuOption,
-  type MenuOptions,
-} from './menu-options'
+import { type MenuGroup, type MenuOption, type MenuOptions } from './menu-options'
 
 /**
  * The recipe the way the admin describes it, behind the cards of
@@ -78,11 +74,7 @@ const inMenuOrder = (groupIds: string[], menu: MenuOptions): string[] => {
  * each new cell starting from the value it came from, so a split changes
  * nothing until a cell is edited.
  */
-export function split<T>(
-  varying: Varying<T>,
-  group: MenuGroup,
-  menu: MenuOptions
-): Varying<T> {
+export function split<T>(varying: Varying<T>, group: MenuGroup, menu: MenuOptions): Varying<T> {
   if (varying.groupIds.includes(group.id)) return varying
   const cells: Record<string, T> = {}
   for (const [key, value] of Object.entries(varying.cells)) {
@@ -101,11 +93,7 @@ export function split<T>(
  * survive and the rest are dropped, so merging is the plain inverse of
  * splitting an untouched value.
  */
-export function merge<T>(
-  varying: Varying<T>,
-  groupId: string,
-  menu: MenuOptions
-): Varying<T> {
+export function merge<T>(varying: Varying<T>, groupId: string, menu: MenuOptions): Varying<T> {
   const group = menu.groups.find((g) => g.id === groupId)
   if (!group || !varying.groupIds.includes(groupId)) return varying
   const keep = representative(group).id
@@ -123,11 +111,7 @@ export function merge<T>(
  * split in. The picker hands the whole set, so this is what a tick or an
  * untick means.
  */
-export function resplit<T>(
-  varying: Varying<T>,
-  groupIds: readonly string[],
-  menu: MenuOptions
-): Varying<T> {
+export function resplit<T>(varying: Varying<T>, groupIds: readonly string[], menu: MenuOptions): Varying<T> {
   const wanted = new Set(groupIds)
   let next = varying
   for (const id of varying.groupIds) {
@@ -158,8 +142,7 @@ export function fold(text: string): string {
 /** Every combination of one option per group, in menu order */
 export function combos(groups: MenuGroup[]): MenuOption[][] {
   return groups.reduce<MenuOption[][]>(
-    (acc, group) =>
-      acc.flatMap((combo) => group.options.map((o) => [...combo, o])),
+    (acc, group) => acc.flatMap((combo) => group.options.map((o) => [...combo, o])),
     [[]]
   )
 }
@@ -169,16 +152,10 @@ export function combos(groups: MenuGroup[]): MenuOption[][] {
  * no choice of a group fits every cell of it ("\u0628\u0646 \u062a\u0631\u0643\u064a" fits both roasts),
  * and one that names a choice fits only that choice's cells.
  */
-function fits(
-  item: ShelfItem,
-  combo: MenuOption[],
-  groups: MenuGroup[]
-): boolean {
+function fits(item: ShelfItem, combo: MenuOption[], groups: MenuGroup[]): boolean {
   const names = item.names.map(fold)
   return groups.every((group, index) => {
-    const claimed = group.options.find((o) =>
-      o.names.some((n) => names.some((m) => m.includes(fold(n))))
-    )
+    const claimed = group.options.find((o) => o.names.some((n) => names.some((m) => m.includes(fold(n)))))
     return !claimed || claimed.id === combo[index].id
   })
 }
@@ -228,21 +205,16 @@ export function guessCell(
   ingredients: ShelfItem[]
 ): string | null {
   const byName = new Map<string, string>()
-  for (const i of ingredients)
-    for (const n of i.names) byName.set(fold(n), i.value)
+  for (const i of ingredients) for (const n of i.names) byName.set(fold(n), i.value)
 
   for (const baseName of base.names) {
     let candidates = [baseName]
     for (const [index, group] of groups.entries()) {
       const wanted = combo[index]
-      const present = group.options.find((o) =>
-        o.names.some((n) => baseName.includes(n))
-      )
+      const present = group.options.find((o) => o.names.some((n) => baseName.includes(n)))
       if (!present || present.id === wanted.id) continue
       candidates = candidates.flatMap((c) =>
-        present.names
-          .filter((f) => c.includes(f))
-          .flatMap((f) => wanted.names.map((w) => c.replace(f, w)))
+        present.names.filter((f) => c.includes(f)).flatMap((f) => wanted.names.map((w) => c.replace(f, w)))
       )
     }
     for (const c of candidates) {
@@ -256,10 +228,7 @@ export function guessCell(
   const fallback = ingredients.find((i) =>
     i.names.some((n) => {
       const f = fold(n)
-      return (
-        (!first || f.includes(first)) &&
-        wanted.every((names) => names.some((w) => w && f.includes(w)))
-      )
+      return (!first || f.includes(first)) && wanted.every((names) => names.some((w) => w && f.includes(w)))
     })
   )
   return fallback?.value ?? null
@@ -278,12 +247,10 @@ export function guessCell(
 const assumed = (group: MenuGroup): MenuOption | undefined =>
   group.allowMultiple
     ? undefined
-    : (group.options.find((o) => o.isDefault) ??
-      (group.isRequired ? group.options[0] : undefined))
+    : (group.options.find((o) => o.isDefault) ?? (group.isRequired ? group.options[0] : undefined))
 
 /** The option to hold a group at while reading a card back: its default, else its first */
-const representative = (group: MenuGroup): MenuOption =>
-  group.options.find((o) => o.isDefault) ?? group.options[0]
+const representative = (group: MenuGroup): MenuOption => group.options.find((o) => o.isDefault) ?? group.options[0]
 
 /** What one choice makes of an ingredient */
 type Cell = { item: string | null; quantity: number; present: boolean }
@@ -291,24 +258,16 @@ type Cell = { item: string | null; quantity: number; present: boolean }
 const NOTHING: Cell = { item: null, quantity: 0, present: false }
 
 /** A line read as a cell: it deducts only when it names an item and a positive amount */
-const lineCell = (
-  stockItemId: string | null,
-  quantity: string,
-  exists: boolean
-): Cell => {
+const lineCell = (stockItemId: string | null, quantity: string, exists: boolean): Cell => {
   const amount = parseFloat(quantity)
-  return exists && stockItemId && amount > 0
-    ? { item: stockItemId, quantity: amount, present: true }
-    : NOTHING
+  return exists && stockItemId && amount > 0 ? { item: stockItemId, quantity: amount, present: true } : NOTHING
 }
 
 /** One option per group, or none where the sale carries nothing of that group */
 type Choice = Map<string, MenuOption | undefined>
 
-const choiceOf = (
-  groups: MenuGroup[],
-  pick: (group: MenuGroup, index: number) => MenuOption | undefined
-): Choice => new Map(groups.map((g, i) => [g.id, pick(g, i)] as const))
+const choiceOf = (groups: MenuGroup[], pick: (group: MenuGroup, index: number) => MenuOption | undefined): Choice =>
+  new Map(groups.map((g, i) => [g.id, pick(g, i)] as const))
 
 /** A group's own options with its standard choice first */
 const standardFirst = (group: MenuGroup): MenuOption[] => {
@@ -323,13 +282,10 @@ const picksOf = (group: MenuGroup): Array<MenuOption | undefined> =>
 /** Every choice the till can send over these groups, the standard sale first */
 function choiceSpace(groups: MenuGroup[]): Choice[] {
   const rows = groups.reduce<Array<Array<MenuOption | undefined>>>(
-    (acc, group) =>
-      acc.flatMap((row) => picksOf(group).map((pick) => [...row, pick])),
+    (acc, group) => acc.flatMap((row) => picksOf(group).map((pick) => [...row, pick])),
     [[]]
   )
-  return rows.map(
-    (row) => new Map(groups.map((g, i) => [g.id, row[i]] as const))
-  )
+  return rows.map((row) => new Map(groups.map((g, i) => [g.id, row[i]] as const)))
 }
 
 /** What a split says for a choice; a group the sale carries no option of decides nothing */
@@ -416,10 +372,7 @@ export function compile(state: BuilderState, menu: MenuOptions): RecipeDraft {
  * with. The reading is only kept when recompiling it deducts exactly what
  * the slot did; anything else stays a custom rule.
  */
-export function reconstruct(
-  draft: RecipeDraft,
-  menu: MenuOptions
-): BuilderState {
+export function reconstruct(draft: RecipeDraft, menu: MenuOptions): BuilderState {
   const groupOf = new Map<string, MenuGroup>()
   for (const g of menu.groups) for (const o of g.options) groupOf.set(o.id, g)
 
@@ -434,11 +387,7 @@ export function reconstruct(
 }
 
 /** One card from a slot, or null when the cards cannot say what it says */
-function readCard(
-  slot: SlotDraft,
-  menu: MenuOptions,
-  groupOf: Map<string, MenuGroup>
-): IngredientSpec | null {
+function readCard(slot: SlotDraft, menu: MenuOptions, groupOf: Map<string, MenuGroup>): IngredientSpec | null {
   // A rule naming an option the menu no longer has cannot be read back; it
   // stays custom so the editor shows it as it is instead of losing it
   if (slot.overrides.some((o) => o.optionIds.some((id) => !groupOf.has(id)))) {
@@ -446,9 +395,7 @@ function readCard(
   }
 
   const groups = menu.groups.filter((g) =>
-    slot.overrides.some((o) =>
-      o.optionIds.some((id) => groupOf.get(id)?.id === g.id)
-    )
+    slot.overrides.some((o) => o.optionIds.some((id) => groupOf.get(id)?.id === g.id))
   )
   if (groups.length === 0) {
     return slot.hasDefault
@@ -462,13 +409,7 @@ function readCard(
 
   const defaultCell = lineCell(slot.stockItemId, slot.quantity, slot.hasDefault)
   const cellOf = (o: OverrideDraft): Cell =>
-    o.none
-      ? NOTHING
-      : lineCell(
-          o.stockItemId ?? slot.stockItemId,
-          o.quantity !== '' ? o.quantity : slot.quantity,
-          true
-        )
+    o.none ? NOTHING : lineCell(o.stockItemId ?? slot.stockItemId, o.quantity !== '' ? o.quantity : slot.quantity, true)
 
   // An add-on group decides presence: a sale that did not tick it carries
   // no option of the group, so a default in that slot would deduct on every
@@ -480,11 +421,7 @@ function readCard(
   if (addOns.length > 0 && defaultCell.present) {
     const legacy = slot.overrides.some((o) => {
       const cell = cellOf(o)
-      return (
-        cell.present &&
-        cell.item === defaultCell.item &&
-        cell.quantity === defaultCell.quantity
-      )
+      return cell.present && cell.item === defaultCell.item && cell.quantity === defaultCell.quantity
     })
     if (!legacy) return null
   }
@@ -505,11 +442,7 @@ function readCard(
   }
 
   /** Whether what `read` sees changes across a group's picks, the others held anywhere */
-  const varies = (
-    group: MenuGroup,
-    read: (cell: Cell) => unknown,
-    presentOnly: boolean
-  ) => {
+  const varies = (group: MenuGroup, read: (cell: Cell) => unknown, presentOnly: boolean) => {
     const others = groups.filter((g) => g !== group)
     for (const row of choiceSpace(others)) {
       const seen = new Set<unknown>()
@@ -549,9 +482,7 @@ function readCard(
       (c) => c.item
     ),
     amount: over(
-      groups.filter((g) =>
-        varies(g, (c) => (c.present ? c.quantity : 0), false)
-      ),
+      groups.filter((g) => varies(g, (c) => (c.present ? c.quantity : 0), false)),
       (c) => (c.present ? String(c.quantity) : '0')
     ),
   }
@@ -563,9 +494,7 @@ function readCard(
     const was = at(choice)
     const now = cellFor(spec, choice)
     if (was.present !== now.present) return false
-    return (
-      !was.present || (was.item === now.item && was.quantity === now.quantity)
-    )
+    return !was.present || (was.item === now.item && was.quantity === now.quantity)
   })
   return same ? spec : null
 }

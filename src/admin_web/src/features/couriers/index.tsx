@@ -12,10 +12,7 @@ import {
   setCourierConnectionMutation,
   updateCourierProviderMutation,
 } from '@/api/ordering/@tanstack/react-query.gen'
-import {
-  type CourierProviderView,
-  type CourierTestJobView,
-} from '@/api/ordering/types.gen'
+import { type CourierProviderView, type CourierTestJobView } from '@/api/ordering/types.gen'
 import {
   addCourierPayoutMutation,
   getCourierBalancesOptions,
@@ -49,8 +46,7 @@ const q = { 'api-version': API_VERSION }
 
 /** The server's own words for a refusal, when it gave some */
 const refusal = (error: unknown) =>
-  error instanceof AxiosError &&
-  typeof error.response?.data?.detail === 'string'
+  error instanceof AxiosError && typeof error.response?.data?.detail === 'string'
     ? (error.response.data.detail as string)
     : null
 
@@ -77,12 +73,8 @@ export function Couriers() {
   const [openId, setOpenId] = useState<number | null>(null)
 
   const rows = providers.data ?? []
-  const balanceOf = (id: number) =>
-    (balances.data ?? []).find((b) => toNumber(b.providerId) === id)
-  const owedToUs = (balances.data ?? []).reduce(
-    (sum, b) => sum + Math.max(0, toNumber(b.balance)),
-    0
-  )
+  const balanceOf = (id: number) => (balances.data ?? []).find((b) => toNumber(b.providerId) === id)
+  const owedToUs = (balances.data ?? []).reduce((sum, b) => sum + Math.max(0, toNumber(b.balance)), 0)
   const selected = rows.find((p) => toNumber(p.id) === openId) ?? null
 
   return (
@@ -128,24 +120,15 @@ export function Couriers() {
               const balance = balanceOf(id)
               const owed = toNumber(balance?.balance)
               return (
-                <li
-                  key={id}
-                  className='hover:bg-muted cursor-pointer px-4 py-3'
-                  onClick={() => setOpenId(id)}
-                >
+                <li key={id} className='hover:bg-muted cursor-pointer px-4 py-3' onClick={() => setOpenId(id)}>
                   <ListRow
                     className={cn(!p.isActive && 'opacity-60')}
                     leading={<EntityAvatar name={p.name ?? ''} />}
                     title={
                       <span className='flex items-center gap-1.5'>
-                        <span className={cn(!p.isActive && 'line-through')}>
-                          {p.name}
-                        </span>
+                        <span className={cn(!p.isActive && 'line-through')}>{p.name}</span>
                         {p.isConnected && (
-                          <Plug
-                            className='text-muted-foreground size-3.5'
-                            aria-label={t('courierConnected')}
-                          />
+                          <Plug className='text-muted-foreground size-3.5' aria-label={t('courierConnected')} />
                         )}
                       </span>
                     }
@@ -190,14 +173,8 @@ export function Couriers() {
 /** Which way the money is owed, in words: never the sign alone */
 function BalanceWords({ balance }: { balance: number }) {
   const t = useT()
-  if (balance > 0)
-    return (
-      <span className='text-muted-foreground text-xs'>
-        {t('courierOwesUs')}
-      </span>
-    )
-  if (balance < 0)
-    return <span className='text-warning text-xs'>{t('weOweCourier')}</span>
+  if (balance > 0) return <span className='text-muted-foreground text-xs'>{t('courierOwesUs')}</span>
+  if (balance < 0) return <span className='text-warning text-xs'>{t('weOweCourier')}</span>
   return null
 }
 
@@ -228,17 +205,10 @@ function CourierSheet({
       ) : provider ? (
         <>
           <Section title={t('details')}>
-            <CourierForm
-              key={String(provider.id)}
-              provider={provider}
-              onSaved={() => {}}
-            />
+            <CourierForm key={String(provider.id)} provider={provider} onSaved={() => {}} />
           </Section>
           <Section title={t('courierConnectionTitle')}>
-            <CourierConnection
-              key={String(provider.id)}
-              providerId={toNumber(provider.id)}
-            />
+            <CourierConnection key={String(provider.id)} providerId={toNumber(provider.id)} />
           </Section>
           <Section title={t('account')}>
             <CourierAccount provider={provider} balance={balance} />
@@ -249,20 +219,12 @@ function CourierSheet({
   )
 }
 
-function CourierForm({
-  provider,
-  onSaved,
-}: {
-  provider: CourierProviderView | null
-  onSaved: () => void
-}) {
+function CourierForm({ provider, onSaved }: { provider: CourierProviderView | null; onSaved: () => void }) {
   const t = useT()
   const queryClient = useQueryClient()
   const [name, setName] = useState(provider?.name ?? '')
   const [phone, setPhone] = useState(provider?.phone ?? '')
-  const [fee, setFee] = useState(
-    provider?.defaultFee == null ? '' : String(toNumber(provider.defaultFee))
-  )
+  const [fee, setFee] = useState(provider?.defaultFee == null ? '' : String(toNumber(provider.defaultFee)))
   const [isActive, setIsActive] = useState(provider?.isActive ?? true)
   const saved = () => {
     queryClient.invalidateQueries({
@@ -349,11 +311,7 @@ function CourierForm({
         />
       )}
       <SheetActions>
-        <Button
-          type='submit'
-          form='courier-form'
-          disabled={name.trim() === '' || !feeOk || busy}
-        >
+        <Button type='submit' form='courier-form' disabled={name.trim() === '' || !feeOk || busy}>
           {busy && <Spinner />}
           {provider ? t('save') : t('addCourierCompany')}
         </Button>
@@ -392,9 +350,7 @@ function CourierConnection({ providerId }: { providerId: number }) {
       setApiKey('')
       setAddress(null)
       if (!view.connected) setSecret(null)
-      toast.success(
-        t(view.connected ? 'courierConnectionSaved' : 'courierDisconnected')
-      )
+      toast.success(t(view.connected ? 'courierConnectionSaved' : 'courierDisconnected'))
     },
     onError: (e) => toast.error(refusal(e) ?? t('somethingWentWrong')),
   })
@@ -407,8 +363,7 @@ function CourierConnection({ providerId }: { providerId: number }) {
     onError: (e) => toast.error(refusal(e) ?? t('somethingWentWrong')),
   })
 
-  if (connection.isError)
-    return <ErrorState error={connection.error} onRetry={connection.refetch} />
+  if (connection.isError) return <ErrorState error={connection.error} onRetry={connection.refetch} />
   if (!connection.data) return <Skeleton className='h-24' />
   const view = connection.data
   const shownAddress = address ?? view.apiBaseUrl ?? ''
@@ -421,12 +376,8 @@ function CourierConnection({ providerId }: { providerId: number }) {
 
   return (
     <div className='space-y-4'>
-      <p className='text-muted-foreground text-sm'>
-        {t('courierConnectionHint')}
-      </p>
-      {!view.canKeepSecrets && (
-        <p className='text-warning text-sm'>{t('courierCannotKeepSecrets')}</p>
-      )}
+      <p className='text-muted-foreground text-sm'>{t('courierConnectionHint')}</p>
+      {!view.canKeepSecrets && <p className='text-warning text-sm'>{t('courierCannotKeepSecrets')}</p>}
       <form
         id='courier-connection'
         className='space-y-4'
@@ -471,13 +422,7 @@ function CourierConnection({ providerId }: { providerId: number }) {
           />
         </Field>
         <div className='flex flex-wrap gap-2'>
-          <Button
-            type='submit'
-            variant='outline'
-            disabled={
-              busy || !view.canKeepSecrets || shownAddress.trim() === ''
-            }
-          >
+          <Button type='submit' variant='outline' disabled={busy || !view.canKeepSecrets || shownAddress.trim() === ''}>
             {save.isPending && <Spinner />}
             <Plug />
             {view.connected ? t('save') : t('courierConnect')}
@@ -487,9 +432,7 @@ function CourierConnection({ providerId }: { providerId: number }) {
               type='button'
               variant='ghost'
               disabled={busy}
-              onClick={() =>
-                save.mutate({ path, query: q, body: { apiBaseUrl: '' } })
-              }
+              onClick={() => save.mutate({ path, query: q, body: { apiBaseUrl: '' } })}
             >
               {t('courierDisconnect')}
             </Button>
@@ -499,11 +442,7 @@ function CourierConnection({ providerId }: { providerId: number }) {
 
       {view.connected && (
         <div className='space-y-4 border-t pt-4'>
-          <Field
-            label={t('courierStatusUrl')}
-            htmlFor='courier-status-url'
-            hint={t('courierStatusUrlHint')}
-          >
+          <Field label={t('courierStatusUrl')} htmlFor='courier-status-url' hint={t('courierStatusUrlHint')}>
             <div className='flex gap-2'>
               <Input
                 id='courier-status-url'
@@ -513,22 +452,14 @@ function CourierConnection({ providerId }: { providerId: number }) {
                 className='font-mono text-xs'
                 onFocus={(e) => e.target.select()}
               />
-              <Button
-                type='button'
-                variant='outline'
-                onClick={() => copy(view.statusUrl)}
-              >
+              <Button type='button' variant='outline' onClick={() => copy(view.statusUrl)}>
                 <Copy />
                 {t('copy')}
               </Button>
             </div>
           </Field>
           {secret ? (
-            <Field
-              label={t('courierSigningSecret')}
-              htmlFor='courier-secret'
-              hint={t('courierSigningSecretOnce')}
-            >
+            <Field label={t('courierSigningSecret')} htmlFor='courier-secret' hint={t('courierSigningSecretOnce')}>
               <div className='flex gap-2'>
                 <Input
                   id='courier-secret'
@@ -538,11 +469,7 @@ function CourierConnection({ providerId }: { providerId: number }) {
                   className='font-mono text-xs'
                   onFocus={(e) => e.target.select()}
                 />
-                <Button
-                  type='button'
-                  variant='outline'
-                  onClick={() => copy(secret)}
-                >
+                <Button type='button' variant='outline' onClick={() => copy(secret)}>
                   <Copy />
                   {t('copy')}
                 </Button>
@@ -551,11 +478,7 @@ function CourierConnection({ providerId }: { providerId: number }) {
           ) : (
             <div className='flex flex-wrap items-center justify-between gap-2'>
               <span className='text-muted-foreground text-sm'>
-                {t(
-                  view.hasWebhookSecret
-                    ? 'courierSigningSecretKept'
-                    : 'courierSigningSecretNone'
-                )}
+                {t(view.hasWebhookSecret ? 'courierSigningSecretKept' : 'courierSigningSecretNone')}
               </span>
               <Button
                 type='button'
@@ -565,11 +488,7 @@ function CourierConnection({ providerId }: { providerId: number }) {
                 onClick={() => makeSecret.mutate({ path, query: q })}
               >
                 {makeSecret.isPending && <Spinner />}
-                {t(
-                  view.hasWebhookSecret
-                    ? 'courierSigningSecretRenew'
-                    : 'courierSigningSecretMake'
-                )}
+                {t(view.hasWebhookSecret ? 'courierSigningSecretRenew' : 'courierSigningSecretMake')}
               </Button>
             </div>
           )}
@@ -634,18 +553,11 @@ function CourierTestKit({ providerId }: { providerId: number }) {
           </p>
           {result.taken && (
             <p className='text-muted-foreground text-xs'>
-              {t(
-                result.cancelled
-                  ? 'courierTestCancelled'
-                  : 'courierTestNotCancelled'
-              )}
+              {t(result.cancelled ? 'courierTestCancelled' : 'courierTestNotCancelled')}
             </p>
           )}
           {result.detail && (
-            <pre
-              dir='ltr'
-              className='text-muted-foreground mt-1 text-xs break-all whitespace-pre-wrap'
-            >
+            <pre dir='ltr' className='text-muted-foreground mt-1 text-xs break-all whitespace-pre-wrap'>
               {result.detail}
             </pre>
           )}
@@ -654,13 +566,7 @@ function CourierTestKit({ providerId }: { providerId: number }) {
 
       <div className='flex items-center justify-between gap-2 pt-1'>
         <span className='text-sm font-medium'>{t('courierCallsTitle')}</span>
-        <Button
-          type='button'
-          variant='ghost'
-          size='sm'
-          disabled={calls.isFetching}
-          onClick={() => calls.refetch()}
-        >
+        <Button type='button' variant='ghost' size='sm' disabled={calls.isFetching} onClick={() => calls.refetch()}>
           {calls.isFetching && <Spinner />}
           {t('courierCallsRefresh')}
         </Button>
@@ -687,26 +593,15 @@ function CourierTestKit({ providerId }: { providerId: number }) {
                   <span className='block truncate' dir='ltr'>
                     {[
                       call.status,
-                      call.orderId != null
-                        ? `#${toNumber(call.orderId)}`
-                        : null,
-                      call.sequence != null
-                        ? `seq ${toNumber(call.sequence)}`
-                        : null,
+                      call.orderId != null ? `#${toNumber(call.orderId)}` : null,
+                      call.sequence != null ? `seq ${toNumber(call.sequence)}` : null,
                     ]
                       .filter(Boolean)
                       .join(' · ') || '—'}
                   </span>
-                  {call.detail && (
-                    <span className='text-muted-foreground block text-xs break-all'>
-                      {call.detail}
-                    </span>
-                  )}
+                  {call.detail && <span className='text-muted-foreground block text-xs break-all'>{call.detail}</span>}
                 </span>
-                <When
-                  value={call.receivedAt}
-                  className='text-muted-foreground shrink-0 text-xs'
-                />
+                <When value={call.receivedAt} className='text-muted-foreground shrink-0 text-xs' />
               </li>
             )
           })}
@@ -733,9 +628,7 @@ function CourierAccount({
       query: { ...q, pageSize: 25 },
     })
   )
-  const payouts = useQuery(
-    getCourierPayoutsOptions({ path: { providerId }, query: q })
-  )
+  const payouts = useQuery(getCourierPayoutsOptions({ path: { providerId }, query: q }))
   const [direction, setDirection] = useState<'in' | 'out'>('in')
   const [amount, setAmount] = useState('')
   const [note, setNote] = useState('')
@@ -776,9 +669,7 @@ function CourierAccount({
       </dl>
       <div className='flex items-center justify-between rounded-lg border p-3'>
         <BalanceWords balance={owed} />
-        <span className='text-lg font-semibold tabular-nums'>
-          {formatEgp(Math.abs(owed))}
-        </span>
+        <span className='text-lg font-semibold tabular-nums'>{formatEgp(Math.abs(owed))}</span>
       </div>
       {toNumber(balance?.shortDeliveries) > 0 && (
         <p className='text-warning text-sm'>
@@ -807,11 +698,7 @@ function CourierAccount({
       >
         <span className='text-sm font-medium'>{t('courierRecordPayment')}</span>
         <div className='grid grid-cols-2 gap-2'>
-          <Button
-            type='button'
-            variant={direction === 'in' ? 'default' : 'outline'}
-            onClick={() => setDirection('in')}
-          >
+          <Button type='button' variant={direction === 'in' ? 'default' : 'outline'} onClick={() => setDirection('in')}>
             {t('courierPaidUs')}
           </Button>
           <Button
@@ -851,32 +738,23 @@ function CourierAccount({
         {jobs.isLoading ? (
           <Skeleton className='h-24' />
         ) : (jobs.data?.items ?? []).length === 0 ? (
-          <p className='text-muted-foreground text-sm'>
-            {t('courierNoDeliveries')}
-          </p>
+          <p className='text-muted-foreground text-sm'>{t('courierNoDeliveries')}</p>
         ) : (
           <ul className='divide-y rounded-lg border text-sm'>
             {(jobs.data?.items ?? []).map((job) => (
-              <li
-                key={String(job.orderId)}
-                className='flex items-center gap-3 px-3 py-2'
-              >
+              <li key={String(job.orderId)} className='flex items-center gap-3 px-3 py-2'>
                 <span className='min-w-0 flex-1'>
                   <span className='block font-medium tabular-nums'>
                     {t('orderNumber', { id: toNumber(job.orderId) })}
                   </span>
                   <span className='text-muted-foreground block text-xs'>
-                    {job.outcome && outcomeKey[job.outcome]
-                      ? t(outcomeKey[job.outcome])
-                      : job.outcome}
+                    {job.outcome && outcomeKey[job.outcome] ? t(outcomeKey[job.outcome]) : job.outcome}
                     {' · '}
                     <When value={job.at} />
                   </span>
                 </span>
                 <span className='text-end tabular-nums'>
-                  <span className='block'>
-                    {formatEgp(toNumber(job.collected))}
-                  </span>
+                  <span className='block'>{formatEgp(toNumber(job.collected))}</span>
                   <span className='text-muted-foreground block text-xs'>
                     {t('courierFeeShort', {
                       amount: formatEgp(toNumber(job.fee)),
@@ -896,22 +774,15 @@ function CourierAccount({
             {(payouts.data ?? []).map((p) => {
               const paid = toNumber(p.amount)
               return (
-                <li
-                  key={String(p.id)}
-                  className='flex items-center gap-3 px-3 py-2'
-                >
+                <li key={String(p.id)} className='flex items-center gap-3 px-3 py-2'>
                   <span className='min-w-0 flex-1'>
-                    <span className='block'>
-                      {paid > 0 ? t('courierPaidUs') : t('wePaidCourier')}
-                    </span>
+                    <span className='block'>{paid > 0 ? t('courierPaidUs') : t('wePaidCourier')}</span>
                     <span className='text-muted-foreground block truncate text-xs'>
                       {p.paidOn}
                       {p.note ? ` · ${p.note}` : ''}
                     </span>
                   </span>
-                  <span className='tabular-nums'>
-                    {formatEgp(Math.abs(paid))}
-                  </span>
+                  <span className='tabular-nums'>{formatEgp(Math.abs(paid))}</span>
                 </li>
               )
             })}

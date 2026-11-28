@@ -3,10 +3,10 @@ import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 import { type PromotionDto } from '@/api/catalog'
 import { getLivePromotionOptions } from '@/api/catalog/@tanstack/react-query.gen'
-import { useLocalized, useT } from '@/lib/i18n'
 import { useBranchStore } from '@/stores/branch-store'
-import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet'
+import { useLocalized, useT } from '@/lib/i18n'
 import { pillAction } from '@/components/ui/ninja-sheet'
+import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet'
 import { promotionPictureUrl } from '@/components/menu/item-picture'
 
 /** How many promotions the device remembers having shown: older ones are long over */
@@ -67,7 +67,13 @@ export function PromoPopup({
   const t = useT()
   const localized = useLocalized()
   const action =
-    promotion.link === 'Item' ? t('promoOrderNow') : promotion.link === 'Category' ? t('promoSeeMenu') : promotion.link === 'Book' ? t('promoBookNow') : null
+    promotion.link === 'Item'
+      ? t('promoOrderNow')
+      : promotion.link === 'Category'
+        ? t('promoSeeMenu')
+        : promotion.link === 'Book'
+          ? t('promoBookNow')
+          : null
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className='gap-4 px-3 pb-3'>
@@ -104,9 +110,11 @@ export function PromoChip({ promotion, onOpen }: { promotion: PromotionDto; onOp
       type='button'
       onClick={onOpen}
       aria-label={t('promoShowAgain')}
-      className='ring-primary/70 size-9 shrink-0 overflow-hidden rounded-full ring-2 ring-offset-2 ring-offset-background transition-transform active:scale-95'
+      className='ring-primary/70 ring-offset-background size-9 shrink-0 overflow-hidden rounded-full ring-2 ring-offset-2 transition-transform active:scale-95'
     >
-      {promotion.pictureUri && <img src={promotionPictureUrl(promotion, 320)} alt='' className='size-full object-cover' />}
+      {promotion.pictureUri && (
+        <img src={promotionPictureUrl(promotion, 320)} alt='' className='size-full object-cover' />
+      )}
     </button>
   )
 }

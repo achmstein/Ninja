@@ -1,8 +1,8 @@
 import axios, { type InternalAxiosRequestConfig } from 'axios'
 import { getChosenBranchId } from '@/stores/branch-store'
 import { getGuestId } from '@/stores/guest-store'
-import { getStoredUser } from './oidc'
 import { noteServerDate } from './clock'
+import { getStoredUser } from './oidc'
 
 export const API_VERSION = '1.0'
 

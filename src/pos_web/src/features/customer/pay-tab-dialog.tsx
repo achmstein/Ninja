@@ -1,19 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
 import { CheckCircle2, Printer } from 'lucide-react'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { NumericKeypad } from '@/components/numeric-keypad'
-import { BASE_TENDERS } from '@/features/ticket/tenders'
 import { API_VERSION } from '@/lib/api-client'
 import { useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
 import { toast } from '@/lib/toast'
+import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { NumericKeypad } from '@/components/numeric-keypad'
 import { openCashDrawer, printSheets } from '@/features/printing/print-sheets'
+import { BASE_TENDERS } from '@/features/ticket/tenders'
 import type { CardCustomer } from './customer-card'
 import { TabPaymentSheet, type TabPaymentSlip } from './tab-payment-sheet'
 import { usePayTab } from './use-customer-card'
@@ -106,9 +101,7 @@ export function PayTabDialog({ customer, balance, open, onOpenChange }: PayTabDi
             <CheckCircle2 className='size-14 text-emerald-500' />
             <DialogTitle className='type-title'>{t('tabPaymentRecorded')}</DialogTitle>
             {slip.number > 0 && (
-              <div className='type-heading tabular-nums'>
-                {t('tabPaymentNumber', { number: slip.number })}
-              </div>
+              <div className='type-heading tabular-nums'>{t('tabPaymentNumber', { number: slip.number })}</div>
             )}
             <div className='bg-accent w-full rounded-xl p-4'>
               <div className='text-muted-foreground type-detail'>{t('newBalance')}</div>
@@ -120,12 +113,7 @@ export function PayTabDialog({ customer, balance, open, onOpenChange }: PayTabDi
             </div>
           </div>
           <div className='grid grid-cols-2 gap-2'>
-            <Button
-              variant='outline'
-              size='lg'
-              className='h-14 text-base'
-              onClick={() => onOpenChange(false)}
-            >
+            <Button variant='outline' size='lg' className='h-14 text-base' onClick={() => onOpenChange(false)}>
               {t('done')}
             </Button>
             <Button size='lg' className='h-14 text-base' onClick={() => void printSheets()}>
@@ -145,9 +133,9 @@ export function PayTabDialog({ customer, balance, open, onOpenChange }: PayTabDi
       <DialogContent className='max-h-[95svh] gap-0 p-0'>
         {/* The name on its own line: a long one must not squeeze the amount */}
         <DialogHeader className='border-b px-5 py-3 pe-14'>
-          <DialogTitle className='flex items-baseline justify-between gap-4 type-title'>
+          <DialogTitle className='type-title flex items-baseline justify-between gap-4'>
             <span>{balance > 0 ? t('payTab') : t('topUp')}</span>
-            <span className='shrink-0 type-title tabular-nums'>
+            <span className='type-title shrink-0 tabular-nums'>
               {balance > 0
                 ? t('owesAmount', { amount: money(balance) })
                 : balance < 0
@@ -155,9 +143,7 @@ export function PayTabDialog({ customer, balance, open, onOpenChange }: PayTabDi
                   : t('settledUp')}
             </span>
           </DialogTitle>
-          <p className='text-muted-foreground type-detail truncate'>
-            {customer.name || t('guest')}
-          </p>
+          <p className='text-muted-foreground type-detail truncate'>{customer.name || t('guest')}</p>
         </DialogHeader>
 
         <div className='flex flex-col gap-3 p-4'>
@@ -174,10 +160,7 @@ export function PayTabDialog({ customer, balance, open, onOpenChange }: PayTabDi
             ))}
           </div>
 
-          <div
-            dir='ltr'
-            className='bg-muted flex h-14 items-center justify-end rounded-lg px-4 type-figure'
-          >
+          <div dir='ltr' className='bg-muted type-figure flex h-14 items-center justify-end rounded-lg px-4'>
             {amountStr || '0'}
           </div>
           <NumericKeypad value={amountStr} onChange={setAmountStr} />

@@ -1,10 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import {
-  formatPhone,
-  isValidPhone,
-  normalizePhone,
-  telHref,
-} from './phone'
+import { formatPhone, isValidPhone, normalizePhone, telHref } from './phone'
 
 // The same cases as the server's PhoneRulesTest: one rule, four places
 describe('normalizePhone', () => {

@@ -1,5 +1,5 @@
-import { motion, useReducedMotion } from 'motion/react'
 import { Flame } from 'lucide-react'
+import { motion, useReducedMotion } from 'motion/react'
 import type { CatalogItemDto } from '@/api/catalog'
 import { usePrice, useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
@@ -42,9 +42,7 @@ export function OfferBadge({
       aria-label={`${t('offer')} ${label}`}
       className={cn(
         'from-offer to-offer-to text-offer-foreground relative inline-flex shrink-0 items-center gap-1 overflow-hidden rounded-full bg-gradient-to-r font-bold tabular-nums',
-        photo
-          ? 'px-2.5 py-1 text-caption shadow-[0_6px_16px_-6px_rgb(0_0_0/0.5)]'
-          : 'px-2 py-0.5 text-micro',
+        photo ? 'text-caption px-2.5 py-1 shadow-[0_6px_16px_-6px_rgb(0_0_0/0.5)]' : 'text-micro px-2 py-0.5',
         className
       )}
     >
@@ -99,7 +97,12 @@ export function OfferPrice({
       >
         {price(item.offerPrice)}
       </span>
-      <span className={cn('text-caption font-medium line-through', tone === 'page' ? 'text-muted-foreground' : 'opacity-70')}>
+      <span
+        className={cn(
+          'text-caption font-medium line-through',
+          tone === 'page' ? 'text-muted-foreground' : 'opacity-70'
+        )}
+      >
         {price(item.price)}
       </span>
     </span>

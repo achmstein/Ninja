@@ -1,8 +1,8 @@
+import { ar } from '@/content/ar'
+import { en } from '@/content/en'
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { ar } from '@/content/ar'
-import { en } from '@/content/en'
 import { INCLUDED, MODULES } from './plans'
 
 const source = readFileSync(path.resolve(__dirname, '../../../Control.API/Platform/Plans.cs'), 'utf8')

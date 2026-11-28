@@ -13,11 +13,7 @@ import { Main } from '@/components/layout/main'
 import { Money } from '@/components/money'
 import { PageHeader } from '@/components/page-header'
 import { StatusChip } from '@/components/status-chip'
-import {
-  EmployeeForm,
-  EmploymentSection,
-  PayTermsSection,
-} from './components/employee-sheet'
+import { EmployeeForm, EmploymentSection, PayTermsSection } from './components/employee-sheet'
 import { LedgerSection } from './components/ledger-section'
 import { readableDay } from './format'
 
@@ -60,9 +56,7 @@ export function EmployeePage({ employeeId }: { employeeId: number }) {
         description={e?.jobTitle || undefined}
         badge={
           e && !e.isActive ? (
-            <StatusChip tone='muted'>
-              {t('leftOn', { date: readableDay(e.endedOn, locale, t) })}
-            </StatusChip>
+            <StatusChip tone='muted'>{t('leftOn', { date: readableDay(e.endedOn, locale, t) })}</StatusChip>
           ) : undefined
         }
       />
@@ -82,23 +76,14 @@ export function EmployeePage({ employeeId }: { employeeId: number }) {
                 <CardTitle>{t('details')}</CardTitle>
               </CardHeader>
               <CardContent>
-                <EmployeeForm
-                  key={String(e.id)}
-                  employee={e}
-                  onSaved={() => {}}
-                />
+                <EmployeeForm key={String(e.id)} employee={e} onSaved={() => {}} />
               </CardContent>
             </Card>
             <div className='grid gap-4'>
               <MetricStrip>
                 <MetricTile
                   label={balance < 0 ? t('theyOwe') : t('owedToThem')}
-                  value={
-                    <Money
-                      value={Math.abs(balance)}
-                      tone={balance < 0 ? 'negative' : 'none'}
-                    />
-                  }
+                  value={<Money value={Math.abs(balance)} tone={balance < 0 ? 'negative' : 'none'} />}
                 />
               </MetricStrip>
               <Card className='gap-3'>

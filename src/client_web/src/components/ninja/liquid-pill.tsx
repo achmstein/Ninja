@@ -8,7 +8,17 @@ import type { LiquidEdges } from './use-liquid'
  * and as wide as the gap to the right edge, so it stretches between the two
  * springs and can never come apart.
  */
-export function LiquidPill({ edges, height, top = 0, className }: { edges: LiquidEdges; height: number; top?: number; className?: string }) {
+export function LiquidPill({
+  edges,
+  height,
+  top = 0,
+  className,
+}: {
+  edges: LiquidEdges
+  height: number
+  top?: number
+  className?: string
+}) {
   const { left, right } = edges
   const width = useMotionValue(height)
   // Subscribed in a layout effect, which runs before the row's own: the row

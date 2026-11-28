@@ -15,13 +15,7 @@ type Segment = {
   search?: LinkProps['search']
 }
 
-const palette = [
-  'var(--chart-1)',
-  'var(--chart-2)',
-  'var(--chart-3)',
-  'var(--chart-4)',
-  'var(--chart-5)',
-]
+const palette = ['var(--chart-1)', 'var(--chart-2)', 'var(--chart-3)', 'var(--chart-4)', 'var(--chart-5)']
 
 type SegmentedBarProps = {
   segments: Segment[]
@@ -35,11 +29,7 @@ type SegmentedBarProps = {
  * Tender split, tier distribution, sales by ticket type — anywhere a set of
  * numbers sums to a whole, this replaces a grid of tiles.
  */
-export function SegmentedBar({
-  segments,
-  legend = true,
-  className,
-}: SegmentedBarProps) {
+export function SegmentedBar({ segments, legend = true, className }: SegmentedBarProps) {
   const total = segments.reduce((sum, s) => sum + Math.max(0, s.value), 0)
   const colored = segments.map((s, i) => ({
     ...s,
@@ -51,9 +41,7 @@ export function SegmentedBar({
       <div
         className='bg-muted flex h-2.5 w-full overflow-hidden rounded-full'
         role='img'
-        aria-label={colored
-          .map((s) => `${s.label}: ${s.display ?? s.value}`)
-          .join(', ')}
+        aria-label={colored.map((s) => `${s.label}: ${s.display ?? s.value}`).join(', ')}
       >
         {total > 0 &&
           colored
@@ -74,19 +62,10 @@ export function SegmentedBar({
           {colored.map((s) => {
             const row = (
               <>
-                <span
-                  className='size-2.5 shrink-0 rounded-full'
-                  style={{ backgroundColor: s.color }}
-                />
+                <span className='size-2.5 shrink-0 rounded-full' style={{ backgroundColor: s.color }} />
                 <span className='flex-1 truncate'>{s.label}</span>
-                {s.hint && (
-                  <span className='text-muted-foreground text-xs tabular-nums'>
-                    {s.hint}
-                  </span>
-                )}
-                <span className='font-medium tabular-nums'>
-                  {s.display ?? s.value}
-                </span>
+                {s.hint && <span className='text-muted-foreground text-xs tabular-nums'>{s.hint}</span>}
+                <span className='font-medium tabular-nums'>{s.display ?? s.value}</span>
               </>
             )
             const rowClass = 'flex items-center gap-2 py-2'

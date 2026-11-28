@@ -5,11 +5,7 @@ type CsvCell = string | number | null | undefined
  * newlines inside a note survive; the byte-order mark up front makes Excel
  * read the Arabic as UTF-8 instead of guessing at a code page.
  */
-export function downloadCsv(
-  filename: string,
-  header: string[],
-  rows: CsvCell[][]
-) {
+export function downloadCsv(filename: string, header: string[], rows: CsvCell[][]) {
   const escape = (cell: CsvCell) => {
     const text = cell === null || cell === undefined ? '' : String(cell)
     return `"${text.replace(/"/g, '""')}"`

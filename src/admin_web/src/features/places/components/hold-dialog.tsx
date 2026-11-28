@@ -5,13 +5,7 @@ import { useLocalized, useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -74,12 +68,7 @@ export function HoldDialog({ place, onOpenChange }: HoldDialogProps) {
           // Link the reservation to the picked account so it shows up in
           // their app and history
           if (customer) {
-            actions.assignReservationCustomer(
-              reservationId,
-              customer.id,
-              holdName,
-              { onSuccess: finish }
-            )
+            actions.assignReservationCustomer(reservationId, customer.id, holdName, { onSuccess: finish })
           } else {
             finish()
           }
@@ -107,14 +96,8 @@ export function HoldDialog({ place, onOpenChange }: HoldDialogProps) {
               {customer ? (
                 <div className='flex items-center justify-between rounded-lg border px-3 py-2 text-sm'>
                   <div className='min-w-0'>
-                    <p className='truncate font-medium'>
-                      {displayName(customer)}
-                    </p>
-                    {customer.email && (
-                      <p className='text-muted-foreground truncate text-xs'>
-                        {customer.email}
-                      </p>
-                    )}
+                    <p className='truncate font-medium'>{displayName(customer)}</p>
+                    {customer.email && <p className='text-muted-foreground truncate text-xs'>{customer.email}</p>}
                   </div>
                   <Button
                     variant='ghost'
@@ -127,11 +110,7 @@ export function HoldDialog({ place, onOpenChange }: HoldDialogProps) {
                   </Button>
                 </div>
               ) : (
-                <Button
-                  variant='outline'
-                  className='w-full justify-start'
-                  onClick={() => setPickerOpen(true)}
-                >
+                <Button variant='outline' className='w-full justify-start' onClick={() => setPickerOpen(true)}>
                   <Search />
                   {t('findRegisteredCustomer')}
                 </Button>
@@ -154,9 +133,7 @@ export function HoldDialog({ place, onOpenChange }: HoldDialogProps) {
               <Checkbox
                 id='holdStartOnConfirm'
                 checked={startOnConfirm}
-                onCheckedChange={(checked) =>
-                  setStartOnConfirm(checked === true)
-                }
+                onCheckedChange={(checked) => setStartOnConfirm(checked === true)}
               />
               <Label htmlFor='holdStartOnConfirm' className='font-normal'>
                 {t('startOnConfirm')}
@@ -165,27 +142,16 @@ export function HoldDialog({ place, onOpenChange }: HoldDialogProps) {
 
             <div className='space-y-2'>
               <Label htmlFor='holdNotes'>{t('notesOptional')}</Label>
-              <Textarea
-                id='holdNotes'
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                rows={2}
-              />
+              <Textarea id='holdNotes' value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} />
             </div>
           </div>
 
           <DialogFooter>
-            <Button
-              type='button'
-              variant='outline'
-              onClick={() => onOpenChange(false)}
-            >
+            <Button type='button' variant='outline' onClick={() => onOpenChange(false)}>
               {t('cancel')}
             </Button>
             <Button onClick={handleHold} disabled={actions.isBusy}>
-              {actions.isBusy && (
-                <Loader2 className='me-2 h-4 w-4 animate-spin' />
-              )}
+              {actions.isBusy && <Loader2 className='me-2 h-4 w-4 animate-spin' />}
               {t('hold')}
             </Button>
           </DialogFooter>

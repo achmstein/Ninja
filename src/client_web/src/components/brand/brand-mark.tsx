@@ -11,20 +11,14 @@ export function BrandMark({ className }: { className?: string }) {
   const name = useBrandName()
 
   if (logo) {
-    return (
-      <img
-        src={logo}
-        alt=''
-        className={cn('shrink-0 object-contain', className)}
-      />
-    )
+    return <img src={logo} alt='' className={cn('shrink-0 object-contain', className)} />
   }
 
   return (
     <span
       aria-hidden
       className={cn(
-        'bg-primary text-primary-foreground grid shrink-0 place-items-center rounded-md font-semibold leading-none',
+        'bg-primary text-primary-foreground grid shrink-0 place-items-center rounded-md leading-none font-semibold',
         className
       )}
     >
@@ -66,9 +60,7 @@ export function BrandWordmark({
   return (
     <>
       <BrandMark className={cn('size-7 text-sm', markClassName)} />
-      <span className={cn('truncate text-lg font-semibold tracking-tight', textClassName)}>
-        {name}
-      </span>
+      <span className={cn('truncate text-lg font-semibold tracking-tight', textClassName)}>{name}</span>
     </>
   )
 }

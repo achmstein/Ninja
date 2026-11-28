@@ -9,8 +9,7 @@ const BASE = '/api/notifications'
 
 // --- Push subscriptions -----------------------------------------------------
 
-export type SubscriptionKind =
-  'user-orders' | 'user-sessions' | 'room-availability'
+export type SubscriptionKind = 'user-orders' | 'user-sessions' | 'room-availability'
 
 export type SubscriptionStatus = {
   id?: number
@@ -23,7 +22,7 @@ export async function subscribe(
   kind: SubscriptionKind,
   fcmToken: string,
   preferredLanguage: string,
-  branchId?: number,
+  branchId?: number
 ): Promise<boolean> {
   try {
     await apiClient.post(`${BASE}/subscriptions/${kind}`, {
@@ -49,9 +48,7 @@ export async function unsubscribe(kind: SubscriptionKind): Promise<boolean> {
 
 export async function getRoomAvailabilitySubscription(): Promise<SubscriptionStatus> {
   try {
-    const response = await apiClient.get<SubscriptionStatus>(
-      `${BASE}/subscriptions/room-availability`,
-    )
+    const response = await apiClient.get<SubscriptionStatus>(`${BASE}/subscriptions/room-availability`)
     return response.data
   } catch {
     return { isSubscribed: false }
@@ -66,18 +63,14 @@ export type NotificationPreferences = {
 }
 
 export async function getNotificationPreferences(): Promise<NotificationPreferences> {
-  const response = await apiClient.get<NotificationPreferences>(
-    `${BASE}/preferences`,
-  )
+  const response = await apiClient.get<NotificationPreferences>(`${BASE}/preferences`)
   return {
     orderStatusUpdates: response.data.orderStatusUpdates ?? true,
     promotionsAndOffers: response.data.promotionsAndOffers ?? true,
   }
 }
 
-export async function updateNotificationPreferences(
-  preferences: NotificationPreferences,
-): Promise<void> {
+export async function updateNotificationPreferences(preferences: NotificationPreferences): Promise<void> {
   await apiClient.put(`${BASE}/preferences`, preferences)
 }
 
@@ -93,8 +86,7 @@ export const SERVICE_REQUEST = {
   changeOption: 6,
 } as const
 
-export type ServiceRequestType =
-  (typeof SERVICE_REQUEST)[keyof typeof SERVICE_REQUEST]
+export type ServiceRequestType = (typeof SERVICE_REQUEST)[keyof typeof SERVICE_REQUEST]
 
 /** From a place: the customer's running stay, or a table they scanned. The
  *  server allows the request by what the place can do. A guest at a table is
@@ -108,10 +100,7 @@ export async function createServiceRequest(request: {
   /** The rate option wanted, for a changeOption request */
   optionCode?: string
 }): Promise<ServiceRequestView> {
-  const response = await apiClient.post<ServiceRequestView>(
-    `${BASE}/service-requests`,
-    request,
-  )
+  const response = await apiClient.post<ServiceRequestView>(`${BASE}/service-requests`, request)
   return response.data
 }
 
@@ -139,9 +128,7 @@ export type ServiceRequestView = {
 /** The customer's open requests: pending and acknowledged, by account or by
  *  the guest id header. Open until the till finishes them or they cancel. */
 export async function getMyServiceRequests(): Promise<ServiceRequestView[]> {
-  const response = await apiClient.get<ServiceRequestView[]>(
-    `${BASE}/service-requests/mine`,
-  )
+  const response = await apiClient.get<ServiceRequestView[]>(`${BASE}/service-requests/mine`)
   return response.data
 }
 

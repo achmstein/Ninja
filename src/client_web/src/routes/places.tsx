@@ -1,44 +1,45 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
-import { LayoutGroup } from 'motion/react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useAuth } from 'react-oidc-context'
 import { CirclePause, UserRound } from 'lucide-react'
+import { LayoutGroup } from 'motion/react'
+import { useAuth } from 'react-oidc-context'
 import { type PlaceViewModel, type StayViewModel } from '@/api/spaces'
 import { useBranchStore } from '@/stores/branch-store'
+import { useFeatures } from '@/lib/brand'
 import { useRoomsGroup } from '@/lib/hub'
+import { useLocalized, useT } from '@/lib/i18n'
+import type { TranslationKey } from '@/lib/i18n'
 import { PLACE_AVAILABLE, PLACE_STATION, PLACE_TABLE } from '@/lib/places'
 import { useMyHold } from '@/lib/stays'
 import { useAfterTickBeat } from '@/lib/tick-beat'
+import { useAtBranch, useBranchesByDistance, useBranchSwitch } from '@/lib/use-branch-switch'
 import { useScrollLock } from '@/lib/use-scroll-lock'
-import { useFeatures } from '@/lib/brand'
-import { useLocalized, useT } from '@/lib/i18n'
+import { cn } from '@/lib/utils'
 import { useBookablePlacesByBranch, useVisit, useVisitTab, type BranchPlaces } from '@/lib/visit'
 import { useProfileGate } from '@/components/auth/profile-gate'
-import { StayBanner } from '@/components/places/stay-banner'
-import { YourRoomCard } from '@/components/places/your-room-card'
+import { SignInSheet } from '@/components/auth/sign-in-options'
+import { UseMyLocation } from '@/components/branch-switcher'
+import { Recede } from '@/components/motion/recede'
+import { useRecede } from '@/components/motion/use-recede'
+import { Notice } from '@/components/ninja/page/notice'
+import { NinjaPage, Rise, RiseItem } from '@/components/ninja/page/page'
 import { SectionLabel } from '@/components/ninja/page/parts'
+import { BranchDial } from '@/components/places/branch-dial'
 import { NotifyBanner } from '@/components/places/notify-banner'
 import { PlaceCard, PlaceCardSkeleton } from '@/components/places/place-card'
 import { type PlacesStyle, usePlacesStyle } from '@/components/places/places-style'
 import { Reservation } from '@/components/places/reservation'
 import { ScanFooter } from '@/components/places/scan-footer'
 import { ScanSheet } from '@/components/places/scan-sheet'
-import { BranchDial } from '@/components/places/branch-dial'
-import { NinjaPage, Rise, RiseItem } from '@/components/ninja/page/page'
-import { Notice } from '@/components/ninja/page/notice'
-import { Recede } from '@/components/motion/recede'
-import { useRecede } from '@/components/motion/use-recede'
-import { SignInSheet } from '@/components/auth/sign-in-options'
-import { cn } from '@/lib/utils'
-import { UseMyLocation } from '@/components/branch-switcher'
-import { useAtBranch, useBranchesByDistance, useBranchSwitch } from '@/lib/use-branch-switch'
-import type { TranslationKey } from '@/lib/i18n'
+import { StayBanner } from '@/components/places/stay-banner'
+import { YourRoomCard } from '@/components/places/your-room-card'
 
 export const Route = createFileRoute('/places')({
   component: PlacesPage,
   // ?scan={placeId}: a timed place's code just opened; the tab answers it
   // with a sheet from the bottom instead of a page of its own
-  validateSearch: (search: Record<string, unknown>): { scan?: number } => (Number(search.scan) > 0 ? { scan: Number(search.scan) } : {}),
+  validateSearch: (search: Record<string, unknown>): { scan?: number } =>
+    Number(search.scan) > 0 ? { scan: Number(search.scan) } : {},
 })
 
 /**
@@ -62,7 +63,9 @@ function PlacesPage() {
 
   // The scan's sheet sits over whatever the tab shows, and the address
   // forgets the scan once it has been answered
-  const scanSheet = scan ? <ScanSheet placeId={scan} onDone={() => navigate({ to: '/places', search: {}, replace: true })} /> : null
+  const scanSheet = scan ? (
+    <ScanSheet placeId={scan} onDone={() => navigate({ to: '/places', search: {}, replace: true })} />
+  ) : null
 
   if (!visible) return null
   // Until the stays answer, cards of nothing: whether the room's card sits over the places is not known yet
@@ -100,7 +103,10 @@ const KIND_HEADINGS: Record<number, TranslationKey> = {
  * the grid: where a branch has rooms and tables both, a heading over each lets
  * the eye skip to its own. One kind, or the big cards, is one group with no heading.
  */
-function groupByKind(places: PlaceViewModel[], look: PlacesStyle): { heading?: TranslationKey; places: PlaceViewModel[] }[] {
+function groupByKind(
+  places: PlaceViewModel[],
+  look: PlacesStyle
+): { heading?: TranslationKey; places: PlaceViewModel[] }[] {
   const kinds = [...new Set(places.map((p) => Number(p.kind)))]
   if (look === 'cards' || kinds.length < 2) return [{ places }]
   return kinds.map((kind) => ({
@@ -171,7 +177,10 @@ function PlacesList({ atTable, stay, look }: { atTable: boolean; stay?: StayView
   // Every branch that takes bookings, each under its own name: the closest first once the customer's
   // position is known (never asked for on opening: read where the browser gives it, else the customer's tap)
   const multi = groups.length > 1
-  const { sorted, location, anyPoint } = useBranchesByDistance(multi, groups.map((g) => g.branch))
+  const { sorted, location, anyPoint } = useBranchesByDistance(
+    multi,
+    groups.map((g) => g.branch)
+  )
   const ordered = sorted.flatMap(({ item, meters }) => {
     const group = groups.find((g) => g.branch === item)
     return group ? [{ ...group, meters }] : []
@@ -180,7 +189,9 @@ function PlacesList({ atTable, stay, look }: { atTable: boolean; stay?: StayView
   // One branch at a time, chosen on the dial: the one the customer is at, else the nearest
   const [viewId, setViewId] = useState<number | null>(null)
   const viewed =
-    ordered.find((g) => Number(g.branch.id) === viewId) ?? ordered.find((g) => Number(g.branch.id) === branchId) ?? ordered[0]
+    ordered.find((g) => Number(g.branch.id) === viewId) ??
+    ordered.find((g) => Number(g.branch.id) === branchId) ??
+    ordered[0]
   const shown = multi ? (viewed ? [viewed] : []) : ordered
   // The selected branch's own places: the notify switch is the branch's, as is the room the customer is in
   const here = groups.find((g) => Number(g.branch.id) === branchId)?.places ?? []
@@ -274,7 +285,7 @@ function PlacesList({ atTable, stay, look }: { atTable: boolean; stay?: StayView
                 <button
                   type='button'
                   onClick={() => setSignInOpen(true)}
-                  className='text-primary inline-flex min-h-11 items-center gap-2 text-note font-semibold'
+                  className='text-primary text-note inline-flex min-h-11 items-center gap-2 font-semibold'
                 >
                   <UserRound className='size-4' />
                   {t('bookSignInLine')}
@@ -317,7 +328,10 @@ function PlacesList({ atTable, stay, look }: { atTable: boolean; stay?: StayView
                 return (
                   <div key={String(branchGroup.branch.id)} className='flex flex-col gap-4'>
                     {groupByKind(others, look).map((group) => (
-                      <div key={group.heading ?? 'all'} className={cn(LIST_CLASS[look], group.heading && 'mt-2 first:mt-0')}>
+                      <div
+                        key={group.heading ?? 'all'}
+                        className={cn(LIST_CLASS[look], group.heading && 'mt-2 first:mt-0')}
+                      >
                         {group.heading && (
                           <RiseItem className={cn(look === 'grid' && 'col-span-2', stay && mine && 'opacity-60')}>
                             <Recede gone={held}>
@@ -326,29 +340,29 @@ function PlacesList({ atTable, stay, look }: { atTable: boolean; stay?: StayView
                           </RiseItem>
                         )}
                         <PanelOf look={look}>
-                        {group.places.map((place) => (
-                          <RiseItem
-                            key={String(place.id)}
-                            className={cn(
-                              stay && mine && 'opacity-60',
-                              // An open tile takes the row, so the booking under it has the width to breathe
-                              look === 'grid' && openId === Number(place.id) && 'col-span-2'
-                            )}
-                          >
-                            <Recede gone={held && String(place.id) !== heldId}>
-                              <PlaceCard
-                                place={place}
-                                look={look}
-                                canReserve={canReserve}
-                                open={openId === Number(place.id)}
-                                onToggle={(p) => handleToggle(p, groupBranchId)}
-                                // Booked, the form stays until the hold opens the card into the reservation
-                                onDone={(outcome) => outcome === 'failed' && closeHold()}
-                                handedOver={String(place.id) === heldId}
-                              />
-                            </Recede>
-                          </RiseItem>
-                        ))}
+                          {group.places.map((place) => (
+                            <RiseItem
+                              key={String(place.id)}
+                              className={cn(
+                                stay && mine && 'opacity-60',
+                                // An open tile takes the row, so the booking under it has the width to breathe
+                                look === 'grid' && openId === Number(place.id) && 'col-span-2'
+                              )}
+                            >
+                              <Recede gone={held && String(place.id) !== heldId}>
+                                <PlaceCard
+                                  place={place}
+                                  look={look}
+                                  canReserve={canReserve}
+                                  open={openId === Number(place.id)}
+                                  onToggle={(p) => handleToggle(p, groupBranchId)}
+                                  // Booked, the form stays until the hold opens the card into the reservation
+                                  onDone={(outcome) => outcome === 'failed' && closeHold()}
+                                  handedOver={String(place.id) === heldId}
+                                />
+                              </Recede>
+                            </RiseItem>
+                          ))}
                         </PanelOf>
                       </div>
                     ))}
@@ -371,7 +385,12 @@ function PlacesList({ atTable, stay, look }: { atTable: boolean; stay?: StayView
 
       <Reservation hold={opened} />
       {profileGateDialog}
-      <SignInSheet open={signInOpen} onOpenChange={setSignInOpen} title={t('bookSignInTitle')} description={t('bookSignInBody')} />
+      <SignInSheet
+        open={signInOpen}
+        onOpenChange={setSignInOpen}
+        title={t('bookSignInTitle')}
+        description={t('bookSignInBody')}
+      />
     </NinjaPage>
   )
 }

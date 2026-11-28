@@ -1,6 +1,6 @@
 import { memo, useRef, useState } from 'react'
-import type { CatalogItemDto } from '@/api/catalog'
 import { Plus } from 'lucide-react'
+import type { CatalogItemDto } from '@/api/catalog'
 import { useLocalized, usePrice, useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { itemPictureUrl } from '@/components/menu/item-picture'
@@ -79,7 +79,13 @@ export const ZoomTile = memo(function ZoomTile({
         )}
         {/* Held, a ring fills: at the full ring the item drops into the tray, or opens when there is something to choose */}
         {!soldOut && (
-          <span aria-hidden className={cn('absolute end-1.5 top-1.5 z-10 transition-opacity duration-150', pressing ? 'opacity-100' : 'opacity-0')}>
+          <span
+            aria-hidden
+            className={cn(
+              'absolute end-1.5 top-1.5 z-10 transition-opacity duration-150',
+              pressing ? 'opacity-100' : 'opacity-0'
+            )}
+          >
             <PressRing pressing={pressing} blur={pressing} small />
           </span>
         )}
@@ -112,13 +118,15 @@ export const ZoomTile = memo(function ZoomTile({
           </div>
         ) : (
           <div className='absolute inset-0 flex items-end p-2.5'>
-            <span className='heading line-clamp-3 text-name leading-[1.05] break-words'>{localized(item.name)}</span>
+            <span className='heading text-name line-clamp-3 leading-[1.05] break-words'>{localized(item.name)}</span>
           </div>
         )}
       </div>
-      <span className='mt-1.5 truncate text-caption font-semibold'>{localized(item.name)}</span>
+      <span className='text-caption mt-1.5 truncate font-semibold'>{localized(item.name)}</span>
       <span className='text-caption tabular-nums'>
-        <span className={cn(onOffer ? 'text-offer font-semibold' : 'text-muted-foreground')}>{price(onOffer ? item.offerPrice : item.price)}</span>
+        <span className={cn(onOffer ? 'text-offer font-semibold' : 'text-muted-foreground')}>
+          {price(onOffer ? item.offerPrice : item.price)}
+        </span>
         {onOffer && <span className='text-muted-foreground ms-1.5 line-through'>{price(item.price)}</span>}
       </span>
     </div>

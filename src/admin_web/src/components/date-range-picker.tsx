@@ -2,12 +2,7 @@ import { useState } from 'react'
 import { CalendarIcon, RotateCcw } from 'lucide-react'
 import { type DateRange } from 'react-day-picker'
 import { useBusinessTimeZone } from '@/lib/business-clock'
-import {
-  formatDay,
-  parseDay,
-  rangePresets,
-  type DayWindow,
-} from '@/lib/business-day'
+import { formatDay, parseDay, rangePresets, type DayWindow } from '@/lib/business-day'
 import { useLocale, useT, type TranslationKey } from '@/lib/i18n'
 import { type RangeKey, type RangeSearch } from '@/lib/search-schemas'
 import { cn } from '@/lib/utils'
@@ -17,19 +12,8 @@ import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover'
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from '@/components/ui/sheet'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import { InfoTip } from '@/components/info-tip'
 
 const presetKeys: Record<RangeKey, TranslationKey> = {
@@ -116,9 +100,7 @@ export function DateRangePicker({
       ? // One business day, 25 hours long on the night the clocks go back
         dayWindow.to.getTime() - dayWindow.from.getTime() <= 25 * 3_600_000
         ? `${hhmm(dayWindow.from)} → ${hhmm(dayWindow.to)}`
-        : `${shortDay.format(dayWindow.from)} → ${shortDay.format(
-            new Date(dayWindow.to.getTime() - 1)
-          )}`
+        : `${shortDay.format(dayWindow.from)} → ${shortDay.format(new Date(dayWindow.to.getTime() - 1))}`
       : null
 
   const pickPreset = (next: RangeKey) => {
@@ -134,8 +116,7 @@ export function DateRangePicker({
   const startTime = search.fromTime ?? (dayWindow ? hhmm(dayWindow.from) : '')
   const endTime = search.toTime ?? (dayWindow ? hhmm(dayWindow.to) : '')
   const hoursPicked = search.fromTime != null || search.toTime != null
-  const pickTime = (key: 'fromTime' | 'toTime', value: string) =>
-    onChange({ [key]: value || undefined })
+  const pickTime = (key: 'fromTime' | 'toTime', value: string) => onChange({ [key]: value || undefined })
 
   const pickRange = (range: DateRange | undefined) => {
     onChange({
@@ -151,18 +132,11 @@ export function DateRangePicker({
   // one under the other in a sheet from the bottom on a phone
   const panel = (
     <div className={cn('flex', isMobile && 'flex-col')}>
-      <div
-        className={cn(
-          'flex gap-0.5 p-2',
-          isMobile ? 'flex-wrap gap-2 border-b' : 'flex-col border-e'
-        )}
-      >
+      <div className={cn('flex gap-0.5 p-2', isMobile ? 'flex-wrap gap-2 border-b' : 'flex-col border-e')}>
         {presets.map((p) => (
           <Button
             key={p}
-            variant={
-              preset === p ? 'secondary' : isMobile ? 'outline' : 'ghost'
-            }
+            variant={preset === p ? 'secondary' : isMobile ? 'outline' : 'ghost'}
             size='sm'
             className={cn('justify-start', isMobile && 'rounded-full')}
             onClick={() => pickPreset(p)}
@@ -214,9 +188,7 @@ export function DateRangePicker({
                   variant='ghost'
                   size='sm'
                   className='ms-auto'
-                  onClick={() =>
-                    onChange({ fromTime: undefined, toTime: undefined })
-                  }
+                  onClick={() => onChange({ fromTime: undefined, toTime: undefined })}
                 >
                   <RotateCcw />
                   {t('wholeDay')}
@@ -237,18 +209,13 @@ export function DateRangePicker({
             <Button
               variant='outline'
               size='sm'
-              className={cn(
-                'min-w-[11rem] justify-start font-normal',
-                compact ? 'h-8' : 'h-9'
-              )}
+              className={cn('min-w-[11rem] justify-start font-normal', compact ? 'h-8' : 'h-9')}
             >
               <CalendarIcon className='text-muted-foreground' />
               <span className='truncate font-medium'>{label}</span>
               {/* The window itself, once, where the range is chosen: not again as a line beside it */}
               {span && preset !== 'custom' && (
-                <span className='text-muted-foreground truncate tabular-nums'>
-                  · {span}
-                </span>
+                <span className='text-muted-foreground truncate tabular-nums'>· {span}</span>
               )}
             </Button>
           </SheetTrigger>
@@ -266,18 +233,13 @@ export function DateRangePicker({
             <Button
               variant='outline'
               size='sm'
-              className={cn(
-                'min-w-[11rem] justify-start font-normal',
-                compact ? 'h-8' : 'h-9'
-              )}
+              className={cn('min-w-[11rem] justify-start font-normal', compact ? 'h-8' : 'h-9')}
             >
               <CalendarIcon className='text-muted-foreground' />
               <span className='truncate font-medium'>{label}</span>
               {/* The window itself, once, where the range is chosen: not again as a line beside it */}
               {span && preset !== 'custom' && (
-                <span className='text-muted-foreground truncate tabular-nums'>
-                  · {span}
-                </span>
+                <span className='text-muted-foreground truncate tabular-nums'>· {span}</span>
               )}
             </Button>
           </PopoverTrigger>

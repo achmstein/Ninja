@@ -1,23 +1,17 @@
 import { useEffect, useRef } from 'react'
 import { z } from 'zod'
 import { createFileRoute, useNavigate, useSearch } from '@tanstack/react-router'
-import { useAuth } from 'react-oidc-context'
-import { useTheme } from '@/context/theme-provider'
-import { useBrandName } from '@/lib/brand'
-import { PoweredBy } from '@/components/ninja-wordmark'
-import { useLanguage } from '@/lib/i18n'
 import { loginPageParams } from '@/config/oidc-config'
 import { Loader2, RefreshCw } from 'lucide-react'
+import { useAuth } from 'react-oidc-context'
+import { useBrandName } from '@/lib/brand'
+import { useLanguage } from '@/lib/i18n'
 import { useT } from '@/lib/i18n'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { useTheme } from '@/context/theme-provider'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { BrandMark } from '@/components/brand-mark'
+import { PoweredBy } from '@/components/ninja-wordmark'
 
 const searchSchema = z.object({
   redirect: z.string().optional(),
@@ -79,13 +73,7 @@ function SignIn() {
   }
 
   useEffect(() => {
-    if (
-      auth.isLoading ||
-      auth.isAuthenticated ||
-      signInError ||
-      auth.activeNavigator ||
-      redirectStarted.current
-    ) {
+    if (auth.isLoading || auth.isAuthenticated || signInError || auth.activeNavigator || redirectStarted.current) {
       return
     }
     redirectStarted.current = true
@@ -101,9 +89,7 @@ function SignIn() {
       <div className='grid h-svh place-items-center p-4'>
         <Card className='w-full max-w-sm gap-4'>
           <CardHeader className='text-center'>
-            <CardTitle className='type-title'>
-              {t('signInFailed')}
-            </CardTitle>
+            <CardTitle className='type-title'>{t('signInFailed')}</CardTitle>
             <CardDescription>{signInError.message}</CardDescription>
           </CardHeader>
           <CardContent>
@@ -122,15 +108,11 @@ function SignIn() {
       <div className='flex flex-col items-center gap-3'>
         <BrandMark className='size-14 text-2xl' />
         <div className='flex flex-col items-center gap-1'>
-          <span className='type-title tracking-tight'>
-            {business || t('posName')}
-          </span>
-          {business && (
-            <span className='text-muted-foreground'>{t('posName')}</span>
-          )}
+          <span className='type-title tracking-tight'>{business || t('posName')}</span>
+          {business && <span className='text-muted-foreground'>{t('posName')}</span>}
         </div>
       </div>
-      <div className='text-muted-foreground flex items-center gap-2 type-detail'>
+      <div className='text-muted-foreground type-detail flex items-center gap-2'>
         <Loader2 className='h-4 w-4 animate-spin' />
         {t('redirectingToSignIn')}
       </div>

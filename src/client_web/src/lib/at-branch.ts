@@ -1,6 +1,6 @@
+import { useActivePlace } from '@/stores/place-store'
 import { isOpen, useMyBills } from '@/lib/bills'
 import { useActiveStay, useMyHold } from '@/lib/stays'
-import { useActivePlace } from '@/stores/place-store'
 
 /** Whether the customer is at the branch: an open bill, a held place, a running clock or a scanned table */
 export function useAtBranch(): boolean {

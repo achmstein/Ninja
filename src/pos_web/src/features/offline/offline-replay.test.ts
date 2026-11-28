@@ -44,11 +44,13 @@ class NetworkDown extends Error {}
 const refused = Object.assign(new Error('400'), { response: { status: 400 } })
 
 /** A fake server: records the calls, answers from the tables given */
-function fakeApi(options: {
-  orderIds?: Record<string, number | Error>
-  tickets?: Record<number, (number | null | Error)[]>
-  settle?: Record<number, Error>
-} = {}) {
+function fakeApi(
+  options: {
+    orderIds?: Record<string, number | Error>
+    tickets?: Record<number, (number | null | Error)[]>
+    settle?: Record<number, Error>
+  } = {}
+) {
   const calls: string[] = []
   const api: ReplayApi = {
     createOrder: async (s) => {

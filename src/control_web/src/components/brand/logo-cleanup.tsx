@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import { motion, useReducedMotion } from 'motion/react'
-import { useT, type TranslationKey } from '@/lib/i18n'
 import { isMark, isPhoto, type ImageSlot } from '@/lib/brand-slots'
+import { useT, type TranslationKey } from '@/lib/i18n'
 import { cleanLogo, releaseLogo, type CleanedLogo, type LogoChoice, type LogoImage } from '@/lib/logo-cleanup'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'

@@ -39,21 +39,13 @@ export function EditStaffDialog({ user, onOpenChange }: EditStaffDialogProps) {
           <DialogDescription>{user?.email ?? ''}</DialogDescription>
         </DialogHeader>
         {/* Keyed by the account so the form mounts from what it holds today */}
-        {user && (
-          <DetailsForm key={user.id} user={user} onOpenChange={onOpenChange} />
-        )}
+        {user && <DetailsForm key={user.id} user={user} onOpenChange={onOpenChange} />}
       </DialogContent>
     </Dialog>
   )
 }
 
-function DetailsForm({
-  user,
-  onOpenChange,
-}: {
-  user: Customer
-  onOpenChange: (open: boolean) => void
-}) {
+function DetailsForm({ user, onOpenChange }: { user: Customer; onOpenChange: (open: boolean) => void }) {
   const t = useT()
   const queryClient = useQueryClient()
   const [firstName, setFirstName] = useState(user.firstName ?? '')
@@ -107,29 +99,14 @@ function DetailsForm({
     <form onSubmit={submit} className='space-y-4'>
       <div className='grid grid-cols-2 gap-3'>
         <Field label={t('firstName')} htmlFor='staffFirstName'>
-          <Input
-            id='staffFirstName'
-            value={firstName}
-            onChange={(e) => setFirstName(e.target.value)}
-            autoFocus
-          />
+          <Input id='staffFirstName' value={firstName} onChange={(e) => setFirstName(e.target.value)} autoFocus />
         </Field>
         <Field label={t('lastName')} htmlFor='staffLastName'>
-          <Input
-            id='staffLastName'
-            value={lastName}
-            onChange={(e) => setLastName(e.target.value)}
-          />
+          <Input id='staffLastName' value={lastName} onChange={(e) => setLastName(e.target.value)} />
         </Field>
       </div>
       <Field label={t('phone')} htmlFor='staffPhone'>
-        <Input
-          id='staffPhone'
-          type='tel'
-          dir='ltr'
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-        />
+        <Input id='staffPhone' type='tel' dir='ltr' value={phone} onChange={(e) => setPhone(e.target.value)} />
       </Field>
       <Field label={t('newPassword')} htmlFor='staffNewPassword'>
         <Input
@@ -143,11 +120,7 @@ function DetailsForm({
       </Field>
       {error && <p className='text-destructive text-sm'>{error}</p>}
       <DialogFooter>
-        <Button
-          type='button'
-          variant='outline'
-          onClick={() => onOpenChange(false)}
-        >
+        <Button type='button' variant='outline' onClick={() => onOpenChange(false)}>
           {t('cancel')}
         </Button>
         <Button type='submit' disabled={save.isPending}>

@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { Check, Loader2, UserRound, UserRoundCheck, UserRoundMinus, UserRoundPlus } from 'lucide-react'
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { currencyLabel, useCurrency } from '@/lib/currency'
 import { useLanguage, usePrice, useT } from '@/lib/i18n'
+import { spring, springSoft } from '@/lib/motion'
 import {
   customShare,
   equalShare,
@@ -15,10 +16,9 @@ import {
   sliderPosition,
   sliderSteps,
 } from '@/lib/pay'
-import { spring, springSoft } from '@/lib/motion'
 import { cn } from '@/lib/utils'
-import { Odometer } from '@/components/ninja/odometer'
 import { Slider } from '@/components/ui/slider'
+import { Odometer } from '@/components/ninja/odometer'
 
 type SeatKind = 'mine' | 'free' | 'held' | 'paid'
 
@@ -132,7 +132,7 @@ export function SeatsTable({
               <Odometer value={String(seats)} className='text-display font-bold' />
               <span className='text-name font-semibold'>{t('peopleUnit', { count: seats })}</span>
             </span>
-            <span aria-hidden className='text-muted-foreground mt-1 text-caption'>
+            <span aria-hidden className='text-muted-foreground text-caption mt-1'>
               {t('onTheTable')}
             </span>
           </div>
@@ -142,7 +142,7 @@ export function SeatsTable({
 
       {/* The people: tap the ones you are paying for */}
       <div className='flex flex-col gap-3'>
-        <span className='px-1 text-caption font-semibold'>{t('whoYouPayFor')}</span>
+        <span className='text-caption px-1 font-semibold'>{t('whoYouPayFor')}</span>
         <div className='flex flex-wrap justify-center gap-x-2 gap-y-3'>
           <AnimatePresence initial={false} mode='popLayout'>
             {kinds.map((kind, i) => {
@@ -154,7 +154,13 @@ export function SeatsTable({
                     ? t('lineBeingPaid')
                     : t(kind === 'mine' ? 'seatYours' : 'seatFree', { n: i + 1 })
               return (
-                <motion.div key={i} layout={!reduced} {...pop} transition={springSoft} className='flex w-12 flex-col items-center gap-1'>
+                <motion.div
+                  key={i}
+                  layout={!reduced}
+                  {...pop}
+                  transition={springSoft}
+                  className='flex w-12 flex-col items-center gap-1'
+                >
                   <motion.button
                     type='button'
                     whileTap={reduced || (kind !== 'free' && kind !== 'mine') ? undefined : { scale: 0.88 }}
@@ -165,12 +171,14 @@ export function SeatsTable({
                     disabled={kind === 'held' || kind === 'paid'}
                     onClick={() => onToggle(i)}
                     className={cn(
-                      'relative grid size-12 place-items-center rounded-full border-2 text-caption font-bold',
+                      'text-caption relative grid size-12 place-items-center rounded-full border-2 font-bold',
                       'focus-visible:ring-ring/50 transition-[background-color,border-color,color,box-shadow] duration-200 outline-none focus-visible:ring-4',
                       kind === 'paid' && 'border-emerald-500 bg-emerald-500 text-white',
                       kind === 'held' && 'border-dashed border-amber-400 text-amber-500',
-                      kind === 'mine' && 'border-foreground bg-foreground text-background shadow-[0_6px_16px_-6px_rgb(0_0_0/0.45)]',
-                      kind === 'free' && 'border-foreground/20 text-muted-foreground hover:border-foreground/45 border-dashed'
+                      kind === 'mine' &&
+                        'border-foreground bg-foreground text-background shadow-[0_6px_16px_-6px_rgb(0_0_0/0.45)]',
+                      kind === 'free' &&
+                        'border-foreground/20 text-muted-foreground hover:border-foreground/45 border-dashed'
                     )}
                   >
                     {kind === 'paid' ? (
@@ -188,7 +196,7 @@ export function SeatsTable({
                   <span
                     aria-hidden
                     className={cn(
-                      'w-full truncate text-center text-micro font-medium',
+                      'text-micro w-full truncate text-center font-medium',
                       kind === 'mine' ? 'text-foreground' : 'text-muted-foreground'
                     )}
                   >
@@ -204,7 +212,9 @@ export function SeatsTable({
           </AnimatePresence>
         </div>
         <div className='flex flex-col items-center gap-0.5 text-center'>
-          <p className='text-muted-foreground text-caption tabular-nums'>{t('leftAfterYou', { amount: price(left) })}</p>
+          <p className='text-muted-foreground text-caption tabular-nums'>
+            {t('leftAfterYou', { amount: price(left) })}
+          </p>
           {(plan.paid > 0 || plan.held > 0 || plan.free > 1) && (
             <p className='text-muted-foreground text-caption'>{t('seatsHint')}</p>
           )}
@@ -277,7 +287,7 @@ export function AmountPicker({
 
   return (
     <div className='flex flex-col gap-4'>
-      <span className='px-1 text-caption font-semibold'>{t('chooseAmount')}</span>
+      <span className='text-caption px-1 font-semibold'>{t('chooseAmount')}</span>
 
       {/* The figure is drawn big; the input over it takes the typing
           (phones keep inputs at 16px so they never zoom) */}
@@ -292,22 +302,12 @@ export function AmountPicker({
           onChange={(e) => type(e.target.value)}
           className='absolute inset-0 h-full w-full cursor-text rounded-[1.5rem] opacity-0'
         />
-        <span
-          aria-hidden
-          className='flex max-w-full items-baseline justify-center gap-1.5'
-        >
-          <span
-            className={cn(
-              'truncate text-display-lg font-bold tabular-nums',
-              !text && 'text-muted-foreground/50'
-            )}
-          >
+        <span aria-hidden className='flex max-w-full items-baseline justify-center gap-1.5'>
+          <span className={cn('text-display-lg truncate font-bold tabular-nums', !text && 'text-muted-foreground/50')}>
             {text || '0'}
           </span>
           <span className='bg-primary hidden h-7 w-0.5 animate-pulse self-center rounded-full group-focus-within:block motion-reduce:animate-none' />
-          <span className='text-muted-foreground text-name font-semibold'>
-            {currencyLabel(currency, language)}
-          </span>
+          <span className='text-muted-foreground text-name font-semibold'>{currencyLabel(currency, language)}</span>
         </span>
       </label>
 
@@ -321,7 +321,7 @@ export function AmountPicker({
           aria-label={t('amountToPay')}
           className='py-2 [&_[data-slot=slider-thumb]]:size-6 [&_[data-slot=slider-thumb]]:border-2 [&_[data-slot=slider-track]]:h-2'
         />
-        <div className='text-muted-foreground flex justify-between text-caption tabular-nums'>
+        <div className='text-muted-foreground text-caption flex justify-between tabular-nums'>
           <span>{price(0)}</span>
           <span>{price(remaining)}</span>
         </div>
@@ -330,16 +330,11 @@ export function AmountPicker({
       <div className='flex flex-col gap-2'>
         <div className='grid grid-cols-4 gap-2'>
           {fractions.map((c) =>
-            c.key === 'all'
-              ? chip(c.key, t('all'), c.amount)
-              : chip(c.key, c.label ?? '', c.amount, true)
+            c.key === 'all' ? chip(c.key, t('all'), c.amount) : chip(c.key, c.label ?? '', c.amount, true)
           )}
         </div>
         {rounds.length > 0 && (
-          <div
-            className='grid gap-2'
-            style={{ gridTemplateColumns: `repeat(${rounds.length}, minmax(0, 1fr))` }}
-          >
+          <div className='grid gap-2' style={{ gridTemplateColumns: `repeat(${rounds.length}, minmax(0, 1fr))` }}>
             {rounds.map((c) => chip(c.key, price.whole(c.amount), c.amount))}
           </div>
         )}
@@ -347,14 +342,12 @@ export function AmountPicker({
 
       <p
         className={cn(
-          'text-center text-caption tabular-nums',
+          'text-caption text-center tabular-nums',
           clamped ? 'text-amber-700 dark:text-amber-400' : 'text-muted-foreground'
         )}
         aria-live='polite'
       >
-        {clamped
-          ? t('customAmountClamped', { amount: price(remaining) })
-          : t('leftAfterYou', { amount: price(left) })}
+        {clamped ? t('customAmountClamped', { amount: price(remaining) }) : t('leftAfterYou', { amount: price(left) })}
       </p>
     </div>
   )

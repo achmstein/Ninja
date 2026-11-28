@@ -14,7 +14,16 @@ import { createJSONStorage, persist } from 'zustand/middleware'
  * remembers there is an order to follow.
  */
 
-export type PillStage = 'awaitingPayment' | 'sent' | 'confirmed' | 'preparing' | 'onTheWay' | 'delivered' | 'notDelivered' | 'paid' | 'cancelled'
+export type PillStage =
+  | 'awaitingPayment'
+  | 'sent'
+  | 'confirmed'
+  | 'preparing'
+  | 'onTheWay'
+  | 'delivered'
+  | 'notDelivered'
+  | 'paid'
+  | 'cancelled'
 
 /** What the pill needs from an order (the Ordering OrderSummary shape) */
 export type PillOrder = {
@@ -88,10 +97,7 @@ export function stageOf(order: PillOrder): PillStage {
  * The order the pill follows: the newest one placed at or after the tap
  * (give or take the clock slack). Null while the list has not caught up.
  */
-export function pickOrder<T extends PillOrder>(
-  orders: readonly T[],
-  placedAt: number,
-): T | null {
+export function pickOrder<T extends PillOrder>(orders: readonly T[], placedAt: number): T | null {
   let best: T | null = null
   let bestTime = -Infinity
   for (const order of orders) {
@@ -117,13 +123,7 @@ export type PillVisibility = {
 }
 
 /** Whether the pill is still worth showing */
-export function pillVisible({
-  placedAt,
-  order,
-  stageSince,
-  dismissed,
-  now,
-}: PillVisibility): boolean {
+export function pillVisible({ placedAt, order, stageSince, dismissed, now }: PillVisibility): boolean {
   if (dismissed) return false
   if (now - placedAt > followFor(order)) return false
   if (!order) return now - placedAt < NOT_FOUND_AFTER_MS
@@ -255,15 +255,25 @@ export const PILL_WORDS = {
 } satisfies Record<string, Words>
 
 /** What a stage says under its title: on its way, it names the rider when the till said who */
-export function noteFor(stage: PillStage, order: PillOrder | null, notes: Record<PillStage, Words>): { words: Words; rider: string | null } {
+export function noteFor(
+  stage: PillStage,
+  order: PillOrder | null,
+  notes: Record<PillStage, Words>
+): { words: Words; rider: string | null } {
   const rider = order?.delivery?.riderName?.trim() || null
   // Paid ahead online: nothing to pay at the door, and money that goes back if it is not made
   const paid = order?.paysOnline === true && !!order.paidOnlineAt
   if (stage === 'notDelivered') return { words: PILL_WORDS.notDeliveredNote, rider: null }
-  if (order?.paysOnline && stage === 'cancelled') return { words: paid ? PILL_WORDS.paidCancelledNote : PILL_WORDS.unpaidCancelledNote, rider: null }
+  if (order?.paysOnline && stage === 'cancelled')
+    return { words: paid ? PILL_WORDS.paidCancelledNote : PILL_WORDS.unpaidCancelledNote, rider: null }
   if (paid && stage === 'sent') return { words: PILL_WORDS.paidSentNote, rider: null }
-  if (paid && stage === 'onTheWay') return rider ? { words: PILL_WORDS.paidOnTheWayRiderNote, rider } : { words: PILL_WORDS.paidOnTheWayNote, rider: null }
-  return stage === 'onTheWay' && rider ? { words: PILL_WORDS.onTheWayRiderNote, rider } : { words: notes[stage], rider: null }
+  if (paid && stage === 'onTheWay')
+    return rider
+      ? { words: PILL_WORDS.paidOnTheWayRiderNote, rider }
+      : { words: PILL_WORDS.paidOnTheWayNote, rider: null }
+  return stage === 'onTheWay' && rider
+    ? { words: PILL_WORDS.onTheWayRiderNote, rider }
+    : { words: notes[stage], rider: null }
 }
 
 /** The words in the language asked; a `{name}` in them is the business's name */
@@ -300,8 +310,8 @@ export const useOrderPill = create<PillState>()(
       // One tab's order: a new tab starts clean
       storage: createJSONStorage(() => sessionStorage),
       partialize: (s) => ({ placedAt: s.placedAt, dismissed: s.dismissed }),
-    },
-  ),
+    }
+  )
 )
 
 /** The pill already says this order's news: no toast for it */

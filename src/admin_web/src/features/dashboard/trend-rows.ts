@@ -27,18 +27,12 @@ const FIVE_MINUTES = 300_000
  * today is compared with a partial day. The cut is to the five minutes, so
  * the query is not asked for again on every tick.
  */
-export function trendWindows(
-  now: Date,
-  hours: BusinessHours,
-  days: number
-): TrendWindows {
+export function trendWindows(now: Date, hours: BusinessHours, days: number): TrendWindows {
   const today = businessDateOf(now, hours)
   const first = addDays(today, -(days - 1))
   const current = businessDaysWindow(first, today, hours)
   const before = previousWindow(current, hours, now)
-  const span =
-    Math.floor((before.to.getTime() - before.from.getTime()) / FIVE_MINUTES) *
-    FIVE_MINUTES
+  const span = Math.floor((before.to.getTime() - before.from.getTime()) / FIVE_MINUTES) * FIVE_MINUTES
   return {
     first,
     previousFirst: addDays(first, -days),
@@ -65,8 +59,7 @@ export function trendRows(
   current: DailySales[] | undefined,
   previous: DailySales[] | undefined
 ): TrendRow[] {
-  const byDay = (list: DailySales[] | undefined) =>
-    new Map((list ?? []).map((d) => [d.date.slice(0, 10), d]))
+  const byDay = (list: DailySales[] | undefined) => new Map((list ?? []).map((d) => [d.date.slice(0, 10), d]))
   const now = byDay(current)
   const before = byDay(previous)
   return Array.from({ length: days }, (_, i) => {

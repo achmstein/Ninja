@@ -19,12 +19,8 @@ export function usePendingOrders() {
   })
 
   const pending = useMemo(
-    () =>
-      [...(query.data ?? [])].sort(
-        (a, b) =>
-          new Date(a.date ?? 0).getTime() - new Date(b.date ?? 0).getTime(),
-      ),
-    [query.data],
+    () => [...(query.data ?? [])].sort((a, b) => new Date(a.date ?? 0).getTime() - new Date(b.date ?? 0).getTime()),
+    [query.data]
   )
 
   return { pending, isLoading: query.isLoading }
@@ -40,20 +36,15 @@ export function pendingForTicket(
   ticket: {
     sessionId?: null | number | string
     placeId?: null | number | string
-  },
+  }
 ): OrderSummary[] {
   const sessionId = ticket.sessionId == null ? null : toNumber(ticket.sessionId)
   const placeId = ticket.placeId == null ? null : toNumber(ticket.placeId)
 
   return pending.filter(
     (order) =>
-      (sessionId != null &&
-        order.sessionId != null &&
-        toNumber(order.sessionId) === sessionId) ||
-      (placeId != null &&
-        order.sessionId == null &&
-        order.placeId != null &&
-        toNumber(order.placeId) === placeId),
+      (sessionId != null && order.sessionId != null && toNumber(order.sessionId) === sessionId) ||
+      (placeId != null && order.sessionId == null && order.placeId != null && toNumber(order.placeId) === placeId)
   )
 }
 

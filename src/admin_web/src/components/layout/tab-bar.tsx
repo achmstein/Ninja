@@ -45,11 +45,7 @@ function isActive(pathname: string, to: Tab['to']) {
   // Orders is the list; Live (/orders/live) is its own page behind More
   if (to === '/orders') return pathname === '/orders'
   if (to === '/menu')
-    return (
-      pathname.startsWith('/menu') ||
-      pathname.startsWith('/promos') ||
-      pathname.startsWith('/promotions')
-    )
+    return pathname.startsWith('/menu') || pathname.startsWith('/promos') || pathname.startsWith('/promotions')
   return pathname === to || pathname.startsWith(`${to}/`)
 }
 
@@ -89,21 +85,10 @@ export function TabBar() {
                 key={tab.to}
                 to={tab.to}
                 aria-current={active ? 'page' : undefined}
-                className={cn(
-                  item,
-                  active ? 'text-foreground' : 'text-muted-foreground'
-                )}
+                className={cn(item, active ? 'text-foreground' : 'text-muted-foreground')}
               >
-                {active && (
-                  <ActiveMarker
-                    group='tab-bar'
-                    className='bg-muted rounded-xl'
-                  />
-                )}
-                <tab.icon
-                  className='size-5'
-                  strokeWidth={active ? 2.25 : 1.75}
-                />
+                {active && <ActiveMarker group='tab-bar' className='bg-muted rounded-xl' />}
+                <tab.icon className='size-5' strokeWidth={active ? 2.25 : 1.75} />
                 {t(tab.label)}
               </Link>
             )
@@ -111,14 +96,9 @@ export function TabBar() {
           <button
             type='button'
             onClick={() => setMoreOpen(true)}
-            className={cn(
-              item,
-              onTab ? 'text-muted-foreground' : 'text-foreground'
-            )}
+            className={cn(item, onTab ? 'text-muted-foreground' : 'text-foreground')}
           >
-            {!onTab && (
-              <ActiveMarker group='tab-bar' className='bg-muted rounded-xl' />
-            )}
+            {!onTab && <ActiveMarker group='tab-bar' className='bg-muted rounded-xl' />}
             {/* Live is behind More: its waiting orders show here */}
             <span className='relative'>
               <MenuIcon className='size-5' strokeWidth={onTab ? 1.75 : 2.25} />

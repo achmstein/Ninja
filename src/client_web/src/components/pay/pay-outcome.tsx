@@ -1,13 +1,13 @@
 import { type ComponentType, type ReactNode } from 'react'
-import { AnimatePresence, motion, MotionConfig, useReducedMotion } from 'motion/react'
 import { CircleAlert, Clock, CreditCard, Loader2 } from 'lucide-react'
+import { AnimatePresence, motion, MotionConfig, useReducedMotion } from 'motion/react'
 import { type PaymentStatusView } from '@/api/sales'
+import { useBrandName, useBrandWordmark } from '@/lib/brand'
 import { formatMoney } from '@/lib/currency'
 import { useLanguage, useT } from '@/lib/i18n'
 import { blurSwap, springSoft } from '@/lib/motion'
 import { cn } from '@/lib/utils'
 import { BrandMark, BrandWordmark } from '@/components/brand/brand-mark'
-import { useBrandName, useBrandWordmark } from '@/lib/brand'
 import { DrawnCheck } from '@/components/motion/morph-button'
 import { Odometer } from '@/components/ninja/odometer'
 import { Rise, RiseItem } from '@/components/ninja/page/page'
@@ -74,7 +74,10 @@ export function Outcome({
             <Slab
               layout
               transition={springSoft}
-              className={cn('flex flex-col items-center gap-4 px-6 py-9 text-center', state === 'good' && 'overflow-visible')}
+              className={cn(
+                'flex flex-col items-center gap-4 px-6 py-9 text-center',
+                state === 'good' && 'overflow-visible'
+              )}
             >
               <div className='relative grid place-items-center'>
                 {/* A paid one lands with a burst round its tick */}
@@ -85,11 +88,15 @@ export function Outcome({
                     {...swap}
                     // The tick's circle pops as it lands, a spring's overshoot and back
                     animate={state === 'good' && !reduced ? { ...swap.animate, scale: [0.6, 1.12, 1] } : swap.animate}
-                    transition={state === 'good' && !reduced ? { scale: { duration: 0.5, times: [0, 0.6, 1] } } : undefined}
+                    transition={
+                      state === 'good' && !reduced ? { scale: { duration: 0.5, times: [0, 0.6, 1] } } : undefined
+                    }
                     className={cn('relative grid size-20 place-items-center rounded-full', tone)}
                   >
                     {Icon ? (
-                      <Icon className={cn('size-9', state === 'waiting' && 'animate-spin motion-reduce:animate-none')} />
+                      <Icon
+                        className={cn('size-9', state === 'waiting' && 'animate-spin motion-reduce:animate-none')}
+                      />
                     ) : (
                       <DrawnCheck reduced={!!reduced} className='size-10' />
                     )}
@@ -135,9 +142,8 @@ export function FeeNote({ payment }: { payment: Pick<PaymentStatusView, 'fee' | 
   const t = useT()
   const language = useLanguage((s) => s.language)
   return (
-    <p className='text-muted-foreground -mt-2 text-caption tabular-nums'>
+    <p className='text-muted-foreground text-caption -mt-2 tabular-nums'>
       {t('onlinePaymentFee')} · {formatMoney(payment.fee, payment.currency, language)}
     </p>
   )
 }
-

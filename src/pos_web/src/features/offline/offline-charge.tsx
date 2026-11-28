@@ -1,16 +1,13 @@
 import { useEffect, useState } from 'react'
 import type { TicketDetail } from '@/api/sales/types.gen'
+import { getActiveBranchId } from '@/stores/branch-store'
 import { printSheets, takesCash } from '@/features/printing/print-sheets'
 import { KitchenChitSheet } from '@/features/receipt/kitchen-chit-sheet'
 import { ReceiptSheet } from '@/features/receipt/receipt-sheet'
 import { saleTotal, type SaleLine } from '@/features/sale/cart'
-import { SettleDialog } from '@/features/ticket/settle-dialog'
 import { lastOpenShiftId } from '@/features/shift/last-open-shift'
-import { getActiveBranchId } from '@/stores/branch-store'
-import {
-  enqueueOfflineSale,
-  nextProvisionalReceiptNumber,
-} from './offline-queue'
+import { SettleDialog } from '@/features/ticket/settle-dialog'
+import { enqueueOfflineSale, nextProvisionalReceiptNumber } from './offline-queue'
 import type { OfflinePayment, OfflineSale } from './offline-replay'
 import { counterBill, NO_PRICING } from './pricing'
 import { useBranchPricing } from './use-branch-pricing'
@@ -34,9 +31,7 @@ type Charging = {
 
 const optionsText = (line: SaleLine, language: 'en' | 'ar') =>
   line.customizations
-    .map((c) =>
-      language === 'ar' ? c.optionNameAr || c.optionNameEn : c.optionNameEn,
-    )
+    .map((c) => (language === 'ar' ? c.optionNameAr || c.optionNameEn : c.optionNameEn))
     .filter(Boolean)
     .join(', ')
 
@@ -77,9 +72,7 @@ export function useOfflineCharge() {
         lines: draft.lines.map((line, index) => ({
           id: index + 1,
           description: { en: line.nameEn || null, ar: line.nameAr || null },
-          details: line.customizations.length
-            ? { en: optionsText(line, 'en'), ar: optionsText(line, 'ar') }
-            : null,
+          details: line.customizations.length ? { en: optionsText(line, 'en'), ar: optionsText(line, 'ar') } : null,
           qty: line.quantity,
           unitPrice: line.price,
           total: line.price * line.quantity,
@@ -139,12 +132,7 @@ export function useOfflineCharge() {
 
   const element = charging ? (
     <>
-      <SettleDialog
-        ticket={charging.ticket}
-        open
-        onOpenChange={close}
-        offline={{ settle }}
-      />
+      <SettleDialog ticket={charging.ticket} open onOpenChange={close} offline={{ settle }} />
       {queued && (
         <>
           <ReceiptSheet

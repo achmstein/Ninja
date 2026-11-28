@@ -9,9 +9,7 @@ import { createAppColumnHelper } from '@/components/data-table'
 import { type MenuCostRow } from './menu-cost-rows'
 
 type Translate = (key: TranslationKey, params?: TranslateParams) => string
-type Localized = (
-  text: { en?: string | null; ar?: string | null } | null | undefined
-) => string
+type Localized = (text: { en?: string | null; ar?: string | null } | null | undefined) => string
 
 const columnHelper = createAppColumnHelper<MenuCostRow>()
 
@@ -26,19 +24,14 @@ export function getMenuCostColumns({
   /** Opens the item's recipe for editing */
   onEdit: (catalogItemId: number) => void
 }) {
-  const endHeader = (key: TranslationKey) => () => (
-    <div className='text-end'>{t(key)}</div>
-  )
+  const endHeader = (key: TranslationKey) => () => <div className='text-end'>{t(key)}</div>
   const money = (value: number, className?: string) => (
-    <div className={cn('text-end tabular-nums', className)}>
-      {formatEgp(value)}
-    </div>
+    <div className={cn('text-end tabular-nums', className)}>{formatEgp(value)}</div>
   )
 
   return columnHelper.columns([
     columnHelper.accessor(
-      (row) =>
-        `${row.name?.en ?? ''} ${row.name?.ar ?? ''} ${row.category?.en ?? ''} ${row.category?.ar ?? ''}`,
+      (row) => `${row.name?.en ?? ''} ${row.name?.ar ?? ''} ${row.category?.en ?? ''} ${row.category?.ar ?? ''}`,
       {
         id: 'item',
         header: t('menuItem'),
@@ -51,9 +44,7 @@ export function getMenuCostColumns({
             >
               {localized(row.original.name) || '—'}
             </Link>
-            <div className='text-muted-foreground truncate text-xs'>
-              {localized(row.original.category)}
-            </div>
+            <div className='text-muted-foreground truncate text-xs'>{localized(row.original.category)}</div>
           </div>
         ),
       }
@@ -91,11 +82,7 @@ export function getMenuCostColumns({
     columnHelper.accessor('margin', {
       id: 'margin',
       header: endHeader('margin'),
-      cell: ({ row }) =>
-        money(
-          row.original.margin,
-          row.original.margin < 0 ? 'text-destructive' : undefined
-        ),
+      cell: ({ row }) => money(row.original.margin, row.original.margin < 0 ? 'text-destructive' : undefined),
     }),
     columnHelper.accessor((row) => row.foodCost ?? -1, {
       meta: { align: 'end' },
@@ -114,15 +101,8 @@ export function getMenuCostColumns({
                 {t('costIncomplete', { count: uncosted })}
               </Badge>
             )}
-            {status === 'over' && (
-              <Badge variant='danger'>{t('overTarget')}</Badge>
-            )}
-            <span
-              className={cn(
-                'tabular-nums',
-                status === 'over' && 'text-destructive font-medium'
-              )}
-            >
+            {status === 'over' && <Badge variant='danger'>{t('overTarget')}</Badge>}
+            <span className={cn('tabular-nums', status === 'over' && 'text-destructive font-medium')}>
               {foodCost === null ? '—' : `${foodCost}%`}
             </span>
           </div>

@@ -3,10 +3,7 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { getRouteApi } from '@tanstack/react-router'
 import { useTable, type SortingState } from '@tanstack/react-table'
 import { Trash2 } from 'lucide-react'
-import {
-  getAllOrdersOptions,
-  getPendingOrdersOptions,
-} from '@/api/ordering/@tanstack/react-query.gen'
+import { getAllOrdersOptions, getPendingOrdersOptions } from '@/api/ordering/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useLanguage, useLocalized, useT } from '@/lib/i18n'
 import { type RangeSearch } from '@/lib/search-schemas'
@@ -78,10 +75,7 @@ export function OrdersManagement() {
     columnFilters: [{ columnId: 'status', searchKey: 'status', type: 'array' }],
   })
 
-  const statusFilter =
-    (columnFilters.find((f) => f.id === 'status')?.value as
-      | string[]
-      | undefined) ?? []
+  const statusFilter = (columnFilters.find((f) => f.id === 'status')?.value as string[] | undefined) ?? []
 
   // History spans everything unless a business-day range is picked
   const { dayWindow, isAll, ready, fromIso, toIso } = useTillWindow(search, {
@@ -169,16 +163,12 @@ export function OrdersManagement() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ordersQuery.data, pageCount])
 
-  const filtered =
-    statusFilter.length > 0 || !!globalFilter || search.range != null
+  const filtered = statusFilter.length > 0 || !!globalFilter || search.range != null
 
   return (
     <>
       <Main>
-        <PageHeader
-          title={t('orders')}
-          actions={<LiveOrdersButton pendingCount={pendingOrders.length} />}
-        />
+        <PageHeader title={t('orders')} actions={<LiveOrdersButton pendingCount={pendingOrders.length} />} />
 
         <DataTableToolbar
           table={table}
@@ -209,34 +199,22 @@ export function OrdersManagement() {
         </DataTableToolbar>
 
         {ordersQuery.isError ? (
-          <ErrorState
-            error={ordersQuery.error}
-            onRetry={() => ordersQuery.refetch()}
-          />
+          <ErrorState error={ordersQuery.error} onRetry={() => ordersQuery.refetch()} />
         ) : (
           <>
             <DataTable
               table={table}
               isLoading={ordersQuery.isLoading}
               emptyMessage={filtered ? t('noOrdersFound') : t('noOrdersYet')}
-              onRowClick={(row) =>
-                setSelectedOrderId(Number(row.original.orderNumber))
-              }
-              mobileRow={(row) => (
-                <OrderListRow row={row} t={t} localized={localized} />
-              )}
+              onRowClick={(row) => setSelectedOrderId(Number(row.original.orderNumber))}
+              mobileRow={(row) => <OrderListRow row={row} t={t} localized={localized} />}
             />
             <DataTablePagination table={table} />
           </>
         )}
 
         <DataTableBulkActions table={table} entityName={t('ordersEntity')}>
-          <Button
-            variant='destructive'
-            size='sm'
-            disabled={isActing}
-            onClick={() => setBulkDeleteOpen(true)}
-          >
+          <Button variant='destructive' size='sm' disabled={isActing} onClick={() => setBulkDeleteOpen(true)}>
             <Trash2 />
             {t('delete')}
           </Button>
@@ -277,9 +255,7 @@ export function OrdersManagement() {
         destructive
         isLoading={isActing}
         handleConfirm={async () => {
-          const selected = table
-            .getSelectedRowModel()
-            .rows.map((row) => Number(row.original.orderNumber))
+          const selected = table.getSelectedRowModel().rows.map((row) => Number(row.original.orderNumber))
           setBulkDeleteOpen(false)
           await handleDeleteMany(selected)
           table.resetRowSelection()

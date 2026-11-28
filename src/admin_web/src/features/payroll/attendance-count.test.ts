@@ -5,9 +5,7 @@ import { ATTENDANCE } from './format'
 describe('a row of attendance marks', () => {
   it('never counts a day off as an absence', () => {
     const { present, halfDay, absent, dayOff } = ATTENDANCE
-    expect(
-      countAttendance([present, present, halfDay, dayOff, dayOff, absent])
-    ).toEqual({
+    expect(countAttendance([present, present, halfDay, dayOff, dayOff, absent])).toEqual({
       worked: 2.5,
       absent: 1.5,
       offDays: 2,

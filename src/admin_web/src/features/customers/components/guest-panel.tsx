@@ -2,10 +2,7 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, MessageCircle } from 'lucide-react'
 import { type GuestSummary } from '@/api/ordering'
-import {
-  getAllOrdersOptions,
-  getGuestsOptions,
-} from '@/api/ordering/@tanstack/react-query.gen'
+import { getAllOrdersOptions, getGuestsOptions } from '@/api/ordering/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useLocale, useT } from '@/lib/i18n'
 import { showPhone, whatsAppLink } from '@/lib/phone'
@@ -18,11 +15,7 @@ import { ErrorState } from '@/components/error-state'
 import { InfoTip } from '@/components/info-tip'
 import { When } from '@/components/when'
 import { OrderDetailsSheet } from '@/features/orders/components/order-details-sheet'
-import {
-  formatEgp,
-  getOrderStatus,
-  relativeTime,
-} from '@/features/orders/status'
+import { formatEgp, getOrderStatus, relativeTime } from '@/features/orders/status'
 import { useOrderActions } from '@/features/orders/use-order-actions'
 
 type GuestPanelProps = {
@@ -52,8 +45,7 @@ export function GuestPanel({ guestKey, guest, onBack }: GuestPanelProps) {
     }),
     enabled: !guest,
   })
-  const summary =
-    guest ?? lookup.data?.items?.find((g) => g.key === guestKey) ?? undefined
+  const summary = guest ?? lookup.data?.items?.find((g) => g.key === guestKey) ?? undefined
 
   const orders = useQuery(
     getAllOrdersOptions({
@@ -69,19 +61,12 @@ export function GuestPanel({ guestKey, guest, onBack }: GuestPanelProps) {
 
   const name = summary?.name || t('guestBadge')
   const phone = summary?.phone ?? undefined
-  const date = (value?: string) =>
-    value ? formatWhen(value, 'date', locale, t) : ''
+  const date = (value?: string) => (value ? formatWhen(value, 'date', locale, t) : '')
 
   return (
     <div className='flex h-full flex-col'>
       <div className='flex flex-none items-center gap-3 border-b p-4'>
-        <Button
-          size='icon'
-          variant='ghost'
-          className='-ms-2'
-          onClick={onBack}
-          aria-label={t('guests')}
-        >
+        <Button size='icon' variant='ghost' className='-ms-2' onClick={onBack} aria-label={t('guests')}>
           <ArrowLeft className='rtl:rotate-180' />
         </Button>
         <Avatar className='size-10'>
@@ -118,31 +103,19 @@ export function GuestPanel({ guestKey, guest, onBack }: GuestPanelProps) {
           <dl className='grid grid-cols-2 gap-4 border-b p-4 text-sm lg:grid-cols-4'>
             <div>
               <dt className='text-muted-foreground text-xs'>{t('orders')}</dt>
-              <dd className='font-semibold tabular-nums'>
-                {Number(summary.orderCount ?? 0).toLocaleString(locale)}
-              </dd>
+              <dd className='font-semibold tabular-nums'>{Number(summary.orderCount ?? 0).toLocaleString(locale)}</dd>
             </div>
             <div>
-              <dt className='text-muted-foreground text-xs'>
-                {t('totalSpent')}
-              </dt>
-              <dd className='font-semibold tabular-nums'>
-                {formatEgp(summary.totalSpent)}
-              </dd>
+              <dt className='text-muted-foreground text-xs'>{t('totalSpent')}</dt>
+              <dd className='font-semibold tabular-nums'>{formatEgp(summary.totalSpent)}</dd>
             </div>
             <div>
-              <dt className='text-muted-foreground text-xs'>
-                {t('firstOrder')}
-              </dt>
+              <dt className='text-muted-foreground text-xs'>{t('firstOrder')}</dt>
               <dd className='font-medium'>{date(summary.firstOrderAt)}</dd>
             </div>
             <div>
-              <dt className='text-muted-foreground text-xs'>
-                {t('lastOrder')}
-              </dt>
-              <dd className='font-medium'>
-                {relativeTime(summary.lastOrderAt, nowMs, t, locale)}
-              </dd>
+              <dt className='text-muted-foreground text-xs'>{t('lastOrder')}</dt>
+              <dd className='font-medium'>{relativeTime(summary.lastOrderAt, nowMs, t, locale)}</dd>
             </div>
           </dl>
         ) : (
@@ -170,9 +143,7 @@ export function GuestPanel({ guestKey, guest, onBack }: GuestPanelProps) {
                     <button
                       type='button'
                       className='hover:bg-accent flex w-full items-center justify-between gap-2 rounded-md px-1 py-2 text-start'
-                      onClick={() =>
-                        setSelectedOrderId(Number(order.orderNumber))
-                      }
+                      onClick={() => setSelectedOrderId(Number(order.orderNumber))}
                     >
                       {/* Two flex items, so the bidi algorithm never merges
                           the order number's digits into the date's in RTL */}
@@ -180,22 +151,11 @@ export function GuestPanel({ guestKey, guest, onBack }: GuestPanelProps) {
                         <span className='font-medium' dir='ltr'>
                           #{order.orderNumber}
                         </span>
-                        {order.date && (
-                          <When
-                            value={order.date}
-                            className='text-muted-foreground text-xs'
-                          />
-                        )}
+                        {order.date && <When value={order.date} className='text-muted-foreground text-xs' />}
                       </div>
                       <div className='flex shrink-0 items-center gap-2'>
-                        {status && (
-                          <Badge variant={status.variant}>
-                            {t(status.key)}
-                          </Badge>
-                        )}
-                        <span className='font-medium tabular-nums'>
-                          {formatEgp(order.total)}
-                        </span>
+                        {status && <Badge variant={status.variant}>{t(status.key)}</Badge>}
+                        <span className='font-medium tabular-nums'>{formatEgp(order.total)}</span>
                       </div>
                     </button>
                   </li>

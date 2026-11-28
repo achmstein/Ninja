@@ -13,13 +13,7 @@ import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Spinner } from '@/components/ui/spinner'
 import { Combobox, type ComboboxOption } from '@/components/combobox'
 import { EntitySheet } from '@/components/entity-sheet'
@@ -68,13 +62,7 @@ type ReceiptReviewSheetProps = {
  * Confirming creates the new items one by one and hands the lines to the
  * receive form; nothing is posted until the user presses Receive there.
  */
-export function ReceiptReviewSheet({
-  proposal,
-  items,
-  suppliers,
-  onOpenChange,
-  onConfirm,
-}: ReceiptReviewSheetProps) {
+export function ReceiptReviewSheet({ proposal, items, suppliers, onOpenChange, onConfirm }: ReceiptReviewSheetProps) {
   const t = useT()
   const localized = useLocalized()
   const { createItem } = useInventoryActions()
@@ -82,39 +70,24 @@ export function ReceiptReviewSheet({
   const lastCosts = useLastCosts()
 
   const matchedSupplier = bestMatch(proposal.supplier, suppliers, (s) => s.name)
-  const [supplierId, setSupplierId] = useState<string | null>(
-    matchedSupplier ? String(matchedSupplier.id) : null
-  )
+  const [supplierId, setSupplierId] = useState<string | null>(matchedSupplier ? String(matchedSupplier.id) : null)
   const [invoiceRef, setInvoiceRef] = useState(proposal.invoiceRef ?? '')
-  const [lines, setLines] = useState<ReviewLine[]>(() =>
-    toReviewLines(proposal)
-  )
+  const [lines, setLines] = useState<ReviewLine[]>(() => toReviewLines(proposal))
   const [creating, setCreating] = useState<{
     done: number
     total: number
   } | null>(null)
 
   const updateLine = (key: number, patch: Partial<ReviewLine>) =>
-    setLines((prev) =>
-      prev.map((line) => (line.key === key ? { ...line, ...patch } : line))
-    )
+    setLines((prev) => prev.map((line) => (line.key === key ? { ...line, ...patch } : line)))
 
   const updateAmounts = (key: number, patch: Partial<Amounts>) =>
-    setLines((prev) =>
-      prev.map((line) =>
-        line.key === key ? { ...line, ...reprice(line, patch) } : line
-      )
-    )
+    setLines((prev) => prev.map((line) => (line.key === key ? { ...line, ...reprice(line, patch) } : line)))
 
   const included = lines.filter((line) => line.include)
-  const computedTotal = included.reduce(
-    (sum, line) => sum + (parseFloat(line.total) || 0),
-    0
-  )
-  const printedTotal =
-    proposal.printedTotal != null ? toNumber(proposal.printedTotal) : null
-  const totalsDiffer =
-    printedTotal != null && Math.abs(printedTotal - computedTotal) > 0.05
+  const computedTotal = included.reduce((sum, line) => sum + (parseFloat(line.total) || 0), 0)
+  const printedTotal = proposal.printedTotal != null ? toNumber(proposal.printedTotal) : null
+  const totalsDiffer = printedTotal != null && Math.abs(printedTotal - computedTotal) > 0.05
   const allReady = included.every(isReviewLineReady)
 
   const confirm = async () => {
@@ -129,9 +102,7 @@ export function ReceiptReviewSheet({
 
     // New items are created one at a time; a line that got its id keeps it,
     // so a retry after a failure never creates the same item twice
-    const toCreate = included.filter(
-      (line) => !line.stockItemId && line.newItem && line.createdId == null
-    )
+    const toCreate = included.filter((line) => !line.stockItemId && line.newItem && line.createdId == null)
     const ids = new Map<number, number>()
     for (const line of included) {
       if (line.stockItemId) ids.set(line.key, Number(line.stockItemId))
@@ -147,10 +118,7 @@ export function ReceiptReviewSheet({
           name: fromLocalizedValue(draft.name),
           unit: draft.unit,
           packSize: packSize > 0 ? packSize : null,
-          packName:
-            packSize > 0 && !isBlank(draft.packName)
-              ? fromLocalizedValue(draft.packName)
-              : null,
+          packName: packSize > 0 && !isBlank(draft.packName) ? fromLocalizedValue(draft.packName) : null,
           autoSoldOut: false,
         })
         const id = toNumber(created.id)
@@ -194,23 +162,12 @@ export function ReceiptReviewSheet({
       }
       actions={
         <>
-          <Button
-            type='button'
-            variant='outline'
-            onClick={() => onOpenChange(false)}
-            disabled={creating != null}
-          >
+          <Button type='button' variant='outline' onClick={() => onOpenChange(false)} disabled={creating != null}>
             {t('cancel')}
           </Button>
-          <Button
-            type='button'
-            onClick={confirm}
-            disabled={creating != null || included.length === 0 || !allReady}
-          >
+          <Button type='button' onClick={confirm} disabled={creating != null || included.length === 0 || !allReady}>
             {creating && <Spinner />}
-            {creating
-              ? t('creatingItems', creating)
-              : t('addScannedLines', { count: included.length })}
+            {creating ? t('creatingItems', creating) : t('addScannedLines', { count: included.length })}
           </Button>
         </>
       }
@@ -238,15 +195,9 @@ export function ReceiptReviewSheet({
         </div>
         <div className='space-y-2'>
           <Label htmlFor='scan-invoiceRef'>{t('invoiceRef')}</Label>
-          <Input
-            id='scan-invoiceRef'
-            value={invoiceRef}
-            onChange={(e) => setInvoiceRef(e.target.value)}
-          />
+          <Input id='scan-invoiceRef' value={invoiceRef} onChange={(e) => setInvoiceRef(e.target.value)} />
           {proposal.date && (
-            <p className='text-muted-foreground text-xs'>
-              {t('onTheReceipt', { text: proposal.date })}
-            </p>
+            <p className='text-muted-foreground text-xs'>{t('onTheReceipt', { text: proposal.date })}</p>
           )}
         </div>
       </div>
@@ -274,11 +225,7 @@ export function ReceiptReviewSheet({
             item={matchedItem(line, itemById)}
             items={items}
             itemById={itemById}
-            lastCost={
-              line.stockItemId
-                ? (lastCosts.get(toNumber(line.stockItemId)) ?? null)
-                : null
-            }
+            lastCost={line.stockItemId ? (lastCosts.get(toNumber(line.stockItemId)) ?? null) : null}
             onChange={(patch) => updateLine(line.key, patch)}
             onAmounts={(patch) => updateAmounts(line.key, patch)}
           />
@@ -288,9 +235,7 @@ export function ReceiptReviewSheet({
       <div className='space-y-1 rounded-lg border px-3 py-2'>
         <div className='flex items-center justify-between'>
           <span className='text-sm font-medium'>{t('grandTotal')}</span>
-          <span className='font-semibold tabular-nums'>
-            {formatEgp(computedTotal)}
-          </span>
+          <span className='font-semibold tabular-nums'>{formatEgp(computedTotal)}</span>
         </div>
         {printedTotal != null && (
           <div
@@ -367,19 +312,10 @@ function ReviewLineCard({
   // Pack size and unit come from the matched item, or from the draft
   const draftPackSize = parseFloat(line.newItem?.packSize ?? '')
   const unit = item?.unit ?? line.newItem?.unit
-  const packSize = item
-    ? toNumber(item.packSize)
-    : draftPackSize > 0
-      ? draftPackSize
-      : 0
+  const packSize = item ? toNumber(item.packSize) : draftPackSize > 0 ? draftPackSize : 0
 
   return (
-    <div
-      className={cn(
-        'space-y-3 rounded-lg border p-3',
-        !line.include && 'opacity-60'
-      )}
-    >
+    <div className={cn('space-y-3 rounded-lg border p-3', !line.include && 'opacity-60')}>
       <div className='flex items-start gap-3'>
         <Checkbox
           checked={line.include}
@@ -421,13 +357,9 @@ function ReviewLineCard({
                             unit: line.proposal.newItem?.unit ?? 'pcs',
                             packSize:
                               line.proposal.newItem?.packSize != null
-                                ? String(
-                                    toNumber(line.proposal.newItem.packSize)
-                                  )
+                                ? String(toNumber(line.proposal.newItem.packSize))
                                 : '',
-                            packName: toLocalizedValue(
-                              line.proposal.newItem?.packName
-                            ),
+                            packName: toLocalizedValue(line.proposal.newItem?.packName),
                           },
                         }
                   )
@@ -443,10 +375,7 @@ function ReviewLineCard({
       {line.include && (
         <div className='space-y-3 ps-7'>
           {creating && line.newItem ? (
-            <NewItemFields
-              draft={line.newItem}
-              onChange={(draft) => onChange({ newItem: draft })}
-            />
+            <NewItemFields draft={line.newItem} onChange={(draft) => onChange({ newItem: draft })} />
           ) : (
             <Combobox
               value={line.stockItemId}
@@ -476,13 +405,7 @@ function ReviewLineCard({
           )}
 
           <div className='grid grid-cols-3 gap-2'>
-            <LineAmounts
-              line={line}
-              unit={unit}
-              packSize={packSize}
-              onChange={onAmounts}
-              labelsAlways
-            />
+            <LineAmounts line={line} unit={unit} packSize={packSize} onChange={onAmounts} labelsAlways />
           </div>
           {unit && (
             <>
@@ -490,10 +413,7 @@ function ReviewLineCard({
                 line={line}
                 unit={unit}
                 packSize={packSize}
-                packName={
-                  item?.packName ??
-                  (line.newItem && fromLocalizedValue(line.newItem.packName))
-                }
+                packName={item?.packName ?? (line.newItem && fromLocalizedValue(line.newItem.packName))}
               />
               <CostHint line={line} unit={unit} lastCost={lastCost} />
             </>
@@ -519,12 +439,7 @@ function NewItemFields({
     <LocalizedFields>
       <div className='bg-muted/40 space-y-2 rounded-lg border p-2'>
         <p className='text-muted-foreground text-xs'>{t('newItemName')}</p>
-        <LocalizedInput
-          ariaLabel={t('newItemName')}
-          value={draft.name}
-          onChange={(name) => set({ name })}
-          compact
-        />
+        <LocalizedInput ariaLabel={t('newItemName')} value={draft.name} onChange={(name) => set({ name })} compact />
         <div className='grid grid-cols-2 gap-2'>
           <Select value={draft.unit} onValueChange={(unit) => set({ unit })}>
             <SelectTrigger aria-label={t('unit')}>

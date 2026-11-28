@@ -18,23 +18,29 @@ import {
   IdCard,
   type LucideIcon,
 } from 'lucide-react'
-import {
-  getOpenTicketsOptions,
-  openTicketMutation,
-} from '@/api/sales/@tanstack/react-query.gen'
+import { TimerReset } from 'lucide-react'
+import { getOpenTicketsOptions, openTicketMutation } from '@/api/sales/@tanstack/react-query.gen'
 import type { TicketSummary } from '@/api/sales/types.gen'
 import type { PlaceViewModel, StayViewModel } from '@/api/spaces/types.gen'
+import { useFreshBills } from '@/stores/fresh-bills'
+import { API_VERSION } from '@/lib/api-client'
+import { useFeatures, useIsCloudKitchen } from '@/lib/brand'
+import { useLocale, useLocalized, useT } from '@/lib/i18n'
+import { useMoney, toNumber } from '@/lib/money'
+import { TICKET_TYPE_TABLE } from '@/lib/ticket-types'
+import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
-import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
-import { PendingOrdersStrip } from '@/features/orders/pending-orders'
+import { CustomerCard, type CardCustomer } from '@/features/customer/customer-card'
+import { CustomerSearch } from '@/features/customer/customer-search'
 import { BillTitle } from '@/features/deliveries/bill-title'
 import { DeliveriesSummary } from '@/features/deliveries/deliveries-summary'
 import { billLabel, deliveryOrderOfLabel } from '@/features/deliveries/delivery-format'
-import { useSale } from '@/features/sale/cart'
 import { useDeliveries } from '@/features/deliveries/use-deliveries'
-import { ServiceRequestsStrip } from '@/features/requests/service-requests-strip'
+import { PendingOrdersStrip } from '@/features/orders/pending-orders'
+import { pendingForTicket, usePendingOrders } from '@/features/orders/use-pending-orders'
 import { PlacePanel } from '@/features/places/place-panel'
 import { StartStayDialog } from '@/features/places/start-stay-dialog'
 import {
@@ -47,25 +53,10 @@ import {
   isTimed,
 } from '@/features/places/status'
 import { usePlaces, useSecondsClock } from '@/features/places/use-places'
-import { API_VERSION } from '@/lib/api-client'
-import {
-  pendingForTicket,
-  usePendingOrders,
-} from '@/features/orders/use-pending-orders'
-import { useFeatures, useIsCloudKitchen } from '@/lib/brand'
-import { useLocale, useLocalized, useT } from '@/lib/i18n'
-import { cn } from '@/lib/utils'
-import { useFreshBills } from '@/stores/fresh-bills'
-import { useMoney, toNumber } from '@/lib/money'
-import { TICKET_TYPE_TABLE } from '@/lib/ticket-types'
-import {
-  CustomerCard,
-  type CardCustomer,
-} from '@/features/customer/customer-card'
-import { CustomerSearch } from '@/features/customer/customer-search'
+import { ServiceRequestsStrip } from '@/features/requests/service-requests-strip'
+import { useSale } from '@/features/sale/cart'
 import { NewTicketDialog } from './new-ticket-dialog'
 import { PlaceList, PlaceSearch } from './place-list'
-import { TimerReset } from 'lucide-react'
 
 const typeIcon: Record<string, LucideIcon> = {
   Room: DoorOpen,
@@ -74,11 +65,7 @@ const typeIcon: Record<string, LucideIcon> = {
 }
 
 function Heading({ children }: { children: React.ReactNode }) {
-  return (
-    <h2 className='text-muted-foreground type-label'>
-      {children}
-    </h2>
-  )
+  return <h2 className='text-muted-foreground type-label'>{children}</h2>
 }
 
 /** One card per open bill: the place, its total, the running clock for a
@@ -108,8 +95,7 @@ function BillCard({
 
   const type = ticket.type ?? ''
   const Icon = delivery ? Bike : (typeIcon[type] ?? ShoppingBag)
-  const typeLabel =
-    type === 'Room' ? t('room') : type === 'Table' ? t('table') : t('counter')
+  const typeLabel = type === 'Room' ? t('room') : type === 'Table' ? t('table') : t('counter')
   const title = localized(ticket.locationName) || billLabel(ticket.label).text || typeLabel
 
   const active = isRunning(stay)
@@ -120,34 +106,26 @@ function BillCard({
       onClick={onClick}
       className={cn(
         'bg-card hover:bg-accent/50 flex min-h-28 flex-col gap-2 rounded-xl border p-3 text-start',
-        fresh && 'animate-arrived',
+        fresh && 'animate-arrived'
       )}
     >
       <div className='flex items-start gap-2'>
         <Icon className='text-muted-foreground mt-0.5 size-4 shrink-0' />
         {/* Two lines for a name, laid out in the name's own script so a long
             English name in an Arabic till is cut at its end, not its start */}
-        <BillTitle
-          title={title}
-          className='line-clamp-2 min-w-0 flex-1 type-heading ltr:text-left rtl:text-right'
-        />
+        <BillTitle title={title} className='type-heading line-clamp-2 min-w-0 flex-1 ltr:text-left rtl:text-right' />
         {waiting && (
-          <span
-            className='mt-1.5 size-2.5 shrink-0 rounded-full bg-amber-500'
-            aria-label={t('waitingToConfirm')}
-          />
+          <span className='mt-1.5 size-2.5 shrink-0 rounded-full bg-amber-500' aria-label={t('waitingToConfirm')} />
         )}
       </div>
 
       {active && (
-        <span className='text-muted-foreground font-mono type-detail tabular-nums'>
+        <span className='text-muted-foreground type-detail font-mono tabular-nums'>
           {formatClock(elapsedSeconds(stay, nowMs))}
         </span>
       )}
 
-      <span className='mt-auto type-heading tabular-nums'>
-        {money(ticket.total)}
-      </span>
+      <span className='type-heading mt-auto tabular-nums'>{money(ticket.total)}</span>
     </button>
   )
 }
@@ -204,9 +182,7 @@ export function Floor() {
   const { deliveries } = useDeliveries()
   // No tables to open or seat: the till is the open bills and the counter
   const cloudKitchen = useIsCloudKitchen()
-  const [filter, setFilter] = useState<'all' | 'Room' | 'Table' | 'Counter'>(
-    'all',
-  )
+  const [filter, setFilter] = useState<'all' | 'Room' | 'Table' | 'Counter'>('all')
 
   const { data: tickets = [], isLoading } = useQuery({
     ...getOpenTicketsOptions({ query: { 'api-version': API_VERSION } }),
@@ -247,10 +223,7 @@ export function Floor() {
 
   useEffect(() => {
     if (startedPlaceId == null) return
-    const bill = tickets.find(
-      (ticket) =>
-        toNumber(ticket.placeId) === startedPlaceId && ticket.sessionId != null,
-    )
+    const bill = tickets.find((ticket) => toNumber(ticket.placeId) === startedPlaceId && ticket.sessionId != null)
     if (bill) {
       setStartedPlaceId(null)
       toTicket(bill)
@@ -264,9 +237,7 @@ export function Floor() {
   }, [startedPlaceId, tickets])
 
   const stayForTicket = (ticket: TicketSummary) =>
-    ticket.sessionId == null
-      ? undefined
-      : stays.find((s) => toNumber(s.id) === toNumber(ticket.sessionId))
+    ticket.sessionId == null ? undefined : stays.find((s) => toNumber(s.id) === toNumber(ticket.sessionId))
 
   // Reservations are the one thing not yet a bill that the cashier must
   // not miss: somebody is on their way, or due later today
@@ -282,17 +253,14 @@ export function Floor() {
   // Bills in the order of their places: rooms, then tables, then counter
   // tabs, each in place order, oldest first within a place
   const placeOrder = new Map(places.map((p, i) => [toNumber(p.id), i]))
-  const typeRank = (type?: string) =>
-    type === 'Room' ? 0 : type === 'Table' ? 1 : 2
+  const typeRank = (type?: string) => (type === 'Room' ? 0 : type === 'Table' ? 1 : 2)
   const placeRank = (ticket: TicketSummary) =>
-    ticket.type === 'Counter'
-      ? 0
-      : (placeOrder.get(toNumber(ticket.placeId)) ?? places.length)
+    ticket.type === 'Counter' ? 0 : (placeOrder.get(toNumber(ticket.placeId)) ?? places.length)
   const bills = [...tickets].sort(
     (a, b) =>
       typeRank(a.type) - typeRank(b.type) ||
       placeRank(a) - placeRank(b) ||
-      new Date(a.openedAt ?? 0).getTime() - new Date(b.openedAt ?? 0).getTime(),
+      new Date(a.openedAt ?? 0).getTime() - new Date(b.openedAt ?? 0).getTime()
   )
 
   const counts = {
@@ -307,20 +275,12 @@ export function Floor() {
     .filter((b) => {
       if (!billQuery) return true
       const name = (localized(b.locationName) || b.label || '').toLowerCase()
-      return (
-        name.includes(billQuery) || String(toNumber(b.id)).includes(billQuery)
-      )
+      return name.includes(billQuery) || String(toNumber(b.id)).includes(billQuery)
     })
-  const waitingIds = new Set(
-    bills
-      .filter((b) => pendingForTicket(pending, b).length > 0)
-      .map((b) => toNumber(b.id)),
-  )
+  const waitingIds = new Set(bills.filter((b) => pendingForTicket(pending, b).length > 0).map((b) => toNumber(b.id)))
   // Which bills are deliveries: Sales names a delivery's bill by its order
   // ("#42 · Mona"), and the deliveries board says which orders are ones
-  const deliveryOrders = new Set(
-    deliveries.map((d) => toNumber(d.orderNumber)),
-  )
+  const deliveryOrders = new Set(deliveries.map((d) => toNumber(d.orderNumber)))
 
   const selectedPlace = placeById(selectedPlaceId ?? undefined) ?? null
   const startPlace = placeById(startPlaceId ?? undefined) ?? null
@@ -343,12 +303,7 @@ export function Floor() {
     const id = toNumber(place.id)
     const reservedNow = isHolding(reservationForPlace(place.id))
     if (!isTimed(place, features.timeBilling) && !reservedNow) openBill(place)
-    else if (
-      Number(place.status) === PLACE_AVAILABLE &&
-      !stayForPlace(place.id) &&
-      !reservedNow
-    )
-      setStartPlaceId(id)
+    else if (Number(place.status) === PLACE_AVAILABLE && !stayForPlace(place.id) && !reservedNow) setStartPlaceId(id)
     else setSelectedPlaceId(id)
   }
 
@@ -376,17 +331,17 @@ export function Floor() {
             <PlaceSearch value={placeSearch} onChange={setPlaceSearch} />
           </div>
           <div className='md:p-4'>
-          <PlaceList
-            places={places}
-            stayForPlace={stayForPlace}
-            reservationForPlace={reservationForPlace}
-            tickets={tickets}
-            busy={openTable.isPending}
-            onNewTab={() => setNewTabOpen(true)}
-            loading={placesLoading}
-            onPick={pickPlace}
-            search={placeSearch}
-          />
+            <PlaceList
+              places={places}
+              stayForPlace={stayForPlace}
+              reservationForPlace={reservationForPlace}
+              tickets={tickets}
+              busy={openTable.isPending}
+              onNewTab={() => setNewTabOpen(true)}
+              loading={placesLoading}
+              onPick={pickPlace}
+              search={placeSearch}
+            />
           </div>
         </aside>
       )}
@@ -476,188 +431,179 @@ export function Floor() {
         </div>
 
         <div className='flex flex-col gap-5 md:p-4'>
-        {/* A customer in a room is waiting on each of these, so they lead the
+          {/* A customer in a room is waiting on each of these, so they lead the
             floor; the strip is gone when nothing is pending */}
-        <ServiceRequestsStrip />
+          <ServiceRequestsStrip />
 
-        {/* App orders waiting for a tap come next: someone is waiting on
+          {/* App orders waiting for a tap come next: someone is waiting on
             each of them, and the strip is gone when nobody is */}
-        <PendingOrdersStrip />
+          <PendingOrdersStrip />
 
-        {/* Deliveries out: waiting for a rider, with one, or their cash to take
+          {/* Deliveries out: waiting for a rider, with one, or their cash to take
             in. Shown even once delivery is switched off, so what is already
             out can finish; it is gone when there is nothing */}
-        <DeliveriesSummary />
+          <DeliveriesSummary />
 
-        {features.reservations && !cloudKitchen && reserved.length > 0 && (
-          <div className='flex flex-col gap-2'>
-            <Heading>{t('statusReserved')}</Heading>
-            <div className='flex gap-3 overflow-x-auto pb-1'>
-              {reserved.map((reservation) => {
-                const place = placeById(reservation.placeId)
-                const holding = isHolding(reservation)
-                // On their way: the minutes left to arrive. Due later: when.
-                const expiresIn = holding
-                  ? expiresInSeconds(reservation, nowMs)
-                  : null
-                return (
-                  <button
-                    key={String(reservation.id)}
-                    type='button'
-                    onClick={() =>
-                      setSelectedPlaceId(toNumber(reservation.placeId))
-                    }
-                    className='bg-card hover:bg-accent/50 flex w-[240px] max-w-[80vw] shrink-0 items-center gap-3 rounded-xl border p-3 text-start shadow-xs'
-                  >
-                    <div className='flex size-11 shrink-0 items-center justify-center rounded-lg bg-amber-500/10'>
-                      {/* The customer asked for the clock to start on arrival:
+          {features.reservations && !cloudKitchen && reserved.length > 0 && (
+            <div className='flex flex-col gap-2'>
+              <Heading>{t('statusReserved')}</Heading>
+              <div className='flex gap-3 overflow-x-auto pb-1'>
+                {reserved.map((reservation) => {
+                  const place = placeById(reservation.placeId)
+                  const holding = isHolding(reservation)
+                  // On their way: the minutes left to arrive. Due later: when.
+                  const expiresIn = holding ? expiresInSeconds(reservation, nowMs) : null
+                  return (
+                    <button
+                      key={String(reservation.id)}
+                      type='button'
+                      onClick={() => setSelectedPlaceId(toNumber(reservation.placeId))}
+                      className='bg-card hover:bg-accent/50 flex w-[240px] max-w-[80vw] shrink-0 items-center gap-3 rounded-xl border p-3 text-start shadow-xs'
+                    >
+                      <div className='flex size-11 shrink-0 items-center justify-center rounded-lg bg-amber-500/10'>
+                        {/* The customer asked for the clock to start on arrival:
                           Confirm in the panel does both */}
-                      {reservation.startOnConfirm ? (
-                        <TimerReset className='size-5 text-amber-600 dark:text-amber-500' />
-                      ) : (
-                        <Clock className='size-5 text-amber-600 dark:text-amber-500' />
-                      )}
-                    </div>
-                    <span className='min-w-0 flex-1'>
-                      <span className='type-heading block truncate'>
-                        {localized(place?.name ?? reservation.placeName)}
+                        {reservation.startOnConfirm ? (
+                          <TimerReset className='size-5 text-amber-600 dark:text-amber-500' />
+                        ) : (
+                          <Clock className='size-5 text-amber-600 dark:text-amber-500' />
+                        )}
+                      </div>
+                      <span className='min-w-0 flex-1'>
+                        <span className='type-heading block truncate'>
+                          {localized(place?.name ?? reservation.placeName)}
+                        </span>
+                        <span className='text-muted-foreground type-detail block truncate'>
+                          {reservation.customerName || t('statusReserved')}
+                          {reservation.partySize ? ` · ${t('partyOf', { count: reservation.partySize })}` : ''}
+                        </span>
                       </span>
-                      <span className='text-muted-foreground type-detail block truncate'>
-                        {reservation.customerName || t('statusReserved')}
-                        {reservation.partySize
-                          ? ` · ${t('partyOf', { count: reservation.partySize })}`
-                          : ''}
-                      </span>
-                    </span>
-                    {expiresIn != null ? (
-                      <span className='font-mono type-detail text-amber-600 tabular-nums shrink-0 dark:text-amber-500'>
-                        {formatClock(expiresIn).slice(3)}
-                      </span>
-                    ) : reservation.for && !holding ? (
-                      <span className='text-muted-foreground shrink-0 type-detail tabular-nums'>
-                        {timeOf(reservation.for)}
-                      </span>
-                    ) : null}
-                  </button>
-                )
-              })}
-            </div>
-          </div>
-        )}
-
-        {isLoading ? (
-          <div className='grid grid-cols-2 gap-3 sm:grid-cols-[repeat(auto-fill,minmax(180px,220px))]'>
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div
-                key={i}
-                className='bg-card flex min-h-28 flex-col gap-2 rounded-xl border p-3'
-              >
-                {/* icon + name, a clock line, and the total — a bill card's shape */}
-                <div className='flex items-center gap-2'>
-                  <Skeleton className='size-4 rounded' />
-                  <Skeleton className='h-4 flex-1' />
-                </div>
-                <Skeleton className='h-3 w-16' />
-                <Skeleton className='mt-auto h-6 w-20' />
+                      {expiresIn != null ? (
+                        <span className='type-detail shrink-0 font-mono text-amber-600 tabular-nums dark:text-amber-500'>
+                          {formatClock(expiresIn).slice(3)}
+                        </span>
+                      ) : reservation.for && !holding ? (
+                        <span className='text-muted-foreground type-detail shrink-0 tabular-nums'>
+                          {timeOf(reservation.for)}
+                        </span>
+                      ) : null}
+                    </button>
+                  )
+                })}
               </div>
-            ))}
-          </div>
-        ) : bills.length === 0 ? (
-          <div className='text-muted-foreground flex flex-col items-center gap-1 py-20 text-center'>
-            <p className='type-body font-medium'>{t('noOpenBills')}</p>
-          </div>
-        ) : (
-          <div className='flex flex-col gap-3'>
-            {/* One row on a phone, slid sideways rather than stacked: the
-                bills are what the screen is for */}
-            <div className='no-scrollbar flex items-center gap-2 max-sm:overflow-x-auto sm:flex-wrap'>
-              {(['all', 'Room', 'Table', 'Counter'] as const).map((key) => {
-                if (key === 'Room' && !features.timeBilling) return null
-                if (key !== 'all' && counts[key] === 0) return null
-                const label =
-                  key === 'all'
-                    ? t('allBills')
-                    : key === 'Room'
-                      ? t('rooms')
-                      : key === 'Table'
-                        ? t('tables')
-                        : t('counter')
-                return (
-                  <Button
-                    key={key}
-                    type='button'
-                    size='lg'
-                    variant={filter === key ? 'default' : 'outline'}
-                    onClick={() => setFilter(key)}
-                    className='shrink-0 gap-2 rounded-full'
-                  >
-                    {label}
-                    <Badge variant='secondary' className='tabular-nums'>
-                      {counts[key]}
-                    </Badge>
-                  </Button>
-                )
-              })}
-              {bills.length > 6 &&
-                (searchOpen ? (
-                  <div className='relative w-56 shrink-0'>
-                    <Search className='text-muted-foreground pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2' />
-                    <Input
-                      autoFocus
-                      value={billSearch}
-                      onChange={(e) => setBillSearch(e.target.value)}
-                      onBlur={() => {
-                        if (!billSearch.trim()) setSearchOpen(false)
-                      }}
-                      placeholder={t('searchBills')}
-                      className='h-11 ps-9 pe-9'
-                      autoComplete='off'
-                    />
-                    {billSearch && (
-                      <button
-                        type='button'
-                        aria-label={t('clear')}
-                        // Keep focus so clearing doesn't blur and collapse the box
-                        onMouseDown={(e) => e.preventDefault()}
-                        onClick={() => setBillSearch('')}
-                        className='text-muted-foreground hover:text-foreground absolute end-2 top-1/2 -translate-y-1/2'
-                      >
-                        <X className='size-4' />
-                      </button>
-                    )}
-                  </div>
-                ) : (
-                  <Button
-                    type='button'
-                    size='icon'
-                    variant='outline'
-                    className='size-11 shrink-0 rounded-full'
-                    aria-label={t('searchBills')}
-                    onClick={() => setSearchOpen(true)}
-                  >
-                    <Search className='size-5' />
-                  </Button>
-                ))}
             </div>
+          )}
 
-            {/* Rounded cards cap at ~220px so a lone bill stays a normal card,
-                not a full-width banner, and the row fills left to right */}
+          {isLoading ? (
             <div className='grid grid-cols-2 gap-3 sm:grid-cols-[repeat(auto-fill,minmax(180px,220px))]'>
-              {shownBills.map((ticket) => (
-                <BillCard
-                  key={String(ticket.id)}
-                  ticket={ticket}
-                  stay={stayForTicket(ticket)}
-                  waiting={waitingIds.has(toNumber(ticket.id))}
-                  delivery={deliveryOrders.has(deliveryOrderOfLabel(ticket.label) ?? -1)}
-                  nowMs={nowMs}
-                  fresh={toNumber(ticket.id) in freshBills}
-                  onClick={() => toTicket(ticket)}
-                />
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className='bg-card flex min-h-28 flex-col gap-2 rounded-xl border p-3'>
+                  {/* icon + name, a clock line, and the total — a bill card's shape */}
+                  <div className='flex items-center gap-2'>
+                    <Skeleton className='size-4 rounded' />
+                    <Skeleton className='h-4 flex-1' />
+                  </div>
+                  <Skeleton className='h-3 w-16' />
+                  <Skeleton className='mt-auto h-6 w-20' />
+                </div>
               ))}
             </div>
-          </div>
-        )}
+          ) : bills.length === 0 ? (
+            <div className='text-muted-foreground flex flex-col items-center gap-1 py-20 text-center'>
+              <p className='type-body font-medium'>{t('noOpenBills')}</p>
+            </div>
+          ) : (
+            <div className='flex flex-col gap-3'>
+              {/* One row on a phone, slid sideways rather than stacked: the
+                bills are what the screen is for */}
+              <div className='no-scrollbar flex items-center gap-2 max-sm:overflow-x-auto sm:flex-wrap'>
+                {(['all', 'Room', 'Table', 'Counter'] as const).map((key) => {
+                  if (key === 'Room' && !features.timeBilling) return null
+                  if (key !== 'all' && counts[key] === 0) return null
+                  const label =
+                    key === 'all'
+                      ? t('allBills')
+                      : key === 'Room'
+                        ? t('rooms')
+                        : key === 'Table'
+                          ? t('tables')
+                          : t('counter')
+                  return (
+                    <Button
+                      key={key}
+                      type='button'
+                      size='lg'
+                      variant={filter === key ? 'default' : 'outline'}
+                      onClick={() => setFilter(key)}
+                      className='shrink-0 gap-2 rounded-full'
+                    >
+                      {label}
+                      <Badge variant='secondary' className='tabular-nums'>
+                        {counts[key]}
+                      </Badge>
+                    </Button>
+                  )
+                })}
+                {bills.length > 6 &&
+                  (searchOpen ? (
+                    <div className='relative w-56 shrink-0'>
+                      <Search className='text-muted-foreground pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2' />
+                      <Input
+                        autoFocus
+                        value={billSearch}
+                        onChange={(e) => setBillSearch(e.target.value)}
+                        onBlur={() => {
+                          if (!billSearch.trim()) setSearchOpen(false)
+                        }}
+                        placeholder={t('searchBills')}
+                        className='h-11 ps-9 pe-9'
+                        autoComplete='off'
+                      />
+                      {billSearch && (
+                        <button
+                          type='button'
+                          aria-label={t('clear')}
+                          // Keep focus so clearing doesn't blur and collapse the box
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => setBillSearch('')}
+                          className='text-muted-foreground hover:text-foreground absolute end-2 top-1/2 -translate-y-1/2'
+                        >
+                          <X className='size-4' />
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <Button
+                      type='button'
+                      size='icon'
+                      variant='outline'
+                      className='size-11 shrink-0 rounded-full'
+                      aria-label={t('searchBills')}
+                      onClick={() => setSearchOpen(true)}
+                    >
+                      <Search className='size-5' />
+                    </Button>
+                  ))}
+              </div>
+
+              {/* Rounded cards cap at ~220px so a lone bill stays a normal card,
+                not a full-width banner, and the row fills left to right */}
+              <div className='grid grid-cols-2 gap-3 sm:grid-cols-[repeat(auto-fill,minmax(180px,220px))]'>
+                {shownBills.map((ticket) => (
+                  <BillCard
+                    key={String(ticket.id)}
+                    ticket={ticket}
+                    stay={stayForTicket(ticket)}
+                    waiting={waitingIds.has(toNumber(ticket.id))}
+                    delivery={deliveryOrders.has(deliveryOrderOfLabel(ticket.label) ?? -1)}
+                    nowMs={nowMs}
+                    fresh={toNumber(ticket.id) in freshBills}
+                    onClick={() => toTicket(ticket)}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </section>
 
@@ -676,10 +622,7 @@ export function Floor() {
             })
         }}
       />
-      <CustomerCard
-        customer={cardFor}
-        onOpenChange={(open) => !open && setCardFor(null)}
-      />
+      <CustomerCard customer={cardFor} onOpenChange={(open) => !open && setCardFor(null)} />
       <StartStayDialog
         place={startPlace}
         onOpenChange={(open) => {
@@ -698,9 +641,7 @@ export function Floor() {
       <PlacePanel
         place={selectedPlace}
         stay={selectedPlace ? stayForPlace(selectedPlace.id) : undefined}
-        reservation={
-          selectedPlace ? reservationForPlace(selectedPlace.id) : undefined
-        }
+        reservation={selectedPlace ? reservationForPlace(selectedPlace.id) : undefined}
         onOpenChange={(open) => {
           if (!open) setSelectedPlaceId(null)
         }}

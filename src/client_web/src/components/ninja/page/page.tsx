@@ -1,12 +1,21 @@
 import type { ReactNode } from 'react'
 import { useCanGoBack, useNavigate, useRouter, type LinkProps } from '@tanstack/react-router'
-import { AnimatePresence, motion, MotionConfig, useMotionValue, useReducedMotion, useScroll, useTransform, type MotionValue } from 'motion/react'
 import { ArrowLeft } from 'lucide-react'
-import { blurSwap, springOpen, springSoft } from '@/lib/motion'
+import {
+  AnimatePresence,
+  motion,
+  MotionConfig,
+  useMotionValue,
+  useReducedMotion,
+  useScroll,
+  useTransform,
+  type MotionValue,
+} from 'motion/react'
 import { useT } from '@/lib/i18n'
+import { blurSwap, springOpen, springSoft } from '@/lib/motion'
 import { cn } from '@/lib/utils'
-import { NinjaTopBar } from '../shell/top-bar'
 import { DOCK_H, DOCK_INSET, TABS_H } from '../shell/chrome'
+import { NinjaTopBar } from '../shell/top-bar'
 import { pushTitleId } from './push'
 
 /** The room a page keeps under its last card: the dock whole, and a gap over it */
@@ -54,7 +63,10 @@ export function NinjaPage({
       {/* A phone's column on a wide screen too: cards this size read as one hand's worth */}
       {/* Room under the last card for the whole dock (its bill row, the tabs, its gap to the edge): at the
           page's end the tabs come back, and they come back into this room, never over the last card */}
-      <div className={cn('mx-auto flex w-full max-w-2xl flex-col gap-5 px-4 pt-(--page-top)', className)} style={{ paddingBottom: PAGE_END }}>
+      <div
+        className={cn('mx-auto flex w-full max-w-2xl flex-col gap-5 px-4 pt-(--page-top)', className)}
+        style={{ paddingBottom: PAGE_END }}
+      >
         <PageTitle title={title} subtitle={subtitle} action={action} scrollY={scrollY} fade={fade} push={push} />
         {children}
       </div>
@@ -89,11 +101,18 @@ export function PageTitle({
   const scale = useTransform(scrollY, [0, TITLE_FOLD], [1, 0.92])
   const swap = blurSwap(useReducedMotion())
   return (
-    <motion.header style={{ opacity, scale }} className={cn('flex origin-[0%_50%] items-end justify-between gap-3 rtl:origin-[100%_50%]', className)}>
+    <motion.header
+      style={{ opacity, scale }}
+      className={cn('flex origin-[0%_50%] items-end justify-between gap-3 rtl:origin-[100%_50%]', className)}
+    >
       <div className='min-w-0'>
         {/* A new title swaps in with a short blur, the page itself staying put */}
         <h1 className='heading text-title'>
-          <motion.span layoutId={push ? pushTitleId(push) : undefined} transition={springOpen} className='inline-block max-w-full align-top'>
+          <motion.span
+            layoutId={push ? pushTitleId(push) : undefined}
+            transition={springOpen}
+            className='inline-block max-w-full align-top'
+          >
             <AnimatePresence mode='popLayout' initial={false}>
               <motion.span key={title} className='block' {...swap}>
                 {title}
@@ -101,7 +120,7 @@ export function PageTitle({
             </AnimatePresence>
           </motion.span>
         </h1>
-        {subtitle && <div className='text-muted-foreground mt-1 text-body'>{subtitle}</div>}
+        {subtitle && <div className='text-muted-foreground text-body mt-1'>{subtitle}</div>}
       </div>
       {action && <div className='shrink-0'>{action}</div>}
     </motion.header>

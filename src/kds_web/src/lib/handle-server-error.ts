@@ -8,12 +8,7 @@ export function handleServerError(error: unknown) {
 
   let errMsg = translate('somethingWentWrong')
 
-  if (
-    error &&
-    typeof error === 'object' &&
-    'status' in error &&
-    Number(error.status) === 204
-  ) {
+  if (error && typeof error === 'object' && 'status' in error && Number(error.status) === 204) {
     errMsg = translate('contentNotFound')
   }
 

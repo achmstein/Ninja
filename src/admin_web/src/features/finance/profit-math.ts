@@ -142,10 +142,7 @@ export function shareOf(value: number, base: number): number | null {
   return base > 0 ? value / base : null
 }
 
-export function formatShare(
-  share: number | null,
-  locale: string
-): string | null {
+export function formatShare(share: number | null, locale: string): string | null {
   if (share == null || !Number.isFinite(share)) return null
   return new Intl.NumberFormat(locale, {
     style: 'percent',
@@ -154,22 +151,13 @@ export function formatShare(
 }
 
 /** The base a month's profit is on: net sales without its VAT (older servers: net sales). */
-export function profitBase(
-  p: ProfitView | ProfitMonthView | undefined
-): number {
-  return p?.netSalesExVat != null
-    ? toNumber(p.netSalesExVat)
-    : toNumber(p?.netSales)
+export function profitBase(p: ProfitView | ProfitMonthView | undefined): number {
+  return p?.netSalesExVat != null ? toNumber(p.netSalesExVat) : toNumber(p?.netSales)
 }
 
 /** The trend's months oldest first, so the chart reads left to right in time. */
-export function oldestFirst<
-  T extends { year: number | string; month: number | string },
->(months: T[]): T[] {
+export function oldestFirst<T extends { year: number | string; month: number | string }>(months: T[]): T[] {
   return [...months].sort(
-    (a, b) =>
-      toNumber(a.year) * 12 +
-      toNumber(a.month) -
-      (toNumber(b.year) * 12 + toNumber(b.month))
+    (a, b) => toNumber(a.year) * 12 + toNumber(a.month) - (toNumber(b.year) * 12 + toNumber(b.month))
   )
 }

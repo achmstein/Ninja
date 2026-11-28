@@ -24,7 +24,8 @@ export const useBranchStore = create<BranchState>()(
       name: 'ninja-branch',
       version: 1,
       // Kept from before there was a first visit to tell: whatever was kept was settled on
-      migrate: (persisted, version) => (version < 1 ? { ...(persisted as object), chosen: true } : persisted) as BranchState,
+      migrate: (persisted, version) =>
+        (version < 1 ? { ...(persisted as object), chosen: true } : persisted) as BranchState,
     }
   )
 )

@@ -1,10 +1,10 @@
 import { Bike, MapPin, Navigation, Phone } from 'lucide-react'
 import type { DeliveryView } from '@/api/ordering/types.gen'
-import { Button } from '@/components/ui/button'
 import { useLanguage, useLocalized, useT } from '@/lib/i18n'
 import { toNumber, useMoney } from '@/lib/money'
 import { showPhone } from '@/lib/phone'
 import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
 import { directionsUrl, distanceParts, formatAddressLine, telHref, type AddressParts } from './delivery-format'
 import { PinQualityLabel } from './pin-quality'
 
@@ -44,11 +44,11 @@ export function DeliveryDetails({ delivery, className }: { delivery: DeliveryVie
 
   return (
     <section className={cn('flex flex-col gap-3 rounded-lg border p-3', className)} aria-label={t('deliverTo')}>
-      <div className='text-muted-foreground flex items-center gap-2 type-detail'>
+      <div className='text-muted-foreground type-detail flex items-center gap-2'>
         <Bike className='size-4 shrink-0' />
         <span className='font-medium'>{t('deliverTo')}</span>
         {delivery.distanceMeters != null && (
-          <span className='bg-muted ms-auto rounded-full px-2 py-0.5 type-caption tabular-nums'>
+          <span className='bg-muted type-caption ms-auto rounded-full px-2 py-0.5 tabular-nums'>
             {distance(toNumber(delivery.distanceMeters))}
           </span>
         )}
@@ -65,7 +65,7 @@ export function DeliveryDetails({ delivery, className }: { delivery: DeliveryVie
           <div className='type-heading'>{delivery.address}</div>
           {details && <div className='text-muted-foreground type-detail'>{details}</div>}
           {delivery.directions && (
-            <div className='text-muted-foreground mt-1 type-detail italic'>"{delivery.directions}"</div>
+            <div className='text-muted-foreground type-detail mt-1 italic'>"{delivery.directions}"</div>
           )}
           <PinQualityLabel source={delivery.pinSource} pinned={pinned} className='mt-2' />
         </div>
@@ -78,7 +78,9 @@ export function DeliveryDetails({ delivery, className }: { delivery: DeliveryVie
             <a href={tel}>
               <Phone className='size-4 shrink-0' />
               {/* Only the digits run left to right; the icon stays at the start */}
-              <span dir='ltr' className='tabular-nums'>{showPhone(delivery.phone)}</span>
+              <span dir='ltr' className='tabular-nums'>
+                {showPhone(delivery.phone)}
+              </span>
             </a>
           </Button>
         ) : (
@@ -101,7 +103,7 @@ export function DeliveryFeeRow({ delivery, className }: { delivery: DeliveryView
   const money = useMoney()
   const fee = toNumber(delivery.fee)
   return (
-    <div className={cn('text-muted-foreground flex justify-between type-detail', className)}>
+    <div className={cn('text-muted-foreground type-detail flex justify-between', className)}>
       <span>
         {t('deliveryFee')}
         {delivery.etaMinutes != null && <> · {t('deliveryAboutMinutes', { minutes: toNumber(delivery.etaMinutes) })}</>}

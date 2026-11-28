@@ -21,9 +21,13 @@ export async function extractSwatches(source: File | string): Promise<string[]> 
   // 4 bits per channel: 4096 buckets, each remembering how many pixels and their sum
   const buckets = new Map<number, { count: number; r: number; g: number; b: number }>()
   for (let i = 0; i < data.length; i += 4) {
-    const r = data[i], g = data[i + 1], b = data[i + 2], a = data[i + 3]
+    const r = data[i],
+      g = data[i + 1],
+      b = data[i + 2],
+      a = data[i + 3]
     if (a < 128) continue
-    const max = Math.max(r, g, b), min = Math.min(r, g, b)
+    const max = Math.max(r, g, b),
+      min = Math.min(r, g, b)
     if (min > 235 || max < 25 || max - min < 12) continue // white, black, grey: not a brand colour
     const key = ((r >> 4) << 8) | ((g >> 4) << 4) | (b >> 4)
     const bucket = buckets.get(key) ?? { count: 0, r: 0, g: 0, b: 0 }
@@ -56,7 +60,9 @@ export function supportsEyeDropper(): boolean {
 export async function pickColor(): Promise<string | null> {
   if (!supportsEyeDropper()) return null
   try {
-    const dropper = new (window as unknown as { EyeDropper: new () => { open(): Promise<{ sRGBHex: string }> } }).EyeDropper()
+    const dropper = new (
+      window as unknown as { EyeDropper: new () => { open(): Promise<{ sRGBHex: string }> } }
+    ).EyeDropper()
     const { sRGBHex } = await dropper.open()
     return sRGBHex.toLowerCase()
   } catch {

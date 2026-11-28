@@ -59,12 +59,21 @@ describe('the delivery choice on a shared device', () => {
 })
 
 describe('servingBranch', () => {
-  const reach = (branchId: number, distanceMeters: number) => ({ branchId, distanceMeters, fee: 0, minimumOrder: 0, signInRequired: false })
-  const branch = (id: number, extra: object = {}) => ({ id, isActive: true, isOrderingEnabled: true, ...extra }) as never
+  const reach = (branchId: number, distanceMeters: number) => ({
+    branchId,
+    distanceMeters,
+    fee: 0,
+    minimumOrder: 0,
+    signInRequired: false,
+  })
+  const branch = (id: number, extra: object = {}) =>
+    ({ id, isActive: true, isOrderingEnabled: true, ...extra }) as never
 
   it('is the nearest branch that reaches the address and takes orders', () => {
     expect(servingBranch([reach(2, 900), reach(1, 2500)], [branch(1), branch(2)])).toEqual({ branchId: 2, meters: 900 })
-    expect(servingBranch([reach(2, 900), reach(1, 2500)], [branch(1), branch(2, { isOrderingEnabled: false })])).toEqual({ branchId: 1, meters: 2500 })
+    expect(
+      servingBranch([reach(2, 900), reach(1, 2500)], [branch(1), branch(2, { isOrderingEnabled: false })])
+    ).toEqual({ branchId: 1, meters: 2500 })
   })
 
   it('skips a branch the customer cannot see, and is none when nothing reaches', () => {
@@ -75,7 +84,10 @@ describe('servingBranch', () => {
   it('passes over a branch that stopped delivering to the area when another reaches it', () => {
     const off = (branchId: number, distanceMeters: number) => ({ ...reach(branchId, distanceMeters), zoneOff: true })
     expect(servingBranch([off(2, 900), reach(1, 2500)], [branch(1), branch(2)])).toEqual({ branchId: 1, meters: 2500 })
-    expect(servingBranch([off(2, 900), reach(1, 2500)], [branch(1, { isOrderingEnabled: false }), branch(2)])).toEqual({ branchId: 2, meters: 900 })
+    expect(servingBranch([off(2, 900), reach(1, 2500)], [branch(1, { isOrderingEnabled: false }), branch(2)])).toEqual({
+      branchId: 2,
+      meters: 900,
+    })
     expect(servingBranch([off(2, 900)], [branch(1), branch(2)])).toEqual({ branchId: 2, meters: 900 })
   })
 })

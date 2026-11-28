@@ -74,8 +74,7 @@ export function useAdminNotifications() {
       }
     }
 
-    const invalidateOrders = () =>
-      refresh('getAllOrders', 'getPendingOrders', 'getOrder')
+    const invalidateOrders = () => refresh('getAllOrders', 'getPendingOrders', 'getOrder')
 
     const invalidatePlaces = () =>
       refresh(
@@ -126,8 +125,7 @@ export function useAdminNotifications() {
     // The Riders page: a rider starting or stopping, and any delivery moving
     // (given, taken back, out, delivered, cash in) change who is where and
     // the day's figures. Both reach the admin group; quiet, only lists change.
-    const invalidateRiders = () =>
-      refresh('getRidersOverview', 'getRiderDeliveries', 'getDeliveryTimeline')
+    const invalidateRiders = () => refresh('getRidersOverview', 'getRiderDeliveries', 'getDeliveryTimeline')
     connection.on('RiderStatusChanged', invalidateRiders)
     connection.on('DeliveryChanged', invalidateRiders)
 
@@ -136,21 +134,13 @@ export function useAdminNotifications() {
     // only the active branch's warning is worth a toast.
     connection.on('StockLow', (event: StockLowEvent) => {
       // Not a warning without inventory (a stack that kept its levels from a bigger plan)
-      if (
-        queryClient.getQueryData<Brand>(brandQueryKey())?.features
-          ?.inventory === false
-      )
-        return
+      if (queryClient.getQueryData<Brand>(brandQueryKey())?.features?.inventory === false) return
       refresh('getStockLevels')
       if (event.branchId == null || event.branchId !== getActiveBranchId()) {
         return
       }
       const language = useLanguage.getState().language
-      const name =
-        (language === 'ar' ? event.name?.ar : event.name?.en) ||
-        event.name?.en ||
-        event.name?.ar ||
-        ''
+      const name = (language === 'ar' ? event.name?.ar : event.name?.en) || event.name?.en || event.name?.ar || ''
       toast.warning(
         translate('stockLowToast', {
           name,
@@ -222,10 +212,7 @@ export function useAdminNotifications() {
         if (!disposed && connection.state === HubConnectionState.Disconnected) {
           // Never giving up while the page is open: a till left on all day
           // must come back by itself when the network does
-          setTimeout(
-            () => start(attempt + 1),
-            Math.min(5_000 * (attempt + 1), 30_000)
-          )
+          setTimeout(() => start(attempt + 1), Math.min(5_000 * (attempt + 1), 30_000))
         }
       }
     }
@@ -245,18 +232,14 @@ export function useAdminNotifications() {
     connection.onclose(() => {
       if (disposed) return
       setTimeout(() => {
-        if (!disposed && connection.state === HubConnectionState.Disconnected)
-          start()
+        if (!disposed && connection.state === HubConnectionState.Disconnected) start()
       }, 30_000)
     })
 
     // Automatic reconnect gives up after long background periods; reconnect
     // when the tab becomes visible again (hard-learned on the mobile apps).
     const handleVisibility = () => {
-      if (
-        document.visibilityState === 'visible' &&
-        connection.state === HubConnectionState.Disconnected
-      ) {
+      if (document.visibilityState === 'visible' && connection.state === HubConnectionState.Disconnected) {
         start()
       }
     }

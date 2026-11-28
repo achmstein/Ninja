@@ -8,7 +8,12 @@ import { Coffee, Gamepad2, User } from 'lucide-react'
 export const NAV_TABS = [
   { to: '/', key: 'menu', icon: Coffee, exact: true, under: ['/item/'] },
   { to: '/places', key: 'rooms', icon: Gamepad2, under: ['/p/', '/stays'] },
-  { to: '/profile', key: 'youTab', icon: User, under: ['/bills', '/receipts/', '/pay/', '/settings', '/loyalty', '/account', '/claim'] },
+  {
+    to: '/profile',
+    key: 'youTab',
+    icon: User,
+    under: ['/bills', '/receipts/', '/pay/', '/settings', '/loyalty', '/account', '/claim'],
+  },
 ] as const
 
 export type NavTab = (typeof NAV_TABS)[number]

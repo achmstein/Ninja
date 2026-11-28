@@ -56,11 +56,7 @@ export function PageTabs({ value, tabs, quiet, className }: PageTabsProps) {
             {active && (
               <ActiveMarker
                 group={quiet ? 'page-tabs-quiet' : 'page-tabs'}
-                className={
-                  quiet
-                    ? 'bg-muted rounded-md'
-                    : 'bg-background dark:bg-input/40 rounded-md shadow-sm'
-                }
+                className={quiet ? 'bg-muted rounded-md' : 'bg-background dark:bg-input/40 rounded-md shadow-sm'}
               />
             )}
             {tab.label}

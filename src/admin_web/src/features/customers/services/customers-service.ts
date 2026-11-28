@@ -15,10 +15,9 @@ export type CustomerOrderSummary = {
 export const customersService = {
   // What each customer has ordered: the list's last order, orders and spent
   async getOrderSummaries(): Promise<CustomerOrderSummary[]> {
-    const response = await apiClient.get<CustomerOrderSummary[]>(
-      '/api/orders/customers/summary',
-      { params: { 'api-version': API_VERSION } }
-    )
+    const response = await apiClient.get<CustomerOrderSummary[]>('/api/orders/customers/summary', {
+      params: { 'api-version': API_VERSION },
+    })
     return response.data
   },
 
@@ -74,10 +73,7 @@ export const customersService = {
     allBranches?: boolean
   }): Promise<string | null> {
     // The new login's id, so the register can link it to an employee
-    const { data } = await apiClient.post<{ userId?: string }>(
-      '/api/identity/register-admin',
-      request
-    )
+    const { data } = await apiClient.post<{ userId?: string }>('/api/identity/register-admin', request)
     return data?.userId ?? null
   },
 
@@ -104,11 +100,7 @@ export const customersService = {
   // Replace the branches a staff account may work in (Owner). The change
   // reaches the user's token on its next refresh. allBranches gives every
   // branch, those opened later too (a call centre's account).
-  async setBranches(
-    userId: string,
-    branchIds: number[],
-    allBranches = false
-  ): Promise<void> {
+  async setBranches(userId: string, branchIds: number[], allBranches = false): Promise<void> {
     await apiClient.put(`/api/identity/users/${userId}/branches`, {
       branchIds,
       allBranches,
@@ -117,20 +109,15 @@ export const customersService = {
 
   // Get a single customer by ID
   async getCustomer(userId: string): Promise<Customer> {
-    const response = await apiClient.get<Customer>(
-      `/api/identity/users/${userId}`
-    )
+    const response = await apiClient.get<Customer>(`/api/identity/users/${userId}`)
     return response.data
   },
 
   // Get total customer count
-  async getCustomerCount(
-    params: Pick<CustomerParams, 'search' | 'excludeRole' | 'enabled'> = {}
-  ): Promise<number> {
+  async getCustomerCount(params: Pick<CustomerParams, 'search' | 'excludeRole' | 'enabled'> = {}): Promise<number> {
     const queryParams = new URLSearchParams()
     if (params.search) queryParams.append('search', params.search)
-    if (params.excludeRole)
-      queryParams.append('excludeRole', params.excludeRole)
+    if (params.excludeRole) queryParams.append('excludeRole', params.excludeRole)
     if (params.enabled !== undefined) {
       queryParams.append('enabled', String(params.enabled))
     }

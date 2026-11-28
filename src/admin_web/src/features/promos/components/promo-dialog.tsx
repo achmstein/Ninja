@@ -2,10 +2,7 @@ import { useState } from 'react'
 import type { AxiosError } from 'axios'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { type PromoCodeDto, type PromoCodeRequest } from '@/api/catalog'
-import {
-  createPromoMutation,
-  updatePromoMutation,
-} from '@/api/catalog/@tanstack/react-query.gen'
+import { createPromoMutation, updatePromoMutation } from '@/api/catalog/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { formatDay } from '@/lib/business-day'
 import { useCurrencyLabel } from '@/lib/currency'
@@ -13,13 +10,7 @@ import { useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Spinner } from '@/components/ui/spinner'
 import { DatePicker } from '@/components/date-picker'
 import { EntitySheet, SheetActions } from '@/components/entity-sheet'
@@ -35,17 +26,9 @@ interface PromoDialogProps {
 export function PromoDialog({ open, onOpenChange, promo }: PromoDialogProps) {
   const t = useT()
   return (
-    <EntitySheet
-      open={open}
-      onOpenChange={onOpenChange}
-      title={promo ? t('editPromoCode') : t('newPromoCode')}
-    >
+    <EntitySheet open={open} onOpenChange={onOpenChange} title={promo ? t('editPromoCode') : t('newPromoCode')}>
       {/* Keyed so form state resets per code; closing unmounts it */}
-      <PromoForm
-        key={String(promo?.id ?? 'new')}
-        promo={promo}
-        onOpenChange={onOpenChange}
-      />
+      <PromoForm key={String(promo?.id ?? 'new')} promo={promo} onOpenChange={onOpenChange} />
     </EntitySheet>
   )
 }
@@ -59,13 +42,7 @@ const lastDayOf = (endsAt: string) => {
   return formatDay(end)
 }
 
-function PromoForm({
-  promo,
-  onOpenChange,
-}: {
-  promo: PromoCodeDto | null
-  onOpenChange: (open: boolean) => void
-}) {
+function PromoForm({ promo, onOpenChange }: { promo: PromoCodeDto | null; onOpenChange: (open: boolean) => void }) {
   const t = useT()
   const currency = useCurrencyLabel()
   const queryClient = useQueryClient()
@@ -75,16 +52,14 @@ function PromoForm({
     code: promo?.code ?? '',
     kind: Number(promo?.kind ?? PROMO_KIND.percent),
     value: promo ? String(Number(promo.value)) : '',
-    minSubtotal:
-      promo?.minSubtotal != null ? String(Number(promo.minSubtotal)) : '',
+    minSubtotal: promo?.minSubtotal != null ? String(Number(promo.minSubtotal)) : '',
     from: promo?.startsAt ? formatDay(new Date(promo.startsAt)) : '',
     until: promo?.endsAt ? lastDayOf(promo.endsAt) : '',
     maxUses: promo?.maxUses != null ? String(Number(promo.maxUses)) : '',
     oncePerCustomer: promo?.oncePerCustomer ?? true,
   })
   const [error, setError] = useState('')
-  const set = <K extends keyof typeof form>(key: K, value: (typeof form)[K]) =>
-    setForm((f) => ({ ...f, [key]: value }))
+  const set = <K extends keyof typeof form>(key: K, value: (typeof form)[K]) => setForm((f) => ({ ...f, [key]: value }))
 
   const onSuccess = () => {
     queryClient.invalidateQueries({ queryKey: [{ _id: 'listPromos' }] })
@@ -94,8 +69,7 @@ function PromoForm({
   // Catalog explains a refused code (taken, percent over 100…) in the
   // problem detail; show that rather than a generic failure
   const onError = (err: AxiosError) => {
-    const detail = (err.response?.data as { detail?: string } | undefined)
-      ?.detail
+    const detail = (err.response?.data as { detail?: string } | undefined)?.detail
     toast.error(detail || t('failedToSavePromo'))
   }
 
@@ -155,27 +129,17 @@ function PromoForm({
 
       <FieldGrid>
         <Field label={t('discount')}>
-          <Select
-            value={String(form.kind)}
-            onValueChange={(v) => set('kind', Number(v))}
-          >
+          <Select value={String(form.kind)} onValueChange={(v) => set('kind', Number(v))}>
             <SelectTrigger className='w-full'>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value={String(PROMO_KIND.percent)}>
-                {t('percentOff')}
-              </SelectItem>
-              <SelectItem value={String(PROMO_KIND.amount)}>
-                {t('amountOff')}
-              </SelectItem>
+              <SelectItem value={String(PROMO_KIND.percent)}>{t('percentOff')}</SelectItem>
+              <SelectItem value={String(PROMO_KIND.amount)}>{t('amountOff')}</SelectItem>
             </SelectContent>
           </Select>
         </Field>
-        <Field
-          label={form.kind === PROMO_KIND.percent ? '%' : currency}
-          htmlFor='promo-value'
-        >
+        <Field label={form.kind === PROMO_KIND.percent ? '%' : currency} htmlFor='promo-value'>
           <Input
             id='promo-value'
             type='number'
@@ -214,18 +178,10 @@ function PromoForm({
 
       <FieldGrid>
         <Field label={t('validFrom')}>
-          <DatePicker
-            value={form.from}
-            onChange={(v) => set('from', v)}
-            placeholder={t('always')}
-          />
+          <DatePicker value={form.from} onChange={(v) => set('from', v)} placeholder={t('always')} />
         </Field>
         <Field label={t('validUntil')}>
-          <DatePicker
-            value={form.until}
-            onChange={(v) => set('until', v)}
-            placeholder={t('always')}
-          />
+          <DatePicker value={form.until} onChange={(v) => set('until', v)} placeholder={t('always')} />
         </Field>
       </FieldGrid>
 
@@ -238,11 +194,7 @@ function PromoForm({
       {error && <p className='text-destructive text-sm'>{error}</p>}
 
       <SheetActions>
-        <Button
-          type='button'
-          variant='outline'
-          onClick={() => onOpenChange(false)}
-        >
+        <Button type='button' variant='outline' onClick={() => onOpenChange(false)}>
           {t('cancel')}
         </Button>
         <Button type='submit' form='promo-form' disabled={isSaving}>

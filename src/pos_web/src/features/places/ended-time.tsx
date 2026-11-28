@@ -1,11 +1,6 @@
 import type { StayViewModel } from '@/api/spaces/types.gen'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
-import {
-  elapsedSeconds,
-  formatClock,
-  optionSeconds,
-  tariffOptions,
-} from './status'
+import { elapsedSeconds, formatClock, optionSeconds, tariffOptions } from './status'
 
 /**
  * An ended stay's time where its clock stood, stopped at the whole stay:
@@ -17,31 +12,20 @@ export function EndedTime({ stay }: { stay: StayViewModel }) {
   const locale = useLocale()
   const localized = useLocalized()
   const end = stay.endedAt ? new Date(stay.endedAt).getTime() : Date.now()
-  const used = tariffOptions(stay.tariff).filter(
-    (o) => optionSeconds(stay, o.code, end) > 0,
-  )
+  const used = tariffOptions(stay.tariff).filter((o) => optionSeconds(stay, o.code, end) > 0)
   const endedAt = stay.endedAt
-    ? new Intl.DateTimeFormat(locale, { timeStyle: 'short' }).format(
-        new Date(stay.endedAt),
-      )
+    ? new Intl.DateTimeFormat(locale, { timeStyle: 'short' }).format(new Date(stay.endedAt))
     : null
 
   return (
     <div className='min-w-0'>
-      <div className='type-figure'>
-        {formatClock(elapsedSeconds(stay, end))}
-      </div>
+      <div className='type-figure'>{formatClock(elapsedSeconds(stay, end))}</div>
       <div className='text-muted-foreground type-body truncate tabular-nums'>
         {endedAt ? `${t('sessionEnded')} · ${endedAt}` : t('sessionEnded')}
       </div>
       {used.length > 1 && (
         <div className='text-muted-foreground type-detail truncate tabular-nums'>
-          {used
-            .map(
-              (o) =>
-                `${localized(o.name)} ${formatClock(optionSeconds(stay, o.code, end))}`,
-            )
-            .join(' · ')}
+          {used.map((o) => `${localized(o.name)} ${formatClock(optionSeconds(stay, o.code, end))}`).join(' · ')}
         </div>
       )}
     </div>

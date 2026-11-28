@@ -1,13 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useAuth } from 'react-oidc-context'
-import { Loader2 } from 'lucide-react'
 import { getStoredUser, loginPageParams } from '@/config/oidc-config'
-import { useTheme } from '@/context/theme-provider'
+import { Loader2 } from 'lucide-react'
+import { useAuth } from 'react-oidc-context'
 import { useLanguage, useT } from '@/lib/i18n'
 import { claimSignInRetry } from '@/lib/sign-in-retry'
-import { pickedSomeoneElse } from '@/features/cashiers/roster'
+import { useTheme } from '@/context/theme-provider'
 import { Button } from '@/components/ui/button'
+import { pickedSomeoneElse } from '@/features/cashiers/roster'
 
 export const Route = createFileRoute('/auth/callback')({
   component: AuthCallback,
@@ -39,8 +39,7 @@ function AuthCallback() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [auth.isAuthenticated, navigate])
 
-  const signInAgain = () =>
-    auth.signinRedirect(loginPageParams(resolvedTheme, language))
+  const signInAgain = () => auth.signinRedirect(loginPageParams(resolvedTheme, language))
 
   useEffect(() => {
     if (!auth.error || auth.isAuthenticated || handled.current) return

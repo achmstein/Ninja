@@ -2,8 +2,8 @@
 // and what the sale is made of once it is chosen. Kept apart from the screens
 // so they can be tested.
 import type { DeliveryAlternative, StaffDeliveryZone } from '@/api/ordering/types.gen'
-import type { SaleDelivery } from '@/features/sale/cart'
 import { toNumber } from '@/lib/money'
+import type { SaleDelivery } from '@/features/sale/cart'
 
 /**
  * The delivery as the sale pad keeps it, at the branch that makes it: the
@@ -37,7 +37,7 @@ export function areaById(zones: readonly StaffDeliveryZone[], zoneId: number | n
 export function pinArea(
   reaching: readonly DeliveryAlternative[],
   zones: readonly StaffDeliveryZone[],
-  branchId: number | null,
+  branchId: number | null
 ): StaffDeliveryZone | null {
   if (branchId == null) return null
   const at = reaching.find((b) => toNumber(b.branchId) === branchId)
@@ -55,7 +55,7 @@ export function chosenArea(
   zones: readonly StaffDeliveryZone[],
   byName: number | null,
   onMap: StaffDeliveryZone | null,
-  tookOff: boolean,
+  tookOff: boolean
 ): StaffDeliveryZone | null {
   const named = areaById(zones, byName)
   if (named) return named
@@ -76,7 +76,7 @@ type Delivering = { branchId: number | string; fee: number | string; paused: boo
  */
 export function branchOffers(
   reaching: readonly DeliveryAlternative[],
-  delivering: readonly Delivering[],
+  delivering: readonly Delivering[]
 ): { offers: BranchOffer[]; byHand: boolean } {
   if (reaching.length > 0) {
     return {
@@ -91,7 +91,12 @@ export function branchOffers(
   }
   return {
     byHand: true,
-    offers: delivering.map((b) => ({ branchId: toNumber(b.branchId), fee: toNumber(b.fee), distanceMeters: null, paused: b.paused })),
+    offers: delivering.map((b) => ({
+      branchId: toNumber(b.branchId),
+      fee: toNumber(b.fee),
+      distanceMeters: null,
+      paused: b.paused,
+    })),
   }
 }
 

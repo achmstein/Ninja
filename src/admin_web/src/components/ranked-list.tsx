@@ -26,19 +26,13 @@ export function RankedList({ items, className }: RankedListProps) {
     <ol className={cn('divide-y', className)}>
       {items.map((item, index) => (
         <li key={item.key} className='flex items-center gap-3 py-2 text-sm'>
-          <span className='text-muted-foreground w-5 shrink-0 text-end text-xs tabular-nums'>
-            {index + 1}
-          </span>
+          <span className='text-muted-foreground w-5 shrink-0 text-end text-xs tabular-nums'>{index + 1}</span>
           <div className='min-w-0 flex-1'>
             <div className='flex items-baseline justify-between gap-3'>
               <span className='truncate font-medium'>{item.label}</span>
               <span className='shrink-0 tabular-nums'>
                 {item.display}
-                {item.hint && (
-                  <span className='text-muted-foreground ms-1.5 text-xs'>
-                    {item.hint}
-                  </span>
-                )}
+                {item.hint && <span className='text-muted-foreground ms-1.5 text-xs'>{item.hint}</span>}
               </span>
             </div>
             <div className='bg-muted mt-1 h-1 w-full overflow-hidden rounded-full'>

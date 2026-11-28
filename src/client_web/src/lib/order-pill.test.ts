@@ -139,7 +139,9 @@ describe('a delivery', () => {
     const withRider: PillOrder = { status: 'Confirmed', delivery: { stage: 'OnTheWay', riderName: ' Emam ' } }
     expect(noteFor('onTheWay', withRider, notes)).toEqual({ words: PILL_WORDS.onTheWayRiderNote, rider: 'Emam' })
     expect(noteFor('onTheWay', delivered('OnTheWay'), notes).rider).toBeNull()
-    expect(words(PILL_WORDS.onTheWayRiderNote, 'en', false).replaceAll('{rider}', 'Emam')).toBe('Emam is on the way to you. Pay them at the door.')
+    expect(words(PILL_WORDS.onTheWayRiderNote, 'en', false).replaceAll('{rider}', 'Emam')).toBe(
+      'Emam is on the way to you. Pay them at the door.'
+    )
   })
 
   it('is followed to the door: made, on its way, delivered, before it is paid', () => {
@@ -152,7 +154,9 @@ describe('a delivery', () => {
 
   it('stays on the dock while it is out, longer than an order eaten in', () => {
     const order = { ...delivered('OnTheWay'), date: iso(0) }
-    expect(pillVisible({ placedAt, order, stageSince: placedAt, dismissed: false, now: placedAt + FOLLOW_FOR_MS + 60_000 })).toBe(true)
+    expect(
+      pillVisible({ placedAt, order, stageSince: placedAt, dismissed: false, now: placedAt + FOLLOW_FOR_MS + 60_000 })
+    ).toBe(true)
     expect(LINGER_MS.onTheWay).toBeNull()
   })
 })
@@ -169,14 +173,21 @@ describe('an order paid ahead online', () => {
     expect(stageOf(ahead('AwaitingPayment', false))).toBe('awaitingPayment')
     expect(LINGER_MS.awaitingPayment).toBeNull()
     expect(STAGE_ICON.awaitingPayment).toBe('card')
-    expect(noteFor('awaitingPayment', ahead('AwaitingPayment', false), STAGE_LABEL).words).toBe(STAGE_LABEL.awaitingPayment)
+    expect(noteFor('awaitingPayment', ahead('AwaitingPayment', false), STAGE_LABEL).words).toBe(
+      STAGE_LABEL.awaitingPayment
+    )
   })
 
   it('says it is paid once it is with the business, and that nothing is owed at the door', () => {
     expect(noteFor('sent', ahead('Submitted'), STAGE_LABEL).words).toBe(PILL_WORDS.paidSentNote)
     const onTheWay = ahead('Confirmed', true, { stage: 'OnTheWay', riderName: 'Emam' })
-    expect(noteFor('onTheWay', onTheWay, STAGE_LABEL)).toEqual({ words: PILL_WORDS.paidOnTheWayRiderNote, rider: 'Emam' })
-    expect(noteFor('onTheWay', ahead('Confirmed', true, { stage: 'OnTheWay' }), STAGE_LABEL).words).toBe(PILL_WORDS.paidOnTheWayNote)
+    expect(noteFor('onTheWay', onTheWay, STAGE_LABEL)).toEqual({
+      words: PILL_WORDS.paidOnTheWayRiderNote,
+      rider: 'Emam',
+    })
+    expect(noteFor('onTheWay', ahead('Confirmed', true, { stage: 'OnTheWay' }), STAGE_LABEL).words).toBe(
+      PILL_WORDS.paidOnTheWayNote
+    )
     expect(words(PILL_WORDS.paidOnTheWayNote, 'en', false)).toContain('nothing to pay at the door')
   })
 

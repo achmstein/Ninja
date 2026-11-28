@@ -123,10 +123,6 @@ export function useOrderActions() {
     remove,
     removeMany,
     actingOrderNumber,
-    isActing:
-      confirmOrder.isPending ||
-      cancelOrder.isPending ||
-      rejectGuestOrder.isPending ||
-      deleteOrder.isPending,
+    isActing: confirmOrder.isPending || cancelOrder.isPending || rejectGuestOrder.isPending || deleteOrder.isPending,
   }
 }

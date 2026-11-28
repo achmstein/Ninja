@@ -1,12 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { PaymentSettingsView } from '@/api/sales/types.gen'
-import {
-  FEE_GUEST,
-  secretValue,
-  toForm,
-  toRequest,
-  type PaymentsForm,
-} from './form'
+import { FEE_GUEST, secretValue, toForm, toRequest, type PaymentsForm } from './form'
 
 const view: PaymentSettingsView = {
   provider: 'Paymob',
@@ -82,9 +76,7 @@ describe('toRequest', () => {
   })
 
   it('reads the fee mode by name too', () => {
-    expect(
-      toForm({ ...view, feeMode: 'Guest' as unknown as number }).feeMode
-    ).toBe(FEE_GUEST)
+    expect(toForm({ ...view, feeMode: 'Guest' as unknown as number }).feeMode).toBe(FEE_GUEST)
     expect(toForm({ ...view, feeMode: 0 }).feeMode).toBe(0)
   })
 
@@ -97,9 +89,7 @@ describe('toRequest', () => {
     expect(toRequest(form({ walletIntegrationId: '12a' }))).toEqual({
       problem: 'integrationId',
     })
-    expect(request({ walletIntegrationId: ' 42 ' }).walletIntegrationId).toBe(
-      42
-    )
+    expect(request({ walletIntegrationId: ' 42 ' }).walletIntegrationId).toBe(42)
   })
 
   it('rejects a negative or over-100% fee', () => {

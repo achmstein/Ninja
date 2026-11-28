@@ -11,9 +11,7 @@ const menuEngineeringSearchSchema = z.object({
   days: z.union([z.literal(7), z.literal(90)]).optional(),
 })
 
-export const Route = createFileRoute(
-  '/_authenticated/inventory/menu-engineering'
-)({
+export const Route = createFileRoute('/_authenticated/inventory/menu-engineering')({
   validateSearch: menuEngineeringSearchSchema,
   component: () => (
     <FeatureGate feature='inventory'>

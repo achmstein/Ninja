@@ -29,9 +29,7 @@ export function useKitchenOrders() {
   const orders = useMemo(
     () =>
       [...(query.data ?? [])].sort(
-        (a, b) =>
-          new Date(a.confirmedAt ?? a.date ?? 0).getTime() -
-          new Date(b.confirmedAt ?? b.date ?? 0).getTime()
+        (a, b) => new Date(a.confirmedAt ?? a.date ?? 0).getTime() - new Date(b.confirmedAt ?? b.date ?? 0).getTime()
       ),
     [query.data]
   )

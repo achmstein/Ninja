@@ -7,23 +7,15 @@ import { MAX_PIXELS } from './image'
 const JPEG_QUALITY = 0.85
 
 export function isPdf(file: File): boolean {
-  return (
-    file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
-  )
+  return file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
 }
 
 /**
  * The first `maxPages` pages as images, and how many pages the PDF has in
  * all (so the caller can say the rest were left out).
  */
-export async function pdfToImages(
-  file: File,
-  maxPages: number
-): Promise<{ pages: File[]; total: number }> {
-  const [pdfjs, worker] = await Promise.all([
-    import('pdfjs-dist'),
-    import('pdfjs-dist/build/pdf.worker.min.mjs?url'),
-  ])
+export async function pdfToImages(file: File, maxPages: number): Promise<{ pages: File[]; total: number }> {
+  const [pdfjs, worker] = await Promise.all([import('pdfjs-dist'), import('pdfjs-dist/build/pdf.worker.min.mjs?url')])
   pdfjs.GlobalWorkerOptions.workerSrc = worker.default
 
   const task = pdfjs.getDocument({ data: await file.arrayBuffer() })
@@ -41,12 +33,9 @@ export async function pdfToImages(
       canvas.width = Math.round(viewport.width)
       canvas.height = Math.round(viewport.height)
       await page.render({ canvas, viewport }).promise
-      const blob = await new Promise<Blob | null>((resolve) =>
-        canvas.toBlob(resolve, 'image/jpeg', JPEG_QUALITY)
-      )
+      const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', JPEG_QUALITY))
       page.cleanup()
-      if (blob)
-        pages.push(new File([blob], `${base}-${n}.jpg`, { type: 'image/jpeg' }))
+      if (blob) pages.push(new File([blob], `${base}-${n}.jpg`, { type: 'image/jpeg' }))
     }
     return { pages, total: doc.numPages }
   } finally {

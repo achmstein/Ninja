@@ -50,9 +50,7 @@ export function Expenses() {
   const { voidExpense, isPending } = useFinanceActions()
 
   const today = formatDay(new Date())
-  const [year, month] = (search.month ?? today.slice(0, 7))
-    .split('-')
-    .map(Number)
+  const [year, month] = (search.month ?? today.slice(0, 7)).split('-').map(Number)
   const range = monthRange(year, month - 1)
   const monthKey = `${year}-${String(month).padStart(2, '0')}`
   const percent = new Intl.NumberFormat(locale, {
@@ -62,16 +60,10 @@ export function Expenses() {
 
   const expenses = useQuery(expensesQueryOptions(range.from, range.to))
   // The month before, to say whether spending went up or down
-  const before = monthRange(
-    month === 1 ? year - 1 : year,
-    month === 1 ? 11 : month - 2
-  )
+  const before = monthRange(month === 1 ? year - 1 : year, month === 1 ? 11 : month - 2)
   const lastMonth = useQuery(expensesQueryOptions(before.from, before.to))
   const lastTotal = toNumber(lastMonth.data?.total)
-  const change =
-    lastMonth.data && lastTotal > 0
-      ? (toNumber(expenses.data?.total) - lastTotal) / lastTotal
-      : null
+  const change = lastMonth.data && lastTotal > 0 ? (toNumber(expenses.data?.total) - lastTotal) / lastTotal : null
   const [adding, setAdding] = useState(false)
   const [categoriesOpen, setCategoriesOpen] = useState(false)
   const [recurringOpen, setRecurringOpen] = useState(false)
@@ -147,9 +139,7 @@ export function Expenses() {
         >
           <MonthSwitcher
             monthKey={monthKey}
-            onChange={(next) =>
-              navigate({ search: (prev) => ({ ...prev, month: next }) })
-            }
+            onChange={(next) => navigate({ search: (prev) => ({ ...prev, month: next }) })}
           />
         </PageHeader>
 
@@ -201,9 +191,7 @@ export function Expenses() {
                     display: formatEgp(c.total),
                     hint:
                       toNumber(expenses.data!.total) > 0
-                        ? percent.format(
-                            toNumber(c.total) / toNumber(expenses.data!.total)
-                          )
+                        ? percent.format(toNumber(c.total) / toNumber(expenses.data!.total))
                         : undefined,
                   }))}
               />
@@ -220,18 +208,12 @@ export function Expenses() {
                         {dayHeading(e.date, locale, t)}
                       </li>
                     )}
-                    <li
-                      className={cn(
-                        'flex items-center gap-2 py-2.5 ps-4 pe-2',
-                        voided && 'text-muted-foreground'
-                      )}
-                    >
+                    <li className={cn('flex items-center gap-2 py-2.5 ps-4 pe-2', voided && 'text-muted-foreground')}>
                       <ListRow
                         className='flex-1'
                         title={
                           <span className={cn(voided && 'line-through')}>
-                            {[e.vendor, e.note].filter(Boolean).join(' · ') ||
-                              localized(e.categoryName)}
+                            {[e.vendor, e.note].filter(Boolean).join(' · ') || localized(e.categoryName)}
                           </span>
                         }
                         meta={
@@ -240,18 +222,13 @@ export function Expenses() {
                             <Dot />
                             <span>
                               {paidFromLabel(e.paidFrom, t)}
-                              {toNumber(e.paidFrom) === PAID_FROM.partner &&
-                                e.partnerName &&
-                                ` (${e.partnerName})`}
+                              {toNumber(e.paidFrom) === PAID_FROM.partner && e.partnerName && ` (${e.partnerName})`}
                             </span>
                             {toNumber(e.source) === FINANCE_SOURCE.till && (
                               <Badge variant='muted'>{t('fromTill')}</Badge>
                             )}
-                            {toNumber(e.source) ===
-                              FINANCE_SOURCE.recurring && (
-                              <Badge variant='muted'>
-                                {t('recurringBadge')}
-                              </Badge>
+                            {toNumber(e.source) === FINANCE_SOURCE.recurring && (
+                              <Badge variant='muted'>{t('recurringBadge')}</Badge>
                             )}
                             {voided && (
                               <span className='text-destructive w-full'>
@@ -268,10 +245,7 @@ export function Expenses() {
                           </span>
                         }
                       />
-                      <ReceiptButton
-                        expense={e}
-                        onView={() => setViewingReceipt(e)}
-                      />
+                      <ReceiptButton expense={e} onView={() => setViewingReceipt(e)} />
                       <RowActions
                         actions={[
                           {
@@ -297,15 +271,9 @@ export function Expenses() {
       </Main>
 
       <ExpenseDialog open={adding} onOpenChange={setAdding} />
-      <CategoriesDialog
-        open={categoriesOpen}
-        onOpenChange={setCategoriesOpen}
-      />
+      <CategoriesDialog open={categoriesOpen} onOpenChange={setCategoriesOpen} />
       <RecurringDialog open={recurringOpen} onOpenChange={setRecurringOpen} />
-      <ReceiptDialog
-        expense={viewingReceipt}
-        onClose={() => setViewingReceipt(null)}
-      />
+      <ReceiptDialog expense={viewingReceipt} onClose={() => setViewingReceipt(null)} />
 
       <ConfirmDialog
         open={voiding !== null}
@@ -316,12 +284,7 @@ export function Expenses() {
           <div className='space-y-3'>
             <div className='flex flex-col gap-1.5'>
               <Label htmlFor='void-reason'>{t('reason')}</Label>
-              <Input
-                id='void-reason'
-                value={voidReason}
-                onChange={(e) => setVoidReason(e.target.value)}
-                autoFocus
-              />
+              <Input id='void-reason' value={voidReason} onChange={(e) => setVoidReason(e.target.value)} autoFocus />
             </div>
           </div>
         }

@@ -1,20 +1,9 @@
-import {
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  DoubleArrowLeftIcon,
-  DoubleArrowRightIcon,
-} from '@radix-ui/react-icons'
+import { ChevronLeftIcon, ChevronRightIcon, DoubleArrowLeftIcon, DoubleArrowRightIcon } from '@radix-ui/react-icons'
 import { type RowData } from '@tanstack/react-table'
 import { useT } from '@/lib/i18n'
 import { cn, getPageNumbers } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { type AppTable } from './features'
 
 type DataTablePaginationProps<TData extends RowData> = {
@@ -22,10 +11,7 @@ type DataTablePaginationProps<TData extends RowData> = {
   className?: string
 }
 
-export function DataTablePagination<TData extends RowData>({
-  table,
-  className,
-}: DataTablePaginationProps<TData>) {
+export function DataTablePagination<TData extends RowData>({ table, className }: DataTablePaginationProps<TData>) {
   const t = useT()
   const currentPage = table.state.pagination.pageIndex + 1
   const totalPages = table.getPageCount()
@@ -33,12 +19,7 @@ export function DataTablePagination<TData extends RowData>({
 
   // One page with room to spare says nothing: no pager under a short list
   const pageSize = table.state.pagination.pageSize
-  if (
-    totalPages <= 1 &&
-    table.getRowModel().rows.length < pageSize &&
-    pageSize <= 20
-  )
-    return null
+  if (totalPages <= 1 && table.getRowModel().rows.length < pageSize && pageSize <= 20) return null
 
   return (
     <div
@@ -71,9 +52,7 @@ export function DataTablePagination<TData extends RowData>({
               ))}
             </SelectContent>
           </Select>
-          <p className='hidden text-sm font-medium sm:block'>
-            {t('rowsPerPage')}
-          </p>
+          <p className='hidden text-sm font-medium sm:block'>{t('rowsPerPage')}</p>
         </div>
       </div>
 
@@ -112,9 +91,7 @@ export function DataTablePagination<TData extends RowData>({
                   className='h-8 min-w-8 px-2'
                   onClick={() => table.setPageIndex((pageNumber as number) - 1)}
                 >
-                  <span className='sr-only'>
-                    {t('goToPage', { page: pageNumber })}
-                  </span>
+                  <span className='sr-only'>{t('goToPage', { page: pageNumber })}</span>
                   {pageNumber}
                 </Button>
               )}

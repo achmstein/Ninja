@@ -3,9 +3,9 @@ import { setOrderReady, setOrderStationReady } from '@/api/ordering/sdk.gen'
 import type { KitchenOrder } from '@/api/ordering/types.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useT } from '@/lib/i18n'
+import { serverNow } from '@/lib/server-clock'
 import { toast } from '@/lib/toast'
 import { useStation } from './use-station'
-import { serverNow } from '@/lib/server-clock'
 
 const BOARD_KEY = [{ _id: 'getKitchenOrders' }]
 
@@ -48,9 +48,7 @@ export function useReady() {
       const nowIso = new Date(serverNow()).toISOString()
       queryClient.setQueriesData<KitchenOrder[]>({ queryKey: BOARD_KEY }, (old) =>
         old?.map((order) =>
-          Number(order.orderNumber) === orderNumber
-            ? { ...order, readyAt: ready ? nowIso : null }
-            : order
+          Number(order.orderNumber) === orderNumber ? { ...order, readyAt: ready ? nowIso : null } : order
         )
       )
       return { previous }
@@ -66,13 +64,10 @@ export function useReady() {
     },
   })
 
-  const setReady = (orderNumber: number, ready: boolean) =>
-    mutation.mutate({ orderNumber, ready })
+  const setReady = (orderNumber: number, ready: boolean) => mutation.mutate({ orderNumber, ready })
 
   // Only the card being acted on shows busy
-  const actingOrderNumber = mutation.isPending
-    ? (mutation.variables?.orderNumber ?? null)
-    : null
+  const actingOrderNumber = mutation.isPending ? (mutation.variables?.orderNumber ?? null) : null
 
   return { setReady, actingOrderNumber }
 }

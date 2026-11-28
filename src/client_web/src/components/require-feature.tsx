@@ -4,13 +4,7 @@ import { useFeatures, type FeatureKey } from '@/lib/brand'
 
 // Wraps a module's page: with the module off (not in the plan, or switched
 // off by the business), the page is not there, and a link from before goes home.
-export function RequireFeature({
-  feature,
-  children,
-}: {
-  feature: FeatureKey
-  children: React.ReactNode
-}) {
+export function RequireFeature({ feature, children }: { feature: FeatureKey; children: React.ReactNode }) {
   const on = useFeatures()[feature]
   const navigate = useNavigate()
 

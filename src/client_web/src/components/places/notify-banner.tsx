@@ -1,19 +1,15 @@
 import { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { motion } from 'motion/react'
 import { Bell, Loader2 } from 'lucide-react'
-import { toast } from '@/lib/toast'
-import {
-  getRoomAvailabilitySubscription,
-  subscribe,
-  unsubscribe,
-} from '@/lib/services/notifications'
-import { ensurePushToken, pushConfigured } from '@/lib/push'
+import { motion } from 'motion/react'
 import { useBranchStore } from '@/stores/branch-store'
 import { useLanguage, useT } from '@/lib/i18n'
+import { ensurePushToken, pushConfigured } from '@/lib/push'
+import { getRoomAvailabilitySubscription, subscribe, unsubscribe } from '@/lib/services/notifications'
+import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
-import { Panel } from '@/components/ninja/page/parts'
 import { Switch } from '@/components/ui/switch'
+import { Panel } from '@/components/ninja/page/parts'
 
 /** "All rooms busy — notify me when one frees up" (web push), as a panel
  *  whose bell rings once when the switch goes on. */
@@ -38,12 +34,8 @@ export function NotifyBanner() {
     try {
       if (checked) {
         const token = await ensurePushToken()
-        const ok =
-          token != null &&
-          (await subscribe('room-availability', token, language, branchId))
-        toast[ok ? 'success' : 'error'](
-          ok ? t('youWillBeNotified') : t('failedToSubscribe'),
-        )
+        const ok = token != null && (await subscribe('room-availability', token, language, branchId))
+        toast[ok ? 'success' : 'error'](ok ? t('youWillBeNotified') : t('failedToSubscribe'))
       } else {
         await unsubscribe('room-availability')
         toast.success(t('unsubscribedFromNotifications'))
@@ -69,7 +61,7 @@ export function NotifyBanner() {
       >
         <Bell className='size-5' />
       </motion.span>
-      <div className='min-w-0 flex-1 text-body font-semibold'>{t('allRoomsBusy')}</div>
+      <div className='text-body min-w-0 flex-1 font-semibold'>{t('allRoomsBusy')}</div>
       {busy || subscriptionQuery.isLoading ? (
         <Loader2 className='text-muted-foreground h-5 w-5 animate-spin' />
       ) : (

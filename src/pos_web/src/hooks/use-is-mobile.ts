@@ -18,6 +18,6 @@ export function useIsMobile(): boolean {
   return useSyncExternalStore(
     subscribe,
     () => window.matchMedia(PHONE_QUERY).matches,
-    () => false,
+    () => false
   )
 }

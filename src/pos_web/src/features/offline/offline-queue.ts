@@ -1,12 +1,12 @@
 import { AxiosError } from 'axios'
+import { getStoredUser } from '@/config/oidc-config'
 import { get, update } from 'idb-keyval'
 import { create } from 'zustand'
-import { getStoredUser } from '@/config/oidc-config'
-import { toBasketItems } from '@/features/sale/basket-items'
 import { apiClient } from '@/lib/api-client'
 import { translate } from '@/lib/i18n'
 import { isConnectionError, networkStatus } from '@/lib/network-status'
 import { problemMessage } from '@/lib/problem'
+import { toBasketItems } from '@/features/sale/basket-items'
 import {
   drainSales,
   provisionalNumber,
@@ -41,10 +41,7 @@ export const useOfflineQueue = create<QueueState>()(() => ({
   draining: false,
 }))
 
-const channel =
-  typeof BroadcastChannel !== 'undefined'
-    ? new BroadcastChannel('pos-offline-sales')
-    : null
+const channel = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('pos-offline-sales') : null
 channel?.addEventListener('message', () => {
   void loadOfflineSales()
 })
@@ -60,9 +57,7 @@ export async function loadOfflineSales(): Promise<OfflineSale[]> {
   return sales
 }
 
-async function change(
-  apply: (sales: OfflineSale[]) => OfflineSale[],
-): Promise<void> {
+async function change(apply: (sales: OfflineSale[]) => OfflineSale[]): Promise<void> {
   let next: OfflineSale[] = []
   await update<OfflineSale[]>(SALES_KEY, (sales) => {
     next = apply(sales ?? [])
@@ -82,11 +77,7 @@ export async function discardOfflineSale(id: string): Promise<void> {
 }
 
 export async function retryOfflineSale(id: string): Promise<void> {
-  await change((sales) =>
-    sales.map((s) =>
-      s.id === id ? { ...s, status: 'queued', error: null } : s,
-    ),
-  )
+  await change((sales) => sales.map((s) => (s.id === id ? { ...s, status: 'queued', error: null } : s)))
   await drainOfflineSales()
 }
 
@@ -106,8 +97,7 @@ export function nextProvisionalReceiptNumber(): string {
   return provisionalNumber(next)
 }
 
-const branchHeaders = (sale: OfflineSale) =>
-  sale.branchId != null ? { 'X-Branch-Id': String(sale.branchId) } : {}
+const branchHeaders = (sale: OfflineSale) => (sale.branchId != null ? { 'X-Branch-Id': String(sale.branchId) } : {})
 
 const replayApi: ReplayApi = {
   createOrder: async (sale) => {
@@ -130,16 +120,16 @@ const replayApi: ReplayApi = {
       {
         headers: { 'x-requestid': sale.id, ...branchHeaders(sale) },
         timeout: REPLAY_TIMEOUT_MS,
-      },
+      }
     )
     return Number(data.orderId)
   },
   ticketByOrder: async (orderId, sale) => {
     try {
-      const { data } = await apiClient.get<{ ticketId: number | string }>(
-        `/api/tickets/by-order/${orderId}`,
-        { headers: branchHeaders(sale), timeout: REPLAY_TIMEOUT_MS },
-      )
+      const { data } = await apiClient.get<{ ticketId: number | string }>(`/api/tickets/by-order/${orderId}`, {
+        headers: branchHeaders(sale),
+        timeout: REPLAY_TIMEOUT_MS,
+      })
       return data?.ticketId != null ? Number(data.ticketId) : null
     } catch (error) {
       if (error instanceof AxiosError && error.response?.status === 404) return null
@@ -147,24 +137,16 @@ const replayApi: ReplayApi = {
     }
   },
   settle: async (ticketId, sale) => {
-    await apiClient.post(
-      `/api/tickets/${ticketId}/settle`,
-      replaySettleBody(sale),
-      {
-        headers: { 'x-requestid': sale.settleRequestId, ...branchHeaders(sale) },
-        timeout: REPLAY_TIMEOUT_MS,
-      },
-    )
+    await apiClient.post(`/api/tickets/${ticketId}/settle`, replaySettleBody(sale), {
+      headers: { 'x-requestid': sale.settleRequestId, ...branchHeaders(sale) },
+      timeout: REPLAY_TIMEOUT_MS,
+    })
   },
 }
 
 function describe(error: unknown): string {
   if (error instanceof ReplayError) {
-    return translate(
-      error.reason === 'alreadyPlaced'
-        ? 'offlineAlreadyPlaced'
-        : 'offlineTicketNotReady',
-    )
+    return translate(error.reason === 'alreadyPlaced' ? 'offlineAlreadyPlaced' : 'offlineTicketNotReady')
   }
   return problemMessage(error, translate, 'somethingWentWrong')
 }
@@ -211,9 +193,7 @@ export async function drainOfflineSales(): Promise<boolean> {
         save: async (id, next) => {
           if (next === null) replayed = true
           await change((all) =>
-            next === null
-              ? all.filter((s) => s.id !== id)
-              : all.map((s) => (s.id === id ? next : s)),
+            next === null ? all.filter((s) => s.id !== id) : all.map((s) => (s.id === id ? next : s))
           )
         },
       })
@@ -224,4 +204,3 @@ export async function drainOfflineSales(): Promise<boolean> {
   })
   return replayed
 }
-

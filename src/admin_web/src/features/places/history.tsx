@@ -3,34 +3,14 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { getRouteApi } from '@tanstack/react-router'
 import { useTable } from '@tanstack/react-table'
 import { type StayViewModel } from '@/api/spaces'
-import {
-  getStayHistoryOptions,
-  listPlacesOptions,
-} from '@/api/spaces/@tanstack/react-query.gen'
+import { getStayHistoryOptions, listPlacesOptions } from '@/api/spaces/@tanstack/react-query.gen'
 import { useNow } from '@/lib/business-clock'
 import { presetWindow } from '@/lib/business-day'
-import {
-  useLanguage,
-  useLocale,
-  useLocalized,
-  useT,
-  type TranslationKey,
-} from '@/lib/i18n'
+import { useLanguage, useLocale, useLocalized, useT, type TranslationKey } from '@/lib/i18n'
 import { dayHeading, dayKey } from '@/lib/when'
 import { useTableUrlState } from '@/hooks/use-table-url-state'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import {
-  createAppColumnHelper,
-  DataTable,
-  DataTablePagination,
-  dataTableFeatures,
-} from '@/components/data-table'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { createAppColumnHelper, DataTable, DataTablePagination, dataTableFeatures } from '@/components/data-table'
 import { Main } from '@/components/layout/main'
 import { Dot, ListRow } from '@/components/list-row'
 import { Money } from '@/components/money'
@@ -38,12 +18,7 @@ import { PageHeader } from '@/components/page-header'
 import { StatusChip } from '@/components/status-chip'
 import { When } from '@/components/when'
 import { useTillWindow } from '@/features/till/use-till-window'
-import {
-  comparePlaces,
-  formatDuration,
-  STAY_CANCELLED,
-  stayBreakdown,
-} from './status'
+import { comparePlaces, formatDuration, STAY_CANCELLED, stayBreakdown } from './status'
 
 const route = getRouteApi('/_authenticated/places/history')
 
@@ -87,20 +62,15 @@ function StaySpan({ stay }: { stay: StayViewModel }) {
 }
 
 function stayDuration(stay: StayViewModel): string {
-  return stay.startedAt && stay.endedAt
-    ? formatDuration(stay.startedAt, stay.endedAt)
-    : '—'
+  return stay.startedAt && stay.endedAt ? formatDuration(stay.startedAt, stay.endedAt) : '—'
 }
 
 /** Paid (with its receipt), not paid, or cancelled, as a soft chip */
 function StayPaid({ stay }: { stay: StayViewModel }) {
   const t = useT()
-  if (Number(stay.status) === STAY_CANCELLED)
-    return <StatusChip tone='danger'>{t('cancelled')}</StatusChip>
+  if (Number(stay.status) === STAY_CANCELLED) return <StatusChip tone='danger'>{t('cancelled')}</StatusChip>
   return stay.paidAt ? (
-    <StatusChip tone='success'>
-      {stay.receiptNumber != null ? `#${stay.receiptNumber}` : t('paid')}
-    </StatusChip>
+    <StatusChip tone='success'>{stay.receiptNumber != null ? `#${stay.receiptNumber}` : t('paid')}</StatusChip>
   ) : (
     <StatusChip tone='warning'>{t('notPaid')}</StatusChip>
   )
@@ -115,24 +85,18 @@ export function StayHistory() {
   const search = route.useSearch()
   const navigate = route.useNavigate()
 
-  const { pagination, onPaginationChange, ensurePageInRange } =
-    useTableUrlState({
-      search,
-      navigate,
-      pagination: { defaultPageSize: 20 },
-      globalFilter: { enabled: false },
-    })
+  const { pagination, onPaginationChange, ensurePageInRange } = useTableUrlState({
+    search,
+    navigate,
+    pagination: { defaultPageSize: 20 },
+    globalFilter: { enabled: false },
+  })
 
   const { fromDate, toDate, ready } = useRangeWindow(search.range)
 
   // Only a timed place has stays to look back on
-  const { data: places = [] } = useQuery(
-    listPlacesOptions({ query: { timed: true } })
-  )
-  const timedPlaces = useMemo(
-    () => [...places].sort(comparePlaces()),
-    [places]
-  )
+  const { data: places = [] } = useQuery(listPlacesOptions({ query: { timed: true } }))
+  const timedPlaces = useMemo(() => [...places].sort(comparePlaces()), [places])
 
   const historyQuery = useQuery({
     ...getStayHistoryOptions({
@@ -158,12 +122,8 @@ export function StayHistory() {
           header: t('place'),
           cell: ({ row }) => (
             <div className='flex flex-col leading-tight'>
-              <span className='font-medium'>
-                {localized(row.original.placeName)}
-              </span>
-              <span className='text-muted-foreground text-xs'>
-                {row.original.customerName || t('walkIn')}
-              </span>
+              <span className='font-medium'>{localized(row.original.placeName)}</span>
+              <span className='text-muted-foreground text-xs'>{row.original.customerName || t('walkIn')}</span>
             </div>
           ),
         }),
@@ -173,9 +133,7 @@ export function StayHistory() {
           cell: ({ row }) => (
             <div className='flex flex-col leading-tight'>
               <StaySpan stay={row.original} />
-              <span className='text-muted-foreground text-xs tabular-nums'>
-                {stayDuration(row.original)}
-              </span>
+              <span className='text-muted-foreground text-xs tabular-nums'>{stayDuration(row.original)}</span>
             </div>
           ),
         }),
@@ -305,13 +263,7 @@ export function StayHistory() {
                   )}
                 </>
               }
-              trailing={
-                <Money
-                  value={stay.totalCost}
-                  strong
-                  dashZero={stay.totalCost == null}
-                />
-              }
+              trailing={<Money value={stay.totalCost} strong dashZero={stay.totalCost == null} />}
               trailingMeta={<StayPaid stay={stay} />}
             />
           )}

@@ -3,13 +3,7 @@ import type { BusinessType } from '@/api/control'
 import { useT, type TranslationKey } from '@/lib/i18n'
 import type { ModuleName } from '@/lib/tenant'
 import { Label } from '@/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 
 export const BUSINESS_TYPES: BusinessType[] = ['CoffeeShop', 'Restaurant', 'CloudKitchen', 'GameStation', 'Other']
@@ -98,7 +92,13 @@ export function ArabicStyleField({ value, onChange }: { value: ArabicStyle; onCh
 }
 
 /** Light, dark or the device's, the first time someone opens the business's apps: part of its look */
-export function DefaultThemeField({ value, onChange }: { value: DefaultTheme; onChange: (value: DefaultTheme) => void }) {
+export function DefaultThemeField({
+  value,
+  onChange,
+}: {
+  value: DefaultTheme
+  onChange: (value: DefaultTheme) => void
+}) {
   const t = useT()
   return (
     <div className='grid min-w-0 gap-2'>

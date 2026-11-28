@@ -1,11 +1,7 @@
 import { StrictMode } from 'react'
 import ReactDOM from 'react-dom/client'
 import { AxiosError } from 'axios'
-import {
-  QueryCache,
-  QueryClient,
-  QueryClientProvider,
-} from '@tanstack/react-query'
+import { QueryCache, QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { RouterProvider, createRouter } from '@tanstack/react-router'
 import { bootBrand } from '@/lib/brand'
 import { handleServerError } from '@/lib/handle-server-error'
@@ -23,10 +19,7 @@ const queryClient = new QueryClient({
     queries: {
       retry: (failureCount, error) => {
         if (failureCount > 3) return false
-        return !(
-          error instanceof AxiosError &&
-          [401, 403].includes(error.response?.status ?? 0)
-        )
+        return !(error instanceof AxiosError && [401, 403].includes(error.response?.status ?? 0))
       },
       refetchOnWindowFocus: import.meta.env.PROD,
       staleTime: 10 * 1000, // 10s

@@ -13,10 +13,7 @@ import { ItemDetailsForm } from './item-details-form'
 import { PairingsSection } from './pairings-section'
 import { StockRuleSection } from './stock-rule-section'
 
-export type ItemSheetState =
-  | { mode: 'edit'; itemId: number }
-  | { mode: 'create'; categoryId?: number }
-  | null
+export type ItemSheetState = { mode: 'edit'; itemId: number } | { mode: 'create'; categoryId?: number } | null
 
 type ItemSheetProps = {
   state: ItemSheetState
@@ -37,20 +34,11 @@ type ItemSheetProps = {
  * Each tab puts its own Save in the sheet's footer; Delete sits on the
  * details tab alone.
  */
-export function ItemSheet({
-  state,
-  items,
-  categories,
-  onStateChange,
-  onDelete,
-}: ItemSheetProps) {
+export function ItemSheet({ state, items, categories, onStateChange, onDelete }: ItemSheetProps) {
   const t = useT()
   const features = useFeatures()
   const localized = useLocalized()
-  const item =
-    state?.mode === 'edit'
-      ? items.find((i) => toNumber(i.id) === state.itemId)
-      : undefined
+  const item = state?.mode === 'edit' ? items.find((i) => toNumber(i.id) === state.itemId) : undefined
   const open = state?.mode === 'create' || !!item
 
   // A different item starts on its details, not the tab last read
@@ -101,12 +89,7 @@ export function ItemSheet({
       <TabsContent value='details'>
         {item ? (
           <>
-            <ItemDetailsForm
-              key={String(item.id)}
-              item={item}
-              categories={categories}
-              onSaved={() => {}}
-            />
+            <ItemDetailsForm key={String(item.id)} item={item} categories={categories} onSaved={() => {}} />
             <SheetActions side='start'>
               <Button
                 type='button'
@@ -125,12 +108,8 @@ export function ItemSheet({
             key='new'
             item={null}
             categories={categories}
-            defaultCategoryId={
-              state?.mode === 'create' ? state.categoryId : undefined
-            }
-            onSaved={(itemId) =>
-              onStateChange(itemId ? { mode: 'edit', itemId } : null)
-            }
+            defaultCategoryId={state?.mode === 'create' ? state.categoryId : undefined}
+            onSaved={(itemId) => onStateChange(itemId ? { mode: 'edit', itemId } : null)}
             onCancel={() => onStateChange(null)}
           />
         )}

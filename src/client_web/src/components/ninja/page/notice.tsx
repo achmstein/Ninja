@@ -37,7 +37,9 @@ export function Notice({
         <span
           className={cn(
             'grid size-10 shrink-0 place-items-center rounded-full',
-            tone === 'paused' ? 'bg-amber-500/20 text-amber-700 dark:text-amber-300' : 'bg-primary text-primary-foreground'
+            tone === 'paused'
+              ? 'bg-amber-500/20 text-amber-700 dark:text-amber-300'
+              : 'bg-primary text-primary-foreground'
           )}
         >
           <Icon className='size-5' />

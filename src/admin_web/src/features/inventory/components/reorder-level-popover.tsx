@@ -6,11 +6,7 @@ import { toNumber } from '@/lib/money'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Spinner } from '@/components/ui/spinner'
 import { formatQuantity, unitLabel } from '../format'
 import { useInventoryActions } from '../use-inventory-actions'
@@ -53,17 +49,11 @@ export function ReorderLevelPopover({ level }: { level: StockLevelView }) {
           onClick={(e) => e.stopPropagation()}
           aria-label={t('setReorderLevel')}
         >
-          {current != null
-            ? t('reorderAt', { level: formatQuantity(current, level.unit, t) })
-            : t('noReorderLevel')}
+          {current != null ? t('reorderAt', { level: formatQuantity(current, level.unit, t) }) : t('noReorderLevel')}
           <Pencil className='h-3 w-3' />
         </Button>
       </PopoverTrigger>
-      <PopoverContent
-        className='w-64 space-y-3'
-        align='start'
-        onClick={(e) => e.stopPropagation()}
-      >
+      <PopoverContent className='w-64 space-y-3' align='start' onClick={(e) => e.stopPropagation()}>
         <form
           className='space-y-3'
           onSubmit={(e) => {
@@ -89,13 +79,7 @@ export function ReorderLevelPopover({ level }: { level: StockLevelView }) {
           </div>
           <div className='flex justify-end gap-2'>
             {current != null && (
-              <Button
-                type='button'
-                variant='ghost'
-                size='sm'
-                disabled={isPending}
-                onClick={() => save(null)}
-              >
+              <Button type='button' variant='ghost' size='sm' disabled={isPending} onClick={() => save(null)}>
                 {t('clear')}
               </Button>
             )}

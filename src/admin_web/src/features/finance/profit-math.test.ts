@@ -1,14 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { type ProfitView } from '@/api/finance'
 import { remainingShare, shareFits } from './partner-shares'
-import {
-  formatShare,
-  oldestFirst,
-  profitAddsUp,
-  profitBase,
-  profitStatement,
-  shareOf,
-} from './profit-math'
+import { formatShare, oldestFirst, profitAddsUp, profitBase, profitStatement, shareOf } from './profit-math'
 
 // A month: 11,400 sold, 400 refunded, VAT 1,400 on the sales of which 49.12
 // came back with the refunds; goods 3,000, waste 100, a count 60 short,
@@ -96,20 +89,12 @@ describe('the profit trend', () => {
       { year: 2025, month: 12 },
       { year: 2026, month: 1 },
     ]
-    expect(oldestFirst(months).map((m) => `${m.year}-${m.month}`)).toEqual([
-      '2025-12',
-      '2026-1',
-      '2026-2',
-    ])
+    expect(oldestFirst(months).map((m) => `${m.year}-${m.month}`)).toEqual(['2025-12', '2026-1', '2026-2'])
   })
 })
 
 describe('partner shares', () => {
-  const partner = (
-    id: number,
-    isActive: boolean,
-    shares: [number, number][]
-  ) => ({
+  const partner = (id: number, isActive: boolean, shares: [number, number][]) => ({
     id,
     name: `P${id}`,
     phone: null,

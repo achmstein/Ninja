@@ -12,11 +12,7 @@ function pictureVersion(pictureUri: string | null | undefined): string {
  * it through only with an api-version, unlike the items'. With `width` (320,
  * 640 or 1280) the server's copy that wide.
  */
-export function promotionPictureUrl(
-  id: number | string,
-  pictureUri?: string | null,
-  width?: 320 | 640 | 1280
-): string {
+export function promotionPictureUrl(id: number | string, pictureUri?: string | null, width?: 320 | 640 | 1280): string {
   // The gateway passes only the items' pictures without an api-version
   const query = new URLSearchParams(pictureVersion(pictureUri).slice(1))
   query.set('api-version', '1.0')

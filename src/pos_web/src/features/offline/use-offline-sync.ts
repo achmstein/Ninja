@@ -3,11 +3,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useAuth } from 'react-oidc-context'
 import { apiClient } from '@/lib/api-client'
 import { useNetworkStatus, watchNetwork } from '@/lib/network-status'
-import {
-  drainOfflineSales,
-  loadOfflineSales,
-  useOfflineQueue,
-} from './offline-queue'
+import { drainOfflineSales, loadOfflineSales, useOfflineQueue } from './offline-queue'
 import { useBranchPricing } from './use-branch-pricing'
 
 /** While sales wait, how often the till tries them again even without a sign the server is back */
@@ -25,9 +21,7 @@ export function useOfflineSync() {
   const auth = useAuth()
   // A renewed token is a new chance: the drain waits for one the server accepts
   const token = auth.user?.access_token
-  const queued = useOfflineQueue((s) =>
-    s.sales.some((sale) => sale.status === 'queued'),
-  )
+  const queued = useOfflineQueue((s) => s.sales.some((sale) => sale.status === 'queued'))
 
   // Fetched while the server is there, for the sale that is rung up when it is not
   useBranchPricing()

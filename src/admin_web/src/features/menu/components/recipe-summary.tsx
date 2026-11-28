@@ -3,19 +3,9 @@ import { useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
 import { formatQuantity } from '@/features/inventory/format'
-import {
-  fromApi,
-  optionSetKey,
-  type SlotDraft,
-} from '@/features/inventory/recipe-model'
+import { fromApi, optionSetKey, type SlotDraft } from '@/features/inventory/recipe-model'
 import { type MenuGroup, type MenuOptions } from '../menu-options'
-import {
-  combos,
-  ONE,
-  reconstruct,
-  type IngredientSpec,
-  type Varying,
-} from '../recipe-cards'
+import { combos, ONE, reconstruct, type IngredientSpec, type Varying } from '../recipe-cards'
 import { Arrow, OptionChips, type StockInfo } from './recipe-editor'
 
 /**
@@ -43,29 +33,16 @@ export function RecipeSummary({
     menu.groups.map((g) => g.id)
   )
   const { ingredients, custom } = reconstruct(draft, menu)
-  const label = (id: string | null | undefined) =>
-    (id && stock.get(id)?.label) || t('pickStockItem')
+  const label = (id: string | null | undefined) => (id && stock.get(id)?.label) || t('pickStockItem')
   const unit = (id: string | null) => (id && stock.get(id)?.unit) || ''
 
   return (
     <div className='space-y-2 text-sm'>
       {ingredients.map((spec) => (
-        <IngredientSummary
-          key={spec.key}
-          spec={spec}
-          menu={menu}
-          label={label}
-          unit={unit}
-        />
+        <IngredientSummary key={spec.key} spec={spec} menu={menu} label={label} unit={unit} />
       ))}
       {custom.map((slot) => (
-        <CustomSlot
-          key={slot.key}
-          slot={slot}
-          menu={menu}
-          label={label}
-          unit={unit}
-        />
+        <CustomSlot key={slot.key} slot={slot} menu={menu} label={label} unit={unit} />
       ))}
     </div>
   )
@@ -73,9 +50,7 @@ export function RecipeSummary({
 
 /** The groups a value is split by, as the menu has them */
 const groupsOf = (varying: Varying<unknown>, menu: MenuOptions): MenuGroup[] =>
-  varying.groupIds
-    .map((id) => menu.groups.find((g) => g.id === id))
-    .filter((g): g is MenuGroup => !!g)
+  varying.groupIds.map((id) => menu.groups.find((g) => g.id === id)).filter((g): g is MenuGroup => !!g)
 
 function IngredientSummary({
   spec,
@@ -106,20 +81,13 @@ function IngredientSummary({
               groups: itemGroups.map((g) => g.label).join(' × '),
             })}
           </div>
-          <Cells
-            varying={spec.item}
-            groups={itemGroups}
-            menu={menu}
-            render={(value) => label(value)}
-          />
+          <Cells varying={spec.item} groups={itemGroups} menu={menu} render={(value) => label(value)} />
         </>
       )}
 
       {/* The amount, laid out the same way; nothing is how a choice drops it */}
       {amountGroups.length === 0 ? (
-        <div className='mt-1 text-xs tabular-nums'>
-          {formatQuantity(spec.amount.cells[ONE] ?? '', u, t)}
-        </div>
+        <div className='mt-1 text-xs tabular-nums'>{formatQuantity(spec.amount.cells[ONE] ?? '', u, t)}</div>
       ) : (
         <>
           <div className='text-muted-foreground mt-1 text-xs'>
@@ -132,11 +100,7 @@ function IngredientSummary({
             groups={amountGroups}
             menu={menu}
             numeric
-            render={(value) =>
-              toNumber(value ?? '') > 0
-                ? formatQuantity(value ?? '', u, t)
-                : t('nothing')
-            }
+            render={(value) => (toNumber(value ?? '') > 0 ? formatQuantity(value ?? '', u, t) : t('nothing'))}
           />
         </>
       )}
@@ -191,9 +155,7 @@ function Cells<T>({
         <tbody>
           {rows.options.map((r) => (
             <tr key={r.id}>
-              <td className='text-muted-foreground pe-3 font-medium'>
-                {r.label}
-              </td>
+              <td className='text-muted-foreground pe-3 font-medium'>{r.label}</td>
               {cols.options.map((c) => (
                 <td key={c.id} className={cn('pe-3', value)}>
                   {render(at([r.id, c.id]))}
@@ -211,10 +173,7 @@ function Cells<T>({
       {combos(groups).map((combo) => {
         const ids = combo.map((o) => o.id)
         return (
-          <li
-            key={optionSetKey(ids)}
-            className='flex flex-wrap items-center gap-x-1.5'
-          >
+          <li key={optionSetKey(ids)} className='flex flex-wrap items-center gap-x-1.5'>
             <OptionChips optionIds={ids} menu={menu} />
             <Arrow className='text-muted-foreground' />
             <span className={value}>{render(at(ids))}</span>
@@ -257,11 +216,7 @@ function CustomSlot({
             ) : (
               <span>
                 <span className='text-muted-foreground tabular-nums'>
-                  {formatQuantity(
-                    o.quantity || slot.quantity,
-                    unit(o.stockItemId ?? slot.stockItemId),
-                    t
-                  )}
+                  {formatQuantity(o.quantity || slot.quantity, unit(o.stockItemId ?? slot.stockItemId), t)}
                 </span>{' '}
                 {label(o.stockItemId ?? slot.stockItemId)}
               </span>

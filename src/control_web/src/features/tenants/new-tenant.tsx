@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { getRouteApi, Link, useNavigate } from '@tanstack/react-router'
 import { ChevronDown, TriangleAlert } from 'lucide-react'
+import { getLeadPhoto, type CreateTenantRequest, type LeadDto } from '@/api/control'
+import type { BusinessType } from '@/api/control'
 import {
   createTenantMutation,
   getLeadOptions,
@@ -14,43 +16,6 @@ import {
   updateLeadMutation,
   uploadTenantSeedImageMutation,
 } from '@/api/control/@tanstack/react-query.gen'
-import { getLeadPhoto, type CreateTenantRequest, type LeadDto } from '@/api/control'
-import { ColorField } from '@/components/brand/color-field'
-import { DockField, type Dock } from '@/components/brand/dock-field'
-import { MapsField } from '@/components/brand/maps-field'
-import { SocialField } from '@/components/brand/social-field'
-import { ImageSlotGrid, SLOT_LABELS } from '@/components/brand/image-slots'
-import { useLogoCleanup } from '@/components/brand/logo-cleanup'
-import { MenuDrop } from './menu-drop'
-import { includedCount, toImportRequest, type DropCategory } from './menu-review'
-import {
-  LocalizedInput,
-  fromLocalizedValue,
-  isBlank,
-  type LocalizedValue,
-} from '@/components/localized-input'
-import { PageHeader } from '@/components/page-header'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Checkbox } from '@/components/ui/checkbox'
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { Spinner } from '@/components/ui/spinner'
-import { Textarea } from '@/components/ui/textarea'
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { IMAGE_SLOTS, type ImageSlot } from '@/lib/brand-slots'
 import { megabytes } from '@/lib/format'
 import { useT } from '@/lib/i18n'
@@ -77,11 +42,27 @@ import {
   type TenantSeedName,
 } from '@/lib/tenant'
 import { toast } from '@/lib/toast'
-import {
-  ContentLanguagesField,
-  LocaleFields,
-  type ContentLanguagesValue,
-} from './new-tenant-locale'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Spinner } from '@/components/ui/spinner'
+import { Textarea } from '@/components/ui/textarea'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+import { ColorField } from '@/components/brand/color-field'
+import { DockField, type Dock } from '@/components/brand/dock-field'
+import { ImageSlotGrid, SLOT_LABELS } from '@/components/brand/image-slots'
+import { useLogoCleanup } from '@/components/brand/logo-cleanup'
+import { MapsField } from '@/components/brand/maps-field'
+import { SocialField } from '@/components/brand/social-field'
+import { LocalizedInput, fromLocalizedValue, isBlank, type LocalizedValue } from '@/components/localized-input'
+import { PageHeader } from '@/components/page-header'
+import { MenuDrop } from './menu-drop'
+import { includedCount, toImportRequest, type DropCategory } from './menu-review'
 import {
   BusinessPicker,
   ArabicStyleField,
@@ -90,7 +71,7 @@ import {
   type ArabicStyle,
   type DefaultTheme,
 } from './new-tenant-business'
-import type { BusinessType } from '@/api/control'
+import { ContentLanguagesField, LocaleFields, type ContentLanguagesValue } from './new-tenant-locale'
 
 type SlotFiles = Partial<Record<ImageSlot, File>>
 
@@ -196,7 +177,11 @@ function NewTenantForm({ lead }: { lead: LeadDto | null }) {
 
   // Identity
   const [name, setName] = useState<LocalizedValue>(() =>
-    lead ? (isArabic(lead.business) ? { en: '', ar: lead.business } : { en: lead.business, ar: '' }) : { en: '', ar: '' }
+    lead
+      ? isArabic(lead.business)
+        ? { en: '', ar: lead.business }
+        : { en: lead.business, ar: '' }
+      : { en: '', ar: '' }
   )
   const [ownerEmail, setOwnerEmail] = useState('')
   const [kind, setKind] = useState<TenantKindName>('Demo')
@@ -213,9 +198,7 @@ function NewTenantForm({ lead }: { lead: LeadDto | null }) {
   const [addons, setAddons] = useState<ModuleName[]>(SUGGESTED_MODULES[lead?.businessType ?? 'CoffeeShop'])
   const [addonsTouched, setAddonsTouched] = useState(false)
   const [business, setBusiness] = useState<BusinessType>(lead?.businessType ?? 'CoffeeShop')
-  const [arabicStyle, setArabicStyle] = useState<ArabicStyle>(
-    FIRST_COUNTRY.code === 'EG' ? 'egyptian' : 'standard'
-  )
+  const [arabicStyle, setArabicStyle] = useState<ArabicStyle>(FIRST_COUNTRY.code === 'EG' ? 'egyptian' : 'standard')
   const [arabicTouched, setArabicTouched] = useState(false)
   const [defaultTheme, setDefaultTheme] = useState<DefaultTheme>('device')
   const plans = useQuery(getPlansOptions())
@@ -280,8 +263,7 @@ function NewTenantForm({ lead }: { lead: LeadDto | null }) {
         )
       )
       results.forEach((result, i) => {
-        if (result.status === 'rejected')
-          toast.error(t('imageUploadFailed', { slot: t(SLOT_LABELS[picked[i].slot]) }))
+        if (result.status === 'rejected') toast.error(t('imageUploadFailed', { slot: t(SLOT_LABELS[picked[i].slot]) }))
       })
       if (includedCount(menu) > 0) {
         try {
@@ -293,7 +275,10 @@ function NewTenantForm({ lead }: { lead: LeadDto | null }) {
       // The request has its demo: it says which, and stops waiting
       if (lead) {
         try {
-          await closeLead.mutateAsync({ path: { id: Number(lead.id) }, body: { status: 'DemoCreated', note: lead.note, tenantSlug: tenant.slug } })
+          await closeLead.mutateAsync({
+            path: { id: Number(lead.id) },
+            body: { status: 'DemoCreated', note: lead.note, tenantSlug: tenant.slug },
+          })
           queryClient.invalidateQueries({ queryKey: listLeadsQueryKey() })
         } catch (e) {
           toast.error(problemDetail(e) || t('somethingWentWrong'))
@@ -398,13 +383,7 @@ function NewTenantForm({ lead }: { lead: LeadDto | null }) {
               <CardTitle>{t('tabBusiness')}</CardTitle>
             </CardHeader>
             <CardContent className='grid gap-4'>
-              <LocalizedInput
-                id='name'
-                label={t('name')}
-                value={name}
-                onChange={setName}
-                autoFocus
-              />
+              <LocalizedInput id='name' label={t('name')} value={name} onChange={setName} autoFocus />
 
               <div className='grid gap-4 sm:grid-cols-2'>
                 <div className='grid gap-2'>
@@ -498,11 +477,7 @@ function NewTenantForm({ lead }: { lead: LeadDto | null }) {
                 <CollapsibleContent className='grid gap-4 pt-4 sm:grid-cols-2'>
                   <div className='grid gap-2'>
                     <Label htmlFor='contactName'>{t('contactName')}</Label>
-                    <Input
-                      id='contactName'
-                      value={contactName}
-                      onChange={(e) => setContactName(e.target.value)}
-                    />
+                    <Input id='contactName' value={contactName} onChange={(e) => setContactName(e.target.value)} />
                   </div>
                   <div className='grid gap-2'>
                     <Label htmlFor='phone'>{t('phone')}</Label>
@@ -517,21 +492,11 @@ function NewTenantForm({ lead }: { lead: LeadDto | null }) {
                   </div>
                   <div className='grid gap-2 sm:col-span-2'>
                     <Label htmlFor='address'>{t('address')}</Label>
-                    <Textarea
-                      id='address'
-                      rows={2}
-                      value={address}
-                      onChange={(e) => setAddress(e.target.value)}
-                    />
+                    <Textarea id='address' rows={2} value={address} onChange={(e) => setAddress(e.target.value)} />
                   </div>
                   <div className='grid gap-2 sm:col-span-2'>
                     <Label htmlFor='notes'>{t('notes')}</Label>
-                    <Textarea
-                      id='notes'
-                      rows={3}
-                      value={notes}
-                      onChange={(e) => setNotes(e.target.value)}
-                    />
+                    <Textarea id='notes' rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} />
                   </div>
                 </CollapsibleContent>
               </Collapsible>
@@ -694,11 +659,7 @@ function NewTenantForm({ lead }: { lead: LeadDto | null }) {
                   </span>
                 </div>
                 <Label htmlFor='force' className='text-foreground pt-1'>
-                  <Checkbox
-                    id='force'
-                    checked={force}
-                    onCheckedChange={(v) => setForce(v === true)}
-                  />
+                  <Checkbox id='force' checked={force} onCheckedChange={(v) => setForce(v === true)} />
                   {t('forceCreate')}
                 </Label>
               </AlertDescription>
@@ -722,7 +683,11 @@ function NewTenantForm({ lead }: { lead: LeadDto | null }) {
             <p className='text-muted-foreground text-sm'>{t('menuDropSectionHint')}</p>
           </div>
           <MenuDrop
-            sent={lead && lead.photos.length > 0 ? { count: lead.photos.length, load: () => leadPhotoFiles(lead) } : undefined}
+            sent={
+              lead && lead.photos.length > 0
+                ? { count: lead.photos.length, load: () => leadPhotoFiles(lead) }
+                : undefined
+            }
             languages={contentLanguages}
             menu={menu}
             onMenu={(next) => {

@@ -74,7 +74,10 @@ function watchPrecise() {
       const accuracy = pos.coords.accuracy || Infinity
       if (accuracy >= best) return
       best = accuracy
-      set({ status: accuracy <= DOOR_ACCURACY ? 'ok' : 'locating', here: { lat: pos.coords.latitude, lng: pos.coords.longitude } })
+      set({
+        status: accuracy <= DOOR_ACCURACY ? 'ok' : 'locating',
+        here: { lat: pos.coords.latitude, lng: pos.coords.longitude },
+      })
       if (accuracy <= DOOR_ACCURACY) stop()
     },
     (err) => {
@@ -104,7 +107,8 @@ function requestFix(precise = false) {
   navigator.geolocation.getCurrentPosition(
     // A coarse fix coming in while the GPS is watched for a door would put the pin back on the guess
     (pos) => stopWatch == null && set({ status: 'ok', here: { lat: pos.coords.latitude, lng: pos.coords.longitude } }),
-    (err) => set({ status: err.code === err.PERMISSION_DENIED ? 'denied' : useGeo.getState().here ? 'ok' : 'unavailable' }),
+    (err) =>
+      set({ status: err.code === err.PERMISSION_DENIED ? 'denied' : useGeo.getState().here ? 'ok' : 'unavailable' }),
     // A café a street away needs no GPS lock: a coarse fix, a recent one if there is, and soon
     { enableHighAccuracy: false, maximumAge: 5 * 60_000, timeout: 10_000 }
   )
@@ -225,7 +229,9 @@ export function useMyLocation(
 }
 
 /** The branch's point, when the owner gave it one */
-export function pointOf(place: { latitude?: number | string | null; longitude?: number | string | null } | null | undefined): LatLng | null {
+export function pointOf(
+  place: { latitude?: number | string | null; longitude?: number | string | null } | null | undefined
+): LatLng | null {
   if (place?.latitude == null || place.longitude == null || place.latitude === '' || place.longitude === '') return null
   const lat = Number(place.latitude)
   const lng = Number(place.longitude)
@@ -268,7 +274,11 @@ export function directionsUrl(point: LatLng): string {
  * known and the thing has a point; those without one after them, in the
  * order given (the caller's own: the last used, then the owner's).
  */
-export function byDistance<T>(items: T[], here: LatLng | null, pointFor: (item: T) => LatLng | null): { item: T; meters: number | null }[] {
+export function byDistance<T>(
+  items: T[],
+  here: LatLng | null,
+  pointFor: (item: T) => LatLng | null
+): { item: T; meters: number | null }[] {
   const measured = items.map((item, index) => {
     const point = pointFor(item)
     return { item, index, meters: here && point ? distanceMeters(here, point) : null }

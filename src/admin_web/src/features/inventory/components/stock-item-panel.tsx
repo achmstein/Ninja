@@ -1,24 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
-import {
-  Archive,
-  ArchiveRestore,
-  ArrowLeft,
-  MoreHorizontal,
-  PackagePlus,
-  Pencil,
-} from 'lucide-react'
+import { Archive, ArchiveRestore, ArrowLeft, MoreHorizontal, PackagePlus, Pencil } from 'lucide-react'
 import { listItemsOptions } from '@/api/catalog/@tanstack/react-query.gen'
-import {
-  getStockMovements,
-  type StockItemView,
-  type StockLevelView,
-} from '@/api/inventory'
-import {
-  getRecipesOptions,
-  getStockItemCostsOptions,
-} from '@/api/inventory/@tanstack/react-query.gen'
+import { getStockMovements, type StockItemView, type StockLevelView } from '@/api/inventory'
+import { getRecipesOptions, getStockItemCostsOptions } from '@/api/inventory/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useLocalized, useT } from '@/lib/i18n'
 import { formatEgp, toNumber } from '@/lib/money'
@@ -70,11 +56,7 @@ type StockItemPanelProps = {
  * it; then cards for the fixes a manager posts by hand (waste, a return,
  * a correction), what the branch paid for it, and what moved.
  */
-export function StockItemPanel({
-  level,
-  onBack,
-  onReceive,
-}: StockItemPanelProps) {
+export function StockItemPanel({ level, onBack, onReceive }: StockItemPanelProps) {
   const t = useT()
   const localized = useLocalized()
   const { updateItem, isPending } = useInventoryActions()
@@ -109,26 +91,14 @@ export function StockItemPanel({
     <div className='flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto'>
       <div className='flex flex-none items-center justify-between gap-2'>
         <div className='flex min-w-0 items-center gap-3'>
-          <Button
-            size='icon'
-            variant='ghost'
-            className='-ms-2'
-            onClick={onBack}
-            aria-label={t('backToStock')}
-          >
+          <Button size='icon' variant='ghost' className='-ms-2' onClick={onBack} aria-label={t('backToStock')}>
             <ArrowLeft className='rtl:rotate-180' />
           </Button>
           <div className='min-w-0'>
             <div className='flex min-w-0 items-center gap-2'>
-              <h1 className='truncate text-lg font-semibold tracking-tight'>
-                {localized(level.name)}
-              </h1>
-              {level.autoSoldOut && (
-                <Badge variant='secondary'>{t('autoSoldOut')}</Badge>
-              )}
-              {!level.isActive && (
-                <Badge variant='outline'>{t('retired')}</Badge>
-              )}
+              <h1 className='truncate text-lg font-semibold tracking-tight'>{localized(level.name)}</h1>
+              {level.autoSoldOut && <Badge variant='secondary'>{t('autoSoldOut')}</Badge>}
+              {!level.isActive && <Badge variant='outline'>{t('retired')}</Badge>}
             </div>
             <p className='text-muted-foreground truncate text-xs'>
               {unitLabel(level.unit, t)}
@@ -160,12 +130,7 @@ export function StockItemPanel({
           )}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button
-                size='icon'
-                variant='outline'
-                className='size-9'
-                aria-label={t('actions')}
-              >
+              <Button size='icon' variant='outline' className='size-9' aria-label={t('actions')}>
                 <MoreHorizontal className='h-4 w-4' />
               </Button>
             </DropdownMenuTrigger>
@@ -177,10 +142,7 @@ export function StockItemPanel({
               {level.isActive && (
                 <>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    variant='destructive'
-                    onClick={() => setRetireOpen(true)}
-                  >
+                  <DropdownMenuItem variant='destructive' onClick={() => setRetireOpen(true)}>
                     <Archive className='h-4 w-4' />
                     {t('retireItem')}
                   </DropdownMenuItem>
@@ -193,15 +155,8 @@ export function StockItemPanel({
 
       {/* The level */}
       <section className='flex-none space-y-1'>
-        <div className='text-muted-foreground text-xs font-medium'>
-          {t('onHand')}
-        </div>
-        <div
-          className={cn(
-            'text-4xl font-semibold tracking-tight tabular-nums',
-            level.isLow && 'text-destructive'
-          )}
-        >
+        <div className='text-muted-foreground text-xs font-medium'>{t('onHand')}</div>
+        <div className={cn('text-4xl font-semibold tracking-tight tabular-nums', level.isLow && 'text-destructive')}>
           {formatQuantity(level.onHand, level.unit, t)}
           {level.isLow && (
             <Badge variant='danger' className='ms-3 align-middle'>
@@ -223,13 +178,9 @@ export function StockItemPanel({
           )}
           <ReorderLevelPopover level={level} />
           <span>·</span>
-          <span className='tabular-nums'>
-            {t('avgCostLine', { cost: formatEgp(level.avgUnitCost) })}
-          </span>
+          <span className='tabular-nums'>{t('avgCostLine', { cost: formatEgp(level.avgUnitCost) })}</span>
           <span>·</span>
-          <span className='tabular-nums'>
-            {t('worthLine', { value: formatEgp(level.value) })}
-          </span>
+          <span className='tabular-nums'>{t('worthLine', { value: formatEgp(level.value) })}</span>
         </div>
         {days !== null && (
           <div className='flex flex-wrap items-center gap-x-1 text-sm'>
@@ -254,11 +205,7 @@ export function StockItemPanel({
         <Movements stockItemId={stockItemId} />
       </div>
 
-      <StockItemDialog
-        open={editOpen}
-        onOpenChange={setEditOpen}
-        item={asItem}
-      />
+      <StockItemDialog open={editOpen} onOpenChange={setEditOpen} item={asItem} />
 
       <ConfirmDialog
         open={retireOpen}
@@ -306,10 +253,7 @@ function QuickFix({ level }: { level: StockLevelView }) {
 
   const picked = fixKinds.find((k) => k.kind === kind)
   const parsed = parseFloat(quantity)
-  const valid =
-    picked &&
-    (picked.sign === null ? parsed !== 0 : parsed > 0) &&
-    !isNaN(parsed)
+  const valid = picked && (picked.sign === null ? parsed !== 0 : parsed > 0) && !isNaN(parsed)
 
   const reset = () => {
     setKind(null)
@@ -320,15 +264,8 @@ function QuickFix({ level }: { level: StockLevelView }) {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!picked || !valid) return
-    const qty =
-      picked.type === MOVEMENT_WASTE
-        ? Math.abs(parsed)
-        : picked.sign === null
-          ? parsed
-          : Math.abs(parsed)
-    const reason = note.trim()
-      ? `${labels[picked.kind]}: ${note.trim()}`
-      : labels[picked.kind]
+    const qty = picked.type === MOVEMENT_WASTE ? Math.abs(parsed) : picked.sign === null ? parsed : Math.abs(parsed)
+    const reason = note.trim() ? `${labels[picked.kind]}: ${note.trim()}` : labels[picked.kind]
     try {
       await postAdjustment({
         stockItemId: toNumber(level.stockItemId),
@@ -360,10 +297,7 @@ function QuickFix({ level }: { level: StockLevelView }) {
           ))}
         </ToggleGroup>
         {picked && (
-          <form
-            onSubmit={submit}
-            className='flex flex-wrap items-end gap-3 rounded-md'
-          >
+          <form onSubmit={submit} className='flex flex-wrap items-end gap-3 rounded-md'>
             <div className='w-36 space-y-1.5'>
               <Label htmlFor='fix-quantity'>
                 {t('quantity')} ({unitLabel(level.unit, t)})
@@ -380,11 +314,7 @@ function QuickFix({ level }: { level: StockLevelView }) {
             </div>
             <div className='min-w-40 flex-1 space-y-1.5'>
               <Label htmlFor='fix-note'>{t('notesOptional')}</Label>
-              <Input
-                id='fix-note'
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-              />
+              <Input id='fix-note' value={note} onChange={(e) => setNote(e.target.value)} />
             </div>
             <div className='flex gap-2'>
               <Button type='button' variant='ghost' onClick={reset}>
@@ -415,13 +345,7 @@ const PAGE_SIZE = 30
  * What the branch paid for the item, receipt by receipt, newest first, each
  * against the one before it so a creeping price is a column of red.
  */
-function CostHistory({
-  stockItemId,
-  unit,
-}: {
-  stockItemId: number
-  unit: string
-}) {
+function CostHistory({ stockItemId, unit }: { stockItemId: number; unit: string }) {
   const t = useT()
   const query = useQuery(
     getStockItemCostsOptions({
@@ -438,19 +362,10 @@ function CostHistory({
       <ul className='divide-y px-5 pt-2 pb-4 text-sm'>
         {rows.map((r, i) => {
           const previous = rows[i + 1]
-          const change = previous
-            ? costChange(toNumber(r.unitCost), toNumber(previous.unitCost))
-            : null
+          const change = previous ? costChange(toNumber(r.unitCost), toNumber(previous.unitCost)) : null
           return (
-            <li
-              key={`${r.at}-${String(r.purchaseId ?? i)}`}
-              className='flex items-center gap-3 py-1.5'
-            >
-              <When
-                value={r.at}
-                mode='date'
-                className='text-muted-foreground w-16 shrink-0 text-xs'
-              />
+            <li key={`${r.at}-${String(r.purchaseId ?? i)}`} className='flex items-center gap-3 py-1.5'>
+              <When value={r.at} mode='date' className='text-muted-foreground w-16 shrink-0 text-xs' />
               <span className='text-muted-foreground min-w-0 flex-1 truncate text-xs'>
                 {r.supplier || t('noSupplier')}
                 {' · '}
@@ -466,16 +381,10 @@ function CostHistory({
               <span
                 className={cn(
                   'w-12 text-end text-xs tabular-nums',
-                  change?.flagged
-                    ? change.percent > 0
-                      ? 'text-destructive'
-                      : 'text-success'
-                    : 'text-muted-foreground'
+                  change?.flagged ? (change.percent > 0 ? 'text-destructive' : 'text-success') : 'text-muted-foreground'
                 )}
               >
-                {change
-                  ? `${change.percent > 0 ? '+' : ''}${change.percent}%`
-                  : ''}
+                {change ? `${change.percent > 0 ? '+' : ''}${change.percent}%` : ''}
               </span>
             </li>
           )
@@ -509,9 +418,7 @@ function Movements({ stockItemId }: { stockItemId: number }) {
     },
     initialPageParam: 0,
     getNextPageParam: (last, pages) =>
-      pages.length * PAGE_SIZE < toNumber(last.totalCount)
-        ? pages.length
-        : undefined,
+      pages.length * PAGE_SIZE < toNumber(last.totalCount) ? pages.length : undefined,
   })
   const rows = query.data?.pages.flatMap((page) => page.items) ?? []
   const total = toNumber(query.data?.pages[0]?.totalCount)
@@ -537,13 +444,7 @@ function Movements({ stockItemId }: { stockItemId: number }) {
   return (
     <SectionCard
       title={t('inventoryMovements')}
-      action={
-        total > 0 ? (
-          <span className='text-muted-foreground text-xs tabular-nums'>
-            {total}
-          </span>
-        ) : undefined
-      }
+      action={total > 0 ? <span className='text-muted-foreground text-xs tabular-nums'>{total}</span> : undefined}
     >
       <div className='px-5 pt-2 pb-2'>
         {query.isLoading ? (
@@ -560,19 +461,13 @@ function Movements({ stockItemId }: { stockItemId: number }) {
               const qty = toNumber(m.quantity)
               return (
                 <li key={String(m.id)} className='flex items-center gap-3 py-2'>
-                  <When
-                    value={m.recordedAt}
-                    className='text-muted-foreground w-24 shrink-0 text-xs'
-                  />
+                  <When value={m.recordedAt} className='text-muted-foreground w-24 shrink-0 text-xs' />
                   <MovementTypeBadge type={m.type} />
                   <span className='text-muted-foreground min-w-0 flex-1 truncate text-xs'>
                     {m.reason || referenceLabel(m.reference, t)}
                   </span>
                   <span
-                    className={cn(
-                      'shrink-0 font-medium tabular-nums',
-                      qty < 0 ? 'text-destructive' : 'text-success'
-                    )}
+                    className={cn('shrink-0 font-medium tabular-nums', qty < 0 ? 'text-destructive' : 'text-success')}
                   >
                     {formatSignedQuantity(m.quantity, m.unit, t)}
                   </span>
@@ -593,26 +488,16 @@ function Movements({ stockItemId }: { stockItemId: number }) {
 function UsedBy({ stockItemId }: { stockItemId: number }) {
   const t = useT()
   const localized = useLocalized()
-  const recipes = useQuery(
-    getRecipesOptions({ query: { 'api-version': API_VERSION } })
-  )
-  const catalog = useQuery(
-    listItemsOptions({ query: { 'api-version': API_VERSION } })
-  )
+  const recipes = useQuery(getRecipesOptions({ query: { 'api-version': API_VERSION } }))
+  const catalog = useQuery(listItemsOptions({ query: { 'api-version': API_VERSION } }))
 
   const users = useMemo(() => {
-    const byId = new Map(
-      (catalog.data ?? []).map((item) => [toNumber(item.id), item])
-    )
+    const byId = new Map((catalog.data ?? []).map((item) => [toNumber(item.id), item]))
     return (recipes.data ?? [])
-      .filter((r) =>
-        r.lines.some((line) => toNumber(line.stockItemId) === stockItemId)
-      )
+      .filter((r) => r.lines.some((line) => toNumber(line.stockItemId) === stockItemId))
       .map((r) => ({
         id: toNumber(r.catalogItemId),
-        name:
-          localized(byId.get(toNumber(r.catalogItemId))?.name) ||
-          t('unknownMenuItem'),
+        name: localized(byId.get(toNumber(r.catalogItemId))?.name) || t('unknownMenuItem'),
       }))
       .sort((a, b) => a.name.localeCompare(b.name))
   }, [recipes.data, catalog.data, stockItemId, localized, t])
@@ -629,11 +514,7 @@ function UsedBy({ stockItemId }: { stockItemId: number }) {
       ) : (
         users.map((u, i) => (
           <span key={u.id}>
-            <Link
-              to='/menu'
-              search={{ q: u.name }}
-              className='text-foreground underline-offset-4 hover:underline'
-            >
+            <Link to='/menu' search={{ q: u.name }} className='text-foreground underline-offset-4 hover:underline'>
               {u.name}
             </Link>
             {i < users.length - 1 && ','}

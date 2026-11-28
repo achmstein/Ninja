@@ -57,29 +57,22 @@ export function isRoom(place: PlaceViewModel | null | undefined): boolean {
  * billing switch where the business's is at hand: with it off, a place that
  * kept its tariff from a bigger plan is a plain table here.
  */
-export function isTimed(
-  place: PlaceViewModel | null | undefined,
-  timeBilling = true,
-): boolean {
+export function isTimed(place: PlaceViewModel | null | undefined, timeBilling = true): boolean {
   return timeBilling && Boolean(place?.isTimed)
 }
 
-export function tariffOptions(
-  tariff: TariffViewModel | null | undefined,
-): RateOptionViewModel[] {
+export function tariffOptions(tariff: TariffViewModel | null | undefined): RateOptionViewModel[] {
   return tariff?.options ?? []
 }
 
 /** A tariff with a choice of rates (single / multi). */
-export function hasOptions(
-  tariff: TariffViewModel | null | undefined,
-): boolean {
+export function hasOptions(tariff: TariffViewModel | null | undefined): boolean {
   return tariffOptions(tariff).length > 1
 }
 
 export function findOption(
   tariff: TariffViewModel | null | undefined,
-  code: string | null | undefined,
+  code: string | null | undefined
 ): RateOptionViewModel | undefined {
   return code ? tariffOptions(tariff).find((o) => o.code === code) : undefined
 }
@@ -87,38 +80,27 @@ export function findOption(
 // Branded so a failed guard does not narrow the stay away
 export type RunningStay = StayViewModel & { readonly __state: 'running' }
 
-export function isRunning(
-  stay: StayViewModel | null | undefined,
-): stay is RunningStay {
+export function isRunning(stay: StayViewModel | null | undefined): stay is RunningStay {
   return stay != null && Number(stay.status) === STAY_RUNNING
 }
 
 /** Requested or confirmed: somebody is on their way, or due later. */
 export function isOpenReservation(
-  reservation: ReservationViewModel | null | undefined,
+  reservation: ReservationViewModel | null | undefined
 ): reservation is ReservationViewModel {
   if (reservation == null) return false
   const status = Number(reservation.status)
-  return (
-    status === RESERVATION_REQUESTED || status === RESERVATION_CONFIRMED
-  )
+  return status === RESERVATION_REQUESTED || status === RESERVATION_CONFIRMED
 }
 
 /** Open and keeping the place right now: made for now, or its time has come. */
-export function isHolding(
-  reservation: ReservationViewModel | null | undefined,
-): boolean {
+export function isHolding(reservation: ReservationViewModel | null | undefined): boolean {
   return isOpenReservation(reservation) && Boolean(reservation.isHolding)
 }
 
 /** Seconds a reservation has left before it lapses; null when it never will. */
-export function expiresInSeconds(
-  reservation: ReservationViewModel,
-  nowMs: number,
-): number | null {
-  return reservation.expiresAt
-    ? Math.max(0, (new Date(reservation.expiresAt).getTime() - nowMs) / 1000)
-    : null
+export function expiresInSeconds(reservation: ReservationViewModel, nowMs: number): number | null {
+  return reservation.expiresAt ? Math.max(0, (new Date(reservation.expiresAt).getTime() - nowMs) / 1000) : null
 }
 
 export function formatClock(totalSeconds: number): string {
@@ -132,17 +114,11 @@ export function formatClock(totalSeconds: number): string {
 /** Seconds since the stay's clock started; once ended, the stay's whole length. */
 export function elapsedSeconds(stay: StayViewModel, nowMs: number): number {
   const end = stay.endedAt ? new Date(stay.endedAt).getTime() : nowMs
-  return stay.startedAt
-    ? (end - new Date(stay.startedAt).getTime()) / 1000
-    : 0
+  return stay.startedAt ? (end - new Date(stay.startedAt).getTime()) / 1000 : 0
 }
 
 /** Seconds spent on one rate option across the stay's segments. */
-export function optionSeconds(
-  stay: StayViewModel,
-  code: string | undefined,
-  nowMs: number,
-): number {
+export function optionSeconds(stay: StayViewModel, code: string | undefined, nowMs: number): number {
   return (stay.segments ?? [])
     .filter((segment) => segment.optionCode === code && segment.startTime)
     .reduce((sum, segment) => {
@@ -169,7 +145,7 @@ export function roundedHours(seconds: number, roundingMinutes = 15): number {
  */
 export function estimateStayCost(
   stay: StayViewModel,
-  nowMs: number,
+  nowMs: number
 ): {
   lines: {
     code: string
@@ -182,10 +158,7 @@ export function estimateStayCost(
 } {
   const rounding = Number(stay.tariff?.roundingMinutes ?? 15) || 15
   const lines = tariffOptions(stay.tariff).map((option) => {
-    const hours = roundedHours(
-      optionSeconds(stay, option.code, nowMs),
-      rounding,
-    )
+    const hours = roundedHours(optionSeconds(stay, option.code, nowMs), rounding)
     return {
       code: option.code ?? '',
       name: option.name,
@@ -207,10 +180,7 @@ export function stayBilledHours(stay: StayViewModel): number {
   return (stay.costs ?? []).reduce((sum, c) => sum + Number(c.hours ?? 0), 0)
 }
 
-export function formatBillingHours(
-  hours: number | string | undefined,
-  t: Translate,
-): string {
+export function formatBillingHours(hours: number | string | undefined, t: Translate): string {
   return t('billedHoursFormat', { hours: Number(hours ?? 0) })
 }
 
@@ -219,9 +189,7 @@ export function formatBillingHours(
  * the roster who has an account. A member with no name still shows, as
  * the picker labels the blank.
  */
-export function stayRoster(
-  stay: StayViewModel | null | undefined,
-): { id: string; name: string }[] {
+export function stayRoster(stay: StayViewModel | null | undefined): { id: string; name: string }[] {
   return (stay?.members ?? [])
     .filter((member) => member.customerId)
     .map((member) => ({
@@ -234,12 +202,10 @@ export function stayRoster(
 export function tariffLine(
   tariff: TariffViewModel | null | undefined,
   money: (value: number | string | undefined) => string,
-  localized: (text: LocalizedText | null | undefined) => string,
+  localized: (text: LocalizedText | null | undefined) => string
 ): string {
   const options = tariffOptions(tariff)
   if (options.length === 0) return ''
   if (options.length === 1) return money(options[0].hourlyRate)
-  return options
-    .map((o) => `${localized(o.name)} ${money(o.hourlyRate)}`)
-    .join(' · ')
+  return options.map((o) => `${localized(o.name)} ${money(o.hourlyRate)}`).join(' · ')
 }

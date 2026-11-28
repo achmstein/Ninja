@@ -5,21 +5,12 @@ import { useT } from '@/lib/i18n'
 import { showPhone } from '@/lib/phone'
 import { toast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Spinner } from '@/components/ui/spinner'
 import { customersKeys } from '@/features/customers/hooks/use-customers'
 import { customersService } from '@/features/customers/services/customers-service'
-import {
-  getCustomerDisplayName,
-  type Customer,
-} from '@/features/customers/types'
+import { getCustomerDisplayName, type Customer } from '@/features/customers/types'
 import { formatEgp } from '@/features/orders/status'
 import { accountsService } from '../services/accounts-service'
 
@@ -45,13 +36,7 @@ const NOT_CUSTOMERS = 'Admin,Owner,Cashier,Kitchen,Rider'
  * that says what it is. No money moves: the till and its drawer hear
  * nothing of it.
  */
-export function OldBalancesDialog({
-  open,
-  onOpenChange,
-}: {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-}) {
+export function OldBalancesDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
   const t = useT()
   const queryClient = useQueryClient()
   const [term, setTerm] = useState('')
@@ -88,10 +73,7 @@ export function OldBalancesDialog({
   const add = () => {
     if (!picked || !canAdd) return
     // One line a customer: entered twice, the later figure is the one meant
-    setLines((all) => [
-      ...all.filter((l) => l.customer.id !== picked.id),
-      { customer: picked, amount: value },
-    ])
+    setLines((all) => [...all.filter((l) => l.customer.id !== picked.id), { customer: picked, amount: value }])
     setPicked(null)
     setTerm('')
     setAmount('')
@@ -147,9 +129,7 @@ export function OldBalancesDialog({
       <DialogContent className='flex max-h-[90svh] flex-col gap-4 sm:max-w-lg'>
         <DialogHeader>
           <DialogTitle>{t('oldBalances')}</DialogTitle>
-          <p className='text-muted-foreground text-sm'>
-            {t('oldBalancesHint')}
-          </p>
+          <p className='text-muted-foreground text-sm'>{t('oldBalancesHint')}</p>
         </DialogHeader>
 
         <form
@@ -176,9 +156,7 @@ export function OldBalancesDialog({
                 {matches.isLoading ? (
                   <p className='text-muted-foreground p-3 text-sm'>…</p>
                 ) : results.length === 0 ? (
-                  <p className='text-muted-foreground p-3 text-sm'>
-                    {t('noCustomersFound')}
-                  </p>
+                  <p className='text-muted-foreground p-3 text-sm'>{t('noCustomersFound')}</p>
                 ) : (
                   results.map((customer) => (
                     <button
@@ -187,9 +165,7 @@ export function OldBalancesDialog({
                       onClick={() => pick(customer)}
                       className='hover:bg-accent focus-visible:bg-accent flex w-full items-baseline justify-between gap-3 px-3 py-2 text-start text-sm outline-none'
                     >
-                      <span className='truncate font-medium'>
-                        {getCustomerDisplayName(customer)}
-                      </span>
+                      <span className='truncate font-medium'>{getCustomerDisplayName(customer)}</span>
                       <span className='text-muted-foreground shrink-0 text-xs'>
                         {showPhone(customer.phoneNumber) || customer.email}
                       </span>
@@ -219,29 +195,20 @@ export function OldBalancesDialog({
 
         <div className='min-h-24 flex-1 overflow-y-auto'>
           {lines.length === 0 ? (
-            <p className='text-muted-foreground py-6 text-center text-sm'>
-              {t('oldBalancesEmpty')}
-            </p>
+            <p className='text-muted-foreground py-6 text-center text-sm'>{t('oldBalancesEmpty')}</p>
           ) : (
             <ul className='divide-y text-sm'>
               {lines.map((line) => (
-                <li
-                  key={line.customer.id}
-                  className='flex items-center gap-3 py-2'
-                >
+                <li key={line.customer.id} className='flex items-center gap-3 py-2'>
                   <span className='min-w-0 flex-1'>
-                    <span className='block truncate font-medium'>
-                      {getCustomerDisplayName(line.customer)}
-                    </span>
+                    <span className='block truncate font-medium'>{getCustomerDisplayName(line.customer)}</span>
                     {line.customer.phoneNumber && (
                       <span className='text-muted-foreground block text-xs'>
                         {showPhone(line.customer.phoneNumber)}
                       </span>
                     )}
                   </span>
-                  <span className='shrink-0 tabular-nums'>
-                    {formatEgp(line.amount)}
-                  </span>
+                  <span className='shrink-0 tabular-nums'>{formatEgp(line.amount)}</span>
                   <Button
                     type='button'
                     variant='ghost'
@@ -249,11 +216,7 @@ export function OldBalancesDialog({
                     className='text-muted-foreground size-8 shrink-0'
                     aria-label={t('remove')}
                     disabled={saving}
-                    onClick={() =>
-                      setLines((all) =>
-                        all.filter((l) => l.customer.id !== line.customer.id)
-                      )
-                    }
+                    onClick={() => setLines((all) => all.filter((l) => l.customer.id !== line.customer.id))}
                   >
                     <X />
                   </Button>
@@ -273,19 +236,10 @@ export function OldBalancesDialog({
             )}
           </span>
           <div className='flex gap-2'>
-            <Button
-              type='button'
-              variant='outline'
-              disabled={saving}
-              onClick={() => close(false)}
-            >
+            <Button type='button' variant='outline' disabled={saving} onClick={() => close(false)}>
               {t('cancel')}
             </Button>
-            <Button
-              type='button'
-              disabled={lines.length === 0 || saving}
-              onClick={save}
-            >
+            <Button type='button' disabled={lines.length === 0 || saving} onClick={save}>
               {saving && <Spinner />}
               {t('oldBalancesSave', { count: lines.length })}
             </Button>

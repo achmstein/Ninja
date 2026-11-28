@@ -1,6 +1,6 @@
 import { StrictMode } from 'react'
-import { renderToString } from 'react-dom/server'
 import { CONTACT } from '@/content/contact'
+import { renderToString } from 'react-dom/server'
 import { contentFor, metaFor, type Lang } from '@/lib/lang'
 import { pathOf, type Page } from '@/lib/pages'
 import { App } from './App'
@@ -24,7 +24,12 @@ function structured(lang: Lang, page: Page, url: string): string {
     url: `${SITE}/`,
     logo: `${SITE}/brand/ninja-mark-512.png`,
     email: CONTACT.email,
-    contactPoint: { '@type': 'ContactPoint', contactType: 'sales', telephone: `+${CONTACT.whatsapp}`, availableLanguage: ['en', 'ar'] },
+    contactPoint: {
+      '@type': 'ContactPoint',
+      contactType: 'sales',
+      telephone: `+${CONTACT.whatsapp}`,
+      availableLanguage: ['en', 'ar'],
+    },
   }
   const software = {
     '@type': 'SoftwareApplication',
@@ -38,7 +43,10 @@ function structured(lang: Lang, page: Page, url: string): string {
     offers: { '@type': 'Offer', price: '0', priceCurrency: 'EGP', name: c.plans.names.Free },
     publisher: { '@id': `${SITE}/#organization` },
   }
-  return JSON.stringify({ '@context': 'https://schema.org', '@graph': [organization, software] }).replace(/</g, '\\u003c')
+  return JSON.stringify({ '@context': 'https://schema.org', '@graph': [organization, software] }).replace(
+    /</g,
+    '\\u003c'
+  )
 }
 
 /** A page as HTML, for scripts/prerender.mjs: what goes in #root and what goes in <head> */

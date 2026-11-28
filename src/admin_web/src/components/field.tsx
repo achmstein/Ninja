@@ -51,17 +51,7 @@ export function FieldGrid({
   children: ReactNode
   className?: string
 }) {
-  return (
-    <div
-      className={cn(
-        'grid gap-4',
-        cols === 3 ? 'sm:grid-cols-3' : 'sm:grid-cols-2',
-        className
-      )}
-    >
-      {children}
-    </div>
-  )
+  return <div className={cn('grid gap-4', cols === 3 ? 'sm:grid-cols-3' : 'sm:grid-cols-2', className)}>{children}</div>
 }
 
 /**
@@ -88,38 +78,16 @@ export function SwitchRow({
     <div className={cn('flex items-center justify-between gap-4', className)}>
       <label htmlFor={id} className='min-w-0 flex-1 cursor-pointer'>
         <span className='block text-sm font-medium'>{title}</span>
-        {description && (
-          <span className='text-muted-foreground mt-0.5 block text-sm'>
-            {description}
-          </span>
-        )}
+        {description && <span className='text-muted-foreground mt-0.5 block text-sm'>{description}</span>}
       </label>
-      <Switch
-        id={id}
-        checked={checked}
-        onCheckedChange={onCheckedChange}
-        disabled={disabled}
-      />
+      <Switch id={id} checked={checked} onCheckedChange={onCheckedChange} disabled={disabled} />
     </div>
   )
 }
 
 /** Yes-or-no rows that belong together, in one bordered group */
-export function SwitchGroup({
-  children,
-  className,
-}: {
-  children: ReactNode
-  className?: string
-}) {
+export function SwitchGroup({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <div
-      className={cn(
-        'divide-border/60 divide-y rounded-lg border [&>*]:px-4 [&>*]:py-3',
-        className
-      )}
-    >
-      {children}
-    </div>
+    <div className={cn('divide-border/60 divide-y rounded-lg border [&>*]:px-4 [&>*]:py-3', className)}>{children}</div>
   )
 }

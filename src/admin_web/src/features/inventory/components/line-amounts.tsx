@@ -22,13 +22,7 @@ type LineAmountsProps = {
  * items), unit cost and total. Rendered as siblings so the parent's grid
  * lays them out; `reprice` keeps them consistent.
  */
-export function LineAmounts({
-  line,
-  unit,
-  packSize,
-  onChange,
-  labelsAlways,
-}: LineAmountsProps) {
+export function LineAmounts({ line, unit, packSize, onChange, labelsAlways }: LineAmountsProps) {
   const t = useT()
   const hasPack = packSize > 0
 
@@ -53,12 +47,7 @@ export function LineAmounts({
           />
         </LabeledInput>
       ) : (
-        <LabeledInput
-          label={
-            unit ? `${t('quantity')} (${unitLabel(unit, t)})` : t('quantity')
-          }
-          always={labelsAlways}
-        >
+        <LabeledInput label={unit ? `${t('quantity')} (${unitLabel(unit, t)})` : t('quantity')} always={labelsAlways}>
           <Input
             type='number'
             min='0'
@@ -70,10 +59,7 @@ export function LineAmounts({
           />
         </LabeledInput>
       )}
-      <LabeledInput
-        label={`${t('unitCost')}${unit ? ` / ${unitLabel(unit, t)}` : ''}`}
-        always={labelsAlways}
-      >
+      <LabeledInput label={`${t('unitCost')}${unit ? ` / ${unitLabel(unit, t)}` : ''}`} always={labelsAlways}>
         <Input
           type='number'
           min='0'
@@ -155,8 +141,7 @@ export function CostHint({
         <span
           className={cn(
             'ms-1 font-medium',
-            change.flagged &&
-              (change.percent > 0 ? 'text-destructive' : 'text-success')
+            change.flagged && (change.percent > 0 ? 'text-destructive' : 'text-success')
           )}
         >
           ({change.percent > 0 ? '+' : ''}
@@ -172,25 +157,10 @@ export function CostHint({
  * bare number box would mean nothing. On a wide screen the header row names
  * the columns and the label is hidden, unless `always` asks for it.
  */
-function LabeledInput({
-  label,
-  always,
-  children,
-}: {
-  label: string
-  always?: boolean
-  children: React.ReactNode
-}) {
+function LabeledInput({ label, always, children }: { label: string; always?: boolean; children: React.ReactNode }) {
   return (
     <div className='space-y-1'>
-      <span
-        className={cn(
-          'text-muted-foreground block truncate text-xs',
-          !always && 'sm:hidden'
-        )}
-      >
-        {label}
-      </span>
+      <span className={cn('text-muted-foreground block truncate text-xs', !always && 'sm:hidden')}>{label}</span>
       {children}
     </div>
   )

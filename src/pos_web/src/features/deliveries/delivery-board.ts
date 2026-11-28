@@ -96,7 +96,7 @@ export function byRider<T extends Riding>(orders: readonly T[]): RiderGroup<T>[]
 export function splitCounted(
   bills: readonly { orderNumber: number; total: number }[],
   counted: number,
-  differenceOn?: number | null,
+  differenceOn?: number | null
 ): Map<number, number> {
   const cents = (v: number) => Math.round(v * 100)
   const amounts = new Map(bills.map((b) => [b.orderNumber, cents(b.total)]))

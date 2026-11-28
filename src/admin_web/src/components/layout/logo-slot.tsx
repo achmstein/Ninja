@@ -37,24 +37,13 @@ export function LogoSlot({
   const brand = useBrand()
   const name = useBrandName()
   const { resolvedTheme } = useTheme()
-  const logo =
-    (resolvedTheme === 'dark' ? brand?.logoDarkUrl : null) ??
-    brand?.logoUrl ??
-    null
+  const logo = (resolvedTheme === 'dark' ? brand?.logoDarkUrl : null) ?? brand?.logoUrl ?? null
   const [shape, setShape] = useState<Shape>('mark')
 
-  const sub = subtitle && (
-    <span className='text-muted-foreground truncate text-xs font-normal'>
-      {subtitle}
-    </span>
-  )
+  const sub = subtitle && <span className='text-muted-foreground truncate text-xs font-normal'>{subtitle}</span>
   const nameText = showName && (name || sub) && (
     <span className='flex min-w-0 flex-col leading-tight'>
-      {name && (
-        <span className={cn('truncate font-semibold', nameClassName)}>
-          {name}
-        </span>
-      )}
+      {name && <span className={cn('truncate font-semibold', nameClassName)}>{name}</span>}
       {sub}
     </span>
   )
@@ -72,11 +61,7 @@ export function LogoSlot({
     <img
       src={logo}
       alt={shape === 'wide' ? name : ''}
-      onLoad={(e) =>
-        setShape(
-          shapeOf(e.currentTarget.naturalWidth, e.currentTarget.naturalHeight)
-        )
-      }
+      onLoad={(e) => setShape(shapeOf(e.currentTarget.naturalWidth, e.currentTarget.naturalHeight))}
       className={cn(
         'block object-contain',
         shape === 'wide' && 'h-7 w-auto max-w-36',
@@ -95,10 +80,7 @@ export function LogoSlot({
         img
       )}
       {/* A wordmark already says the name; the line under it stays */}
-      {shape !== 'wide'
-        ? nameText
-        : showName &&
-          sub && <span className='flex min-w-0 flex-col'>{sub}</span>}
+      {shape !== 'wide' ? nameText : showName && sub && <span className='flex min-w-0 flex-col'>{sub}</span>}
     </span>
   )
 }

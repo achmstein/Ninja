@@ -13,11 +13,7 @@ import { formatEgp, toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupInput,
-} from '@/components/ui/input-group'
+import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ErrorState } from '@/components/error-state'
 import { MetricStrip, MetricTile } from '@/components/kit'
@@ -49,12 +45,7 @@ const CHANNELS: {
   ...TICKET_TYPES.map(({ name, labelKey }) => ({
     name,
     labelKey,
-    runs: (modules: Modules) =>
-      name === 'Room'
-        ? modules.rooms
-        : name === 'Table'
-          ? modules.places
-          : true,
+    runs: (modules: Modules) => (name === 'Room' ? modules.rooms : name === 'Table' ? modules.places : true),
   })),
   { name: 'Delivery', labelKey: 'channelDelivery', runs: () => false },
   { name: 'Platform', labelKey: 'channelPlatform', runs: () => false },
@@ -82,8 +73,7 @@ export function TillReport() {
   const now = useNow()
 
   // A typed receipt number opens the tickets list on that one bill
-  const view: TillView | undefined =
-    search.view ?? (search.receipt != null ? 'tickets' : undefined)
+  const view: TillView | undefined = search.view ?? (search.receipt != null ? 'tickets' : undefined)
 
   const report = useQuery({
     ...getRangeReportOptions({
@@ -95,18 +85,13 @@ export function TillReport() {
   // As many business days right before this window, cut to the same time
   // into them while this one is still going (to the 5 minutes, so the
   // query is not asked again every tick)
-  const previousSpan =
-    dayWindow && hours ? previousWindow(dayWindow, hours, now) : null
+  const previousSpan = dayWindow && hours ? previousWindow(dayWindow, hours, now) : null
   const previous = previousSpan
     ? {
         from: previousSpan.from,
         to: new Date(
           previousSpan.from.getTime() +
-            Math.floor(
-              (previousSpan.to.getTime() - previousSpan.from.getTime()) /
-                300_000
-            ) *
-              300_000
+            Math.floor((previousSpan.to.getTime() - previousSpan.from.getTime()) / 300_000) * 300_000
         ),
       }
     : null
@@ -126,14 +111,9 @@ export function TillReport() {
   const bills = toNumber(data?.ticketsSettled)
   const refunds = toNumber(data?.refunds)
   const previousNet = toNumber(previousReport.data?.netSales)
-  const delta =
-    previousReport.data && previousNet > 0
-      ? ((net - previousNet) / previousNet) * 100
-      : null
+  const delta = previousReport.data && previousNet > 0 ? ((net - previousNet) / previousNet) * 100 : null
 
-  const channelTotals = new Map(
-    (data?.byChannel ?? []).map((row) => [row.channel, row])
-  )
+  const channelTotals = new Map((data?.byChannel ?? []).map((row) => [row.channel, row]))
   const statement = netStatement(data)
   const range = {
     range: search.range,
@@ -169,8 +149,7 @@ export function TillReport() {
   // Bring the opened list into view; the report above stays where it is
   const drill = useRef<HTMLElement>(null)
   useEffect(() => {
-    if (view)
-      drill.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    if (view) drill.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }, [view, search.tender, search.status])
 
   const viewTitle: Record<TillView, string> = {
@@ -243,11 +222,7 @@ export function TillReport() {
               to='/till'
               search={open('tickets')}
             />
-            <MetricTile
-              label={t('averageBill')}
-              value={bills > 0 ? formatEgp(net / bills) : '—'}
-              loading={loading}
-            />
+            <MetricTile label={t('averageBill')} value={bills > 0 ? formatEgp(net / bills) : '—'} loading={loading} />
             <MetricTile
               label={t('refundsTotal')}
               value={
@@ -285,9 +260,7 @@ export function TillReport() {
                 ) : (
                   <TenderSeriesView
                     report={data}
-                    billsSearch={(tender) =>
-                      open('payments', { tender: String(tender) })
-                    }
+                    billsSearch={(tender) => open('payments', { tender: String(tender) })}
                     tabsSearch={() => open('tab-payments')}
                   />
                 )}
@@ -313,13 +286,7 @@ export function TillReport() {
                           line.sign === 'of' && 'ps-3 text-xs'
                         )}
                       >
-                        <dt
-                          className={cn(
-                            line.sign !== '=' && 'text-muted-foreground'
-                          )}
-                        >
-                          {t(line.labelKey)}
-                        </dt>
+                        <dt className={cn(line.sign !== '=' && 'text-muted-foreground')}>{t(line.labelKey)}</dt>
                         <dd
                           className={cn(
                             'tabular-nums',
@@ -327,9 +294,7 @@ export function TillReport() {
                             line.sign === 'of' && 'text-muted-foreground'
                           )}
                         >
-                          {line.sign === '−' || line.sign === '+'
-                            ? line.sign
-                            : ''}
+                          {line.sign === '−' || line.sign === '+' ? line.sign : ''}
                           {formatEgp(line.amount)}
                         </dd>
                       </div>
@@ -349,41 +314,34 @@ export function TillReport() {
                 <Skeleton className='h-24' />
               ) : (
                 <div className='grid gap-3 sm:grid-cols-3 lg:grid-cols-5'>
-                  {CHANNELS.filter(
-                    ({ name, runs }) => runs(modules) || channelTotals.has(name)
-                  ).map(({ name, labelKey }) => {
-                    const row = channelTotals.get(name)
-                    return (
-                      <Link
-                        key={name}
-                        to='/till'
-                        search={open('tickets')}
-                        className='bg-muted/40 hover:bg-muted rounded-lg p-3 transition-colors'
-                      >
-                        <div className='text-muted-foreground text-xs'>
-                          {t(labelKey)}
-                        </div>
-                        <div className='mt-0.5 font-semibold tabular-nums'>
-                          {formatEgp(row?.gross)}
-                        </div>
-                        <div className='text-muted-foreground text-xs tabular-nums'>
-                          {t('posTicketsCount', {
-                            count: toNumber(row?.count),
-                          })}
-                        </div>
-                      </Link>
-                    )
-                  })}
+                  {CHANNELS.filter(({ name, runs }) => runs(modules) || channelTotals.has(name)).map(
+                    ({ name, labelKey }) => {
+                      const row = channelTotals.get(name)
+                      return (
+                        <Link
+                          key={name}
+                          to='/till'
+                          search={open('tickets')}
+                          className='bg-muted/40 hover:bg-muted rounded-lg p-3 transition-colors'
+                        >
+                          <div className='text-muted-foreground text-xs'>{t(labelKey)}</div>
+                          <div className='mt-0.5 font-semibold tabular-nums'>{formatEgp(row?.gross)}</div>
+                          <div className='text-muted-foreground text-xs tabular-nums'>
+                            {t('posTicketsCount', {
+                              count: toNumber(row?.count),
+                            })}
+                          </div>
+                        </Link>
+                      )
+                    }
+                  )}
                 </div>
               )}
             </CardContent>
           </Card>
 
           {view && (view !== 'tab-payments' || features.tabs) && (
-            <section
-              ref={drill}
-              className='scroll-mt-20 space-y-3 border-t pt-4'
-            >
+            <section ref={drill} className='scroll-mt-20 space-y-3 border-t pt-4'>
               <div className='flex items-center justify-between gap-2'>
                 <h2 className='text-sm font-semibold'>{viewTitle[view]}</h2>
                 <Button variant='ghost' size='sm' onClick={closeView}>

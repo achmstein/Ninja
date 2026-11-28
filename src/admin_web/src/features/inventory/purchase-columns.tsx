@@ -35,19 +35,13 @@ export function getPurchaseColumns({ t }: PurchaseColumnsContext) {
       meta: { align: 'end' },
       id: 'lines',
       header: () => <div className='text-end'>{t('lines')}</div>,
-      cell: (info) => (
-        <div className='text-end tabular-nums'>{info.getValue()}</div>
-      ),
+      cell: (info) => <div className='text-end tabular-nums'>{info.getValue()}</div>,
     }),
     columnHelper.accessor('total', {
       meta: { align: 'end' },
       id: 'total',
       header: () => <div className='text-end'>{t('total')}</div>,
-      cell: (info) => (
-        <div className='text-end font-medium tabular-nums'>
-          {formatEgp(info.getValue())}
-        </div>
-      ),
+      cell: (info) => <div className='text-end font-medium tabular-nums'>{formatEgp(info.getValue())}</div>,
     }),
   ])
 }

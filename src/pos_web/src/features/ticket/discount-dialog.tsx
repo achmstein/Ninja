@@ -1,24 +1,15 @@
 import { useEffect, useState } from 'react'
-import { useCurrencyLabel } from '@/lib/currency'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import type { TicketDetail } from '@/api/sales'
-import {
-  applyTicketDiscountMutation,
-  removeTicketDiscountMutation,
-} from '@/api/sales/@tanstack/react-query.gen'
-import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { applyTicketDiscountMutation, removeTicketDiscountMutation } from '@/api/sales/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
+import { useCurrencyLabel } from '@/lib/currency'
 import { useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
+import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 
 type DiscountDialogProps = {
   ticket: TicketDetail
@@ -160,12 +151,7 @@ export function DiscountDialog({ ticket, open, onOpenChange }: DiscountDialogPro
             <span />
           )}
           <div className='flex gap-2'>
-            <Button
-              variant='outline'
-              size='lg'
-              className='h-12 min-w-28'
-              onClick={() => onOpenChange(false)}
-            >
+            <Button variant='outline' size='lg' className='h-12 min-w-28' onClick={() => onOpenChange(false)}>
               {t('cancel')}
             </Button>
             <Button size='lg' className='h-12 min-w-28' disabled={!canApply} onClick={doApply}>

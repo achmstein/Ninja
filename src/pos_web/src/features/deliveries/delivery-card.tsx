@@ -1,8 +1,8 @@
 import { AlertTriangle, Banknote, Bike, CircleDot, Clock, MapPin, Store, Truck, Undo2, UserRound } from 'lucide-react'
-import { useBranchName } from '@/features/branch/use-branch-name'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { toNumber, useMoney } from '@/lib/money'
 import { cn } from '@/lib/utils'
+import { useBranchName } from '@/features/branch/use-branch-name'
 import { relativeTime } from '@/features/orders/status'
 import { useNowMs } from '@/features/orders/use-pending-orders'
 import { useAddressLine } from './delivery-details'
@@ -31,7 +31,7 @@ export function DeliveryCard({ order, onOpen }: { order: BoardDelivery; onOpen: 
       className={cn(
         'bg-card text-card-foreground flex w-full flex-col gap-1 rounded-xl border p-3 text-start shadow-xs',
         (lane === 'waiting' || lane === 'failed') && 'border-amber-500/70',
-        lane === 'cashDue' && 'border-emerald-500/70',
+        lane === 'cashDue' && 'border-emerald-500/70'
       )}
     >
       {/* One thing a line, read at a glance from across the counter: how it
@@ -40,7 +40,7 @@ export function DeliveryCard({ order, onOpen }: { order: BoardDelivery; onOpen: 
           Arabic sentence */}
       <div className='flex items-center gap-2'>
         <StagePill order={order} />
-        <span className='text-muted-foreground ms-auto shrink-0 type-caption whitespace-nowrap'>
+        <span className='text-muted-foreground type-caption ms-auto shrink-0 whitespace-nowrap'>
           {relativeTime(order.confirmedAt ?? order.date, nowMs, t, locale)}
         </span>
       </div>
@@ -50,11 +50,14 @@ export function DeliveryCard({ order, onOpen }: { order: BoardDelivery; onOpen: 
         <span className='min-w-0 flex-1 truncate'>
           <bdi className='type-heading'>{order.customerName || t('guest')}</bdi>
           {/* In the till's direction, not forced left-to-right: Arabic reads the sign before the number */}
-          <span className='text-muted-foreground ms-2 type-detail tabular-nums'>{'#\u200F'}{toNumber(order.orderNumber)}</span>
+          <span className='text-muted-foreground type-detail ms-2 tabular-nums'>
+            {'#\u200F'}
+            {toNumber(order.orderNumber)}
+          </span>
         </span>
-        <span className='shrink-0 type-body font-semibold whitespace-nowrap tabular-nums'>{money(order.total)}</span>
+        <span className='type-body shrink-0 font-semibold whitespace-nowrap tabular-nums'>{money(order.total)}</span>
       </div>
-      <div className='text-muted-foreground flex items-center gap-1.5 type-detail'>
+      <div className='text-muted-foreground type-detail flex items-center gap-1.5'>
         <MapPin className='size-3.5 shrink-0' aria-hidden />
         <span className='min-w-0 truncate'>
           {area && (
@@ -67,13 +70,13 @@ export function DeliveryCard({ order, onOpen }: { order: BoardDelivery; onOpen: 
         </span>
       </div>
       {order.takenAtBranchId != null && (
-        <div className='text-primary flex items-center gap-1.5 type-detail font-medium'>
+        <div className='text-primary type-detail flex items-center gap-1.5 font-medium'>
           <Store className='size-3.5 shrink-0' aria-hidden />
           <span className='truncate'>{sentFrom(order)}</span>
         </div>
       )}
       {order.delivery.riderName && (
-        <div className='flex items-center gap-1.5 type-detail'>
+        <div className='type-detail flex items-center gap-1.5'>
           <UserRound className='text-muted-foreground size-3.5 shrink-0' aria-hidden />
           <span className='min-w-0 truncate font-medium'>
             <bdi>{order.delivery.riderName}</bdi>
@@ -82,7 +85,7 @@ export function DeliveryCard({ order, onOpen }: { order: BoardDelivery; onOpen: 
       )}
       {/* A courier company that has it: the company, and its courier when it said who */}
       {order.delivery.courierProvider && (
-        <div className='flex items-center gap-1.5 type-detail'>
+        <div className='type-detail flex items-center gap-1.5'>
           <Truck className='text-muted-foreground size-3.5 shrink-0' aria-hidden />
           <span className='min-w-0 truncate font-medium'>
             <bdi>{order.delivery.courierProvider}</bdi>
@@ -111,7 +114,9 @@ export function useSentFrom() {
   const branchName = useBranchName()
   return (order: { takenAtBranchId?: number | string | null; takenByName?: string | null }) => {
     const branch = branchName(order.takenAtBranchId)
-    return order.takenByName ? t('deliverySentFrom', { branch, name: order.takenByName }) : t('deliverySentFromNoName', { branch })
+    return order.takenByName
+      ? t('deliverySentFrom', { branch, name: order.takenByName })
+      : t('deliverySentFromNoName', { branch })
   }
 }
 
@@ -132,7 +137,11 @@ function StagePill({ order }: { order: BoardDelivery }) {
       case 'returned':
         return [Undo2, t('deliveryReturned'), 'bg-muted text-muted-foreground'] as const
       case 'cashDue':
-        return [Banknote, t('deliveryStageCashDue'), 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400'] as const
+        return [
+          Banknote,
+          t('deliveryStageCashDue'),
+          'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400',
+        ] as const
       default:
         return order.delivery.outAt
           ? ([Bike, t('deliveryStageOnTheWay'), 'bg-sky-500/15 text-sky-700 dark:text-sky-400'] as const)
@@ -140,7 +149,12 @@ function StagePill({ order }: { order: BoardDelivery }) {
     }
   })()
   return (
-    <span className={cn('inline-flex min-w-0 items-center gap-1.5 rounded-full px-2.5 py-1 type-caption font-semibold', tone)}>
+    <span
+      className={cn(
+        'type-caption inline-flex min-w-0 items-center gap-1.5 rounded-full px-2.5 py-1 font-semibold',
+        tone
+      )}
+    >
       <Icon className='size-3.5 shrink-0' aria-hidden />
       <span className='truncate'>{text}</span>
     </span>

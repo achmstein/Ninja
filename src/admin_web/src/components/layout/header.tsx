@@ -31,10 +31,7 @@ export function Header({ className, ...props }: HeaderProps) {
   const [scrolled, setScrolled] = useState(false)
 
   useEffect(() => {
-    const onScroll = () =>
-      setScrolled(
-        (document.body.scrollTop || document.documentElement.scrollTop) > 8
-      )
+    const onScroll = () => setScrolled((document.body.scrollTop || document.documentElement.scrollTop) > 8)
     document.addEventListener('scroll', onScroll, { passive: true })
     return () => document.removeEventListener('scroll', onScroll)
   }, [])
@@ -60,15 +57,10 @@ export function Header({ className, ...props }: HeaderProps) {
         <div className='hidden min-w-0 items-center gap-3 md:flex'>
           <SidebarTrigger className='text-muted-foreground size-8 shrink-0' />
           {trail && (
-            <nav
-              aria-label={t('navigation')}
-              className='flex min-w-0 items-center gap-1.5 text-sm'
-            >
+            <nav aria-label={t('navigation')} className='flex min-w-0 items-center gap-1.5 text-sm'>
               {trail.group && (
                 <>
-                  <span className='text-muted-foreground truncate'>
-                    {t(trail.group)}
-                  </span>
+                  <span className='text-muted-foreground truncate'>{t(trail.group)}</span>
                   <ChevronRight className='text-muted-foreground/60 size-3.5 shrink-0 rtl:rotate-180' />
                 </>
               )}
@@ -85,9 +77,7 @@ export function Header({ className, ...props }: HeaderProps) {
         >
           <SearchIcon className='size-4' />
           <span className='flex-1 text-start'>{t('goTo')}</span>
-          <kbd className='bg-background rounded border px-1.5 font-mono text-[11px]'>
-            Ctrl K
-          </kbd>
+          <kbd className='bg-background rounded border px-1.5 font-mono text-[11px]'>Ctrl K</kbd>
         </button>
 
         <div className='ms-auto flex items-center gap-1 md:ms-0 md:gap-2 md:justify-self-end'>

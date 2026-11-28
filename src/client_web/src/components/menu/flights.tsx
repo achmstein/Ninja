@@ -1,6 +1,6 @@
 import { motion } from 'motion/react'
-import { ItemPhoto } from './item-photo'
 import { flightPath, type Box } from '../tray/tray-model'
+import { ItemPhoto } from './item-photo'
 
 export type Flight = {
   id: number
@@ -43,7 +43,14 @@ export function FlightLayer({ flights, onLand }: { flights: Flight[]; onLand: (i
           <motion.div
             key={f.id}
             className='absolute'
-            style={{ left: f.from.x, top: f.from.y, width: f.from.width, height: f.from.height, originX: 0.5, originY: 0.5 }}
+            style={{
+              left: f.from.x,
+              top: f.from.y,
+              width: f.from.width,
+              height: f.from.height,
+              originX: 0.5,
+              originY: 0.5,
+            }}
             initial={{ x: 0, y: 0, scale: 1, clipPath: clipFrom }}
             animate={{
               x: [0, dx * 0.45, dx],

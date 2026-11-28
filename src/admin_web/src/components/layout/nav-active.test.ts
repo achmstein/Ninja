@@ -6,8 +6,7 @@ import { type NavItem } from './types'
 // The sidebar highlights exactly one entry per group. These pin the rule
 // for child pages that have no nav item of their own.
 
-const link = (url: string): NavItem =>
-  ({ title: 'menu', url }) as unknown as NavItem
+const link = (url: string): NavItem => ({ title: 'menu', url }) as unknown as NavItem
 
 /** The Menu & stock group, as sidebar data has it */
 const menuStock = ['/menu', '/inventory']
@@ -40,9 +39,7 @@ describe('checkIsActive', () => {
   })
 
   it('keeps a query string out of the comparison', () => {
-    expect(checkIsActive('/inventory?page=2', stock, false, menuStock)).toBe(
-      true
-    )
+    expect(checkIsActive('/inventory?page=2', stock, false, menuStock)).toBe(true)
   })
 
   it('lights the entry for each of its tabs', () => {
@@ -59,11 +56,7 @@ describe('checkIsActive', () => {
 
   it('lights Employees for its tabs and an employee page, not Staff', () => {
     const team = ['/payroll/employees', '/staff']
-    for (const path of [
-      '/payroll/attendance',
-      '/payroll/payslips',
-      '/payroll/employee/5',
-    ]) {
+    for (const path of ['/payroll/attendance', '/payroll/payslips', '/payroll/employee/5']) {
       expect(checkIsActive(path, employees, false, team)).toBe(true)
       expect(checkIsActive(path, link('/staff'), false, team)).toBe(false)
     }
@@ -71,36 +64,24 @@ describe('checkIsActive', () => {
 
   it('lets a more specific sibling win: Live, not Orders', () => {
     const today = ['/', '/orders/live', '/orders']
-    expect(checkIsActive('/orders/live', link('/orders'), false, today)).toBe(
-      false
-    )
-    expect(
-      checkIsActive('/orders/live', link('/orders/live'), false, today)
-    ).toBe(true)
+    expect(checkIsActive('/orders/live', link('/orders'), false, today)).toBe(false)
+    expect(checkIsActive('/orders/live', link('/orders/live'), false, today)).toBe(true)
   })
 
   it('lights Menu for a menu item page', () => {
     const menu = ['/menu', '/menu/categories']
-    expect(checkIsActive('/menu/42/stock', link('/menu'), false, menu)).toBe(
-      true
-    )
-    expect(checkIsActive('/menu/categories', link('/menu'), false, menu)).toBe(
-      false
-    )
+    expect(checkIsActive('/menu/42/stock', link('/menu'), false, menu)).toBe(true)
+    expect(checkIsActive('/menu/categories', link('/menu'), false, menu)).toBe(false)
   })
 
   it('never lights the root for a child page', () => {
-    expect(checkIsActive('/inventory/history', link('/'), false, ['/'])).toBe(
-      false
-    )
+    expect(checkIsActive('/inventory/history', link('/'), false, ['/'])).toBe(false)
   })
 })
 
 describe('navTrail', () => {
   it('names a tab by its entry and group', () => {
-    const groups = [
-      { title: 'navMenuStock', items: [link('/menu'), stock] },
-    ] as Parameters<typeof navTrail>[1]
+    const groups = [{ title: 'navMenuStock', items: [link('/menu'), stock] }] as Parameters<typeof navTrail>[1]
     expect(navTrail('/inventory/history/counts', groups)).toEqual({
       group: 'navMenuStock',
       page: 'inventoryStock',
@@ -133,9 +114,7 @@ describe('every page tab keeps its sidebar entry lit', () => {
     it(url, () => {
       const lit = sidebarData.navGroups.flatMap((group) => {
         const urls = group.items.map((item) => String(item.url))
-        return group.items.filter((item) =>
-          checkIsActive(url, item, false, urls)
-        )
+        return group.items.filter((item) => checkIsActive(url, item, false, urls))
       })
       expect(lit).toHaveLength(1)
     })

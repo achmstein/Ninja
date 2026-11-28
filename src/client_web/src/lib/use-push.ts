@@ -1,9 +1,9 @@
 import { useEffect } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useAuth } from 'react-oidc-context'
-import { subscribe, unsubscribe } from './services/notifications'
-import { ensurePushToken, onForegroundMessage, pushConfigured } from './push'
 import { useLanguage } from './i18n'
+import { ensurePushToken, onForegroundMessage, pushConfigured } from './push'
+import { subscribe, unsubscribe } from './services/notifications'
 
 /**
  * Registers the signed-in customer for order/session push notifications
@@ -58,8 +58,5 @@ export function usePushRegistration() {
 /** Called right before sign-out so the device stops receiving pushes. */
 export async function unregisterPush(): Promise<void> {
   if (!pushConfigured()) return
-  await Promise.allSettled([
-    unsubscribe('user-orders'),
-    unsubscribe('user-sessions'),
-  ])
+  await Promise.allSettled([unsubscribe('user-orders'), unsubscribe('user-sessions')])
 }

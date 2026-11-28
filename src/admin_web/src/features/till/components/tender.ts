@@ -5,14 +5,7 @@ import { type TranslationKey } from '@/lib/i18n'
 // models spell the name. Online is what guests paid from their phones (online
 // payments); Talabat is a Talabat order Talabat pays the business for, settled
 // when it lands. Neither is cash, neither is in the drawer.
-export type TenderName =
-  | 'Cash'
-  | 'Card'
-  | 'InstaPay'
-  | 'Account'
-  | 'Online'
-  | 'Talabat'
-  | 'Courier'
+export type TenderName = 'Cash' | 'Card' | 'InstaPay' | 'Account' | 'Online' | 'Talabat' | 'Courier'
 
 export const TENDERS: {
   name: TenderName
@@ -44,10 +37,7 @@ export type TenderModules = {
  * On account is the tabs module, Online is online payments, Talabat and
  * Courier their connections.
  */
-export function tendersFor(
-  modules: TenderModules,
-  used: Iterable<TenderName> = []
-) {
+export function tendersFor(modules: TenderModules, used: Iterable<TenderName> = []) {
   const usedNames = new Set(used)
   const on: Record<TenderName, boolean> = {
     Cash: true,
@@ -58,14 +48,10 @@ export function tendersFor(
     Talabat: modules.talabat === true,
     Courier: modules.couriers === true,
   }
-  return TENDERS.filter(
-    (tender) => on[tender.name] || usedNames.has(tender.name)
-  )
+  return TENDERS.filter((tender) => on[tender.name] || usedNames.has(tender.name))
 }
 
-export function tenderLabelKey(
-  name: string | null | undefined
-): TranslationKey | undefined {
+export function tenderLabelKey(name: string | null | undefined): TranslationKey | undefined {
   return TENDERS.find((tender) => tender.name === name)?.labelKey
 }
 
@@ -85,9 +71,7 @@ export const TICKET_TYPES: {
   },
 ]
 
-export function ticketTypeKey(
-  name: string | null | undefined
-): TranslationKey | undefined {
+export function ticketTypeKey(name: string | null | undefined): TranslationKey | undefined {
   return TICKET_TYPES.find((type) => type.name === name)?.singularKey
 }
 

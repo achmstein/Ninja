@@ -29,13 +29,7 @@ export function BillPayBar({ bill }: { bill: BillView }) {
   return <PayBar source={source} view={data} />
 }
 
-function PayBar({
-  source,
-  view,
-}: {
-  source: PaySource
-  view: NonNullable<ReturnType<typeof usePayView>['data']>
-}) {
+function PayBar({ source, view }: { source: PaySource; view: NonNullable<ReturnType<typeof usePayView>['data']> }) {
   const t = useT()
   // The way in stays put while the sheet slides away
   const [start, setStart] = useState<PayStart>('full')
@@ -44,8 +38,7 @@ function PayBar({
     setStart(way)
     setOpen(true)
   }
-  const canSplit =
-    view.options.allowItems || view.options.allowEqual || view.options.allowCustom
+  const canSplit = view.options.allowItems || view.options.allowEqual || view.options.allowCustom
 
   return (
     <div className='bg-muted flex flex-col gap-3 rounded-[1.5rem] p-4'>
@@ -55,7 +48,7 @@ function PayBar({
           <button
             type='button'
             onClick={() => openAs('full')}
-            className='bg-foreground text-background flex h-11 items-center justify-center gap-2 rounded-full text-note font-bold transition-transform active:scale-[0.97] motion-reduce:transform-none'
+            className='bg-foreground text-background text-note flex h-11 items-center justify-center gap-2 rounded-full font-bold transition-transform active:scale-[0.97] motion-reduce:transform-none'
           >
             <CreditCard className='size-4' />
             {t('payFully')}
@@ -64,7 +57,7 @@ function PayBar({
             type='button'
             disabled={!canSplit}
             onClick={() => openAs('split')}
-            className='bg-background flex h-11 items-center justify-center gap-2 rounded-full text-note font-bold transition-transform active:scale-[0.97] disabled:opacity-50 motion-reduce:transform-none'
+            className='bg-background text-note flex h-11 items-center justify-center gap-2 rounded-full font-bold transition-transform active:scale-[0.97] disabled:opacity-50 motion-reduce:transform-none'
           >
             <Split className='size-4' />
             {t('splitBill')}
@@ -73,12 +66,7 @@ function PayBar({
       ) : (
         <PayWhy why={view.why} className='bg-background' />
       )}
-      <PaySheet
-        source={source}
-        start={start}
-        open={open}
-        onOpenChange={setOpen}
-      />
+      <PaySheet source={source} start={start} open={open} onOpenChange={setOpen} />
     </div>
   )
 }

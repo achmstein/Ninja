@@ -8,9 +8,7 @@ import { createContext, useContext } from 'react'
  */
 export type ContentLanguages = 'both' | 'ar' | 'en'
 
-export function contentLanguagesOf(
-  value: string | null | undefined
-): ContentLanguages {
+export function contentLanguagesOf(value: string | null | undefined): ContentLanguages {
   return value === 'ar' || value === 'en' ? value : 'both'
 }
 

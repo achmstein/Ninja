@@ -1,24 +1,13 @@
 import { useState } from 'react'
 import { AlertTriangle, CloudOff, Loader2, RotateCw, Trash2 } from 'lucide-react'
-import { ConfirmDialog } from '@/components/confirm-dialog'
-import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
 import { useLocale, useT } from '@/lib/i18n'
 import { useMoney } from '@/lib/money'
 import { useNetworkStatus } from '@/lib/network-status'
 import { cn } from '@/lib/utils'
-import {
-  discardOfflineSale,
-  drainOfflineSales,
-  retryOfflineSale,
-  useOfflineQueue,
-} from './offline-queue'
+import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { ConfirmDialog } from '@/components/confirm-dialog'
+import { discardOfflineSale, drainOfflineSales, retryOfflineSale, useOfflineQueue } from './offline-queue'
 import type { OfflineSale } from './offline-replay'
 
 /**
@@ -42,34 +31,20 @@ export function OfflineChip() {
         variant='outline'
         className={cn(
           'h-12 gap-2 px-3',
-          (!online || failed) && 'border-amber-500/60 text-amber-700 dark:text-amber-400',
+          (!online || failed) && 'border-amber-500/60 text-amber-700 dark:text-amber-400'
         )}
         onClick={() => setOpen(true)}
       >
-        {failed ? (
-          <AlertTriangle className='size-5' />
-        ) : (
-          <CloudOff className='size-5' />
-        )}
+        {failed ? <AlertTriangle className='size-5' /> : <CloudOff className='size-5' />}
         <span className='max-sm:hidden'>{online ? t('offlineSalesWaiting') : t('offline')}</span>
-        {sales.length > 0 && (
-          <span className='bg-muted rounded-full px-2 text-sm tabular-nums'>
-            {sales.length}
-          </span>
-        )}
+        {sales.length > 0 && <span className='bg-muted rounded-full px-2 text-sm tabular-nums'>{sales.length}</span>}
       </Button>
       <OfflineSalesDialog open={open} onOpenChange={setOpen} />
     </>
   )
 }
 
-function OfflineSalesDialog({
-  open,
-  onOpenChange,
-}: {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-}) {
+function OfflineSalesDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
   const t = useT()
   const online = useNetworkStatus((s) => s.online)
   const { sales, draining } = useOfflineQueue()
@@ -87,9 +62,7 @@ function OfflineSalesDialog({
         </DialogHeader>
 
         {sales.length === 0 ? (
-          <p className='text-muted-foreground py-6 text-center'>
-            {t('offlineSalesNone')}
-          </p>
+          <p className='text-muted-foreground py-6 text-center'>{t('offlineSalesNone')}</p>
         ) : (
           <div className='flex flex-col divide-y rounded-lg border'>
             {sales.map((sale) => (
@@ -105,17 +78,8 @@ function OfflineSalesDialog({
         )}
 
         {online && queued && (
-          <Button
-            size='lg'
-            className='h-12 text-base'
-            disabled={draining}
-            onClick={() => void drainOfflineSales()}
-          >
-            {draining ? (
-              <Loader2 className='size-5 animate-spin' />
-            ) : (
-              <RotateCw className='size-5' />
-            )}
+          <Button size='lg' className='h-12 text-base' disabled={draining} onClick={() => void drainOfflineSales()}>
+            {draining ? <Loader2 className='size-5 animate-spin' /> : <RotateCw className='size-5' />}
             {t('offlineSendNow')}
           </Button>
         )}
@@ -159,21 +123,12 @@ function OfflineSaleRow({
     <div className='flex items-center gap-3 p-3'>
       <div className='min-w-0 flex-1'>
         <div className='flex items-baseline gap-2'>
-          <span className='type-heading tabular-nums'>
-            {sale.provisionalReceiptNumber}
-          </span>
+          <span className='type-heading tabular-nums'>{sale.provisionalReceiptNumber}</span>
           <span className='text-muted-foreground type-detail'>
-            {new Intl.DateTimeFormat(locale, { timeStyle: 'short' }).format(
-              new Date(sale.placedAt),
-            )}
+            {new Intl.DateTimeFormat(locale, { timeStyle: 'short' }).format(new Date(sale.placedAt))}
           </span>
         </div>
-        <div
-          className={cn(
-            'type-detail',
-            failed ? 'text-destructive' : 'text-muted-foreground',
-          )}
-        >
+        <div className={cn('type-detail', failed ? 'text-destructive' : 'text-muted-foreground')}>
           {failed ? sale.error || t('somethingWentWrong') : t('offlineQueued')}
         </div>
       </div>

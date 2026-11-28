@@ -17,9 +17,7 @@ export function remainingShare(
     .reduce(
       (sum, p) =>
         sum +
-        p.shares
-          .filter((s) => toNumber(s.branchId) === branchId)
-          .reduce((s, share) => s + toNumber(share.percent), 0),
+        p.shares.filter((s) => toNumber(s.branchId) === branchId).reduce((s, share) => s + toNumber(share.percent), 0),
       0
     )
   return Math.max(0, Math.round((100 - taken) * 100) / 100)

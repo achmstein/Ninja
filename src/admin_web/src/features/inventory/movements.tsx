@@ -13,21 +13,13 @@ import { dayHeading, dayKey } from '@/lib/when'
 import { useTableUrlState } from '@/hooks/use-table-url-state'
 import { Button } from '@/components/ui/button'
 import { Combobox } from '@/components/combobox'
-import {
-  DataTable,
-  DataTablePagination,
-  dataTableFeatures,
-} from '@/components/data-table'
+import { DataTable, DataTablePagination, dataTableFeatures } from '@/components/data-table'
 import { DateRangePicker } from '@/components/date-range-picker'
 import { ListRow } from '@/components/list-row'
 import { When } from '@/components/when'
 import { useTillWindow } from '@/features/till/use-till-window'
 import { MovementTypeBadge } from './components/movement-type-badge'
-import {
-  formatSignedQuantity,
-  movementTypeKeys,
-  MOVEMENT_TYPE_VALUES,
-} from './format'
+import { formatSignedQuantity, movementTypeKeys, MOVEMENT_TYPE_VALUES } from './format'
 import { HistoryPage } from './history-page'
 import { getMovementColumns, movementTime } from './movement-columns'
 import { stockItemsQueryOptions, toStockItemOptions } from './queries'
@@ -48,13 +40,12 @@ export function Movements() {
     defaultPreset: 'all',
   })
 
-  const { pagination, onPaginationChange, ensurePageInRange } =
-    useTableUrlState({
-      search,
-      navigate,
-      pagination: { defaultPageSize: 20 },
-      globalFilter: { enabled: false },
-    })
+  const { pagination, onPaginationChange, ensurePageInRange } = useTableUrlState({
+    search,
+    navigate,
+    pagination: { defaultPageSize: 20 },
+    globalFilter: { enabled: false },
+  })
 
   // Retired items keep their history, so the picker lists them too
   const { data: items = [] } = useQuery(stockItemsQueryOptions(true))
@@ -99,13 +90,7 @@ export function Movements() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query.data, pageCount])
 
-  const patchSearch = (next: {
-    stockItemId?: number
-    type?: number
-    range?: RangeKey
-    from?: string
-    to?: string
-  }) =>
+  const patchSearch = (next: { stockItemId?: number; type?: number; range?: RangeKey; from?: string; to?: string }) =>
     navigate({
       search: (prev) => ({ ...prev, page: undefined, ...next }),
     })
@@ -117,12 +102,8 @@ export function Movements() {
       <HistoryPage tab='movements'>
         <div className='flex flex-wrap items-center gap-2'>
           <Combobox
-            value={
-              search.stockItemId != null ? String(search.stockItemId) : null
-            }
-            onChange={(value) =>
-              patchSearch({ stockItemId: value ? Number(value) : undefined })
-            }
+            value={search.stockItemId != null ? String(search.stockItemId) : null}
+            onChange={(value) => patchSearch({ stockItemId: value ? Number(value) : undefined })}
             options={toStockItemOptions(items, localized, t)}
             placeholder={t('allItems')}
             clearLabel={t('allItems')}
@@ -130,9 +111,7 @@ export function Movements() {
           />
           <Combobox
             value={search.type != null ? String(search.type) : null}
-            onChange={(value) =>
-              patchSearch({ type: value ? Number(value) : undefined })
-            }
+            onChange={(value) => patchSearch({ type: value ? Number(value) : undefined })}
             options={MOVEMENT_TYPE_VALUES.map(({ value, name }) => ({
               value: String(value),
               label: t(movementTypeKeys[name]),
@@ -141,12 +120,7 @@ export function Movements() {
             clearLabel={t('allTypes')}
             className='w-[180px]'
           />
-          <DateRangePicker
-            search={search}
-            dayWindow={dayWindow}
-            defaultPreset='all'
-            onChange={patchSearch}
-          />
+          <DateRangePicker search={search} dayWindow={dayWindow} defaultPreset='all' onChange={patchSearch} />
           {isFiltered && (
             <Button
               variant='ghost'
@@ -188,12 +162,7 @@ export function Movements() {
                   </>
                 }
                 trailing={
-                  <span
-                    className={cn(
-                      quantity < 0 && 'text-destructive',
-                      quantity > 0 && 'text-success'
-                    )}
-                  >
+                  <span className={cn(quantity < 0 && 'text-destructive', quantity > 0 && 'text-success')}>
                     {formatSignedQuantity(quantity, m.unit, t)}
                   </span>
                 }

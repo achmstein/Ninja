@@ -25,27 +25,14 @@ type PageHeaderProps = {
  * for behind an ⓘ beside it (the page stays clean), the page's actions on
  * the end side, an optional row (tabs, filters) below.
  */
-export function PageHeader({
-  title,
-  description,
-  back,
-  badge,
-  actions,
-  children,
-  className,
-}: PageHeaderProps) {
+export function PageHeader({ title, description, back, badge, actions, children, className }: PageHeaderProps) {
   const t = useT()
   return (
     <div className={cn('flex flex-col gap-4', className)}>
       <div className='flex flex-wrap items-start justify-between gap-x-4 gap-y-2'>
         <div className='flex min-w-0 items-start gap-2'>
           {back && (
-            <Button
-              asChild
-              variant='ghost'
-              size='icon'
-              className='-ms-2 size-9 shrink-0'
-            >
+            <Button asChild variant='ghost' size='icon' className='-ms-2 size-9 shrink-0'>
               <Link to={back.to} search={back.search} aria-label={t('goBack')}>
                 <ArrowLeft className='rtl:rotate-180' />
               </Link>
@@ -59,9 +46,7 @@ export function PageHeader({
             </div>
           </div>
         </div>
-        {actions && (
-          <div className='flex flex-wrap items-center gap-2'>{actions}</div>
-        )}
+        {actions && <div className='flex flex-wrap items-center gap-2'>{actions}</div>}
       </div>
       {children}
     </div>

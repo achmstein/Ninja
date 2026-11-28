@@ -15,7 +15,7 @@ export function BoardTally() {
   const { orders } = useKitchenOrders()
   // One whose every item was cancelled has nothing left to make either
   const open = orders.filter(
-    (order) => order.readyAt == null && order.cancelledAt == null && !allItemsCancelled(order.items),
+    (order) => order.readyAt == null && order.cancelledAt == null && !allItemsCancelled(order.items)
   )
   const late = open.filter((order) => orderUrgency(order.confirmedAt ?? order.date, nowMs) === 'delayed').length
 

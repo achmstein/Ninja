@@ -1,14 +1,6 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import {
-  KeyRound,
-  LogOut,
-  MoreHorizontal,
-  ShieldOff,
-  UserCheck,
-  UserPlus,
-  UserX,
-} from 'lucide-react'
+import { KeyRound, LogOut, MoreHorizontal, ShieldOff, UserCheck, UserPlus, UserX } from 'lucide-react'
 import type { OperatorResponse } from '@/api/control'
 import {
   disableOperatorMutation,
@@ -20,6 +12,10 @@ import {
   resetOperatorPasswordMutation,
   signOutOperatorMutation,
 } from '@/api/control/@tanstack/react-query.gen'
+import { useFormat } from '@/lib/format'
+import { useT, type TranslationKey } from '@/lib/i18n'
+import { problemDetail } from '@/lib/problem'
+import { toast } from '@/lib/toast'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -52,19 +48,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { CopyButton } from '@/components/copy-button'
-import { useFormat } from '@/lib/format'
-import { useT, type TranslationKey } from '@/lib/i18n'
-import { problemDetail } from '@/lib/problem'
-import { toast } from '@/lib/toast'
 
 /** A password to hand over: shown once, right after it was made. */
 type Handover = { email: string; password: string; invited: boolean }
@@ -106,12 +91,19 @@ export function TeamTable() {
   })
   const disable = useMutation({
     ...disableOperatorMutation(),
-    onSuccess: () => { toast.success(t('operatorDisabledToast', { email: pending?.op.email ?? '' })); setPending(null); refresh() },
+    onSuccess: () => {
+      toast.success(t('operatorDisabledToast', { email: pending?.op.email ?? '' }))
+      setPending(null)
+      refresh()
+    },
     onError,
   })
   const enable = useMutation({
     ...enableOperatorMutation(),
-    onSuccess: (_, v) => { toast.success(t('operatorEnabledToast', { email: emailOf(v.path.id) })); refresh() },
+    onSuccess: (_, v) => {
+      toast.success(t('operatorEnabledToast', { email: emailOf(v.path.id) }))
+      refresh()
+    },
     onError,
   })
   const resetPassword = useMutation({
@@ -125,7 +117,11 @@ export function TeamTable() {
   })
   const resetAuthenticator = useMutation({
     ...resetOperatorAuthenticatorMutation(),
-    onSuccess: () => { toast.success(t('authenticatorReset', { email: pending?.op.email ?? '' })); setPending(null); refresh() },
+    onSuccess: () => {
+      toast.success(t('authenticatorReset', { email: pending?.op.email ?? '' }))
+      setPending(null)
+      refresh()
+    },
     onError,
   })
   const signOut = useMutation({
@@ -190,11 +186,26 @@ export function TeamTable() {
                     <TableCell>
                       <div className='flex flex-wrap gap-1'>
                         {!op.enabled ? (
-                          <Badge variant='outline' className='border-transparent bg-red-500/15 text-red-700 dark:text-red-400'>{t('operatorDisabled')}</Badge>
+                          <Badge
+                            variant='outline'
+                            className='border-transparent bg-red-500/15 text-red-700 dark:text-red-400'
+                          >
+                            {t('operatorDisabled')}
+                          </Badge>
                         ) : op.pendingSetup ? (
-                          <Badge variant='outline' className='border-transparent bg-amber-500/15 text-amber-700 dark:text-amber-400'>{t('operatorPendingSetup')}</Badge>
+                          <Badge
+                            variant='outline'
+                            className='border-transparent bg-amber-500/15 text-amber-700 dark:text-amber-400'
+                          >
+                            {t('operatorPendingSetup')}
+                          </Badge>
                         ) : (
-                          <Badge variant='outline' className='border-transparent bg-emerald-500/15 text-emerald-700 dark:text-emerald-400'>{t('operatorActive')}</Badge>
+                          <Badge
+                            variant='outline'
+                            className='border-transparent bg-emerald-500/15 text-emerald-700 dark:text-emerald-400'
+                          >
+                            {t('operatorActive')}
+                          </Badge>
                         )}
                         {op.enabled && !op.pendingSetup && !op.hasAuthenticator && (
                           <Badge variant='outline'>{t('operatorNoTwoFactor')}</Badge>
@@ -228,7 +239,10 @@ export function TeamTable() {
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             {op.enabled ? (
-                              <DropdownMenuItem variant='destructive' onSelect={() => setPending({ kind: 'disable', op })}>
+                              <DropdownMenuItem
+                                variant='destructive'
+                                onSelect={() => setPending({ kind: 'disable', op })}
+                              >
                                 <UserX className='size-4' />
                                 {t('disableOperator')}
                               </DropdownMenuItem>
@@ -272,7 +286,10 @@ export function TeamTable() {
                 <AlertDialogAction
                   variant={pending.kind === 'disable' ? 'destructive' : 'default'}
                   disabled={confirming}
-                  onClick={(e) => { e.preventDefault(); confirm() }}
+                  onClick={(e) => {
+                    e.preventDefault()
+                    confirm()
+                  }}
                 >
                   {confirming && <Spinner />}
                   {t(confirmCopy[pending.kind].action)}
@@ -306,7 +323,11 @@ function InviteDialog({
   const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())
 
   const reset = (next: boolean) => {
-    if (!next) { setEmail(''); setFirstName(''); setLastName('') }
+    if (!next) {
+      setEmail('')
+      setFirstName('')
+      setLastName('')
+    }
     onOpenChange(next)
   }
 
@@ -327,7 +348,14 @@ function InviteDialog({
         >
           <div className='flex flex-col gap-2'>
             <Label htmlFor='operator-email'>{t('email')}</Label>
-            <Input id='operator-email' type='email' dir='ltr' autoFocus value={email} onChange={(e) => setEmail(e.target.value)} />
+            <Input
+              id='operator-email'
+              type='email'
+              dir='ltr'
+              autoFocus
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
           </div>
           <div className='grid grid-cols-2 gap-3'>
             <div className='flex flex-col gap-2'>
@@ -344,7 +372,9 @@ function InviteDialog({
             </div>
           </div>
           <DialogFooter>
-            <Button type='button' variant='outline' onClick={() => reset(false)}>{t('cancel')}</Button>
+            <Button type='button' variant='outline' onClick={() => reset(false)}>
+              {t('cancel')}
+            </Button>
             <Button type='submit' disabled={!valid || isPending}>
               {isPending && <Spinner />}
               {t('invite')}
@@ -376,13 +406,19 @@ function HandoverDialog({ handover, onClose }: { handover: Handover | null; onCl
             </DialogHeader>
             <dl className='grid grid-cols-[auto_1fr_auto] items-center gap-x-3 gap-y-2 text-sm'>
               <dt className='text-muted-foreground'>{t('signInAt')}</dt>
-              <dd className='truncate font-mono' dir='ltr'>{signInUrl}</dd>
+              <dd className='truncate font-mono' dir='ltr'>
+                {signInUrl}
+              </dd>
               <CopyButton value={signInUrl} />
               <dt className='text-muted-foreground'>{t('email')}</dt>
-              <dd className='truncate font-mono' dir='ltr'>{handover.email}</dd>
+              <dd className='truncate font-mono' dir='ltr'>
+                {handover.email}
+              </dd>
               <CopyButton value={handover.email} />
               <dt className='text-muted-foreground'>{t('temporaryPassword')}</dt>
-              <dd className='font-mono text-base tracking-wide' dir='ltr'>{handover.password}</dd>
+              <dd className='font-mono text-base tracking-wide' dir='ltr'>
+                {handover.password}
+              </dd>
               <CopyButton value={handover.password} />
             </dl>
             <DialogFooter>

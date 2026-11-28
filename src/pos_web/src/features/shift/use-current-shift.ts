@@ -1,10 +1,10 @@
 import { useEffect } from 'react'
-import { useQuery } from '@tanstack/react-query'
 import { AxiosError } from 'axios'
+import { useQuery } from '@tanstack/react-query'
 import { getCurrentShiftOptions } from '@/api/sales/@tanstack/react-query.gen'
 import type { ShiftView } from '@/api/sales/types.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { getActiveBranchId } from '@/stores/branch-store'
+import { API_VERSION } from '@/lib/api-client'
 import { rememberOpenShift } from './last-open-shift'
 
 /**
@@ -26,15 +26,11 @@ export function useCurrentShift(options?: { refetchInterval?: number }) {
     refetchInterval: options?.refetchInterval,
   })
 
-  const noShift =
-    query.isError &&
-    query.error instanceof AxiosError &&
-    query.error.response?.status === 404
+  const noShift = query.isError && query.error instanceof AxiosError && query.error.response?.status === 404
 
   // Remembered for a sale rung up offline: it is credited to this drawer
   const data = query.data as ShiftView | undefined
-  const openId =
-    !query.isError && data?.status === 'Open' && data.id != null ? Number(data.id) : null
+  const openId = !query.isError && data?.status === 'Open' && data.id != null ? Number(data.id) : null
   const openBranch = data?.branchId != null ? Number(data.branchId) : null
   useEffect(() => {
     if (openId != null && openBranch != null) rememberOpenShift(openBranch, openId)

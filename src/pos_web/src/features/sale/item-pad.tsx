@@ -2,12 +2,12 @@ import type { ReactNode } from 'react'
 import { Link } from '@tanstack/react-router'
 import { ArrowLeft, Search, Sparkles, X } from 'lucide-react'
 import type { CatalogItemDto } from '@/api/catalog/types.gen'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Skeleton } from '@/components/ui/skeleton'
 import { useLocalized, useT } from '@/lib/i18n'
 import { toNumber, useMoney } from '@/lib/money'
 import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Skeleton } from '@/components/ui/skeleton'
 import { ItemImage } from './item-image'
 import { itemPictureUrl } from './item-picture'
 import { USUALS_CATEGORY, type Menu } from './use-menu'
@@ -78,14 +78,16 @@ function RailCategory({
       onClick={onClick}
       className={cn(
         'flex min-h-12 w-full items-center gap-2 rounded-md px-3 py-2 text-start text-sm font-medium transition-colors',
-        active ? 'bg-primary text-primary-foreground' : 'hover:bg-accent text-foreground',
+        active ? 'bg-primary text-primary-foreground' : 'hover:bg-accent text-foreground'
       )}
     >
       {icon}
       <span className='line-clamp-2 min-w-0 flex-1'>
         <bdi>{label}</bdi>
       </span>
-      <span className={cn('shrink-0 text-xs tabular-nums', active ? 'text-primary-foreground/80' : 'text-muted-foreground')}>
+      <span
+        className={cn('shrink-0 text-xs tabular-nums', active ? 'text-primary-foreground/80' : 'text-muted-foreground')}
+      >
         {count}
       </span>
     </button>
@@ -221,7 +223,10 @@ export function ItemPad({
               Array.from({ length: compact ? 24 : 8 }).map((_, i) =>
                 compact ? (
                   /* Name and price lines, no picture: the compact tile's shape */
-                  <div key={i} className='flex min-h-16 flex-col justify-between gap-1.5 rounded-lg border px-2.5 py-2 shadow-xs'>
+                  <div
+                    key={i}
+                    className='flex min-h-16 flex-col justify-between gap-1.5 rounded-lg border px-2.5 py-2 shadow-xs'
+                  >
                     <Skeleton className='h-4 w-full' />
                     <Skeleton className='h-3 w-1/2' />
                   </div>
@@ -234,11 +239,13 @@ export function ItemPad({
                       <Skeleton className='h-3 w-1/2' />
                     </div>
                   </div>
-                ),
-              ),
+                )
+              )
             )
           ) : menu.visibleItems.length === 0 ? (
-            <p className='text-muted-foreground py-16 text-center'>{menu.needle ? t('noItemsMatch') : t('noItemsInCategory')}</p>
+            <p className='text-muted-foreground py-16 text-center'>
+              {menu.needle ? t('noItemsMatch') : t('noItemsInCategory')}
+            </p>
           ) : (
             grid(menu.visibleItems.map((item) => <Tile key={String(item.id)} item={item} onTap={menu.tapItem} />))
           )}

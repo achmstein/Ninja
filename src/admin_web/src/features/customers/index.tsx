@@ -1,9 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import {
-  keepPreviousData,
-  useInfiniteQuery,
-  useQuery,
-} from '@tanstack/react-query'
+import { keepPreviousData, useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { getRouteApi } from '@tanstack/react-router'
 import { ArrowUpDown, Search, UserRound, Users } from 'lucide-react'
 import { getGuests } from '@/api/ordering'
@@ -35,10 +31,7 @@ import { accountsService } from '@/features/accounts/services/accounts-service'
 import { useLoyaltyAccounts } from '@/features/loyalty/hooks/use-loyalty'
 import { tierColors, type LoyaltyTier } from '@/features/loyalty/types'
 import { formatEgp, relativeTime } from '@/features/orders/status'
-import {
-  AddCustomerButton,
-  AddedAtCounterBadge,
-} from './components/counter-customer'
+import { AddCustomerButton, AddedAtCounterBadge } from './components/counter-customer'
 import { CustomerPanel } from './components/customer-panel'
 import { CustomerStats } from './components/customer-stats'
 import { GuestPanel } from './components/guest-panel'
@@ -88,14 +81,10 @@ export function Customers() {
   const guestsView = filter === 'guests'
   const offView = filter === 'off'
 
-  const select = (customer: string | undefined) =>
-    navigate({ search: (prev) => ({ ...prev, customer }) })
-  const selectGuest = (guest: string | undefined) =>
-    navigate({ search: (prev) => ({ ...prev, guest }) })
-  const setFilter = (next: CustomerFilter | undefined) =>
-    navigate({ search: (prev) => ({ ...prev, filter: next }) })
-  const setSort = (next: CustomerSort) =>
-    navigate({ search: (prev) => ({ ...prev, sort: next }) })
+  const select = (customer: string | undefined) => navigate({ search: (prev) => ({ ...prev, customer }) })
+  const selectGuest = (guest: string | undefined) => navigate({ search: (prev) => ({ ...prev, guest }) })
+  const setFilter = (next: CustomerFilter | undefined) => navigate({ search: (prev) => ({ ...prev, filter: next }) })
+  const setSort = (next: CustomerSort) => navigate({ search: (prev) => ({ ...prev, sort: next }) })
 
   // What the other services know of each customer, read whole and joined to the rows
   const accounts = useQuery({
@@ -144,19 +133,13 @@ export function Customers() {
       return data
     },
     initialPageParam: 0,
-    getNextPageParam: (last) =>
-      last.hasNextPage ? Number(last.pageIndex ?? 0) + 1 : undefined,
+    getNextPageParam: (last) => (last.hasNextPage ? Number(last.pageIndex ?? 0) + 1 : undefined),
     enabled: guestsView,
   })
-  const guestRows = useMemo(
-    () => guests.data?.pages.flatMap((page) => page.items ?? []) ?? [],
-    [guests.data]
-  )
+  const guestRows = useMemo(() => guests.data?.pages.flatMap((page) => page.items ?? []) ?? [], [guests.data])
 
   const everyone = useMemo<CustomerRow[]>(() => {
-    const balances = new Map(
-      (accounts.data ?? []).map((a) => [a.customerId, a.balance])
-    )
+    const balances = new Map((accounts.data ?? []).map((a) => [a.customerId, a.balance]))
     const points = new Map((members.data ?? []).map((m) => [m.userId, m]))
     const ordered = new Map((orders.data ?? []).map((o) => [o.customerId, o]))
     const rows: CustomerRow[] = (directory.data ?? []).map((c) => {
@@ -201,35 +184,18 @@ export function Customers() {
       }
     }
     return rows
-  }, [
-    directory.data,
-    accounts.data,
-    members.data,
-    orders.data,
-    offView,
-    query,
-    t,
-  ])
+  }, [directory.data, accounts.data, members.data, orders.data, offView, query, t])
 
   const owing = useMemo(() => everyone.filter((r) => r.balance > 0), [everyone])
   const inProgram = useMemo(() => everyone.filter((r) => r.member), [everyone])
-  const inDirectory = useMemo(
-    () => everyone.filter((r) => !r.owingOnly),
-    [everyone]
-  )
+  const inDirectory = useMemo(() => everyone.filter((r) => !r.owingOnly), [everyone])
 
   // What the list is sorted by: the owner's pick, or what the view is about.
   // A search keeps the server's order (closest name first) until a sort is picked
-  const viewSort: CustomerSort =
-    filter === 'owing' ? 'owes' : filter === 'members' ? 'points' : 'lastOrder'
+  const viewSort: CustomerSort = filter === 'owing' ? 'owes' : filter === 'members' ? 'points' : 'lastOrder'
   const sort = search.sort ?? viewSort
   const rows = useMemo(() => {
-    const shown =
-      filter === 'owing'
-        ? owing
-        : filter === 'members'
-          ? inProgram
-          : inDirectory
+    const shown = filter === 'owing' ? owing : filter === 'members' ? inProgram : inDirectory
     return query && !search.sort ? shown : sortRows(shown, sort)
   }, [filter, owing, inProgram, inDirectory, query, search.sort, sort])
 
@@ -256,10 +222,7 @@ export function Customers() {
     {
       value: 'guests',
       label: t('guests'),
-      count:
-        guests.data?.pages[0]?.totalCount != null
-          ? Number(guests.data.pages[0].totalCount)
-          : undefined,
+      count: guests.data?.pages[0]?.totalCount != null ? Number(guests.data.pages[0].totalCount) : undefined,
     },
     { value: 'off', label: t('disabled'), count: offCount.data },
   ]
@@ -309,11 +272,8 @@ export function Customers() {
         ...(features.tabs ? (['owes'] as const) : []),
         ...(features.loyalty ? (['points'] as const) : []),
       ]
-  const sorts = (
-    ['lastOrder', 'spent', 'owes', 'points', 'name'] as CustomerSort[]
-  ).filter(
-    (s) =>
-      (s !== 'owes' || features.tabs) && (s !== 'points' || features.loyalty)
+  const sorts = (['lastOrder', 'spent', 'owes', 'points', 'name'] as CustomerSort[]).filter(
+    (s) => (s !== 'owes' || features.tabs) && (s !== 'points' || features.loyalty)
   )
   const listQuery = guestsView ? guests : directory
 
@@ -356,11 +316,7 @@ export function Customers() {
               onClick={() => setFilter(f.value)}
             >
               {f.label}
-              {f.count != null && (
-                <span className='text-muted-foreground ms-1.5 tabular-nums'>
-                  {f.count}
-                </span>
-              )}
+              {f.count != null && <span className='text-muted-foreground ms-1.5 tabular-nums'>{f.count}</span>}
             </Button>
           ))}
         </div>
@@ -373,10 +329,7 @@ export function Customers() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align='end'>
-              <DropdownMenuRadioGroup
-                value={sort}
-                onValueChange={(value) => setSort(value as CustomerSort)}
-              >
+              <DropdownMenuRadioGroup value={sort} onValueChange={(value) => setSort(value as CustomerSort)}>
                 {sorts.map((s) => (
                   <DropdownMenuRadioItem key={s} value={s}>
                     {t(sortLabels[s])}
@@ -406,10 +359,7 @@ export function Customers() {
           ))}
         </div>
         {listQuery.isError ? (
-          <ErrorState
-            error={listQuery.error}
-            onRetry={() => listQuery.refetch()}
-          />
+          <ErrorState error={listQuery.error} onRetry={() => listQuery.refetch()} />
         ) : listQuery.isLoading ? (
           <div className='space-y-2 p-3'>
             {[...Array(8)].map((_, i) => (
@@ -456,12 +406,7 @@ export function Customers() {
           <EmptyState compact icon={Users} title={t('noCustomersFound')} />
         ) : (
           // Starts again from the top when what is listed changes
-          <DrawnRows
-            key={`${filter ?? 'all'}|${query}|${sort}`}
-            rows={rows}
-            columns={columns}
-            onOpen={select}
-          />
+          <DrawnRows key={`${filter ?? 'all'}|${query}|${sort}`} rows={rows} columns={columns} onOpen={select} />
         )}
       </section>
     </Main>
@@ -502,25 +447,13 @@ function DrawnRows({
       {rows.slice(0, drawn).map((row) => (
         <ListRow key={row.id} row={row} columns={columns} onOpen={onOpen} />
       ))}
-      <More
-        more={drawn < rows.length}
-        loading={false}
-        onMore={() => setDrawn((n) => n + DRAWN_AT_A_TIME)}
-      />
+      <More more={drawn < rows.length} loading={false} onMore={() => setDrawn((n) => n + DRAWN_AT_A_TIME)} />
     </ScrollArea>
   )
 }
 
 /** The end of the list: asks for more when it scrolls into view */
-function More({
-  more,
-  loading,
-  onMore,
-}: {
-  more: boolean
-  loading: boolean
-  onMore: () => void
-}) {
+function More({ more, loading, onMore }: { more: boolean; loading: boolean; onMore: () => void }) {
   const sentinel = useRef<HTMLDivElement>(null)
   const ask = useRef(onMore)
   useEffect(() => {
@@ -551,32 +484,15 @@ function More({
  * a phone, the name over when they last ordered, with what they owe and
  * their points at the end.
  */
-function ListRow({
-  row,
-  columns,
-  onOpen,
-}: {
-  row: CustomerRow
-  columns: Column[]
-  onOpen: (id: string) => void
-}) {
+function ListRow({ row, columns, onOpen }: { row: CustomerRow; columns: Column[]; onOpen: (id: string) => void }) {
   const t = useT()
   const locale = useLocale()
   const [nowMs] = useState(() => Date.now())
-  const last = row.lastOrderAt
-    ? relativeTime(row.lastOrderAt, nowMs, t, locale)
-    : undefined
+  const last = row.lastOrderAt ? relativeTime(row.lastOrderAt, nowMs, t, locale) : undefined
   const owes =
-    row.balance > 0 ? (
-      <span className='text-destructive font-medium tabular-nums'>
-        {formatEgp(row.balance)}
-      </span>
-    ) : null
+    row.balance > 0 ? <span className='text-destructive font-medium tabular-nums'>{formatEgp(row.balance)}</span> : null
   const points = row.member ? (
-    <span
-      className='font-medium tabular-nums'
-      style={{ color: tierColors[row.tier as LoyaltyTier] }}
-    >
+    <span className='font-medium tabular-nums' style={{ color: tierColors[row.tier as LoyaltyTier] }}>
       {row.points.toLocaleString(locale)}
     </span>
   ) : null
@@ -584,8 +500,7 @@ function ListRow({
 
   const cells: Record<Column, React.ReactNode> = {
     lastOrder: last ?? nothing,
-    orders:
-      row.orderCount > 0 ? row.orderCount.toLocaleString(locale) : nothing,
+    orders: row.orderCount > 0 ? row.orderCount.toLocaleString(locale) : nothing,
     spent: row.orderCount > 0 ? formatEgp(row.spent) : nothing,
     owes: owes ?? nothing,
     points: points ?? nothing,
@@ -621,24 +536,16 @@ function ListRow({
           {owes}
           {points && (
             <span>
-              {points}{' '}
-              <span className='text-muted-foreground'>{t('points')}</span>
+              {points} <span className='text-muted-foreground'>{t('points')}</span>
             </span>
           )}
-          {row.guest && row.orderCount > 0 && (
-            <span className='font-medium tabular-nums'>
-              {formatEgp(row.spent)}
-            </span>
-          )}
+          {row.guest && row.orderCount > 0 && <span className='font-medium tabular-nums'>{formatEgp(row.spent)}</span>}
         </div>
       )}
       {columns.map((c) => (
         <span
           key={c}
-          className={cn(
-            'hidden truncate text-end tabular-nums md:block',
-            c === 'lastOrder' && 'text-muted-foreground'
-          )}
+          className={cn('hidden truncate text-end tabular-nums md:block', c === 'lastOrder' && 'text-muted-foreground')}
         >
           {cells[c]}
         </span>

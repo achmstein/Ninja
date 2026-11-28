@@ -45,10 +45,8 @@ export function useInventoryActions() {
   }
 
   const invalidateLevels = () => refresh('getStockLevels', 'getStockMovements')
-  const invalidateItems = () =>
-    refresh('getStockItems', 'getStockItem', 'getStockLevels')
-  const invalidateRecipes = () =>
-    refresh('getRecipes', 'getRecipe', 'listItems')
+  const invalidateItems = () => refresh('getStockItems', 'getStockItem', 'getStockLevels')
+  const invalidateRecipes = () => refresh('getRecipes', 'getRecipe', 'listItems')
 
   const receivePurchase = useMutation({
     ...receivePurchaseMutation(),
@@ -57,8 +55,7 @@ export function useInventoryActions() {
       refresh('getPurchases')
       toast.success(t('purchaseReceived'))
     },
-    onError: (error) =>
-      toast.error(domainMessage(error, t('failedToReceivePurchase'))),
+    onError: (error) => toast.error(domainMessage(error, t('failedToReceivePurchase'))),
   })
 
   const postCount = useMutation({
@@ -68,8 +65,7 @@ export function useInventoryActions() {
       refresh('getStockCounts')
       toast.success(t('countPosted'))
     },
-    onError: (error) =>
-      toast.error(domainMessage(error, t('failedToPostCount'))),
+    onError: (error) => toast.error(domainMessage(error, t('failedToPostCount'))),
   })
 
   const postAdjustment = useMutation({
@@ -78,8 +74,7 @@ export function useInventoryActions() {
       invalidateLevels()
       toast.success(t('adjustmentPosted'))
     },
-    onError: (error) =>
-      toast.error(domainMessage(error, t('failedToPostAdjustment'))),
+    onError: (error) => toast.error(domainMessage(error, t('failedToPostAdjustment'))),
   })
 
   const transferStock = useMutation({
@@ -89,8 +84,7 @@ export function useInventoryActions() {
       refresh('getTransfers')
       toast.success(t('transferSent'))
     },
-    onError: (error) =>
-      toast.error(domainMessage(error, t('failedToTransfer'))),
+    onError: (error) => toast.error(domainMessage(error, t('failedToTransfer'))),
   })
 
   // Owner-only repair: recompute on-hand from the ledger, report how many moved
@@ -100,8 +94,7 @@ export function useInventoryActions() {
       invalidateLevels()
       toast.success(t('levelsCorrected', { count: toNumber(data.changed) }))
     },
-    onError: (error) =>
-      toast.error(domainMessage(error, t('failedToRebuildLevels'))),
+    onError: (error) => toast.error(domainMessage(error, t('failedToRebuildLevels'))),
   })
 
   const setReorderLevel = useMutation({
@@ -110,8 +103,7 @@ export function useInventoryActions() {
       refresh('getStockLevels')
       toast.success(t('reorderLevelSaved'))
     },
-    onError: (error) =>
-      toast.error(domainMessage(error, t('failedToSaveReorderLevel'))),
+    onError: (error) => toast.error(domainMessage(error, t('failedToSaveReorderLevel'))),
   })
 
   const createItem = useMutation({
@@ -120,8 +112,7 @@ export function useInventoryActions() {
       invalidateItems()
       toast.success(t('stockItemSaved'))
     },
-    onError: (error) =>
-      toast.error(domainMessage(error, t('failedToSaveStockItem'))),
+    onError: (error) => toast.error(domainMessage(error, t('failedToSaveStockItem'))),
   })
 
   const updateItem = useMutation({
@@ -130,8 +121,7 @@ export function useInventoryActions() {
       invalidateItems()
       toast.success(t('stockItemSaved'))
     },
-    onError: (error) =>
-      toast.error(domainMessage(error, t('failedToSaveStockItem'))),
+    onError: (error) => toast.error(domainMessage(error, t('failedToSaveStockItem'))),
   })
 
   const setRecipe = useMutation({
@@ -140,8 +130,7 @@ export function useInventoryActions() {
       invalidateRecipes()
       toast.success(t('recipeSaved'))
     },
-    onError: (error) =>
-      toast.error(domainMessage(error, t('failedToSaveRecipe'))),
+    onError: (error) => toast.error(domainMessage(error, t('failedToSaveRecipe'))),
   })
 
   const removeRecipe = useMutation({
@@ -150,8 +139,7 @@ export function useInventoryActions() {
       invalidateRecipes()
       toast.success(t('recipeRemoved'))
     },
-    onError: (error) =>
-      toast.error(domainMessage(error, t('failedToRemoveRecipe'))),
+    onError: (error) => toast.error(domainMessage(error, t('failedToRemoveRecipe'))),
   })
 
   const trackByUnit = useMutation({
@@ -190,8 +178,7 @@ export function useInventoryActions() {
         headers: { 'x-requestid': uuidv4() },
         query: { 'api-version': API_VERSION },
       }),
-    rebuildLevels: () =>
-      rebuildLevels.mutateAsync({ query: { 'api-version': API_VERSION } }),
+    rebuildLevels: () => rebuildLevels.mutateAsync({ query: { 'api-version': API_VERSION } }),
     setReorderLevel: (stockItemId: number, reorderLevel: number | null) =>
       setReorderLevel.mutateAsync({
         path: { id: stockItemId },

@@ -17,13 +17,7 @@ import { useFinanceActions } from '../use-finance-actions'
  * The paperclip on an expense row: filled when a bill is attached (tap to
  * see it), hollow when not (tap to pick a photo or a PDF).
  */
-export function ReceiptButton({
-  expense,
-  onView,
-}: {
-  expense: ExpenseView
-  onView: () => void
-}) {
+export function ReceiptButton({ expense, onView }: { expense: ExpenseView; onView: () => void }) {
   const t = useT()
   const { attachReceipt, isPending } = useFinanceActions()
   const input = useRef<HTMLInputElement>(null)
@@ -33,10 +27,7 @@ export function ReceiptButton({
       <Button
         variant='ghost'
         size='icon'
-        className={cn(
-          'size-8',
-          expense.hasReceipt ? 'text-primary' : 'text-muted-foreground'
-        )}
+        className={cn('size-8', expense.hasReceipt ? 'text-primary' : 'text-muted-foreground')}
         aria-label={expense.hasReceipt ? t('viewReceipt') : t('attachReceipt')}
         title={expense.hasReceipt ? t('viewReceipt') : t('attachReceipt')}
         disabled={isPending}
@@ -66,45 +57,22 @@ export function ReceiptButton({
  * The attached bill, shown as it was uploaded: a photo inline, a PDF in a
  * frame. Replace it with another file, or take it off.
  */
-export function ReceiptDialog({
-  expense,
-  onClose,
-}: {
-  expense: ExpenseView | null
-  onClose: () => void
-}) {
+export function ReceiptDialog({ expense, onClose }: { expense: ExpenseView | null; onClose: () => void }) {
   const t = useT()
   return (
     <EntitySheet
       open={expense !== null}
       onOpenChange={(open) => !open && onClose()}
       title={t('receiptOfExpense')}
-      subtitle={
-        expense
-          ? [expense.vendor, expense.note].filter(Boolean).join(' · ') ||
-            expense.date
-          : undefined
-      }
+      subtitle={expense ? [expense.vendor, expense.note].filter(Boolean).join(' · ') || expense.date : undefined}
       size='wide'
     >
-      {expense && (
-        <ReceiptViewer
-          key={String(expense.id)}
-          expense={expense}
-          onClose={onClose}
-        />
-      )}
+      {expense && <ReceiptViewer key={String(expense.id)} expense={expense} onClose={onClose} />}
     </EntitySheet>
   )
 }
 
-function ReceiptViewer({
-  expense,
-  onClose,
-}: {
-  expense: ExpenseView
-  onClose: () => void
-}) {
+function ReceiptViewer({ expense, onClose }: { expense: ExpenseView; onClose: () => void }) {
   const t = useT()
   const id = toNumber(expense.id)
   const { attachReceipt, removeReceipt, isPending } = useFinanceActions()
@@ -116,10 +84,9 @@ function ReceiptViewer({
   const receipt = useQuery({
     queryKey: [{ _id: 'getExpenseReceipt', id }],
     queryFn: async () => {
-      const { data, headers } = await apiClient.get<Blob>(
-        `/api/finance/expenses/${id}/receipt`,
-        { responseType: 'blob' }
-      )
+      const { data, headers } = await apiClient.get<Blob>(`/api/finance/expenses/${id}/receipt`, {
+        responseType: 'blob',
+      })
       return {
         url: URL.createObjectURL(data),
         type: String(headers['content-type'] ?? data.type),
@@ -144,11 +111,7 @@ function ReceiptViewer({
       ) : receipt.isError ? (
         <p className='text-destructive text-sm'>{t('receiptMissing')}</p>
       ) : isPdf ? (
-        <iframe
-          title={t('receiptOfExpense')}
-          src={objectUrl}
-          className='h-[70svh] w-full rounded-md border'
-        />
+        <iframe title={t('receiptOfExpense')} src={objectUrl} className='h-[70svh] w-full rounded-md border' />
       ) : (
         <img
           src={objectUrl}
@@ -193,12 +156,7 @@ function ReceiptViewer({
         </Button>
       </SheetActions>
       <SheetActions>
-        <Button
-          type='button'
-          variant='outline'
-          disabled={isPending}
-          onClick={() => input.current?.click()}
-        >
+        <Button type='button' variant='outline' disabled={isPending} onClick={() => input.current?.click()}>
           {isPending ? <Spinner /> : <Upload />}
           {t('replaceReceipt')}
         </Button>

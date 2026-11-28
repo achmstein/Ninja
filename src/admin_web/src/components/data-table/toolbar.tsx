@@ -1,5 +1,5 @@
-import { type RowData } from '@tanstack/react-table'
 import { Cross2Icon } from '@radix-ui/react-icons'
+import { type RowData } from '@tanstack/react-table'
 import { useT } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -35,8 +35,7 @@ export function DataTableToolbar<TData extends RowData>({
 }: DataTableToolbarProps<TData>) {
   const t = useT()
   const placeholder = searchPlaceholder ?? t('filter')
-  const isFiltered =
-    table.state.columnFilters.length > 0 || table.state.globalFilter
+  const isFiltered = table.state.columnFilters.length > 0 || table.state.globalFilter
 
   return (
     <div className='flex items-center justify-between'>
@@ -44,12 +43,8 @@ export function DataTableToolbar<TData extends RowData>({
         {!showSearch ? null : searchKey ? (
           <Input
             placeholder={placeholder}
-            value={
-              (table.getColumn(searchKey)?.getFilterValue() as string) ?? ''
-            }
-            onChange={(event) =>
-              table.getColumn(searchKey)?.setFilterValue(event.target.value)
-            }
+            value={(table.getColumn(searchKey)?.getFilterValue() as string) ?? ''}
+            onChange={(event) => table.getColumn(searchKey)?.setFilterValue(event.target.value)}
             className='h-8 w-[150px] lg:w-[250px]'
           />
         ) : (

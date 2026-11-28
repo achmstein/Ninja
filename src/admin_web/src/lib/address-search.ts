@@ -2,13 +2,7 @@ import { useEffect, useState } from 'react'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { getPlace, type PlaceSuggestion } from '@/api/tenant'
 import { autocompletePlacesOptions } from '@/api/tenant/@tanstack/react-query.gen'
-import {
-  nearParam,
-  newSearchSession,
-  SEARCH_DEBOUNCE_MS,
-  searchable,
-  type LatLng,
-} from './maps'
+import { nearParam, newSearchSession, SEARCH_DEBOUNCE_MS, searchable, type LatLng } from './maps'
 
 export { googleWebKey, type LatLng } from './maps'
 
@@ -60,9 +54,7 @@ export function useAddressSearch({
     placeholderData: keepPreviousData,
   })
 
-  const pick = async (
-    suggestion: PlaceSuggestion
-  ): Promise<PickedPlace | null> => {
+  const pick = async (suggestion: PlaceSuggestion): Promise<PickedPlace | null> => {
     const token = session ?? undefined
     // The pick closes the session; the next search opens another
     setSession(null)

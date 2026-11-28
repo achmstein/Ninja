@@ -1,17 +1,17 @@
 import { useQuery } from '@tanstack/react-query'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { MotionConfig } from 'motion/react'
 import { Coffee } from 'lucide-react'
+import { MotionConfig } from 'motion/react'
 import { getItemOptions } from '@/api/catalog/@tanstack/react-query.gen'
 import { useBranchScope, useSelectedBranch } from '@/lib/branch'
 import { useCart } from '@/lib/cart'
 import { useT } from '@/lib/i18n'
-import { itemPictureUrl } from '@/components/menu/item-picture'
-import { NinjaPage } from '@/components/ninja/page/page'
-import { Empty } from '@/components/ninja/page/parts'
-import { Tune } from '@/components/menu/tune'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import { itemPictureUrl } from '@/components/menu/item-picture'
+import { Tune } from '@/components/menu/tune'
+import { NinjaPage } from '@/components/ninja/page/page'
+import { Empty } from '@/components/ninja/page/parts'
 
 export const Route = createFileRoute('/item/$itemId')({
   component: ItemPage,
@@ -33,7 +33,10 @@ function ItemPage() {
 
   // The item as this branch has it (its price), cached per branch like the menu
   const scope = useBranchScope()
-  const { data: item, isLoading: itemLoading } = useQuery({ ...getItemOptions({ path: { id: Number(itemId) }, ...scope.options }), enabled: scope.ready })
+  const { data: item, isLoading: itemLoading } = useQuery({
+    ...getItemOptions({ path: { id: Number(itemId) }, ...scope.options }),
+    enabled: scope.ready,
+  })
   const isLoading = itemLoading || !scope.ready
 
   if (!isLoading && !item) {

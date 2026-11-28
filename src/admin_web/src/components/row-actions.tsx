@@ -25,13 +25,7 @@ export type RowAction = {
  * the row's own data. A destructive one sits last, apart and in red. Clicks
  * stay inside, so a row that opens on click does not open too.
  */
-export function RowActions({
-  actions,
-  className,
-}: {
-  actions: RowAction[]
-  className?: string
-}) {
+export function RowActions({ actions, className }: { actions: RowAction[]; className?: string }) {
   const t = useT()
   const shown = actions.filter((a) => !a.hidden)
   if (shown.length === 0) return null
@@ -52,23 +46,14 @@ export function RowActions({
       </DropdownMenuTrigger>
       <DropdownMenuContent align='end' onClick={(e) => e.stopPropagation()}>
         {plain.map((a) => (
-          <DropdownMenuItem
-            key={a.label}
-            disabled={a.disabled}
-            onSelect={a.onSelect}
-          >
+          <DropdownMenuItem key={a.label} disabled={a.disabled} onSelect={a.onSelect}>
             {a.icon && <a.icon className='size-4' />}
             {a.label}
           </DropdownMenuItem>
         ))}
         {plain.length > 0 && risky.length > 0 && <DropdownMenuSeparator />}
         {risky.map((a) => (
-          <DropdownMenuItem
-            key={a.label}
-            variant='destructive'
-            disabled={a.disabled}
-            onSelect={a.onSelect}
-          >
+          <DropdownMenuItem key={a.label} variant='destructive' disabled={a.disabled} onSelect={a.onSelect}>
             {a.icon && <a.icon className='size-4' />}
             {a.label}
           </DropdownMenuItem>

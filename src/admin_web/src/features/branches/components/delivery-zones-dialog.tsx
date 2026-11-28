@@ -1,19 +1,8 @@
 import { lazy, Suspense, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import {
-  ArrowDown,
-  ArrowUp,
-  ChevronDown,
-  MapPinned,
-  PenLine,
-  Plus,
-  Trash2,
-} from 'lucide-react'
+import { ArrowDown, ArrowUp, ChevronDown, MapPinned, PenLine, Plus, Trash2 } from 'lucide-react'
 import { type BranchResponse, type DeliveryZoneResponse } from '@/api/tenant'
-import {
-  getDeliveryZonesOptions,
-  setDeliveryZonesMutation,
-} from '@/api/tenant/@tanstack/react-query.gen'
+import { getDeliveryZonesOptions, setDeliveryZonesMutation } from '@/api/tenant/@tanstack/react-query.gen'
 import { useCurrencyLabel } from '@/lib/currency'
 import { useLocalized, useT } from '@/lib/i18n'
 import { areaOf, type DeliveryArea, type LatLng } from '@/lib/maps'
@@ -36,12 +25,7 @@ import { Switch } from '@/components/ui/switch'
 import { ConfirmDialog } from '@/components/confirm-dialog'
 import { ErrorState } from '@/components/error-state'
 import { Field, FieldGrid } from '@/components/field'
-import {
-  isBlank,
-  LocalizedFields,
-  LocalizedInput,
-  toLocalizedValue,
-} from '@/components/localized-input'
+import { isBlank, LocalizedFields, LocalizedInput, toLocalizedValue } from '@/components/localized-input'
 import {
   MAX_ZONES,
   parseDeliveryZones,
@@ -76,8 +60,7 @@ interface DeliveryZonesDialogProps {
   onOpenChange: (open: boolean) => void
 }
 
-const asText = (value: number | string | null | undefined) =>
-  value == null ? '' : String(Number(value))
+const asText = (value: number | string | null | undefined) => (value == null ? '' : String(Number(value)))
 
 const rowOf = (zone: DeliveryZoneResponse): Row => ({
   key: `saved-${zone.id}`,
@@ -99,10 +82,7 @@ const rowOf = (zone: DeliveryZoneResponse): Row => ({
  * shapes overlap, the earlier one decides. Everywhere else the branch's own
  * reach and fee hold.
  */
-export function DeliveryZonesDialog({
-  branch,
-  onOpenChange,
-}: DeliveryZonesDialogProps) {
+export function DeliveryZonesDialog({ branch, onOpenChange }: DeliveryZonesDialogProps) {
   const t = useT()
   const branchId = Number(branch?.id ?? 0)
   const zonesQuery = useQuery({
@@ -122,11 +102,7 @@ export function DeliveryZonesDialog({
         </DialogHeader>
         {branch &&
           (zonesQuery.isError ? (
-            <ErrorState
-              size='section'
-              error={zonesQuery.error}
-              onRetry={zonesQuery.refetch}
-            />
+            <ErrorState size='section' error={zonesQuery.error} onRetry={zonesQuery.refetch} />
           ) : zonesQuery.data ? (
             <ZonesForm
               key={String(branch.id)}
@@ -174,10 +150,7 @@ function ZonesForm({
       ? { lat: Number(branch.latitude), lng: Number(branch.longitude) }
       : null
   // The branch's own distance, faintly on the map, unless its own drawn area decides instead
-  const radiusKm =
-    (branch.deliveryArea?.length ?? 0) >= 3
-      ? 0
-      : Number(branch.deliveryRadiusKm ?? 0)
+  const radiusKm = (branch.deliveryArea?.length ?? 0) >= 3 ? 0 : Number(branch.deliveryRadiusKm ?? 0)
 
   const parsed = parseDeliveryZones(rows, centre)
   const errors: ZoneErrors[] = tried && !parsed.ok ? parsed.errors : []
@@ -192,9 +165,7 @@ function ZonesForm({
     },
     onError: (error) => {
       const detail =
-        error.response?.status === 400
-          ? (error.response.data as { detail?: string } | undefined)?.detail
-          : undefined
+        error.response?.status === 400 ? (error.response.data as { detail?: string } | undefined)?.detail : undefined
       if (detail) setRefusal(detail)
       else toast.error(t('deliveryZonesSaveFailed'))
     },
@@ -248,10 +219,7 @@ function ZonesForm({
   }
 
   // An area just added and still empty has nothing to lose: it goes without asking
-  const askRemove = (row: Row) =>
-    row.id == null && isBlank(row.name) && !row.shape
-      ? remove(row)
-      : setRemoving(row)
+  const askRemove = (row: Row) => (row.id == null && isBlank(row.name) && !row.shape ? remove(row) : setRemoving(row))
 
   const submit = () => {
     setTried(true)
@@ -294,13 +262,7 @@ function ZonesForm({
             ))}
           </ul>
         )}
-        <Button
-          type='button'
-          variant='outline'
-          size='sm'
-          disabled={rows.length >= MAX_ZONES}
-          onClick={add}
-        >
+        <Button type='button' variant='outline' size='sm' disabled={rows.length >= MAX_ZONES} onClick={add}>
           <Plus />
           {t('deliveryZoneAdd')}
         </Button>
@@ -327,9 +289,7 @@ function ZonesForm({
           if (!o) setRemoving(null)
         }}
         title={t('deliveryZoneRemoveConfirm', {
-          name: removing
-            ? localized(removing.name) || t('deliveryZoneNew')
-            : '',
+          name: removing ? localized(removing.name) || t('deliveryZoneNew') : '',
         })}
         desc={t('deliveryZoneRemoveHint')}
         confirmText={t('remove')}
@@ -393,9 +353,7 @@ function ZoneRow({
   const summary = [
     row.isOn ? null : t('deliveryZonePaused'),
     fee > 0 ? formatEgp(fee) : t('deliveryFree'),
-    minimum != null && minimum > 0
-      ? t('deliveryMinimumShort', { amount: formatEgp(minimum) })
-      : null,
+    minimum != null && minimum > 0 ? t('deliveryMinimumShort', { amount: formatEgp(minimum) }) : null,
     minutes != null ? t('minutesShort', { count: minutes }) : null,
     row.shape ? t('onTheMap') : null,
   ]
@@ -413,26 +371,13 @@ function ZoneRow({
           className='flex min-w-0 flex-1 items-center gap-2.5 text-start'
         >
           <ChevronDown
-            className={cn(
-              'text-muted-foreground size-4 shrink-0 transition-transform',
-              open && 'rotate-180'
-            )}
+            className={cn('text-muted-foreground size-4 shrink-0 transition-transform', open && 'rotate-180')}
           />
           <span className='min-w-0 flex-1'>
-            <span
-              className={cn(
-                'block truncate text-sm font-medium',
-                (!name || !row.isOn) && 'text-muted-foreground'
-              )}
-            >
+            <span className={cn('block truncate text-sm font-medium', (!name || !row.isOn) && 'text-muted-foreground')}>
               {name || t('deliveryZoneNew')}
             </span>
-            <span
-              className={cn(
-                'block truncate text-xs',
-                wrong ? 'text-destructive' : 'text-muted-foreground'
-              )}
-            >
+            <span className={cn('block truncate text-xs', wrong ? 'text-destructive' : 'text-muted-foreground')}>
               {wrong ? t('deliveryZoneNeedsFix') : summary}
             </span>
           </span>
@@ -494,9 +439,7 @@ function ZoneRow({
             <Field
               label={t('deliveryZoneMinutes')}
               htmlFor={`${id}-minutes`}
-              error={
-                errors.minutes ? t('deliveryZoneMinutesInvalid') : undefined
-              }
+              error={errors.minutes ? t('deliveryZoneMinutesInvalid') : undefined}
             >
               <Input
                 id={`${id}-minutes`}
@@ -588,12 +531,7 @@ function ZoneShape({
       {!centre ? (
         <p
           role={problem === 'needsLocation' ? 'alert' : undefined}
-          className={cn(
-            'text-xs',
-            problem === 'needsLocation'
-              ? 'text-destructive'
-              : 'text-muted-foreground'
-          )}
+          className={cn('text-xs', problem === 'needsLocation' ? 'text-destructive' : 'text-muted-foreground')}
         >
           {t('deliveryAreaNeedsLocation')}
         </p>
@@ -605,12 +543,7 @@ function ZoneShape({
             </div>
           }
         >
-          <DeliveryAreaMap
-            centre={centre}
-            radiusKm={radiusKm}
-            initial={row.shape}
-            onChange={onChange}
-          />
+          <DeliveryAreaMap centre={centre} radiusKm={radiusKm} initial={row.shape} onChange={onChange} />
         </Suspense>
       ) : (
         <div className='flex flex-wrap items-center gap-2'>
@@ -619,29 +552,17 @@ function ZoneShape({
             {row.shape ? t('deliveryZoneOnMapEdit') : t('deliveryZoneDraw')}
           </Button>
           {row.shape ? (
-            <Button
-              type='button'
-              variant='ghost'
-              size='sm'
-              onClick={() => onChange(null)}
-            >
+            <Button type='button' variant='ghost' size='sm' onClick={() => onChange(null)}>
               {t('deliveryZoneRemoveShape')}
             </Button>
           ) : (
-            <p className='text-muted-foreground text-xs'>
-              {t('deliveryZoneNotDrawn')}
-            </p>
+            <p className='text-muted-foreground text-xs'>{t('deliveryZoneNotDrawn')}</p>
           )}
         </div>
       )}
       {/* A shape kept from before the branch lost its place on the map can still be taken off */}
       {!centre && row.shape && (
-        <Button
-          type='button'
-          variant='ghost'
-          size='sm'
-          onClick={() => onChange(null)}
-        >
+        <Button type='button' variant='ghost' size='sm' onClick={() => onChange(null)}>
           {t('deliveryZoneRemoveShape')}
         </Button>
       )}

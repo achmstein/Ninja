@@ -2,11 +2,12 @@ import { useMemo, useState } from 'react'
 import { AxiosError } from 'axios'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { Check, Printer } from 'lucide-react'
-import {
-  getKitchenStationsOptions,
-  reprintOrderKitchenTicketsMutation,
-} from '@/api/ordering/@tanstack/react-query.gen'
+import { getKitchenStationsOptions, reprintOrderKitchenTicketsMutation } from '@/api/ordering/@tanstack/react-query.gen'
 import type { TicketLineView } from '@/api/sales/types.gen'
+import { API_VERSION } from '@/lib/api-client'
+import { useLocalized, useT } from '@/lib/i18n'
+import { toNumber } from '@/lib/money'
+import { toast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -16,16 +17,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { API_VERSION } from '@/lib/api-client'
-import { useLocalized, useT } from '@/lib/i18n'
-import { toNumber } from '@/lib/money'
-import { toast } from '@/lib/toast'
 
 /** Ordering refuses a reprint with the reason as a bare string. */
 const refusal = (error: unknown) =>
-  error instanceof AxiosError && typeof error.response?.data === 'string'
-    ? error.response.data
-    : null
+  error instanceof AxiosError && typeof error.response?.data === 'string' ? error.response.data : null
 
 /** One entry per order on the bill, newest on top */
 function ordersOn(lines: TicketLineView[]) {
@@ -80,9 +75,7 @@ export function KitchenReprintDialog({
     onError: (error) => toast.error(refusal(error) ?? t('somethingWentWrong')),
   })
 
-  const sending = reprint.isPending
-    ? Number(reprint.variables?.path.orderId)
-    : null
+  const sending = reprint.isPending ? Number(reprint.variables?.path.orderId) : null
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -95,16 +88,9 @@ export function KitchenReprintDialog({
           {orders.map(([orderId, orderLines]) => (
             <li key={orderId} className='flex items-center gap-3 py-2.5'>
               <div className='min-w-0 flex-1'>
-                <p className='type-heading tabular-nums'>
-                  {t('orderNumber', { id: orderId })}
-                </p>
-                <p className='text-muted-foreground truncate type-detail'>
-                  {orderLines
-                    .map(
-                      (line) =>
-                        `${toNumber(line.qty)}× ${localized(line.description)}`,
-                    )
-                    .join(' · ')}
+                <p className='type-heading tabular-nums'>{t('orderNumber', { id: orderId })}</p>
+                <p className='text-muted-foreground type-detail truncate'>
+                  {orderLines.map((line) => `${toNumber(line.qty)}× ${localized(line.description)}`).join(' · ')}
                 </p>
               </div>
               <Button
@@ -118,22 +104,14 @@ export function KitchenReprintDialog({
                   })
                 }
               >
-                {sent.has(orderId) ? (
-                  <Check className='size-5' />
-                ) : (
-                  <Printer className='size-5' />
-                )}
+                {sent.has(orderId) ? <Check className='size-5' /> : <Printer className='size-5' />}
                 {t('reprint')}
               </Button>
             </li>
           ))}
         </ul>
         <DialogFooter>
-          <Button
-            variant='outline'
-            className='h-12'
-            onClick={() => onOpenChange(false)}
-          >
+          <Button variant='outline' className='h-12' onClick={() => onOpenChange(false)}>
             {t('close')}
           </Button>
         </DialogFooter>

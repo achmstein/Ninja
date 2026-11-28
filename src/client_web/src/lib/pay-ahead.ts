@@ -48,7 +48,10 @@ export type PayAhead = {
 }
 
 /** The fee on top of an order paid ahead, as Sales will work it out */
-export function payAheadFee(total: number, options: { feeMode?: string; feePercent?: number | string; feeFixed?: number | string } | undefined): number {
+export function payAheadFee(
+  total: number,
+  options: { feeMode?: string; feePercent?: number | string; feeFixed?: number | string } | undefined
+): number {
   if (!options || options.feeMode !== 'Guest') return 0
   return guestFee(total, num(options.feePercent), num(options.feeFixed))
 }

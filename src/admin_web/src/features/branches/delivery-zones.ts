@@ -1,12 +1,6 @@
 import { z } from 'zod'
 import { fromLocalizedValue, type LocalizedValue } from '@/lib/localized-value'
-import {
-  areaProblem,
-  areaToApi,
-  type AreaProblem,
-  type DeliveryArea,
-  type LatLng,
-} from '@/lib/maps'
+import { areaProblem, areaToApi, type AreaProblem, type DeliveryArea, type LatLng } from '@/lib/maps'
 
 /** The rules the server holds a branch's list of named areas to */
 export const MAX_ZONES = 100
@@ -82,11 +76,7 @@ export const zoneAmountsSchema = z.object({
 
 const nameProblem = (name: Zone['name']): ZoneNameProblem | undefined => {
   if (!name.en && !name.ar) return 'required'
-  if (
-    (name.en?.length ?? 0) > MAX_ZONE_NAME ||
-    (name.ar?.length ?? 0) > MAX_ZONE_NAME
-  )
-    return 'tooLong'
+  if ((name.en?.length ?? 0) > MAX_ZONE_NAME || (name.ar?.length ?? 0) > MAX_ZONE_NAME) return 'tooLong'
   return undefined
 }
 
@@ -98,9 +88,7 @@ function duplicates(names: Zone['name'][]): Set<number> {
   const owners = new Map<string, number>()
   const found = new Set<number>()
   names.forEach((name, index) => {
-    for (const text of new Set(
-      [name.en, name.ar].filter((n) => n != null).map((n) => n.toLowerCase())
-    )) {
+    for (const text of new Set([name.en, name.ar].filter((n) => n != null).map((n) => n.toLowerCase()))) {
       const first = owners.get(text)
       if (first == null) owners.set(text, index)
       else found.add(first).add(index)
@@ -117,9 +105,7 @@ function duplicates(names: Zone['name'][]): Set<number> {
 export function parseDeliveryZones(
   inputs: ZoneInput[],
   centre: LatLng | null
-):
-  | { ok: true; value: Zone[] }
-  | { ok: false; errors: ZoneErrors[]; tooMany: boolean } {
+): { ok: true; value: Zone[] } | { ok: false; errors: ZoneErrors[]; tooMany: boolean } {
   const names = inputs.map((input) => fromLocalizedValue(input.name))
   const repeated = duplicates(names)
   const value: Zone[] = []
@@ -133,8 +119,7 @@ export function parseDeliveryZones(
     if (!amounts.success)
       for (const issue of amounts.error.issues) {
         const field = issue.path[0]
-        if (field === 'fee' || field === 'minimum' || field === 'minutes')
-          wrong[field] = true
+        if (field === 'fee' || field === 'minimum' || field === 'minutes') wrong[field] = true
       }
 
     if (input.shape) {
@@ -156,7 +141,6 @@ export function parseDeliveryZones(
   })
 
   const tooMany = inputs.length > MAX_ZONES
-  if (tooMany || errors.some((wrong) => Object.keys(wrong).length > 0))
-    return { ok: false, errors, tooMany }
+  if (tooMany || errors.some((wrong) => Object.keys(wrong).length > 0)) return { ok: false, errors, tooMany }
   return { ok: true, value }
 }

@@ -7,9 +7,7 @@ import { type TranslationKey } from '@/lib/i18n'
  * the server's own words. Identity answers `{ message }` for what it checks
  * itself and a ProblemDetails carrying Keycloak's answer for the rest.
  */
-export function staffError(
-  error: unknown
-): { key: TranslationKey } | { text: string } | null {
+export function staffError(error: unknown): { key: TranslationKey } | { text: string } | null {
   if (!(error instanceof AxiosError) || !error.response) return null
   const { status, data } = error.response
   if (status === 409) return { key: 'staffEmailTaken' }
@@ -22,7 +20,6 @@ export function staffError(
   const said = body.message || body.detail || body.title || ''
   // Keycloak's password policy: "Registration failed: {"errorMessage":"invalidPassword…"}"
   if (/invalidPassword/i.test(said)) return { key: 'staffPasswordRejected' }
-  if (/same email|email.*exists|exists.*email/i.test(said))
-    return { key: 'staffEmailTaken' }
+  if (/same email|email.*exists|exists.*email/i.test(said)) return { key: 'staffEmailTaken' }
   return said ? { text: said } : null
 }

@@ -38,9 +38,7 @@ export function useFavorites() {
     onMutate: async (variables) => {
       await queryClient.cancelQueries({ queryKey })
       queryClient.setQueryData<Array<number | string>>(queryKey, (old) =>
-        (old ?? []).filter(
-          (id) => Number(id) !== variables.path.catalogItemId
-        )
+        (old ?? []).filter((id) => Number(id) !== variables.path.catalogItemId)
       )
     },
     onError: () => queryClient.invalidateQueries({ queryKey }),

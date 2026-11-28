@@ -4,12 +4,7 @@ import { TerraDrawMapLibreGLAdapter } from 'terra-draw-maplibre-gl-adapter'
 import { googleWebKey } from '@/lib/address-search'
 import { useBrand } from '@/lib/brand'
 import { useLanguage, useT } from '@/lib/i18n'
-import {
-  areaStartingBox,
-  circleRing,
-  type DeliveryArea,
-  type LatLng,
-} from '@/lib/maps'
+import { areaStartingBox, circleRing, type DeliveryArea, type LatLng } from '@/lib/maps'
 import { Button } from '@/components/ui/button'
 import { Waiting } from './branch-map'
 import { AREA_COLOUR, startAreaDraw, type AreaDraw } from './delivery-area-draw'
@@ -38,21 +33,14 @@ export interface DeliveryAreaMapProps {
  * owner clicks the corners round the streets the riders reach, then drags
  * them. The radius stays on the map faintly, for reference.
  */
-export default function DeliveryAreaMap({
-  centre,
-  radiusKm,
-  initial,
-  onChange,
-}: DeliveryAreaMapProps) {
+export default function DeliveryAreaMap({ centre, radiusKm, initial, onChange }: DeliveryAreaMapProps) {
   const t = useT()
   const brand = useBrand()
   const language = useLanguage((s) => s.language)
   const [googleFailed, setGoogleFailed] = useState(false)
   const draw = useRef<AreaDraw | null>(null)
   const [drawing, setDrawing] = useState(initial == null)
-  const apiKey = googleFailed
-    ? null
-    : googleWebKey(brand?.maps, window.location.hostname)
+  const apiKey = googleFailed ? null : googleWebKey(brand?.maps, window.location.hostname)
   const change = (area: DeliveryArea | null) => {
     setDrawing(area == null)
     onChange(area)
@@ -79,13 +67,7 @@ export default function DeliveryAreaMap({
             />
           </Suspense>
         ) : (
-          <FreeAreaMap
-            centre={centre}
-            radiusKm={radiusKm}
-            initial={initial}
-            onChange={change}
-            onReady={ready}
-          />
+          <FreeAreaMap centre={centre} radiusKm={radiusKm} initial={initial} onChange={change} onReady={ready} />
         )}
       </div>
       <div className='flex items-start justify-between gap-3'>
@@ -138,10 +120,7 @@ function FreeAreaMap({
     let draw: AreaDraw | null = null
     let remove: (() => void) | null = null
     const { centre, radiusKm, initial } = opening.current
-    Promise.all([
-      import('maplibre-gl'),
-      import('maplibre-gl/dist/maplibre-gl.css'),
-    ])
+    Promise.all([import('maplibre-gl'), import('maplibre-gl/dist/maplibre-gl.css')])
       .then(([{ default: maplibre }]) => {
         if (disposed || !box.current) return
         if (maplibre.getRTLTextPluginStatus() === 'unavailable')
@@ -209,11 +188,7 @@ function FreeAreaMap({
               'circle-stroke-width': 2,
             },
           })
-          draw = startAreaDraw(
-            new TerraDrawMapLibreGLAdapter({ map: m }),
-            initial,
-            (area) => change.current(area)
-          )
+          draw = startAreaDraw(new TerraDrawMapLibreGLAdapter({ map: m }), initial, (area) => change.current(area))
           readyCallback.current(draw)
         })
         m.on('error', () => {

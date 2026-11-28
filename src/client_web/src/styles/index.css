@@ -15,8 +15,7 @@
     /* Themed so the scrollbar track never shows as a white strip in dark mode */
     @apply bg-background;
     /* Subtle scrollbars, inherited by scrollable dialogs too */
-    scrollbar-color: color-mix(in oklab, var(--muted-foreground) 50%, transparent)
-      transparent;
+    scrollbar-color: color-mix(in oklab, var(--muted-foreground) 50%, transparent) transparent;
   }
   body {
     @apply bg-background text-foreground min-h-svh w-full antialiased;

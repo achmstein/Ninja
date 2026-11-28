@@ -1,9 +1,5 @@
 import { type ReactNode } from 'react'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 
 /**
  * A badge that says why when the pointer rests on it: "Tracked" opens to
@@ -29,9 +25,7 @@ export function InfoBadge({
       </TooltipTrigger>
       <TooltipContent side='top' className='max-w-64 text-start'>
         <div className='font-semibold'>{title}</div>
-        {children && (
-          <div className='mt-1 space-y-0.5 opacity-90'>{children}</div>
-        )}
+        {children && <div className='mt-1 space-y-0.5 opacity-90'>{children}</div>}
       </TooltipContent>
     </Tooltip>
   )

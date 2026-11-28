@@ -119,7 +119,11 @@ export function oklchToHex(color: Oklch): string {
   return (
     '#' +
     toLinearRgb(color)
-      .map((v) => Math.round(linearToSrgb(v) * 255).toString(16).padStart(2, '0'))
+      .map((v) =>
+        Math.round(linearToSrgb(v) * 255)
+          .toString(16)
+          .padStart(2, '0')
+      )
       .join('')
   )
 }

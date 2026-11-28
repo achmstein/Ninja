@@ -5,13 +5,7 @@ import { useTable } from '@tanstack/react-table'
 import { type RefundSummary } from '@/api/sales'
 import { getRefundsOptions } from '@/api/sales/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
-import {
-  useLanguage,
-  useLocale,
-  useT,
-  type TranslateParams,
-  type TranslationKey,
-} from '@/lib/i18n'
+import { useLanguage, useLocale, useT, type TranslateParams, type TranslationKey } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { dayHeading, dayKey } from '@/lib/when'
 import { useTableUrlState } from '@/hooks/use-table-url-state'
@@ -40,9 +34,7 @@ type Translate = (key: TranslationKey, params?: TranslateParams) => string
 function Reason({ refund, t }: { refund: RefundSummary; t: Translate }) {
   return (
     <span className='flex min-w-0 flex-col leading-tight'>
-      {refund.reason && (
-        <span className='line-clamp-2 whitespace-normal'>{refund.reason}</span>
-      )}
+      {refund.reason && <span className='line-clamp-2 whitespace-normal'>{refund.reason}</span>}
       <span className='text-muted-foreground truncate text-xs'>
         {t('receiptNumber', { number: toNumber(refund.receiptNumber) })}
         {refund.customerName && ` · ${refund.customerName}`}
@@ -75,14 +67,8 @@ function getRefundColumns({ t }: { t: Translate }) {
       header: t('creditNoteHash'),
       cell: (info) => (
         <div className='flex flex-col leading-tight'>
-          <span className='font-medium tabular-nums'>
-            #{toNumber(info.getValue())}
-          </span>
-          <When
-            value={info.row.original.refundedAt}
-            mode='time'
-            className='text-muted-foreground text-xs'
-          />
+          <span className='font-medium tabular-nums'>#{toNumber(info.getValue())}</span>
+          <When value={info.row.original.refundedAt} mode='time' className='text-muted-foreground text-xs' />
         </div>
       ),
     }),
@@ -114,20 +100,13 @@ function getRefundColumns({ t }: { t: Translate }) {
 }
 
 /** A refund as a phone lists it: why, then the note, time and who; how much over how it went back */
-function RefundListRow({
-  row,
-  t,
-}: {
-  row: AppRow<RefundSummary>
-  t: Translate
-}) {
+function RefundListRow({ row, t }: { row: AppRow<RefundSummary>; t: Translate }) {
   const refund = row.original
   return (
     <ListRow
       title={
         <span className='whitespace-normal'>
-          {refund.reason ||
-            t('receiptNumber', { number: toNumber(refund.receiptNumber) })}
+          {refund.reason || t('receiptNumber', { number: toNumber(refund.receiptNumber) })}
         </span>
       }
       meta={
@@ -163,13 +142,12 @@ export function RefundsList() {
   const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null)
   const { dayWindow, fromIso, toIso } = useTillWindow(search)
 
-  const { pagination, onPaginationChange, ensurePageInRange } =
-    useTableUrlState({
-      search,
-      navigate,
-      pagination: { defaultPageSize: 20 },
-      globalFilter: { enabled: false },
-    })
+  const { pagination, onPaginationChange, ensurePageInRange } = useTableUrlState({
+    search,
+    navigate,
+    pagination: { defaultPageSize: 20 },
+    globalFilter: { enabled: false },
+  })
 
   const refundsQuery = useQuery({
     ...getRefundsOptions({
@@ -214,19 +192,14 @@ export function RefundsList() {
     <>
       <div className='flex flex-col gap-4'>
         {refundsQuery.isError ? (
-          <ErrorState
-            error={refundsQuery.error}
-            onRetry={() => refundsQuery.refetch()}
-          />
+          <ErrorState error={refundsQuery.error} onRetry={() => refundsQuery.refetch()} />
         ) : (
           <>
             <DataTable
               table={table}
               isLoading={refundsQuery.isLoading}
               emptyMessage={t('noRefundsInRange')}
-              onRowClick={(row) =>
-                setSelectedTicketId(toNumber(row.original.ticketId))
-              }
+              onRowClick={(row) => setSelectedTicketId(toNumber(row.original.ticketId))}
               groupBy={{
                 key: (row) => dayKey(row.refundedAt),
                 label: (key) => dayHeading(key, locale, t),

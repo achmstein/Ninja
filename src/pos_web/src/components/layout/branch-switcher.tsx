@@ -1,9 +1,11 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { Check, ChevronsUpDown, Headset } from 'lucide-react'
+import { useBranchStore } from '@/stores/branch-store'
+import { useBrandName } from '@/lib/brand'
+import { useLocalized, useT } from '@/lib/i18n'
 import { useAllowedBranches } from '@/hooks/use-allowed-branches'
 import { useCallCentre } from '@/hooks/use-call-centre'
-import { useBranchStore } from '@/stores/branch-store'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -14,8 +16,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { BrandMark } from '@/components/brand-mark'
-import { useBrandName } from '@/lib/brand'
-import { useLocalized, useT } from '@/lib/i18n'
 
 /**
  * Header branch switcher, same contract as admin_web's sidebar one: picking
@@ -57,10 +57,12 @@ export function BranchSwitcher() {
   const brand = (
     <>
       <BrandMark className='size-8 shrink-0 text-base' />
-      <div className='grid min-w-0 flex-1 text-start type-detail'>
+      <div className='type-detail grid min-w-0 flex-1 text-start'>
         <span className='truncate font-semibold'>{business || label}</span>
         {/* One branch: the business is the place, and its branch says nothing more */}
-        {business && (branches.length > 1 || callCentre.on) && <span className='text-muted-foreground type-caption truncate'>{label}</span>}
+        {business && (branches.length > 1 || callCentre.on) && (
+          <span className='text-muted-foreground type-caption truncate'>{label}</span>
+        )}
       </div>
     </>
   )
@@ -83,9 +85,7 @@ export function BranchSwitcher() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align='start' className='min-w-56 rounded-lg'>
-        <DropdownMenuLabel className='text-muted-foreground text-xs'>
-          {t('branches')}
-        </DropdownMenuLabel>
+        <DropdownMenuLabel className='text-muted-foreground text-xs'>{t('branches')}</DropdownMenuLabel>
         {branches.map((branch) => (
           <DropdownMenuItem
             key={String(branch.id)}

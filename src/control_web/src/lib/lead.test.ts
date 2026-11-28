@@ -11,7 +11,9 @@ describe('leadOrigin', () => {
     expect(leadOrigin({ ...none, ref: 'chillax', referrer: 'chillax.ninjapp.net' })).toBe('recommended by chillax')
   })
   it('joins the campaign tags and leaves the referrer out', () => {
-    expect(leadOrigin({ ...none, source: 'facebook', medium: 'reel', campaign: 'gaming', referrer: 'l.facebook.com' })).toBe('facebook / reel / gaming')
+    expect(
+      leadOrigin({ ...none, source: 'facebook', medium: 'reel', campaign: 'gaming', referrer: 'l.facebook.com' })
+    ).toBe('facebook / reel / gaming')
   })
   it('falls back to the site before ours', () => {
     expect(leadOrigin({ ...none, referrer: 'google.com' })).toBe('google.com')

@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { ChevronRight } from 'lucide-react'
 import type { StepDto } from '@/api/control'
-import { useT } from '@/lib/i18n'
 import { duration } from '@/lib/format'
+import { useT } from '@/lib/i18n'
 import { stepLabelKey, stepStatus, type StepStatusName } from '@/lib/tenant'
 import { cn } from '@/lib/utils'
 
@@ -59,14 +59,9 @@ function StepRow({ step, nowMs }: { step: StepDto; nowMs: number }) {
           hasOutput ? 'hover:bg-muted/50 cursor-pointer' : 'cursor-default'
         )}
       >
-        <span
-          aria-hidden
-          className={cn('size-2.5 shrink-0 rounded-full', dotClass[status])}
-        />
+        <span aria-hidden className={cn('size-2.5 shrink-0 rounded-full', dotClass[status])} />
         <span className='flex-1 truncate font-medium'>{step.name}</span>
-        <span className='text-muted-foreground text-xs'>
-          {t(stepLabelKey[status])}
-        </span>
+        <span className='text-muted-foreground text-xs'>{t(stepLabelKey[status])}</span>
         <span className='text-muted-foreground w-16 text-end text-xs tabular-nums'>
           {status === 'Pending' ? '' : duration(step.startedAt, step.finishedAt, nowMs)}
         </span>
@@ -79,7 +74,10 @@ function StepRow({ step, nowMs }: { step: StepDto; nowMs: number }) {
         />
       </button>
       {open && hasOutput && (
-        <pre className='bg-muted/50 max-h-96 overflow-auto border-t px-3 py-2 font-mono text-xs leading-relaxed whitespace-pre-wrap' dir='ltr'>
+        <pre
+          className='bg-muted/50 max-h-96 overflow-auto border-t px-3 py-2 font-mono text-xs leading-relaxed whitespace-pre-wrap'
+          dir='ltr'
+        >
           {step.output}
         </pre>
       )}

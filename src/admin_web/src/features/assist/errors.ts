@@ -3,8 +3,7 @@ import { create } from 'zustand'
 import { translate } from '@/lib/i18n'
 
 /** What the server says, word for word, when it has no chat model (Ninja.AI's AIProblems.NotConfiguredDetail) */
-export const NOT_CONFIGURED_DETAIL =
-  'AI assistant is not configured on this server.'
+export const NOT_CONFIGURED_DETAIL = 'AI assistant is not configured on this server.'
 
 // Once the server says the assistant is not configured the buttons go away
 // for the rest of the session; nothing else on the server is going to
@@ -33,8 +32,7 @@ export const QUOTA_TITLE = 'AI quota used up'
 
 /** "2h 48m", "35m", "40s": a wait as a person reads it */
 export function readableWait(seconds: number): string {
-  if (seconds >= 3600)
-    return `${Math.floor(seconds / 3600)}h ${Math.floor((seconds % 3600) / 60)}m`
+  if (seconds >= 3600) return `${Math.floor(seconds / 3600)}h ${Math.floor((seconds % 3600) / 60)}m`
   if (seconds >= 60) return `${Math.ceil(seconds / 60)}m`
   return `${Math.ceil(seconds)}s`
 }
@@ -71,10 +69,8 @@ export function assistErrorMessage(error: unknown): string {
       return translate('assistUnavailable')
     }
     if (status === 504) return translate('assistTimedOut')
-    if (status === 502 && problem.title === 'AI answer too long')
-      return translate('assistTooLong')
-    if (status === 502 && problem.detail?.includes('API key'))
-      return translate('assistKeyRejected')
+    if (status === 502 && problem.title === 'AI answer too long') return translate('assistTooLong')
+    if (status === 502 && problem.detail?.includes('API key')) return translate('assistKeyRejected')
     if (status === 400 && problem.detail) return problem.detail
   }
   return translate('assistFailed')

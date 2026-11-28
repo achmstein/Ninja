@@ -7,11 +7,7 @@ import { API_VERSION } from '@/lib/api-client'
 import { useLanguage, useLocale, useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { useTableUrlState } from '@/hooks/use-table-url-state'
-import {
-  DataTable,
-  DataTablePagination,
-  dataTableFeatures,
-} from '@/components/data-table'
+import { DataTable, DataTablePagination, dataTableFeatures } from '@/components/data-table'
 import { ListRow } from '@/components/list-row'
 import { StatusChip } from '@/components/status-chip'
 import { When } from '@/components/when'
@@ -30,13 +26,12 @@ export function StockCounts() {
   const navigate = route.useNavigate()
   const [selectedId, setSelectedId] = useState<number | null>(null)
 
-  const { pagination, onPaginationChange, ensurePageInRange } =
-    useTableUrlState({
-      search,
-      navigate,
-      pagination: { defaultPageSize: 20 },
-      globalFilter: { enabled: false },
-    })
+  const { pagination, onPaginationChange, ensurePageInRange } = useTableUrlState({
+    search,
+    navigate,
+    pagination: { defaultPageSize: 20 },
+    globalFilter: { enabled: false },
+  })
 
   const query = useQuery({
     ...getStockCountsOptions({
@@ -87,16 +82,10 @@ export function StockCounts() {
             return (
               <ListRow
                 title={<When value={c.countedAt} />}
-                meta={
-                  c.note ? (
-                    <span className='truncate'>{c.note}</span>
-                  ) : undefined
-                }
+                meta={c.note ? <span className='truncate'>{c.note}</span> : undefined}
                 trailingMeta={
                   <StatusChip tone={off > 0 ? 'danger' : 'success'}>
-                    {off > 0
-                      ? t('countOffSummary', { off, total })
-                      : t('countAllMatched', { total })}
+                    {off > 0 ? t('countOffSummary', { off, total }) : t('countAllMatched', { total })}
                   </StatusChip>
                 }
               />

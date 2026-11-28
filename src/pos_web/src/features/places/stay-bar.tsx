@@ -1,13 +1,12 @@
 import { useState } from 'react'
 import { Square } from 'lucide-react'
 import type { StayViewModel } from '@/api/spaces/types.gen'
-import { ConfirmDialog } from '@/components/confirm-dialog'
-import { Button } from '@/components/ui/button'
 import { useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
+import { ConfirmDialog } from '@/components/confirm-dialog'
 import { RateOptionToggle } from './rate-option-toggle'
-import { StayMembers } from './stay-members'
 import {
   elapsedSeconds,
   estimateStayCost,
@@ -18,6 +17,7 @@ import {
   optionSeconds,
   tariffOptions,
 } from './status'
+import { StayMembers } from './stay-members'
 import { useSecondsClock, useStayActions } from './use-places'
 
 /**
@@ -56,8 +56,7 @@ export function StayBar({
   const hoursLabel = formatBillingHours(estimate.hours, t)
   // Per-option split only once more than one option has been used
   const used = options.filter((o) => optionSeconds(stay, o.code, now) > 0)
-  const optionName = (code: string | null) =>
-    localized(findOption(stay.tariff, code)?.name) || code || ''
+  const optionName = (code: string | null) => localized(findOption(stay.tariff, code)?.name) || code || ''
 
   return (
     <>
@@ -66,20 +65,13 @@ export function StayBar({
           it), the rate, the people; then the way to end it */}
       <div className='flex flex-col gap-6'>
         <div className={cn('min-w-0', !clock && used.length <= 1 && 'hidden')}>
-          <div className={cn('type-figure', !clock && 'hidden')}>
-            {formatClock(elapsedSeconds(stay, now))}
-          </div>
+          <div className={cn('type-figure', !clock && 'hidden')}>{formatClock(elapsedSeconds(stay, now))}</div>
           <div className={cn('text-muted-foreground type-body truncate tabular-nums', !clock && 'hidden')}>
             ≈ {money(estimate.amount)} · {hoursLabel}
           </div>
           {used.length > 1 && (
             <div className='text-muted-foreground type-detail truncate tabular-nums'>
-              {used
-                .map(
-                  (o) =>
-                    `${localized(o.name)} ${formatClock(optionSeconds(stay, o.code, now))}`,
-                )
-                .join(' · ')}
+              {used.map((o) => `${localized(o.name)} ${formatClock(optionSeconds(stay, o.code, now))}`).join(' · ')}
             </div>
           )}
         </div>
@@ -93,17 +85,13 @@ export function StayBar({
             onChange={(code) => {
               if (code !== currentCode) setPendingOption(code)
             }}
-            rates={Object.fromEntries(
-              options.map((o) => [o.code ?? '', money(o.hourlyRate)]),
-            )}
+            rates={Object.fromEntries(options.map((o) => [o.code ?? '', money(o.hourlyRate)]))}
           />
         )}
 
         {members && (
           <div className='flex flex-col gap-2'>
-            <h2 className='text-muted-foreground type-label'>
-              {t('inTheRoom')}
-            </h2>
+            <h2 className='text-muted-foreground type-label'>{t('inTheRoom')}</h2>
             <StayMembers stay={stay} />
           </div>
         )}

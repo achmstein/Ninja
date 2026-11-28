@@ -49,10 +49,7 @@ function region(country: string): CountryCode | undefined {
  * against its own country code when it carries one. Undefined when it spells
  * none; what comes back may still not be a real number (see isValidPhone).
  */
-export function readPhone(
-  input: string | null | undefined,
-  country: string
-): PhoneNumber | undefined {
+export function readPhone(input: string | null | undefined, country: string): PhoneNumber | undefined {
   let text = clean(input ?? '')
   if (!text) return undefined
   // +020…, as some forms and contact books write +20: no country code starts with a zero
@@ -63,10 +60,7 @@ export function readPhone(
 }
 
 /** Whether this is a customer's number here: a mobile of the business's country, in any spelling. */
-export function isValidPhone(
-  input: string | null | undefined,
-  country: string
-): boolean {
+export function isValidPhone(input: string | null | undefined, country: string): boolean {
   const number = readPhone(input, country)
   if (!number?.isValid()) return false
   const home = region(country)
@@ -79,13 +73,8 @@ export function isValidPhone(
  * separators, which the server will refuse. Empty when nothing number-like
  * was typed.
  */
-export function normalizePhone(
-  input: string | null | undefined,
-  country: string
-): string {
-  return isValidPhone(input, country)
-    ? readPhone(input, country)!.number
-    : clean(input ?? '')
+export function normalizePhone(input: string | null | undefined, country: string): string {
+  return isValidPhone(input, country) ? readPhone(input, country)!.number : clean(input ?? '')
 }
 
 /**
@@ -93,16 +82,11 @@ export function normalizePhone(
  * business's country, +44 7400 123456 for one from abroad. What is not a
  * number (a hotline's 19019, a note) is shown as it is.
  */
-export function formatPhone(
-  stored: string | null | undefined,
-  country: string
-): string {
+export function formatPhone(stored: string | null | undefined, country: string): string {
   const text = stored?.trim() ?? ''
   const number = readPhone(text, country)
   if (!number?.isPossible()) return text
-  return number.country === region(country)
-    ? number.formatNational()
-    : number.formatInternational()
+  return number.country === region(country) ? number.formatNational() : number.formatInternational()
 }
 
 // The business's country, set when its brand lands (lib/brand): what a kept
@@ -138,9 +122,7 @@ export function digitCount(input: string): number {
 /** The number as WhatsApp wants it: country code first, no plus, no trunk 0. */
 export function internationalDigits(phone: string, country = home): string {
   const number = readPhone(phone, country)
-  return number?.isPossible()
-    ? number.number.slice(1)
-    : clean(phone).replace('+', '')
+  return number?.isPossible() ? number.number.slice(1) : clean(phone).replace('+', '')
 }
 
 // A WhatsApp link for a phone as customers gave it here: the local number

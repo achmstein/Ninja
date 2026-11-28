@@ -3,21 +3,15 @@ import { Loader2, Star, Tag } from 'lucide-react'
 import { type Order, type OrderSummary } from '@/api/ordering'
 import { getOrderOptions } from '@/api/ordering/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
+import { useLanguage, useLocalized, usePrice, useT } from '@/lib/i18n'
 import { statusDotClass } from '@/lib/order-status'
 import { PlaceIcon, placeKindOf } from '@/lib/places'
-import { useLanguage, useLocalized, usePrice, useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { SectionLabel } from '@/components/ninja/page/parts'
 
 // Orders not on a bill yet: sent and waiting, or turned down
 
-export function OrderGroup({
-  title,
-  orders,
-}: {
-  title: string
-  orders: OrderSummary[]
-}) {
+export function OrderGroup({ title, orders }: { title: string; orders: OrderSummary[] }) {
   if (orders.length === 0) return null
   return (
     <div className='flex flex-col gap-2'>
@@ -51,46 +45,44 @@ function OrderTile({ order }: { order: OrderSummary }) {
 
   return (
     <div className='flex items-start gap-2.5 px-4 py-3'>
-      <span className={cn('mt-1.5 size-2.5 shrink-0 animate-pulse rounded-full motion-reduce:animate-none', statusDotClass(order.status))} />
+      <span
+        className={cn(
+          'mt-1.5 size-2.5 shrink-0 animate-pulse rounded-full motion-reduce:animate-none',
+          statusDotClass(order.status)
+        )}
+      />
       <div className='flex min-w-0 flex-1 flex-col gap-1'>
         <div className='text-body font-semibold'>
           {order.date &&
-            new Date(order.date).toLocaleTimeString(
-              language === 'ar' ? 'ar-EG' : 'en-US',
-              { hour: 'numeric', minute: '2-digit' }
-            )}
+            new Date(order.date).toLocaleTimeString(language === 'ar' ? 'ar-EG' : 'en-US', {
+              hour: 'numeric',
+              minute: '2-digit',
+            })}
         </div>
         {placeName && (
-          <div className='text-muted-foreground flex items-center gap-1 text-caption'>
-            <PlaceIcon
-              kind={placeKindOf(order.placeKind)}
-              className='h-3.5 w-3.5 shrink-0'
-            />
+          <div className='text-muted-foreground text-caption flex items-center gap-1'>
+            <PlaceIcon kind={placeKindOf(order.placeKind)} className='h-3.5 w-3.5 shrink-0' />
             <span className='truncate'>{placeName}</span>
           </div>
         )}
         {detailQuery.isLoading ? (
           <Loader2 className='text-muted-foreground h-4 w-4 animate-spin' />
         ) : detailQuery.isError ? (
-          <p className='text-destructive text-caption'>
-            {t('failedToLoadDetails')}
-          </p>
+          <p className='text-destructive text-caption'>{t('failedToLoadDetails')}</p>
         ) : (
           detailQuery.data && <OrderItems order={detailQuery.data} />
         )}
       </div>
       <div className='shrink-0 text-end'>
-        <div className='text-body font-bold tabular-nums'>
-          {price(Number(order.total ?? 0) - discount)}
-        </div>
+        <div className='text-body font-bold tabular-nums'>{price(Number(order.total ?? 0) - discount)}</div>
         {promoDiscount > 0 && (
-          <div className='flex items-center justify-end gap-0.5 text-caption text-emerald-600 dark:text-emerald-400'>
+          <div className='text-caption flex items-center justify-end gap-0.5 text-emerald-600 dark:text-emerald-400'>
             <Tag className='h-3 w-3' />
             {price.discount(promoDiscount)}
           </div>
         )}
         {discount > 0 && (
-          <div className='flex items-center justify-end gap-0.5 text-caption text-emerald-600 dark:text-emerald-400'>
+          <div className='text-caption flex items-center justify-end gap-0.5 text-emerald-600 dark:text-emerald-400'>
             <Star className='h-3 w-3 fill-current' />
             {price.discount(discount)}
           </div>
@@ -108,30 +100,20 @@ function OrderItems({ order }: { order: Order }) {
     <div className='flex flex-col gap-1'>
       {(order.orderItems ?? []).map((item, index) => (
         <div key={index}>
-          <div className='flex items-baseline gap-1 text-note'>
-            <span className='text-muted-foreground'>
-              {Number(item.units ?? 0)}x
-            </span>
-            <span className='min-w-0 flex-1'>
-              {localized(item.productName)}
-            </span>
+          <div className='text-note flex items-baseline gap-1'>
+            <span className='text-muted-foreground'>{Number(item.units ?? 0)}x</span>
+            <span className='min-w-0 flex-1'>{localized(item.productName)}</span>
           </div>
           {item.customizationsDescription && (
-            <p className='text-muted-foreground ms-6 text-caption'>
-              {localized(item.customizationsDescription)}
-            </p>
+            <p className='text-muted-foreground text-caption ms-6'>{localized(item.customizationsDescription)}</p>
           )}
           {item.specialInstructions && (
-            <p className='text-muted-foreground ms-6 text-caption italic'>
-              "{item.specialInstructions}"
-            </p>
+            <p className='text-muted-foreground text-caption ms-6 italic'>"{item.specialInstructions}"</p>
           )}
         </div>
       ))}
       {order.customerNote && (
-        <p className='text-muted-foreground text-caption'>
-          {t('noteWithText', { notes: order.customerNote })}
-        </p>
+        <p className='text-muted-foreground text-caption'>{t('noteWithText', { notes: order.customerNote })}</p>
       )}
     </div>
   )

@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { UserPlus, X } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import type { SaleCustomer } from '@/features/sale/cart'
 import { useFeatures } from '@/lib/brand'
 import { useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
+import { Button } from '@/components/ui/button'
+import type { SaleCustomer } from '@/features/sale/cart'
 import { CustomerCard, type CardCustomer } from './customer-card'
 import { useLoyalty } from './use-customer-card'
 
@@ -19,9 +19,7 @@ function CustomerPointsLine({ userId }: { userId: string }) {
   if (!account && !notEnrolled) return null
   return (
     <span className='text-muted-foreground type-caption block truncate tabular-nums'>
-      {notEnrolled
-        ? t('notEnrolled')
-        : t('pointsBalance', { points: toNumber(account?.pointsBalance) })}
+      {notEnrolled ? t('notEnrolled') : t('pointsBalance', { points: toNumber(account?.pointsBalance) })}
     </span>
   )
 }
@@ -41,18 +39,10 @@ export function ChooseCustomerButton({
 }) {
   const t = useT()
   return (
-    <Button
-      variant='outline'
-      className='h-12 w-full min-w-0 gap-2 text-base'
-      onClick={onClick}
-    >
+    <Button variant='outline' className='h-12 w-full min-w-0 gap-2 text-base' onClick={onClick}>
       <UserPlus className='size-5' />
       <span className='truncate'>{t('chooseCustomer')}</span>
-      {showOptional && (
-        <span className='text-muted-foreground font-normal'>
-          ({t('optional')})
-        </span>
-      )}
+      {showOptional && <span className='text-muted-foreground font-normal'>({t('optional')})</span>}
     </Button>
   )
 }
@@ -63,13 +53,7 @@ export function ChooseCustomerButton({
  * glance) with the points under the name; a bare name is just the name.
  * The cross takes them off.
  */
-export function SelectedCustomer({
-  customer,
-  onRemove,
-}: {
-  customer: SaleCustomer
-  onRemove: () => void
-}) {
+export function SelectedCustomer({ customer, onRemove }: { customer: SaleCustomer; onRemove: () => void }) {
   const t = useT()
   const features = useFeatures()
   const [cardFor, setCardFor] = useState<CardCustomer | null>(null)
@@ -107,10 +91,7 @@ export function SelectedCustomer({
       >
         <X className='size-4' />
       </Button>
-      <CustomerCard
-        customer={cardFor}
-        onOpenChange={(open) => !open && setCardFor(null)}
-      />
+      <CustomerCard customer={cardFor} onOpenChange={(open) => !open && setCardFor(null)} />
     </div>
   )
 }

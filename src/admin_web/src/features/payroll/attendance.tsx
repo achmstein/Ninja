@@ -10,11 +10,7 @@ import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Toggle } from '@/components/ui/toggle'
 import { EmptyState } from '@/components/empty-state'
 import { ErrorState } from '@/components/error-state'
@@ -31,13 +27,7 @@ import { usePayrollActions } from './use-payroll-actions'
 const route = getRouteApi('/_authenticated/payroll/attendance')
 
 // A tap cycles a day: unmarked → present → half day → day off → absent → unmarked
-const CYCLE: (number | null)[] = [
-  null,
-  ATTENDANCE.present,
-  ATTENDANCE.halfDay,
-  ATTENDANCE.dayOff,
-  ATTENDANCE.absent,
-]
+const CYCLE: (number | null)[] = [null, ATTENDANCE.present, ATTENDANCE.halfDay, ATTENDANCE.dayOff, ATTENDANCE.absent]
 
 /**
  * The month, one row per person, one cell per day. Tapping a cell marks
@@ -55,9 +45,7 @@ export function Attendance() {
   const { markAttendance } = usePayrollActions()
 
   const today = formatDay(new Date())
-  const [year, month] = (search.month ?? today.slice(0, 7))
-    .split('-')
-    .map(Number)
+  const [year, month] = (search.month ?? today.slice(0, 7)).split('-').map(Number)
   const range = monthRange(year, month - 1)
   const monthKey = `${year}-${String(month).padStart(2, '0')}`
 
@@ -69,9 +57,7 @@ export function Attendance() {
   // Everyone employed on any day of the month, leavers included. The
   // compiler memoizes these; a manual useMemo over a query result trips
   // the query lint rule
-  const rows = (employees.data ?? []).filter(
-    (e) => e.startedOn <= range.to && (!e.endedOn || e.endedOn >= range.from)
-  )
+  const rows = (employees.data ?? []).filter((e) => e.startedOn <= range.to && (!e.endedOn || e.endedOn >= range.from))
 
   const marks = new Map<string, AttendanceView>()
   for (const row of attendance.data ?? []) {
@@ -85,9 +71,7 @@ export function Attendance() {
   const weekday = new Intl.DateTimeFormat(locale, { weekday: 'narrow' })
 
   const canMark = (employee: EmployeeView, iso: string) =>
-    iso <= today &&
-    iso >= employee.startedOn &&
-    (!employee.endedOn || iso <= employee.endedOn)
+    iso <= today && iso >= employee.startedOn && (!employee.endedOn || iso <= employee.endedOn)
 
   const mark = async (
     date: string,
@@ -98,41 +82,29 @@ export function Attendance() {
     }[]
   ) => {
     // Paint first, then post; the refetch on success settles it
-    queryClient.setQueryData(
-      attendanceOptions.queryKey,
-      (prev: AttendanceView[] | undefined) => {
-        const kept = (prev ?? []).filter(
-          (row) =>
-            !(
-              row.date === date &&
-              changes.some(
-                (c) => toNumber(c.employee.id) === toNumber(row.employeeId)
-              )
-            )
-        )
-        const added = changes
-          .filter((c) => c.status !== null)
-          .map<AttendanceView>((c) => ({
-            employeeId: c.employee.id,
-            date,
-            branchId: c.employee.branchId,
-            status: c.status!,
-            overtimeHours:
-              c.overtimeHours ??
-              // Untouched hours stay; a day away has none
-              (c.status === ATTENDANCE.present ||
-              c.status === ATTENDANCE.halfDay
-                ? toNumber(
-                    marks.get(`${c.employee.id}/${date}`)?.overtimeHours ?? 0
-                  )
-                : 0),
-            note: null,
-            markedBy: '',
-            markedAt: new Date().toISOString(),
-          }))
-        return [...kept, ...added]
-      }
-    )
+    queryClient.setQueryData(attendanceOptions.queryKey, (prev: AttendanceView[] | undefined) => {
+      const kept = (prev ?? []).filter(
+        (row) => !(row.date === date && changes.some((c) => toNumber(c.employee.id) === toNumber(row.employeeId)))
+      )
+      const added = changes
+        .filter((c) => c.status !== null)
+        .map<AttendanceView>((c) => ({
+          employeeId: c.employee.id,
+          date,
+          branchId: c.employee.branchId,
+          status: c.status!,
+          overtimeHours:
+            c.overtimeHours ??
+            // Untouched hours stay; a day away has none
+            (c.status === ATTENDANCE.present || c.status === ATTENDANCE.halfDay
+              ? toNumber(marks.get(`${c.employee.id}/${date}`)?.overtimeHours ?? 0)
+              : 0),
+          note: null,
+          markedBy: '',
+          markedAt: new Date().toISOString(),
+        }))
+      return [...kept, ...added]
+    })
     try {
       await markAttendance(date, {
         marks: changes.map((c) => ({
@@ -149,26 +121,18 @@ export function Attendance() {
 
   const cycle = (employee: EmployeeView, iso: string) => {
     const current = marks.get(`${employee.id}/${iso}`)?.status ?? null
-    const next =
-      CYCLE[
-        (CYCLE.indexOf(current === null ? null : toNumber(current)) + 1) %
-          CYCLE.length
-      ]
+    const next = CYCLE[(CYCLE.indexOf(current === null ? null : toNumber(current)) + 1) % CYCLE.length]
     void mark(iso, [{ employee, status: next }])
   }
 
   const setOvertime = (employee: EmployeeView, iso: string, hours: number) => {
     const current = marks.get(`${employee.id}/${iso}`)
     if (!current) return
-    void mark(iso, [
-      { employee, status: toNumber(current.status), overtimeHours: hours },
-    ])
+    void mark(iso, [{ employee, status: toNumber(current.status), overtimeHours: hours }])
   }
 
   const everyoneToday = () => {
-    const unmarked = rows.filter(
-      (e) => canMark(e, today) && !marks.has(`${e.id}/${today}`)
-    )
+    const unmarked = rows.filter((e) => canMark(e, today) && !marks.has(`${e.id}/${today}`))
     if (unmarked.length === 0) return
     void mark(
       today,
@@ -203,9 +167,7 @@ export function Attendance() {
         <div className='flex flex-wrap items-center gap-2'>
           <MonthSwitcher
             monthKey={monthKey}
-            onChange={(next) =>
-              navigate({ search: (prev) => ({ ...prev, month: next }) })
-            }
+            onChange={(next) => navigate({ search: (prev) => ({ ...prev, month: next }) })}
           />
           {rows.length > 0 && (
             <Toggle
@@ -254,25 +216,18 @@ export function Attendance() {
                       d.iso === today && 'text-primary font-semibold'
                     )}
                   >
-                    <div className='text-muted-foreground text-[10px] leading-none'>
-                      {weekday.format(d.date)}
-                    </div>
+                    <div className='text-muted-foreground text-[10px] leading-none'>{weekday.format(d.date)}</div>
                     <div className='tabular-nums'>{d.day}</div>
                   </th>
                 ))}
-                <th className='min-w-14 px-2 py-2 text-end font-medium tabular-nums'>
-                  {t('daysShort')}
-                </th>
+                <th className='min-w-14 px-2 py-2 text-end font-medium tabular-nums'>{t('daysShort')}</th>
               </tr>
             </thead>
             <tbody>
               {rows.map((employee) => {
                 // Daily workers are paid per day marked worked; monthly staff
                 // are marked when absent, so their number is the absences
-                const monthly =
-                  toNumber(
-                    employee.currentTerms?.scheme ?? PAY_SCHEME.daily
-                  ) === PAY_SCHEME.monthly
+                const monthly = toNumber(employee.currentTerms?.scheme ?? PAY_SCHEME.daily) === PAY_SCHEME.monthly
                 // A day off is a rest day, not an absence
                 const { worked, absent, offDays } = countAttendance(
                   days.flatMap((d) => {
@@ -281,48 +236,29 @@ export function Attendance() {
                   })
                 )
                 const overtime = days.reduce(
-                  (sum, d) =>
-                    sum +
-                    toNumber(
-                      marks.get(`${employee.id}/${d.iso}`)?.overtimeHours ?? 0
-                    ),
+                  (sum, d) => sum + toNumber(marks.get(`${employee.id}/${d.iso}`)?.overtimeHours ?? 0),
                   0
                 )
                 return (
                   <tr key={String(employee.id)} className='border-t'>
                     <td className='bg-background sticky start-0 z-10 border-e px-3 py-1'>
-                      <div className='truncate font-medium'>
-                        {employee.name}
-                      </div>
+                      <div className='truncate font-medium'>{employee.name}</div>
                       <div className='text-muted-foreground truncate text-xs'>
                         {employee.jobTitle || ''}
-                        {monthly && (
-                          <span> · {schemeLabel(PAY_SCHEME.monthly, t)}</span>
-                        )}
+                        {monthly && <span> · {schemeLabel(PAY_SCHEME.monthly, t)}</span>}
                       </div>
                     </td>
                     {days.map((d) => {
                       const row = marks.get(`${employee.id}/${d.iso}`)
-                      const status =
-                        row === undefined ? null : toNumber(row.status)
+                      const status = row === undefined ? null : toNumber(row.status)
                       const hours = toNumber(row?.overtimeHours ?? 0)
                       const enabled = canMark(employee, d.iso)
-                      const worked =
-                        status === ATTENDANCE.present ||
-                        status === ATTENDANCE.halfDay
+                      const worked = status === ATTENDANCE.present || status === ATTENDANCE.halfDay
                       return (
                         <td key={d.iso} className='p-0.5 text-center'>
                           {overtimeMode && worked ? (
-                            <OvertimePopover
-                              hours={hours}
-                              onSave={(h) => setOvertime(employee, d.iso, h)}
-                            >
-                              <DayCell
-                                status={status}
-                                hours={hours}
-                                disabled={!enabled}
-                                today={d.iso === today}
-                              />
+                            <OvertimePopover hours={hours} onSave={(h) => setOvertime(employee, d.iso, h)}>
+                              <DayCell status={status} hours={hours} disabled={!enabled} today={d.iso === today} />
                             </OvertimePopover>
                           ) : (
                             <DayCell
@@ -428,9 +364,7 @@ function OvertimePopover({
               onChange={(e) => setValue(e.target.value)}
               autoFocus
             />
-            <span className='text-muted-foreground text-sm'>
-              {t('hoursAbbr')}
-            </span>
+            <span className='text-muted-foreground text-sm'>{t('hoursAbbr')}</span>
           </div>
           <div className='flex justify-end gap-1'>
             {hours > 0 && (
@@ -494,14 +428,10 @@ function DayCell({
         'relative mx-auto flex size-8 items-center justify-center rounded-md border transition-colors',
         'disabled:cursor-not-allowed disabled:opacity-30',
         status === null && 'hover:bg-accent border-dashed',
-        status === ATTENDANCE.present &&
-          'bg-success/15 border-success/40 text-success',
-        status === ATTENDANCE.halfDay &&
-          'bg-warning/15 border-warning/40 text-warning',
-        status === ATTENDANCE.dayOff &&
-          'bg-primary/10 border-primary/40 text-primary',
-        status === ATTENDANCE.absent &&
-          'bg-destructive/10 border-destructive/40 text-destructive',
+        status === ATTENDANCE.present && 'bg-success/15 border-success/40 text-success',
+        status === ATTENDANCE.halfDay && 'bg-warning/15 border-warning/40 text-warning',
+        status === ATTENDANCE.dayOff && 'bg-primary/10 border-primary/40 text-primary',
+        status === ATTENDANCE.absent && 'bg-destructive/10 border-destructive/40 text-destructive',
         today && status === null && 'border-primary/50'
       )}
     >

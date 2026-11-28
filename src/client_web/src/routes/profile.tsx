@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { useAuth } from 'react-oidc-context'
 import {
   Award,
   Download,
@@ -17,15 +16,19 @@ import {
   UserRound,
   Wallet,
 } from 'lucide-react'
-import { getAccountOptions } from '@/api/loyalty/@tanstack/react-query.gen'
+import { useAuth } from 'react-oidc-context'
 import { getMyAccountOptions } from '@/api/accounts/@tanstack/react-query.gen'
-import { getMyProfile } from '@/lib/services/identity'
+import { getAccountOptions } from '@/api/loyalty/@tanstack/react-query.gen'
+import { useGuestStore } from '@/stores/guest-store'
 import { API_VERSION } from '@/lib/api-client'
+import { closedAt, useMyBills } from '@/lib/bills'
 import { useBranches, useSelectedBranch } from '@/lib/branch'
-import { unregisterPush } from '@/lib/use-push'
+import { callHref, showPhone, useBrandName, useBrandWordmark, useFeatures } from '@/lib/brand'
 import { useLocalized, usePrice, useT } from '@/lib/i18n'
 import { TIER_KEYS, useTierProgress } from '@/lib/loyalty'
-import { closedAt, useMyBills } from '@/lib/bills'
+import { getMyProfile } from '@/lib/services/identity'
+import { useAtBranch } from '@/lib/use-branch-switch'
+import { unregisterPush } from '@/lib/use-push'
 import { cn } from '@/lib/utils'
 import {
   AlertDialog,
@@ -37,32 +40,23 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import { PoweredByNinja } from '@/components/brand/powered-by-ninja'
-import { useInstallAction } from '@/components/install/use-install-action'
 import { Badge } from '@/components/ui/badge'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { SignInOptions } from '@/components/auth/sign-in-options'
-import { useGuestStore } from '@/stores/guest-store'
 import { BranchSheet } from '@/components/branch-switcher'
+import { BrandMark, BrandWordmark } from '@/components/brand/brand-mark'
+import { PoweredByNinja } from '@/components/brand/powered-by-ninja'
 import { AddressSheet } from '@/components/delivery/address-sheet'
-import { useAtBranch } from '@/lib/use-branch-switch'
-import { TileAnchor, TileButton, TileGroup, TileLink } from '@/components/ninja/page/tile-row'
-import { NinjaPage, Rise, RiseItem } from '@/components/ninja/page/page'
+import { useInstallAction } from '@/components/install/use-install-action'
 import { Notice } from '@/components/ninja/page/notice'
+import { NinjaPage, Rise, RiseItem } from '@/components/ninja/page/page'
 import { Slab } from '@/components/ninja/page/parts'
 import { PointsRing } from '@/components/ninja/page/points-ring'
-import { callHref, showPhone, useBrandName, useBrandWordmark, useFeatures } from '@/lib/brand'
-import { BrandMark, BrandWordmark } from '@/components/brand/brand-mark'
+import { TileAnchor, TileButton, TileGroup, TileLink } from '@/components/ninja/page/tile-row'
 
 export const Route = createFileRoute('/profile')({
   component: ProfilePage,
 })
-
 
 /**
  * The You tab: who you are on the dock's slab (a member's points as a ring),
@@ -116,9 +110,7 @@ function ProfilePage() {
     enabled: features.tabs && auth.isAuthenticated,
     retry: false,
   })
-  const houseBalance = houseAccountQuery.isError
-    ? 0
-    : Number(houseAccountQuery.data?.balance ?? 0)
+  const houseBalance = houseAccountQuery.isError ? 0 : Number(houseAccountQuery.data?.balance ?? 0)
 
   const signedIn = auth.isAuthenticated
   const displayName = myProfileQuery.data?.name || name
@@ -134,34 +126,44 @@ function ProfilePage() {
         <RiseItem>
           <Slab className='isolate flex items-center gap-4'>
             {/* Its mark large and faint in the corner, as the other slabs wear theirs; a member's points ring has that corner */}
-            {!loyalty && <User className='pointer-events-none absolute -end-6 -bottom-10 -z-10 size-44 -rotate-12 opacity-[0.07]' />}
+            {!loyalty && (
+              <User className='pointer-events-none absolute -end-6 -bottom-10 -z-10 size-44 -rotate-12 opacity-[0.07]' />
+            )}
             <div className='bg-background/12 grid size-16 shrink-0 place-items-center rounded-full text-2xl font-extrabold'>
-              {signedIn ? (displayName || '?')[0]?.toUpperCase() : guestContact ? guestContact.name[0]?.toUpperCase() : <User className='size-7 opacity-70' />}
+              {signedIn ? (
+                (displayName || '?')[0]?.toUpperCase()
+              ) : guestContact ? (
+                guestContact.name[0]?.toUpperCase()
+              ) : (
+                <User className='size-7 opacity-70' />
+              )}
             </div>
             <div className='min-w-0 flex-1'>
               {/* Two lines for a long name: beside the avatar and the points ring one line cut it short */}
-              <div className='heading line-clamp-2 text-headline break-words'>
+              <div className='heading text-headline line-clamp-2 break-words'>
                 {signedIn ? displayName : guestContact ? guestContact.name : t('guestUser')}
               </div>
               {signedIn && myProfileQuery.data?.phoneNumber && (
-                <div className='truncate text-note opacity-60'>
+                <div className='text-note truncate opacity-60'>
                   {/* The digits run left to right; the line sits where the page reads from */}
                   <span dir='ltr'>{showPhone(myProfileQuery.data.phoneNumber)}</span>
                 </div>
               )}
               {!signedIn && guestContact && (
-                <div className='truncate text-note opacity-60'>
+                <div className='text-note truncate opacity-60'>
                   <span dir='ltr'>{showPhone(guestContact.phone)}</span>
                 </div>
               )}
               {loyalty && (
-                <div className='mt-2 inline-flex items-center gap-1.5 rounded-full bg-amber-400/15 px-2.5 py-1 text-caption font-bold text-amber-300'>
+                <div className='text-caption mt-2 inline-flex items-center gap-1.5 rounded-full bg-amber-400/15 px-2.5 py-1 font-bold text-amber-300'>
                   <Award className='size-3.5' />
                   {TIER_KEYS[tier] ? t(TIER_KEYS[tier]) : loyalty.currentTier}
                 </div>
               )}
               {!signedIn && guestContact && (
-                <div className='bg-background/12 mt-2 inline-flex rounded-full px-2.5 py-1 text-caption font-semibold'>{t('orderingAsGuest')}</div>
+                <div className='bg-background/12 text-caption mt-2 inline-flex rounded-full px-2.5 py-1 font-semibold'>
+                  {t('orderingAsGuest')}
+                </div>
               )}
             </div>
             {loyalty && (
@@ -171,7 +173,7 @@ function ProfilePage() {
             )}
           </Slab>
           {loyalty && nextTier && (
-            <p className='text-muted-foreground px-2 pt-2 text-caption'>
+            <p className='text-muted-foreground text-caption px-2 pt-2'>
               {t('pointsToNextTier', { points: Number(nextTier.pointsRequired) - lifetime, tier: nextTier.name })}
             </p>
           )}
@@ -199,7 +201,11 @@ function ProfilePage() {
                 push='bills'
                 icon={ReceiptText}
                 label={t('ninjaYourBills')}
-                value={monthVisits > 0 ? `${t('ninjaMonthVisits', { count: String(monthVisits) })} ${t('ninjaThisMonth')}` : undefined}
+                value={
+                  monthVisits > 0
+                    ? `${t('ninjaMonthVisits', { count: String(monthVisits) })} ${t('ninjaThisMonth')}`
+                    : undefined
+                }
               />
               {features.timeBilling && <TileLink to='/stays' push='stays' icon={Timer} label={t('sessions')} />}
               {features.tabs && (
@@ -210,7 +216,12 @@ function ProfilePage() {
                   label={t('transactions')}
                   value={
                     houseBalance !== 0 ? (
-                      <span className={cn('font-semibold tabular-nums', houseBalance > 0 ? 'text-destructive' : 'text-emerald-600 dark:text-emerald-400')}>
+                      <span
+                        className={cn(
+                          'font-semibold tabular-nums',
+                          houseBalance > 0 ? 'text-destructive' : 'text-emerald-600 dark:text-emerald-400'
+                        )}
+                      >
                         {price(Math.abs(houseBalance))}
                       </span>
                     ) : undefined
@@ -233,7 +244,12 @@ function ProfilePage() {
         <RiseItem>
           <TileGroup>
             {canChangeBranch && (
-              <TileButton icon={MapPin} label={t('ninjaBranch')} value={localized(branch?.name)} onClick={() => setBranchesOpen(true)} />
+              <TileButton
+                icon={MapPin}
+                label={t('ninjaBranch')}
+                value={localized(branch?.name)}
+                onClick={() => setBranchesOpen(true)}
+              />
             )}
             {/* Where a delivery goes, kept on the account: only where the business and some branch deliver */}
             {signedIn && features.delivery && branches.some((b) => b.isDeliveryEnabled) && (
@@ -241,9 +257,21 @@ function ProfilePage() {
             )}
             <TileLink to='/settings' push='settings' icon={Settings} label={t('settings')} />
             {branch?.phone && (
-              <TileAnchor href={callHref(branch.phone)} icon={Phone} label={t('callUs')} sublabel={<span dir='ltr'>{showPhone(branch.phone)}</span>} />
+              <TileAnchor
+                href={callHref(branch.phone)}
+                icon={Phone}
+                label={t('callUs')}
+                sublabel={<span dir='ltr'>{showPhone(branch.phone)}</span>}
+              />
             )}
-            {install.eligible && <TileButton icon={Download} label={t('installApp')} sublabel={t('installAppSubtitle')} onClick={install.run} />}
+            {install.eligible && (
+              <TileButton
+                icon={Download}
+                label={t('installApp')}
+                sublabel={t('installAppSubtitle')}
+                onClick={install.run}
+              />
+            )}
             <TileButton icon={Info} label={t('about')} onClick={() => setAboutOpen(true)} />
           </TileGroup>
         </RiseItem>
@@ -257,7 +285,7 @@ function ProfilePage() {
         )}
 
         <RiseItem>
-          <p className='text-muted-foreground text-center text-caption'>{t('version', { version: __APP_VERSION__ })}</p>
+          <p className='text-muted-foreground text-caption text-center'>{t('version', { version: __APP_VERSION__ })}</p>
         </RiseItem>
       </Rise>
 
@@ -291,22 +319,14 @@ function SignOutButton() {
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
-          <AlertDialogAction onClick={() => signOut.mutate()}>
-            {t('signOut')}
-          </AlertDialogAction>
+          <AlertDialogAction onClick={() => signOut.mutate()}>{t('signOut')}</AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
   )
 }
 
-function AboutDialog({
-  open,
-  onOpenChange,
-}: {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-}) {
+function AboutDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
   const t = useT()
   const brandName = useBrandName()
   const wordmark = useBrandWordmark()
@@ -325,9 +345,7 @@ function AboutDialog({
               <div className='text-headline font-bold'>{brandName}</div>
             </>
           )}
-          <Badge variant='secondary'>
-            {t('version', { version: __APP_VERSION__ })}
-          </Badge>
+          <Badge variant='secondary'>{t('version', { version: __APP_VERSION__ })}</Badge>
           <PoweredByNinja className='pt-2' />
         </div>
       </DialogContent>

@@ -15,13 +15,7 @@ import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
 import { DatePicker } from '@/components/date-picker'
@@ -65,13 +59,9 @@ export function Partners() {
 
   // This branch's share, as the list shows it
   const shareHere = (p: PartnerView) =>
-    toNumber(
-      p.shares.find((s) => toNumber(s.branchId) === activeBranchId)?.percent ??
-        0
-    )
+    toNumber(p.shares.find((s) => toNumber(s.branchId) === activeBranchId)?.percent ?? 0)
 
-  const open = (partner?: number) =>
-    navigate({ search: (prev) => ({ ...prev, partner: partner ?? undefined }) })
+  const open = (partner?: number) => navigate({ search: (prev) => ({ ...prev, partner: partner ?? undefined }) })
 
   const rows = partners.data ?? []
   const selected = rows.find((p) => toNumber(p.id) === search.partner) ?? null
@@ -120,17 +110,12 @@ export function Partners() {
                   <ListRow
                     className={cn(!p.isActive && 'opacity-60')}
                     leading={<EntityAvatar name={p.name ?? ''} />}
-                    title={
-                      <span className={cn(!p.isActive && 'line-through')}>
-                        {p.name}
-                      </span>
-                    }
+                    title={<span className={cn(!p.isActive && 'line-through')}>{p.name}</span>}
                     meta={
                       <>
                         {/* Their share of this branch's profit, the reason they are here */}
                         <span className='tabular-nums'>
-                          {t('profitShare')}{' '}
-                          {share > 0 ? percent.format(share / 100) : '—'}
+                          {t('profitShare')} {share > 0 ? percent.format(share / 100) : '—'}
                         </span>
                         {p.phone && (
                           <>
@@ -151,9 +136,7 @@ export function Partners() {
                     }
                     trailingMeta={
                       balance !== 0 ? (
-                        <span className='text-muted-foreground text-xs'>
-                          {t('partnerBalance')}
-                        </span>
+                        <span className='text-muted-foreground text-xs'>{t('partnerBalance')}</span>
                       ) : null
                     }
                   />
@@ -202,11 +185,7 @@ function PartnerSheet({
       ) : partner ? (
         <>
           <Section title={t('details')}>
-            <PartnerForm
-              key={String(partner.id)}
-              partner={partner}
-              onSaved={() => {}}
-            />
+            <PartnerForm key={String(partner.id)} partner={partner} onSaved={() => {}} />
           </Section>
           <Section title={t('account')}>
             <PartnerLedger partner={partner} />
@@ -217,13 +196,7 @@ function PartnerSheet({
   )
 }
 
-function PartnerForm({
-  partner,
-  onSaved,
-}: {
-  partner: PartnerView | null
-  onSaved: () => void
-}) {
+function PartnerForm({ partner, onSaved }: { partner: PartnerView | null; onSaved: () => void }) {
   const t = useT()
   const localized = useLocalized()
   const { savePartner, isPending } = useFinanceActions()
@@ -234,8 +207,7 @@ function PartnerForm({
   // list's own query, so from the cache)
   const everyone = useQuery(partnersQueryOptions(true))
   const editingId = partner ? toNumber(partner.id) : null
-  const left = (branchId: number) =>
-    remainingShare(everyone.data, branchId, editingId)
+  const left = (branchId: number) => remainingShare(everyone.data, branchId, editingId)
 
   const [name, setName] = useState(partner?.name ?? '')
   const [phone, setPhone] = useState(() => editablePhone(partner?.phone))
@@ -243,12 +215,7 @@ function PartnerForm({
   // the map is not theirs. A new partner starts with what is left, not 100%.
   const [shares, setShares] = useState<Map<number, string>>(() =>
     partner
-      ? new Map(
-          partner.shares.map((s) => [
-            toNumber(s.branchId),
-            String(toNumber(s.percent)),
-          ])
-        )
+      ? new Map(partner.shares.map((s) => [toNumber(s.branchId), String(toNumber(s.percent))]))
       : activeBranchId !== null
         ? new Map([[activeBranchId, String(left(activeBranchId))]])
         : new Map()
@@ -262,17 +229,14 @@ function PartnerForm({
       else next.delete(id)
       return next
     })
-  const setShare = (id: number, value: string) =>
-    setShares((prev) => new Map(prev).set(id, value))
+  const setShare = (id: number, value: string) => setShares((prev) => new Map(prev).set(id, value))
 
   const shareList = [...shares].map(([branchId, percent]) => ({
     branchId,
     percent: parseFloat(percent) || 0,
   }))
   // No branch's shares may add up to more than 100% (the server refuses it too)
-  const sharesValid = shareList.every((s) =>
-    shareFits(s.percent, left(s.branchId))
-  )
+  const sharesValid = shareList.every((s) => shareFits(s.percent, left(s.branchId)))
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -323,16 +287,11 @@ function PartnerForm({
               const held = shares.has(id)
               return (
                 <div key={id} className='flex h-9 items-center gap-3'>
-                  <label
-                    htmlFor={inputId}
-                    className='flex min-w-32 items-center gap-2 text-sm'
-                  >
+                  <label htmlFor={inputId} className='flex min-w-32 items-center gap-2 text-sm'>
                     <Checkbox
                       id={inputId}
                       checked={held}
-                      onCheckedChange={(checked) =>
-                        toggleBranch(id, checked === true)
-                      }
+                      onCheckedChange={(checked) => toggleBranch(id, checked === true)}
                     />
                     {localized(branch.name)}
                   </label>
@@ -349,16 +308,11 @@ function PartnerForm({
                         value={shares.get(id) ?? ''}
                         onChange={(e) => setShare(id, e.target.value)}
                       />
-                      <span className='text-muted-foreground'>
-                        % {t('ofProfit')}
-                      </span>
+                      <span className='text-muted-foreground'>% {t('ofProfit')}</span>
                       <span
                         className={cn(
                           'text-xs tabular-nums',
-                          shareFits(
-                            parseFloat(shares.get(id) ?? '') || 0,
-                            left(id)
-                          )
+                          shareFits(parseFloat(shares.get(id) ?? '') || 0, left(id))
                             ? 'text-muted-foreground'
                             : 'text-destructive'
                         )}
@@ -373,20 +327,12 @@ function PartnerForm({
           </div>
         </div>
       </div>
-      {partner && (
-        <SwitchRow
-          title={t('active')}
-          checked={isActive}
-          onCheckedChange={setIsActive}
-        />
-      )}
+      {partner && <SwitchRow title={t('active')} checked={isActive} onCheckedChange={setIsActive} />}
       <SheetActions>
         <Button
           type='submit'
           form='partner-form'
-          disabled={
-            name.trim() === '' || shares.size === 0 || !sharesValid || isPending
-          }
+          disabled={name.trim() === '' || shares.size === 0 || !sharesValid || isPending}
         >
           {isPending && <Spinner />}
           {partner ? t('save') : t('addPartner')}
@@ -444,31 +390,15 @@ function PartnerLedger({ partner }: { partner: PartnerView }) {
     <div className='space-y-3'>
       <div className='flex flex-wrap items-center justify-between gap-2'>
         <div>
-          <div className='text-muted-foreground text-xs'>
-            {balance < 0 ? t('partnerDrewNet') : t('partnerBalance')}
-          </div>
-          <div
-            className={cn(
-              'text-lg font-semibold tabular-nums',
-              balance < 0 && 'text-destructive'
-            )}
-          >
+          <div className='text-muted-foreground text-xs'>{balance < 0 ? t('partnerDrewNet') : t('partnerBalance')}</div>
+          <div className={cn('text-lg font-semibold tabular-nums', balance < 0 && 'text-destructive')}>
             {formatEgp(Math.abs(balance))}
           </div>
         </div>
         {!adding && (
           <div className='flex gap-2'>
-            <ExportButton
-              size='sm'
-              onExport={exportCsv}
-              disabled={(ledger.data?.entries.length ?? 0) === 0}
-            />
-            <Button
-              type='button'
-              variant='outline'
-              size='sm'
-              onClick={() => setAdding(true)}
-            >
+            <ExportButton size='sm' onExport={exportCsv} disabled={(ledger.data?.entries.length ?? 0) === 0} />
+            <Button type='button' variant='outline' size='sm' onClick={() => setAdding(true)}>
               <Plus />
               {t('addLedgerEntry')}
             </Button>
@@ -477,10 +407,7 @@ function PartnerLedger({ partner }: { partner: PartnerView }) {
       </div>
 
       {adding && (
-        <form
-          onSubmit={submit}
-          className='bg-muted/40 space-y-3 rounded-lg border p-3'
-        >
+        <form onSubmit={submit} className='bg-muted/40 space-y-3 rounded-lg border p-3'>
           <div className='grid gap-3 sm:grid-cols-3'>
             <div className='flex flex-col gap-1.5'>
               <Label>{t('type')}</Label>
@@ -489,13 +416,11 @@ function PartnerLedger({ partner }: { partner: PartnerView }) {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {[PARTNER_ENTRY.contribution, PARTNER_ENTRY.drawing].map(
-                    (v) => (
-                      <SelectItem key={v} value={String(v)}>
-                        {partnerEntryLabel(v, t)}
-                      </SelectItem>
-                    )
-                  )}
+                  {[PARTNER_ENTRY.contribution, PARTNER_ENTRY.drawing].map((v) => (
+                    <SelectItem key={v} value={String(v)}>
+                      {partnerEntryLabel(v, t)}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -515,36 +440,18 @@ function PartnerLedger({ partner }: { partner: PartnerView }) {
             </div>
             <div className='flex flex-col gap-1.5'>
               <Label htmlFor='partner-date'>{t('date')}</Label>
-              <DatePicker
-                id='partner-date'
-                value={date}
-                onChange={setDate}
-                disabled={(d) => d > new Date()}
-              />
+              <DatePicker id='partner-date' value={date} onChange={setDate} disabled={(d) => d > new Date()} />
             </div>
           </div>
           <div className='flex flex-col gap-1.5'>
             <Label htmlFor='partner-note'>{t('note')}</Label>
-            <Input
-              id='partner-note'
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-            />
+            <Input id='partner-note' value={note} onChange={(e) => setNote(e.target.value)} />
           </div>
           <div className='flex justify-end gap-2'>
-            <Button
-              type='button'
-              variant='ghost'
-              size='sm'
-              onClick={() => setAdding(false)}
-            >
+            <Button type='button' variant='ghost' size='sm' onClick={() => setAdding(false)}>
               {t('cancel')}
             </Button>
-            <Button
-              type='submit'
-              size='sm'
-              disabled={isPending || !(parseFloat(amount) > 0)}
-            >
+            <Button type='submit' size='sm' disabled={isPending || !(parseFloat(amount) > 0)}>
               {isPending && <Spinner />}
               {t('post')}
             </Button>

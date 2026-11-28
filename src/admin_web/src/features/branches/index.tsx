@@ -58,19 +58,11 @@ export function BranchesManagement() {
   const [openId, setOpenId] = useState<string | null>(null)
   const [sheetOpen, setSheetOpen] = useState(false)
   const [dialogOpen, setDialogOpen] = useState(false)
-  const [editingBranch, setEditingBranch] = useState<BranchResponse | null>(
-    null
-  )
-  const [pricingBranch, setPricingBranch] = useState<BranchResponse | null>(
-    null
-  )
-  const [deliveryBranch, setDeliveryBranch] = useState<BranchResponse | null>(
-    null
-  )
+  const [editingBranch, setEditingBranch] = useState<BranchResponse | null>(null)
+  const [pricingBranch, setPricingBranch] = useState<BranchResponse | null>(null)
+  const [deliveryBranch, setDeliveryBranch] = useState<BranchResponse | null>(null)
   const [zonesBranch, setZonesBranch] = useState<BranchResponse | null>(null)
-  const [kitchenBranch, setKitchenBranch] = useState<BranchResponse | null>(
-    null
-  )
+  const [kitchenBranch, setKitchenBranch] = useState<BranchResponse | null>(null)
   const [deactivating, setDeactivating] = useState<BranchResponse | null>(null)
 
   const branchesQuery = useQuery(getAllBranchesOptions())
@@ -103,11 +95,7 @@ export function BranchesManagement() {
     onError: () => toast.error(t('failedToSaveBranch')),
   })
 
-  const toggleSetting = (
-    branch: BranchResponse,
-    setting: BranchSetting,
-    value: boolean
-  ) =>
+  const toggleSetting = (branch: BranchResponse, setting: BranchSetting, value: boolean) =>
     updateSettings.mutate({
       path: { branchId: Number(branch.id) },
       body: { [setting]: value },
@@ -159,13 +147,9 @@ export function BranchesManagement() {
       if (by === 'active' && !b.isActive) return false
       if (by === 'inactive' && b.isActive) return false
       if (!q) return true
-      return [
-        b.name?.en,
-        b.name?.ar,
-        b.address?.en,
-        b.address?.ar,
-        b.phone,
-      ].some((text) => text?.toLowerCase().includes(q))
+      return [b.name?.en, b.name?.ar, b.address?.en, b.address?.ar, b.phone].some((text) =>
+        text?.toLowerCase().includes(q)
+      )
     })
   }, [branches, by, query])
 
@@ -190,10 +174,7 @@ export function BranchesManagement() {
         />
 
         {branchesQuery.isError ? (
-          <ErrorState
-            error={branchesQuery.error}
-            onRetry={branchesQuery.refetch}
-          />
+          <ErrorState error={branchesQuery.error} onRetry={branchesQuery.refetch} />
         ) : isLoading ? (
           <ListSkeleton />
         ) : branches.length === 0 ? (
@@ -233,9 +214,7 @@ export function BranchesManagement() {
                         onClick={() => setFilter(f)}
                       >
                         {t(f)}
-                        <span className='text-muted-foreground ms-1.5 tabular-nums'>
-                          {counts[f]}
-                        </span>
+                        <span className='text-muted-foreground ms-1.5 tabular-nums'>{counts[f]}</span>
                       </Button>
                     ))}
                   </div>
@@ -311,9 +290,7 @@ export function BranchesManagement() {
         branch={openBranch}
         onOpenChange={setSheetOpen}
         savingSettings={updateSettings.isPending}
-        onToggle={(setting, value) =>
-          openBranch && toggleSetting(openBranch, setting, value)
-        }
+        onToggle={(setting, value) => openBranch && toggleSetting(openBranch, setting, value)}
         onEdit={() => openBranch && edit(openBranch)}
         onKitchen={() => openBranch && setKitchenBranch(openBranch)}
         onPricing={() => openBranch && setPricingBranch(openBranch)}
@@ -395,9 +372,7 @@ function BranchRow({
   const localized = useLocalized()
   const features = useFeatures()
   const cloudKitchen = useIsCloudKitchen()
-  const where = [localized(branch.address), branch.phone]
-    .filter(Boolean)
-    .join(' · ')
+  const where = [localized(branch.address), branch.phone].filter(Boolean).join(' · ')
 
   return (
     <div
@@ -414,21 +389,13 @@ function BranchRow({
       className='hover:bg-muted/40 focus-visible:bg-muted/40 flex cursor-pointer items-center gap-3 px-4 py-3.5 transition-colors outline-none sm:px-5'
     >
       <span
-        className={cn(
-          'bg-muted grid size-10 shrink-0 place-items-center rounded-lg',
-          !branch.isActive && 'opacity-50'
-        )}
+        className={cn('bg-muted grid size-10 shrink-0 place-items-center rounded-lg', !branch.isActive && 'opacity-50')}
       >
         <Building2 className='text-muted-foreground size-4' />
       </span>
       <div className='min-w-0 flex-1'>
         <div className='flex min-w-0 items-center gap-2'>
-          <span
-            className={cn(
-              'truncate text-sm font-medium',
-              !branch.isActive && 'text-muted-foreground'
-            )}
-          >
+          <span className={cn('truncate text-sm font-medium', !branch.isActive && 'text-muted-foreground')}>
             {localized(branch.name)}
           </span>
           {/* Only what needs noticing: a branch switched off, or not taking QR orders. An open one says nothing */}
@@ -438,16 +405,10 @@ function BranchRow({
             <StatusChip tone='warning'>{t('branchOrdersPaused')}</StatusChip>
           ) : null}
         </div>
-        {where && (
-          <div className='text-muted-foreground mt-0.5 truncate text-xs'>
-            {where}
-          </div>
-        )}
+        {where && <div className='text-muted-foreground mt-0.5 truncate text-xs'>{where}</div>}
         {branch.isActive && (
           <div className='text-muted-foreground mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs'>
-            {branch.isOrderingEnabled && (
-              <Fact icon={QrCode}>{t('branchTakingOrders')}</Fact>
-            )}
+            {branch.isOrderingEnabled && <Fact icon={QrCode}>{t('branchTakingOrders')}</Fact>}
             {features.reservations && branch.isReservationsEnabled && (
               <Fact icon={CalendarCheck}>{t('reservationsEnabled')}</Fact>
             )}
@@ -478,12 +439,7 @@ function Fact({
   children: React.ReactNode
 }) {
   return (
-    <span
-      className={cn(
-        'inline-flex items-center gap-1',
-        muted && 'text-muted-foreground/60'
-      )}
-    >
+    <span className={cn('inline-flex items-center gap-1', muted && 'text-muted-foreground/60')}>
       <Icon className='size-3.5' />
       {children}
     </span>

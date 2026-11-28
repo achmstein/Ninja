@@ -1,16 +1,11 @@
 import { useEffect, useRef } from 'react'
-import {
-  createFileRoute,
-  Outlet,
-  useNavigate,
-  useRouter,
-} from '@tanstack/react-router'
-import { useAuth } from 'react-oidc-context'
-import { Loader2 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { createFileRoute, Outlet, useNavigate, useRouter } from '@tanstack/react-router'
 import { getRealmRoles } from '@/config/oidc-config'
-import { AppHeader } from '@/components/layout/app-header'
+import { Loader2 } from 'lucide-react'
+import { useAuth } from 'react-oidc-context'
 import { useT } from '@/lib/i18n'
+import { Button } from '@/components/ui/button'
+import { AppHeader } from '@/components/layout/app-header'
 
 // Everything the control panel calls is covered by Control.API's "Platform"
 // policy; this gate mirrors it.
@@ -71,11 +66,7 @@ function AuthenticatedRoute() {
       <div className='flex h-svh flex-col items-center justify-center gap-4'>
         <h1 className='text-2xl font-bold'>{t('accessDeniedTitle')}</h1>
         <p className='text-muted-foreground'>{t('accessDeniedDescription')}</p>
-        <Button
-          variant='outline'
-          size='lg'
-          onClick={() => auth.signoutRedirect()}
-        >
+        <Button variant='outline' size='lg' onClick={() => auth.signoutRedirect()}>
           {t('signOut')}
         </Button>
       </div>

@@ -27,9 +27,7 @@ export function totalWith(ticket: TicketDetail, extra: number): number {
   let served =
     ticket.type === 'Counter'
       ? 0
-      : lines
-          .filter((l) => l.source !== 'SessionTime')
-          .reduce((sum, l) => sum + toNumber(l.total), 0) + extra
+      : lines.filter((l) => l.source !== 'SessionTime').reduce((sum, l) => sum + toNumber(l.total), 0) + extra
   if (subtotal > 0) served *= discounted / subtotal
   const service = money(Math.max(0, served) * toNumber(ticket.serviceChargeRate))
 

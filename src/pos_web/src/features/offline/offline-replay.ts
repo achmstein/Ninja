@@ -99,8 +99,7 @@ export class ReplayError extends Error {
   }
 }
 
-const defaultSleep = (ms: number) =>
-  new Promise<void>((resolve) => setTimeout(resolve, ms))
+const defaultSleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms))
 
 /**
  * Replays one sale: the POS order (dated when it was sold, confirmed on
@@ -108,10 +107,7 @@ const defaultSleep = (ms: number) =>
  * carrying the provisional number). Each step's result is saved before the
  * next, so a retry picks up after the last one that landed.
  */
-export async function replaySale(
-  sale: OfflineSale,
-  options: ReplayOptions,
-): Promise<void> {
+export async function replaySale(sale: OfflineSale, options: ReplayOptions): Promise<void> {
   const { api, save } = options
   const sleep = options.sleep ?? defaultSleep
   const pollMs = options.ticketPollMs ?? 600
@@ -152,10 +148,7 @@ export async function replaySale(
  * it refuses is kept as failed, with its reason, for the cashier to look at.
  * Returns whether the run got through or stopped for the network.
  */
-export async function drainSales(
-  sales: readonly OfflineSale[],
-  options: ReplayOptions,
-): Promise<'done' | 'offline'> {
+export async function drainSales(sales: readonly OfflineSale[], options: ReplayOptions): Promise<'done' | 'offline'> {
   for (const sale of sales) {
     if (sale.status !== 'queued') continue
     // The progress saved so far is the sale the replay continues from

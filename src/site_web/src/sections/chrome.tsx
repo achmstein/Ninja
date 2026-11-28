@@ -19,7 +19,9 @@ export function NMark({ size = 36, className }: { size?: number; className?: str
   )
 }
 
-export const Container = ({ children, className }: { children: ReactNode; className?: string }) => <div className={cn('mx-auto w-full max-w-[1100px] px-5 sm:px-8', className)}>{children}</div>
+export const Container = ({ children, className }: { children: ReactNode; className?: string }) => (
+  <div className={cn('mx-auto w-full max-w-[1100px] px-5 sm:px-8', className)}>{children}</div>
+)
 
 /** The way to reach Ninja: WhatsApp first, email beside it */
 export function ContactButtons({ className }: { className?: string }) {
@@ -28,7 +30,9 @@ export function ContactButtons({ className }: { className?: string }) {
   return (
     <div className={cn('flex flex-wrap items-center gap-x-7 gap-y-3', className)}>
       {whatsapp && (
-        <a className='inline-flex min-h-12 items-center rounded-full bg-ink px-6 text-[1.0625rem] text-white transition-colors hover:bg-black' href={whatsapp}
+        <a
+          className='bg-ink inline-flex min-h-12 items-center rounded-full px-6 text-[1.0625rem] text-white transition-colors hover:bg-black'
+          href={whatsapp}
           target='_blank'
           rel='noreferrer'
           // The chat says where the visit came from too; put on at the tap, so the built page and the woken one agree
@@ -39,7 +43,10 @@ export function ContactButtons({ className }: { className?: string }) {
           {c.cta.whatsapp}
         </a>
       )}
-      <a className='text-[1.0625rem] text-ink underline decoration-ink/30 underline-offset-4 hover:decoration-ink' href={mailto(c.cta.subject)}>
+      <a
+        className='text-ink decoration-ink/30 hover:decoration-ink text-[1.0625rem] underline underline-offset-4'
+        href={mailto(c.cta.subject)}
+      >
         {c.cta.email}
       </a>
     </div>
@@ -50,7 +57,7 @@ export function Header() {
   const { c, lang, page } = useLang()
   const other = c.nav.otherLang as 'en' | 'ar'
   return (
-    <header className='border-b border-ink/10 bg-white/80 backdrop-blur'>
+    <header className='border-ink/10 border-b bg-white/80 backdrop-blur'>
       <Container className='flex h-12 items-center gap-4 text-[0.8125rem]'>
         <a href={pathOf(lang, 'home')} aria-label={c.nav.home} className='flex items-center gap-2'>
           <NMark size={24} />
@@ -58,17 +65,17 @@ export function Header() {
             ninja
           </span>
         </a>
-        <nav className='ms-auto flex items-center gap-5 text-ink/80'>
-          <a href='#plans' className='hidden hover:text-ink sm:block'>
+        <nav className='text-ink/80 ms-auto flex items-center gap-5'>
+          <a href='#plans' className='hover:text-ink hidden sm:block'>
             {c.nav.plans}
           </a>
-          <a href='/apps/' className='hidden hover:text-ink sm:block'>
+          <a href='/apps/' className='hover:text-ink hidden sm:block'>
             {c.nav.apps}
           </a>
           <a href={pathOf(other, page)} lang={other} hrefLang={other} className='hover:text-ink'>
             {c.nav.other}
           </a>
-          <a href='#talk' className='rounded-full bg-ink px-3 py-1 text-white'>
+          <a href='#talk' className='bg-ink rounded-full px-3 py-1 text-white'>
             {c.nav.talk}
           </a>
         </nav>
@@ -80,9 +87,9 @@ export function Header() {
 export function Footer() {
   const { c, lang } = useLang()
   return (
-    <footer className='border-t border-ink/10 py-6 text-xs text-soft'>
+    <footer className='border-ink/10 text-soft border-t py-6 text-xs'>
       {/* The page for each kind of place: how someone who landed on one finds the others, and a search engine all of them */}
-      <Container className='mb-5 flex flex-wrap items-center gap-x-6 gap-y-2 border-b border-ink/10 pb-5'>
+      <Container className='border-ink/10 mb-5 flex flex-wrap items-center gap-x-6 gap-y-2 border-b pb-5'>
         <span>{c.footer.made}</span>
         {PAGES.filter((p) => p !== 'home').map((p) => (
           <a key={p} href={pathOf(lang, p)} className='text-ink/80 hover:text-ink'>

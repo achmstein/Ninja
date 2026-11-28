@@ -9,11 +9,7 @@ import { formatEgp, toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
-import {
-  createAppColumnHelper,
-  DataTable,
-  dataTableFeatures,
-} from '@/components/data-table'
+import { createAppColumnHelper, DataTable, dataTableFeatures } from '@/components/data-table'
 import { EmptyState } from '@/components/empty-state'
 import { EntityAvatar } from '@/components/entity-avatar'
 import { ErrorState } from '@/components/error-state'
@@ -53,11 +49,7 @@ function LeftChip({ employee }: { employee: EmployeeView }) {
   const t = useT()
   const locale = useLocale()
   if (employee.isActive) return null
-  return (
-    <StatusChip tone='muted'>
-      {t('leftOn', { date: readableDay(employee.endedOn, locale, t) })}
-    </StatusChip>
-  )
+  return <StatusChip tone='muted'>{t('leftOn', { date: readableDay(employee.endedOn, locale, t) })}</StatusChip>
 }
 
 /**
@@ -78,10 +70,7 @@ export function Employees() {
   // Owed to everyone, those who left included, whatever the switch shows:
   // a leaver not yet paid off is still owed (the same query as the switch's)
   const everyone = useQuery(employeesQueryOptions(true))
-  const owedToStaff = (everyone.data ?? rows).reduce(
-    (sum, e) => sum + Math.max(0, toNumber(e.balance)),
-    0
-  )
+  const owedToStaff = (everyone.data ?? rows).reduce((sum, e) => sum + Math.max(0, toNumber(e.balance)), 0)
 
   const open = (employee?: number, isNew?: boolean) =>
     navigate({
@@ -98,12 +87,7 @@ export function Employees() {
         columnHelper.accessor('name', {
           header: t('name'),
           cell: ({ row }) => (
-            <div
-              className={cn(
-                'flex items-center gap-3',
-                !row.original.isActive && 'opacity-60'
-              )}
-            >
+            <div className={cn('flex items-center gap-3', !row.original.isActive && 'opacity-60')}>
               <EntityAvatar name={row.original.name} />
               <div className='flex min-w-0 flex-col leading-tight'>
                 <span className='flex items-center gap-2 font-medium'>
@@ -111,9 +95,7 @@ export function Employees() {
                   <LeftChip employee={row.original} />
                 </span>
                 {row.original.jobTitle && (
-                  <span className='text-muted-foreground text-xs'>
-                    {row.original.jobTitle}
-                  </span>
+                  <span className='text-muted-foreground text-xs'>{row.original.jobTitle}</span>
                 )}
               </div>
             </div>
@@ -122,11 +104,7 @@ export function Employees() {
         columnHelper.display({
           id: 'pay',
           header: t('pay'),
-          cell: ({ row }) => (
-            <span className='tabular-nums'>
-              {payLabel(row.original.currentTerms, t)}
-            </span>
-          ),
+          cell: ({ row }) => <span className='tabular-nums'>{payLabel(row.original.currentTerms, t)}</span>,
         }),
         columnHelper.accessor((row) => toNumber(row.balance), {
           meta: { align: 'end' },
@@ -231,9 +209,7 @@ export function Employees() {
                           <Dot />
                         </>
                       )}
-                      <span className='tabular-nums'>
-                        {payLabel(e.currentTerms, t)}
-                      </span>
+                      <span className='tabular-nums'>{payLabel(e.currentTerms, t)}</span>
                       <LeftChip employee={e} />
                     </>
                   }
@@ -245,11 +221,7 @@ export function Employees() {
         )}
       </Main>
 
-      <EmployeeSheet
-        employeeId={search.employee ?? null}
-        isNew={search.new === true}
-        onClose={() => open()}
-      />
+      <EmployeeSheet employeeId={search.employee ?? null} isNew={search.new === true} onClose={() => open()} />
     </>
   )
 }

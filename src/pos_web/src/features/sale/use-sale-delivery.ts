@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
-import { useTillDeliveryQuote } from '@/features/deliveries/use-deliveries'
 import { useFeatures } from '@/lib/brand'
 import { translate } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { isModuleOff } from '@/lib/problem'
 import { toast } from '@/lib/toast'
+import { useTillDeliveryQuote } from '@/features/deliveries/use-deliveries'
 import { useSale, type SaleCustomer } from './cart'
 import { chargedZone, deliveryFeeOf, deliveryReadiness, zoneGone } from './sale-delivery'
 
@@ -30,7 +30,11 @@ export function useSaleDelivery(addingToTicket: boolean) {
       ? `${onSale.latitude}, ${onSale.longitude}`
       : ''
   // Asked where the business delivers, and for a delivery already on the sale whatever the switch says
-  const terms = useTillDeliveryQuote(pin, !addingToTicket && (features.delivery === true || onSale != null), zone?.id ?? null)
+  const terms = useTillDeliveryQuote(
+    pin,
+    !addingToTicket && (features.delivery === true || onSale != null),
+    zone?.id ?? null
+  )
   // The owner took the area off the list since it was picked: the branch's own fee holds, and the cashier is told
   const gone = onSale != null && terms.data?.delivers === true && !terms.isFetching && zoneGone(zone, terms.data.zoneId)
   useEffect(() => {
@@ -44,8 +48,12 @@ export function useSaleDelivery(addingToTicket: boolean) {
   const readiness = deliveryReadiness(
     onSale,
     // Still the terms of the pin before: the fee shown would be another place's
-    { isLoading: terms.isLoading || terms.answeredFor !== pin, isError: terms.isError && !off, delivers: off ? false : terms.data?.delivers },
-    features.delivery === true,
+    {
+      isLoading: terms.isLoading || terms.answeredFor !== pin,
+      isError: terms.isError && !off,
+      delivers: off ? false : terms.data?.delivers,
+    },
+    features.delivery === true
   )
 
   return {

@@ -29,10 +29,7 @@ const supplierEntryKeys: Record<number, TranslationKey> = {
   [SUPPLIER_ENTRY.credit]: 'supplierCredit',
 }
 
-export function supplierEntryLabel(
-  value: number | string,
-  t: Translate
-): string {
+export function supplierEntryLabel(value: number | string, t: Translate): string {
   const key = supplierEntryKeys[toNumber(value)]
   return key ? t(key) : String(value)
 }
@@ -42,20 +39,13 @@ const partnerEntryKeys: Record<number, TranslationKey> = {
   [PARTNER_ENTRY.contribution]: 'partnerContribution',
 }
 
-export function partnerEntryLabel(
-  value: number | string,
-  t: Translate
-): string {
+export function partnerEntryLabel(value: number | string, t: Translate): string {
   const key = partnerEntryKeys[toNumber(value)]
   return key ? t(key) : String(value)
 }
 
 /** Where a ledger line came from, for the small print under it */
-export function sourceLabel(
-  value: number | string,
-  recordedBy: string,
-  t: Translate
-): string {
+export function sourceLabel(value: number | string, recordedBy: string, t: Translate): string {
   const n = toNumber(value)
   if (n === FINANCE_SOURCE.till) return t('fromTill')
   if (n === FINANCE_SOURCE.purchase) return t('fromReceipt')

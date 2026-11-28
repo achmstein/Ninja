@@ -5,31 +5,15 @@ import { type BranchResponse } from '@/api/tenant'
 import { updateBranchMutation } from '@/api/tenant/@tanstack/react-query.gen'
 import { useCurrencyLabel } from '@/lib/currency'
 import { useT } from '@/lib/i18n'
-import {
-  areaOf,
-  areaProblem,
-  areaToApi,
-  type AreaProblem,
-  type DeliveryArea,
-} from '@/lib/maps'
+import { areaOf, areaProblem, areaToApi, type AreaProblem, type DeliveryArea } from '@/lib/maps'
 import { toast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Spinner } from '@/components/ui/spinner'
 import { Field, FieldGrid } from '@/components/field'
 import { StatusChip } from '@/components/status-chip'
-import {
-  parseDeliverySettings,
-  stopsDelivering,
-  type DeliverySettings,
-} from '../delivery-settings'
+import { parseDeliverySettings, stopsDelivering, type DeliverySettings } from '../delivery-settings'
 import { Waiting } from './branch-map'
 
 /** The map the area is drawn on, with terra-draw and the map library, in a chunk of its own */
@@ -69,34 +53,20 @@ export function DeliveryDialog({ branch, onOpenChange }: DeliveryDialogProps) {
             {t('deliverySettings')}
           </DialogTitle>
         </DialogHeader>
-        {branch && (
-          <DeliveryForm
-            key={String(branch.id)}
-            branch={branch}
-            onClose={() => onOpenChange(false)}
-          />
-        )}
+        {branch && <DeliveryForm key={String(branch.id)} branch={branch} onClose={() => onOpenChange(false)} />}
       </DialogContent>
     </Dialog>
   )
 }
 
-function DeliveryForm({
-  branch,
-  onClose,
-}: {
-  branch: BranchResponse
-  onClose: () => void
-}) {
+function DeliveryForm({ branch, onClose }: { branch: BranchResponse; onClose: () => void }) {
   const t = useT()
   const currency = useCurrencyLabel()
   const queryClient = useQueryClient()
   const [radius, setRadius] = useState(asText(branch.deliveryRadiusKm))
   const [fee, setFee] = useState(asText(branch.deliveryFee))
   const [minimum, setMinimum] = useState(asText(branch.deliveryMinimumOrder))
-  const [area, setArea] = useState<DeliveryArea | null>(() =>
-    areaOf(branch.deliveryArea)
-  )
+  const [area, setArea] = useState<DeliveryArea | null>(() => areaOf(branch.deliveryArea))
   const [drawingArea, setDrawingArea] = useState(false)
   const [tried, setTried] = useState(false)
   // Clearing the radius of a branch that delivers stops it: asked once more
@@ -124,10 +94,7 @@ function DeliveryForm({
   const submit = () => {
     setTried(true)
     if (!parsed.ok || problem) return
-    if (
-      !confirming &&
-      stopsDelivering(branch.isDeliveryEnabled, parsed.value, area != null)
-    ) {
+    if (!confirming && stopsDelivering(branch.isDeliveryEnabled, parsed.value, area != null)) {
       setConfirming(true)
       return
     }
@@ -171,13 +138,7 @@ function DeliveryForm({
               </StatusChip>
             ) : undefined
           }
-          error={
-            errors.radius ? (
-              <span id='delivery-radius-error'>
-                {t('deliveryRadiusInvalid')}
-              </span>
-            ) : undefined
-          }
+          error={errors.radius ? <span id='delivery-radius-error'>{t('deliveryRadiusInvalid')}</span> : undefined}
         >
           <Input
             id='delivery-radius'
@@ -190,32 +151,21 @@ function DeliveryForm({
             // Still open when it holds something unreadable, so it can be put right
             disabled={area != null && !errors.radius}
             aria-invalid={errors.radius || undefined}
-            aria-describedby={
-              errors.radius
-                ? 'delivery-radius-error'
-                : area
-                  ? 'delivery-radius-unused'
-                  : undefined
-            }
+            aria-describedby={errors.radius ? 'delivery-radius-error' : area ? 'delivery-radius-unused' : undefined}
             onChange={(e) => {
               setRadius(e.target.value)
               setConfirming(false)
             }}
           />
           {area && (
-            <p
-              id='delivery-radius-unused'
-              className='text-muted-foreground text-xs'
-            >
+            <p id='delivery-radius-unused' className='text-muted-foreground text-xs'>
               {t('deliveryRadiusUnusedHint')}
             </p>
           )}
         </Field>
         <div className='space-y-2'>
           <div className='flex items-center justify-between gap-2'>
-            <span className='text-sm font-medium'>
-              {t('deliveryAreaTitle')}
-            </span>
+            <span className='text-sm font-medium'>{t('deliveryAreaTitle')}</span>
             {area && !drawingArea && (
               <Button
                 type='button'
@@ -231,9 +181,7 @@ function DeliveryForm({
             )}
           </div>
           {!centre ? (
-            <p className='text-muted-foreground text-xs'>
-              {t('deliveryAreaNeedsLocation')}
-            </p>
+            <p className='text-muted-foreground text-xs'>{t('deliveryAreaNeedsLocation')}</p>
           ) : drawingArea ? (
             <Suspense
               fallback={
@@ -255,16 +203,9 @@ function DeliveryForm({
           ) : (
             <div className='flex flex-wrap items-center justify-between gap-2'>
               <p className='text-muted-foreground text-xs'>
-                {area
-                  ? t('deliveryAreaDrawn', { n: area.length })
-                  : t('deliveryAreaNone')}
+                {area ? t('deliveryAreaDrawn', { n: area.length }) : t('deliveryAreaNone')}
               </p>
-              <Button
-                type='button'
-                variant='outline'
-                size='sm'
-                onClick={() => setDrawingArea(true)}
-              >
+              <Button type='button' variant='outline' size='sm' onClick={() => setDrawingArea(true)}>
                 <PenLine />
                 {area ? t('deliveryAreaEdit') : t('deliveryAreaDraw')}
               </Button>
@@ -280,13 +221,7 @@ function DeliveryForm({
           <Field
             label={`${t('deliveryFee')} (${currency})`}
             htmlFor='delivery-fee'
-            error={
-              errors.fee ? (
-                <span id='delivery-fee-error'>
-                  {t('deliveryAmountInvalid')}
-                </span>
-              ) : undefined
-            }
+            error={errors.fee ? <span id='delivery-fee-error'>{t('deliveryAmountInvalid')}</span> : undefined}
           >
             <Input
               id='delivery-fee'
@@ -304,13 +239,7 @@ function DeliveryForm({
           <Field
             label={`${t('deliveryMinimumOrder')} (${currency})`}
             htmlFor='delivery-minimum'
-            error={
-              errors.minimum ? (
-                <span id='delivery-minimum-error'>
-                  {t('deliveryAmountInvalid')}
-                </span>
-              ) : undefined
-            }
+            error={errors.minimum ? <span id='delivery-minimum-error'>{t('deliveryAmountInvalid')}</span> : undefined}
           >
             <Input
               id='delivery-minimum'
@@ -321,18 +250,13 @@ function DeliveryForm({
               placeholder='0'
               value={minimum}
               aria-invalid={errors.minimum || undefined}
-              aria-describedby={
-                errors.minimum ? 'delivery-minimum-error' : undefined
-              }
+              aria-describedby={errors.minimum ? 'delivery-minimum-error' : undefined}
               onChange={(e) => setMinimum(e.target.value)}
             />
           </Field>
         </FieldGrid>
         {confirming && (
-          <p
-            role='alert'
-            className='rounded-md bg-amber-500/10 px-3 py-2 text-sm text-amber-700 dark:text-amber-400'
-          >
+          <p role='alert' className='rounded-md bg-amber-500/10 px-3 py-2 text-sm text-amber-700 dark:text-amber-400'>
             {t('deliveryClearRadiusConfirm')}
           </p>
         )}
@@ -342,11 +266,7 @@ function DeliveryForm({
         <Button type='button' variant='outline' onClick={onClose}>
           {t('cancel')}
         </Button>
-        <Button
-          onClick={submit}
-          disabled={save.isPending}
-          variant={confirming ? 'destructive' : 'default'}
-        >
+        <Button onClick={submit} disabled={save.isPending} variant={confirming ? 'destructive' : 'default'}>
           {save.isPending && <Spinner />}
           {confirming ? t('deliveryStopDelivering') : t('save')}
         </Button>

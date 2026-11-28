@@ -1,15 +1,11 @@
 import { useLayoutEffect } from 'react'
 import { type QueryClient } from '@tanstack/react-query'
-import {
-  createRootRouteWithContext,
-  Link,
-  Outlet,
-} from '@tanstack/react-router'
+import { createRootRouteWithContext, Link, Outlet } from '@tanstack/react-router'
 import { Toaster } from 'sileo'
-import { Button } from '@/components/ui/button'
 import { useBrandEffects } from '@/lib/brand'
 import { useT } from '@/lib/i18n'
 import { useTheme } from '@/context/theme-provider'
+import { Button } from '@/components/ui/button'
 
 // Sileo only paints the pill background when it knows the theme (otherwise
 // it falls back to a white fill that vanishes on light pages), and autopilot

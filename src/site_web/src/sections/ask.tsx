@@ -9,7 +9,8 @@ import { lighten, MAX_PHOTOS, PHOTO_ACCEPT } from '@/lib/photo'
 const KINDS = ['CoffeeShop', 'Restaurant', 'GameStation', 'Other'] as const
 type Kind = (typeof KINDS)[number]
 
-const field = 'h-14 w-full rounded-2xl bg-white px-5 text-[1.0625rem] text-ink shadow-[0_0_0_1px_rgb(0_0_0/.08)] outline-none placeholder:text-soft/70 focus-visible:shadow-[0_0_0_2px_var(--color-ink)]'
+const field =
+  'h-14 w-full rounded-2xl bg-white px-5 text-[1.0625rem] text-ink shadow-[0_0_0_1px_rgb(0_0_0/.08)] outline-none placeholder:text-soft/70 focus-visible:shadow-[0_0_0_2px_var(--color-ink)]'
 
 /**
  * Asking for a demo without a chat: the place, a name, a WhatsApp number, the
@@ -44,16 +45,47 @@ export function AskForm({ className }: { className?: string }) {
 
   if (state === 'done')
     return (
-      <p role='status' className={cn('mx-auto max-w-[24ch] text-[clamp(1.25rem,2.4vw,1.75rem)] leading-snug', className)}>
+      <p
+        role='status'
+        className={cn('mx-auto max-w-[24ch] text-[clamp(1.25rem,2.4vw,1.75rem)] leading-snug', className)}
+      >
         {f.done}
       </p>
     )
 
   return (
     <form onSubmit={send} className={cn('mx-auto grid w-full max-w-[440px] gap-3 text-start', className)}>
-      <input name='business' required maxLength={80} autoComplete='organization' placeholder={f.business} aria-label={f.business} className={field} />
-      <input name='name' required maxLength={80} autoComplete='name' placeholder={f.name} aria-label={f.name} className={field} />
-      <input name='phone' required type='tel' inputMode='tel' dir='ltr' minLength={7} maxLength={24} autoComplete='tel' placeholder={f.phone} aria-label={f.phone} className={cn(field, 'placeholder:text-start')} />
+      <input
+        name='business'
+        required
+        maxLength={80}
+        autoComplete='organization'
+        placeholder={f.business}
+        aria-label={f.business}
+        className={field}
+      />
+      <input
+        name='name'
+        required
+        maxLength={80}
+        autoComplete='name'
+        placeholder={f.name}
+        aria-label={f.name}
+        className={field}
+      />
+      <input
+        name='phone'
+        required
+        type='tel'
+        inputMode='tel'
+        dir='ltr'
+        minLength={7}
+        maxLength={24}
+        autoComplete='tel'
+        placeholder={f.phone}
+        aria-label={f.phone}
+        className={cn(field, 'placeholder:text-start')}
+      />
       {/* People never see this one; a robot fills it and is dropped */}
       <input name='website' tabIndex={-1} autoComplete='off' aria-hidden className='hidden' />
 
@@ -65,7 +97,12 @@ export function AskForm({ className }: { className?: string }) {
             role='radio'
             aria-checked={kind === k}
             onClick={() => setKind(k)}
-            className={cn('min-h-11 rounded-full px-4 text-[0.9375rem] transition-colors', kind === k ? 'bg-ink text-white' : 'bg-white text-ink shadow-[0_0_0_1px_rgb(0_0_0/.08)] hover:shadow-[0_0_0_1px_rgb(0_0_0/.3)]')}
+            className={cn(
+              'min-h-11 rounded-full px-4 text-[0.9375rem] transition-colors',
+              kind === k
+                ? 'bg-ink text-white'
+                : 'text-ink bg-white shadow-[0_0_0_1px_rgb(0_0_0/.08)] hover:shadow-[0_0_0_1px_rgb(0_0_0/.3)]'
+            )}
           >
             {f.kinds[k]}
           </button>
@@ -83,11 +120,19 @@ export function AskForm({ className }: { className?: string }) {
           e.target.value = ''
         }}
       />
-      <button type='button' onClick={() => picker.current?.click()} className='min-h-11 justify-self-start text-[1.0625rem] text-ink underline decoration-ink/30 underline-offset-4 hover:decoration-ink'>
+      <button
+        type='button'
+        onClick={() => picker.current?.click()}
+        className='text-ink decoration-ink/30 hover:decoration-ink min-h-11 justify-self-start text-[1.0625rem] underline underline-offset-4'
+      >
         {photos.length > 0 ? f.photosCount.replace('{n}', String(photos.length)) : f.photos}
       </button>
 
-      <button type='submit' disabled={state === 'sending'} className='mt-2 inline-flex min-h-14 items-center justify-center rounded-full bg-ink px-6 text-[1.0625rem] font-medium text-white transition-colors hover:bg-black disabled:opacity-60'>
+      <button
+        type='submit'
+        disabled={state === 'sending'}
+        className='bg-ink mt-2 inline-flex min-h-14 items-center justify-center rounded-full px-6 text-[1.0625rem] font-medium text-white transition-colors hover:bg-black disabled:opacity-60'
+      >
         {state === 'sending' ? f.sending : f.send}
       </button>
       {state === 'failed' && (

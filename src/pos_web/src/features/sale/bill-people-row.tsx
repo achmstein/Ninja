@@ -1,8 +1,8 @@
 import { useRef } from 'react'
 import { Plus, UserMinus, UserPlus } from 'lucide-react'
+import { useT } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
 import { CustomerCard } from '@/features/customer/customer-card'
-import { useT } from '@/lib/i18n'
 import { shortNames } from './bill-people'
 import { samePerson } from './cart'
 import type { BillPeople } from './use-bill-people'
@@ -38,7 +38,11 @@ export function BillPeopleRow({ people, onAdd }: { people: BillPeople; onAdd: ()
         </div>
       )}
       {none ? (
-        <Button variant='outline' className='text-muted-foreground h-11 flex-1 gap-1.5 border-dashed px-4 text-base' onClick={onAdd}>
+        <Button
+          variant='outline'
+          className='text-muted-foreground h-11 flex-1 gap-1.5 border-dashed px-4 text-base'
+          onClick={onAdd}
+        >
           {t('aCustomer')}
           <Plus className='size-4' />
         </Button>
@@ -62,7 +66,17 @@ export function BillPeopleRow({ people, onAdd }: { people: BillPeople; onAdd: ()
 const HOLD_MS = 500
 
 /** One of a bill's people. A tap picks them; held for a moment (or a right click) it opens their card */
-function PersonChip({ name, picked, onTap, onHold }: { name: string; picked: boolean; onTap: () => void; onHold: () => void }) {
+function PersonChip({
+  name,
+  picked,
+  onTap,
+  onHold,
+}: {
+  name: string
+  picked: boolean
+  onTap: () => void
+  onHold: () => void
+}) {
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
   // The hold opened the card: the tap that ends it picks nobody
   const held = useRef(false)
@@ -112,7 +126,13 @@ export function BillPersonCard({ people }: { people: BillPeople }) {
       onOpenChange={(open) => !open && card.close()}
       footer={
         card.removable && (
-          <Button variant='outline' size='lg' className='text-destructive h-12 gap-2' disabled={card.busy} onClick={card.remove}>
+          <Button
+            variant='outline'
+            size='lg'
+            className='text-destructive h-12 gap-2'
+            disabled={card.busy}
+            onClick={card.remove}
+          >
             <UserMinus className='size-5' />
             {t('removeFromRoom')}
           </Button>

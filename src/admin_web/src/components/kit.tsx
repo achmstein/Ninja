@@ -1,11 +1,6 @@
 import type { ComponentType, ReactNode } from 'react'
 import { Link, type LinkProps } from '@tanstack/react-router'
-import {
-  AlertTriangle,
-  ChevronRight,
-  TrendingDown,
-  TrendingUp,
-} from 'lucide-react'
+import { AlertTriangle, ChevronRight, TrendingDown, TrendingUp } from 'lucide-react'
 import { motion } from 'motion/react'
 import { cn } from '@/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -47,11 +42,7 @@ export function AttentionBanner({
       animate={{ opacity: 1, y: 0 }}
       transition={SPRING}
       role='status'
-      className={cn(
-        'flex items-center gap-3 rounded-xl px-4 py-3 text-sm ring-1 ring-inset',
-        toneClass,
-        className
-      )}
+      className={cn('flex items-center gap-3 rounded-xl px-4 py-3 text-sm ring-1 ring-inset', toneClass, className)}
     >
       <AlertTriangle className='size-4 shrink-0' />
       <div className='min-w-0 flex-1'>{children}</div>
@@ -96,16 +87,12 @@ export function MetricTile({
   const bad = goodWhenDown ? up : down
   const body = (
     <div className='flex h-full flex-col gap-1 p-4'>
-      <div className='text-muted-foreground truncate text-xs font-medium'>
-        {label}
-      </div>
+      <div className='text-muted-foreground truncate text-xs font-medium'>{label}</div>
       <div className='flex items-end justify-between gap-3'>
         <div className='text-2xl font-semibold tracking-tight tabular-nums'>
           {loading ? <Skeleton className='h-8 w-24' /> : value}
         </div>
-        {trend && trend.length > 1 && !loading && (
-          <Sparkline values={trend} tone={bad ? 'down' : 'up'} />
-        )}
+        {trend && trend.length > 1 && !loading && <Sparkline values={trend} tone={bad ? 'down' : 'up'} />}
       </div>
       {(change != null || hint) && !loading && (
         <div className='text-muted-foreground flex items-center gap-1.5 text-xs'>
@@ -117,11 +104,7 @@ export function MetricTile({
                 bad && 'text-destructive'
               )}
             >
-              {up ? (
-                <TrendingUp className='size-3.5' />
-              ) : down ? (
-                <TrendingDown className='size-3.5' />
-              ) : null}
+              {up ? <TrendingUp className='size-3.5' /> : down ? <TrendingDown className='size-3.5' /> : null}
               {`${change > 0 ? '+' : ''}${Math.round(change * 100)}%`}
             </span>
           )}
@@ -131,11 +114,7 @@ export function MetricTile({
     </div>
   )
   return to ? (
-    <Link
-      to={to}
-      search={search}
-      className='hover:bg-muted/40 block transition-colors'
-    >
+    <Link to={to} search={search} className='hover:bg-muted/40 block transition-colors'>
       {body}
     </Link>
   ) : (
@@ -144,13 +123,7 @@ export function MetricTile({
 }
 
 /** Tiles side by side on one surface, divided by hairlines: two a row on a phone */
-export function MetricStrip({
-  children,
-  className,
-}: {
-  children: ReactNode
-  className?: string
-}) {
+export function MetricStrip({ children, className }: { children: ReactNode; className?: string }) {
   return (
     <div
       className={cn(
@@ -182,13 +155,8 @@ export function Sparkline({
   const max = Math.max(...values)
   const min = Math.min(...values)
   const span = max - min || 1
-  const points = values.map((v, i) => [
-    (i / (values.length - 1)) * w,
-    h - 2 - ((v - min) / span) * (h - 4),
-  ])
-  const d = points
-    .map(([x, y], i) => `${i ? 'L' : 'M'}${x.toFixed(1)} ${y.toFixed(1)}`)
-    .join(' ')
+  const points = values.map((v, i) => [(i / (values.length - 1)) * w, h - 2 - ((v - min) / span) * (h - 4)])
+  const d = points.map(([x, y], i) => `${i ? 'L' : 'M'}${x.toFixed(1)} ${y.toFixed(1)}`).join(' ')
   const [lx, ly] = points[points.length - 1]
   return (
     <svg
@@ -232,13 +200,7 @@ export type MoneyPart = {
  * the rest) as one bar of its parts and a legend with their amounts. Parts
  * of nothing are left out.
  */
-export function MoneyBar({
-  parts,
-  className,
-}: {
-  parts: MoneyPart[]
-  className?: string
-}) {
+export function MoneyBar({ parts, className }: { parts: MoneyPart[]; className?: string }) {
   const shown = parts.filter((p) => p.value > 0)
   const total = shown.reduce((sum, p) => sum + p.value, 0)
   if (total <= 0) return null
@@ -248,10 +210,7 @@ export function MoneyBar({
         {shown.map((p, i) => (
           <motion.span
             key={p.key}
-            className={cn(
-              'h-full first:rounded-s-full last:rounded-e-full',
-              p.color
-            )}
+            className={cn('h-full first:rounded-s-full last:rounded-e-full', p.color)}
             initial={{ width: 0 }}
             animate={{ width: `${(p.value / total) * 100}%` }}
             transition={{ ...SPRING, delay: i * 0.05 }}
@@ -263,9 +222,7 @@ export function MoneyBar({
           <div key={p.key} className='flex items-center gap-2'>
             <span className={cn('size-2 shrink-0 rounded-full', p.color)} />
             <span className='text-muted-foreground truncate'>{p.label}</span>
-            <span className='ms-auto font-medium tabular-nums'>
-              {p.display}
-            </span>
+            <span className='ms-auto font-medium tabular-nums'>{p.display}</span>
           </div>
         ))}
       </div>
@@ -291,11 +248,7 @@ export function SettingsCard({
 }) {
   return (
     <section
-      className={cn(
-        'bg-card overflow-hidden rounded-xl shadow-sm',
-        danger && 'ring-destructive/30 ring-1',
-        className
-      )}
+      className={cn('bg-card overflow-hidden rounded-xl shadow-sm', danger && 'ring-destructive/30 ring-1', className)}
     >
       {title && (
         <div className='border-border/60 border-b px-5 py-4'>
@@ -338,16 +291,10 @@ export function SettingRow({
       )}
       <div className='min-w-[12rem] flex-1'>
         <div className='text-sm font-medium'>{title}</div>
-        {description && (
-          <div className='text-muted-foreground mt-0.5 text-sm'>
-            {description}
-          </div>
-        )}
+        {description && <div className='text-muted-foreground mt-0.5 text-sm'>{description}</div>}
       </div>
       {control}
-      {to && (
-        <ChevronRight className='text-muted-foreground size-4 rtl:rotate-180' />
-      )}
+      {to && <ChevronRight className='text-muted-foreground size-4 rtl:rotate-180' />}
     </div>
   )
   return to ? (

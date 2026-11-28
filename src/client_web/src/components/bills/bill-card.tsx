@@ -1,25 +1,24 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { AnimatePresence, motion } from 'motion/react'
 import { ChevronDown, ReceiptText, Timer } from 'lucide-react'
+import { AnimatePresence, motion } from 'motion/react'
 import { type OrderSummary } from '@/api/ordering'
 import { getOrderOptions } from '@/api/ordering/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
-import { FORMING_BILL, type PendingRound, type PendingStage } from '@/lib/live-bills'
 import { type BillLineView, type BillView } from '@/api/sales'
+import { API_VERSION } from '@/lib/api-client'
 import { billParts, hoursLabel, isSettled, isTimeLine, isUnassigned, percent, runningTime, useNow } from '@/lib/bills'
+import { useLanguage, useLocalized, usePrice, useT } from '@/lib/i18n'
+import { FORMING_BILL, type PendingRound, type PendingStage } from '@/lib/live-bills'
 import { ease, spring, springSoft } from '@/lib/motion'
 import { PlaceIcon, placeKindOf } from '@/lib/places'
 import { useActiveStay, useMyStays } from '@/lib/stays'
-import { useLanguage, useLocalized, usePrice, useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
-import { RunningTimeLine } from '@/components/bills/bill-slip'
 import { BillStars } from '@/components/bills/bill-rating'
+import { RunningTimeLine } from '@/components/bills/bill-slip'
 import { BillReceipt } from '@/components/bills/receipt-view'
 import { Odometer } from '@/components/ninja/odometer'
 import { Panel, Slab } from '@/components/ninja/page/parts'
 import { BillPayBar } from '@/components/pay/bill-pay'
-
 
 type Round = {
   key: string
@@ -32,7 +31,6 @@ type Round = {
   pending?: PendingStage
   orderId?: number
 }
-
 
 /**
  * A bill as a stack of its rounds. The total sits on top and rolls to each
@@ -86,7 +84,14 @@ export function BillCard({
   const landed = new Set(onBill.map((r) => r.key))
   const onTheirWay = pending
     .filter((p) => !landed.has(`o${p.orderId}`))
-    .map((p): Round => ({ key: `o${p.orderId}`, at: timeOf(p.date, language), lines: [], unnamed: false, pending: p.stage, orderId: p.orderId }))
+    .map((p): Round => ({
+      key: `o${p.orderId}`,
+      at: timeOf(p.date, language),
+      lines: [],
+      unnamed: false,
+      pending: p.stage,
+      orderId: p.orderId,
+    }))
   const rounds = [...onTheirWay, ...onBill]
   const forming = String(bill.id) === FORMING_BILL
   const running = runningTime(bill, stay, now)
@@ -131,7 +136,10 @@ export function BillCard({
   ]
 
   const opened = bill.openedAt
-    ? new Date(bill.openedAt).toLocaleTimeString(language === 'ar' ? 'ar-EG' : 'en-US', { hour: 'numeric', minute: '2-digit' })
+    ? new Date(bill.openedAt).toLocaleTimeString(language === 'ar' ? 'ar-EG' : 'en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+      })
     : ''
   const Surface = open ? Slab : Panel
   const row = 'flex items-baseline justify-between gap-2 tabular-nums'
@@ -145,12 +153,13 @@ export function BillCard({
         className={cn(
           'relative z-10 flex flex-col gap-4',
           !open && 'p-5',
-          open && 'in-data-on-slab:rounded-none in-data-on-slab:bg-transparent in-data-on-slab:p-0 in-data-on-slab:shadow-none'
+          open &&
+            'in-data-on-slab:rounded-none in-data-on-slab:bg-transparent in-data-on-slab:p-0 in-data-on-slab:shadow-none'
         )}
       >
         {/* Where and when, and what the till did with it */}
         <div className='flex items-center gap-2'>
-          <span className='text-muted-foreground flex min-w-0 flex-1 items-center gap-1.5 text-caption font-semibold'>
+          <span className='text-muted-foreground text-caption flex min-w-0 flex-1 items-center gap-1.5 font-semibold'>
             {bill.placeId != null && <PlaceIcon kind={placeKindOf(bill.placeKind)} className='size-4 shrink-0' />}
             <span className='truncate'>{localized(bill.locationName) || t('atTheCounter')}</span>
             {opened && <span className='shrink-0'>· {opened}</span>}
@@ -167,13 +176,20 @@ export function BillCard({
             </span>
             {/* Under the bill's own total. A shared bill's headline is the customer's rounds: there it goes under the bill's total, with the stack open */}
             {paidSoFar && !parts.shared && (
-              <span className='text-caption font-medium text-emerald-600 tabular-nums dark:text-emerald-400'>{paidSoFar}</span>
+              <span className='text-caption font-medium text-emerald-600 tabular-nums dark:text-emerald-400'>
+                {paidSoFar}
+              </span>
             )}
           </div>
         </div>
 
         {stackSize > 0 && (
-          <div role='button' tabIndex={-1} onClick={() => setFanned((f) => !f)} className='flex cursor-pointer flex-col'>
+          <div
+            role='button'
+            tabIndex={-1}
+            onClick={() => setFanned((f) => !f)}
+            className='flex cursor-pointer flex-col'
+          >
             {/* The newest round in full; a new one takes its place with a short fade */}
             <AnimatePresence mode='popLayout' initial={false}>
               <motion.div
@@ -198,7 +214,9 @@ export function BillCard({
                   className='flex flex-col items-stretch overflow-hidden'
                 >
                   <span className={cn('mx-3 h-2 rounded-b-[0.9rem] opacity-70', cardFill(open))} />
-                  {cards.length > 2 && <span className={cn('mx-6 h-1.5 rounded-b-[0.75rem] opacity-40', cardFill(open))} />}
+                  {cards.length > 2 && (
+                    <span className={cn('mx-6 h-1.5 rounded-b-[0.75rem] opacity-40', cardFill(open))} />
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>
@@ -210,7 +228,12 @@ export function BillCard({
                     key={card.key}
                     initial={{ opacity: 0, height: 0, y: -12 }}
                     animate={{ opacity: 1, height: 'auto', y: 0, transition: { ...springSoft, delay: i * 0.04 } }}
-                    exit={{ opacity: 0, height: 0, y: -12, transition: { duration: 0.2, ease: ease.exit, delay: (rest.length - 1 - i) * 0.03 } }}
+                    exit={{
+                      opacity: 0,
+                      height: 0,
+                      y: -12,
+                      transition: { duration: 0.2, ease: ease.exit, delay: (rest.length - 1 - i) * 0.03 },
+                    }}
                     className='overflow-hidden'
                   >
                     <div className='pt-2'>{card.node}</div>
@@ -277,7 +300,7 @@ export function BillCard({
                   type='button'
                   aria-expanded={paper}
                   onClick={() => setPaper((on) => !on)}
-                  className='bg-muted mt-2 flex h-10 items-center justify-center gap-2 rounded-full text-note font-semibold'
+                  className='bg-muted text-note mt-2 flex h-10 items-center justify-center gap-2 rounded-full font-semibold'
                 >
                   <ReceiptText className='size-4' />
                   {t(paper ? 'ninjaHideReceipt' : 'ninjaOpenBill')}
@@ -310,7 +333,7 @@ export function BillCard({
             type='button'
             aria-expanded={fanned}
             onClick={() => setFanned((f) => !f)}
-            className='text-muted-foreground -mt-1 flex h-9 items-center justify-center gap-1.5 rounded-full text-caption font-semibold'
+            className='text-muted-foreground text-caption -mt-1 flex h-9 items-center justify-center gap-1.5 rounded-full font-semibold'
           >
             {fanned
               ? t('billHideDetails')
@@ -327,7 +350,7 @@ export function BillCard({
       {/* Paying from the phone, where the business takes it: tucked under the slab, as the order sheet tucks under the dock */}
       {open && !forming && (
         // With the bill flat on a sheet there is no slab to tuck under: it stands under the bill, whole
-        <div className='in-data-on-slab:mt-4 in-data-on-slab:[&>*]:rounded-t-[1.5rem] in-data-on-slab:[&>*]:pt-4 -mt-6 empty:hidden [&>*]:bg-muted [&>*]:rounded-t-none [&>*]:rounded-b-[1.5rem] [&>*]:pt-9'>
+        <div className='[&>*]:bg-muted -mt-6 empty:hidden in-data-on-slab:mt-4 [&>*]:rounded-t-none [&>*]:rounded-b-[1.5rem] [&>*]:pt-9 in-data-on-slab:[&>*]:rounded-t-[1.5rem] in-data-on-slab:[&>*]:pt-4'>
           <BillPayBar bill={bill} />
         </div>
       )}
@@ -365,19 +388,32 @@ function roundsOf(lines: BillLineView[], ordersById: Map<number, OrderSummary> |
 }
 
 function timeOf(date: string | null | undefined, language: string): string | null {
-  return date ? new Date(date).toLocaleTimeString(language === 'ar' ? 'ar-EG' : 'en-US', { hour: 'numeric', minute: '2-digit' }) : null
+  return date
+    ? new Date(date).toLocaleTimeString(language === 'ar' ? 'ar-EG' : 'en-US', { hour: 'numeric', minute: '2-digit' })
+    : null
 }
 
 /** A round's own fill: lighter than the dark slab, or the page's muted on a light card */
-const cardFill = (dark: boolean) => (dark ? 'bg-[color-mix(in_oklab,var(--background)_9%,var(--foreground))]' : 'bg-muted')
+const cardFill = (dark: boolean) =>
+  dark ? 'bg-[color-mix(in_oklab,var(--background)_9%,var(--foreground))]' : 'bg-muted'
 
 /** One round's card: an outline while it is on its way to the bill, solid once it is on it */
-function RoundShell({ dark, pending = false, children }: { dark: boolean; pending?: boolean; children: React.ReactNode }) {
+function RoundShell({
+  dark,
+  pending = false,
+  children,
+}: {
+  dark: boolean
+  pending?: boolean
+  children: React.ReactNode
+}) {
   return (
     <div
       className={cn(
         'flex flex-col gap-1 rounded-[1.25rem] p-3 transition-[background-color,box-shadow] duration-300',
-        pending ? 'bg-transparent shadow-[inset_0_0_0_1.5px_color-mix(in_oklab,currentColor_30%,transparent)]' : cardFill(dark)
+        pending
+          ? 'bg-transparent shadow-[inset_0_0_0_1.5px_color-mix(in_oklab,currentColor_30%,transparent)]'
+          : cardFill(dark)
       )}
     >
       {children}
@@ -406,13 +442,18 @@ function RoundCard({ round, dark }: { round: Round; dark: boolean }) {
       <span className='flex items-center justify-between gap-2 empty:hidden'>
         {round.at && <span className='text-muted-foreground text-caption font-semibold'>{round.at}</span>}
         {round.pending && (
-          <span className='ms-auto flex items-center gap-1.5 text-caption font-bold text-amber-500'>
+          <span className='text-caption ms-auto flex items-center gap-1.5 font-bold text-amber-500'>
             <span className='size-1.5 animate-pulse rounded-full bg-current motion-reduce:animate-none' />
             {t(round.pending === 'waiting' ? 'waitingToBeConfirmed' : 'addingToBill')}
           </span>
         )}
       </span>
-      <div className={cn('flex flex-col gap-1 transition-opacity duration-300', (round.unnamed || round.pending) && 'opacity-60')}>
+      <div
+        className={cn(
+          'flex flex-col gap-1 transition-opacity duration-300',
+          (round.unnamed || round.pending) && 'opacity-60'
+        )}
+      >
         {lines.map((line) => (
           <LineRow key={String(line.id)} line={line} />
         ))}
@@ -431,28 +472,30 @@ function LineRow({ line }: { line: BillLineView }) {
   const details = localized(line.details)
   return (
     <div>
-      <div className='flex items-baseline gap-1.5 text-note'>
+      <div className='text-note flex items-baseline gap-1.5'>
         {isTime ? (
           <Timer className='text-muted-foreground size-3.5 shrink-0 self-center' />
         ) : (
           <span className='text-muted-foreground font-semibold tabular-nums'>{qty}×</span>
         )}
-        <span className={cn('min-w-0 flex-1 font-medium', line.paid && 'opacity-50')}>{localized(line.description)}</span>
+        <span className={cn('min-w-0 flex-1 font-medium', line.paid && 'opacity-50')}>
+          {localized(line.description)}
+        </span>
         {/* Paid for at the till already, the bill still open: said on the item, which steps back */}
         {line.paid && (
-          <span className='shrink-0 self-center rounded-full bg-emerald-500/12 px-2 text-caption font-semibold text-emerald-600 dark:text-emerald-400'>
+          <span className='text-caption shrink-0 self-center rounded-full bg-emerald-500/12 px-2 font-semibold text-emerald-600 dark:text-emerald-400'>
             {t('paid')}
           </span>
         )}
         <span className={cn('shrink-0 tabular-nums', line.paid && 'opacity-50')}>{price(Number(line.total ?? 0))}</span>
       </div>
       {isTime ? (
-        <p className='text-muted-foreground ms-5 text-caption tabular-nums'>
+        <p className='text-muted-foreground text-caption ms-5 tabular-nums'>
           {t('hoursShort', { count: hoursLabel(qty) })} × {price(Number(line.unitPrice ?? 0))}
           {t('perHourShort')}
         </p>
       ) : (
-        details && <p className='text-muted-foreground ms-5 text-caption'>{details}</p>
+        details && <p className='text-muted-foreground text-caption ms-5'>{details}</p>
       )}
     </div>
   )

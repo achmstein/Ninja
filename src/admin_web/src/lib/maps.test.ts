@@ -90,9 +90,7 @@ describe('the delivery area', () => {
   })
 
   it('sends [lat, lng] to six places, and nothing for none', () => {
-    expect(areaToApi([{ lat: 30.0351234567, lng: 31.2251234567 }])).toEqual([
-      [30.035123, 31.225123],
-    ])
+    expect(areaToApi([{ lat: 30.0351234567, lng: 31.2251234567 }])).toEqual([[30.035123, 31.225123]])
     expect(areaToApi(null)).toEqual([])
   })
 
@@ -167,12 +165,7 @@ describe('the delivery area', () => {
   })
 
   it('a spike folding back along an edge crosses', () => {
-    const spike = [
-      square[0],
-      square[1],
-      square[2],
-      { lat: 30.055, lng: 31.235 },
-    ]
+    const spike = [square[0], square[1], square[2], { lat: 30.055, lng: 31.235 }]
     expect(crossesItself(spike)).toBe(true)
     expect(crossesItself(square)).toBe(false)
   })

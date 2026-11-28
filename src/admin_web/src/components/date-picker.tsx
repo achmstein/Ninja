@@ -5,11 +5,7 @@ import { useLocale } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 
 type DatePickerProps = {
   /** yyyy-MM-dd, the shape a DateOnly travels in */
@@ -27,14 +23,7 @@ type DatePickerProps = {
  * never shows the browser's own date control beside the app's. Input
  * height, so it sits in a row with inputs and selects.
  */
-export function DatePicker({
-  value,
-  onChange,
-  id,
-  placeholder,
-  disabled,
-  className,
-}: DatePickerProps) {
+export function DatePicker({ value, onChange, id, placeholder, disabled, className }: DatePickerProps) {
   const locale = useLocale()
   const [open, setOpen] = useState(false)
   const selected = parseDay(value)
@@ -50,11 +39,7 @@ export function DatePicker({
           type='button'
           variant='outline'
           size='sm'
-          className={cn(
-            'w-full justify-start font-normal',
-            !selected && 'text-muted-foreground',
-            className
-          )}
+          className={cn('w-full justify-start font-normal', !selected && 'text-muted-foreground', className)}
         >
           <CalendarIcon className='text-muted-foreground' />
           <span className='truncate'>{label}</span>

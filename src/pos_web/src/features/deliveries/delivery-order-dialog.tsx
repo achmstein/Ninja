@@ -1,16 +1,16 @@
 import { useState } from 'react'
 import { AlertTriangle, Banknote, Bike, Check, ExternalLink, Truck, Undo2, UserRound, X } from 'lucide-react'
 import type { RiderView } from '@/api/ordering/types.gen'
+import { useLocalized, useT } from '@/lib/i18n'
+import { toNumber, useMoney } from '@/lib/money'
+import { defaultDisposition, type StockDisposition } from '@/lib/stock-disposition'
+import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { StockDispositionChoice } from '@/components/stock-disposition-choice'
-import { useLocalized, useT } from '@/lib/i18n'
-import { toNumber, useMoney } from '@/lib/money'
-import { defaultDisposition, type StockDisposition } from '@/lib/stock-disposition'
-import { cn } from '@/lib/utils'
 import { CourierPicker } from './courier-picker'
 import { DeliveryDetails, DeliveryFeeRow } from './delivery-details'
 import { cashDifference, laneOf } from './delivery-format'
@@ -26,12 +26,20 @@ type Asking = 'delivered' | 'courierDelivered' | 'cash' | 'cancel' | 'failed' | 
  * what the courier collected), say it couldn't be delivered and then that it is
  * back (and cancel it), or take a rider's cash in, counted.
  */
-export function DeliveryOrderDialog({ order, onOpenChange }: { order: BoardDelivery | null; onOpenChange: (open: boolean) => void }) {
+export function DeliveryOrderDialog({
+  order,
+  onOpenChange,
+}: {
+  order: BoardDelivery | null
+  onOpenChange: (open: boolean) => void
+}) {
   return (
     <Dialog open={order != null} onOpenChange={onOpenChange}>
       <DialogContent className='max-h-[95svh] gap-4'>
         {/* Keyed by the order, so a confirm half-asked for one is never carried to another */}
-        {order && <DeliveryOrderBody key={toNumber(order.orderNumber)} order={order} close={() => onOpenChange(false)} />}
+        {order && (
+          <DeliveryOrderBody key={toNumber(order.orderNumber)} order={order} close={() => onOpenChange(false)} />
+        )}
       </DialogContent>
     </Dialog>
   )
@@ -80,14 +88,14 @@ function DeliveryOrderBody({ order, close }: { order: BoardDelivery; close: () =
       </DialogHeader>
       <DeliveryDetails delivery={d} />
       {d.failureReason && (
-        <p className='flex items-start gap-1.5 type-detail text-amber-700 dark:text-amber-400'>
+        <p className='type-detail flex items-start gap-1.5 text-amber-700 dark:text-amber-400'>
           <AlertTriangle className='mt-0.5 size-4 shrink-0' aria-hidden />
           {d.failureReason}
         </p>
       )}
       {/* A connected company: its system has the job, who it sent, and where to follow the courier */}
       {courier && d.courierJobId && (
-        <div className='bg-muted/50 flex flex-col gap-1.5 rounded-lg px-3 py-2 type-detail'>
+        <div className='bg-muted/50 type-detail flex flex-col gap-1.5 rounded-lg px-3 py-2'>
           <span className='flex items-start gap-1.5'>
             <Truck className='text-muted-foreground mt-0.5 size-4 shrink-0' aria-hidden />
             <span>
@@ -104,7 +112,7 @@ function DeliveryOrderBody({ order, close }: { order: BoardDelivery; close: () =
               ) : !out ? (
                 t('deliveryCourierWaiting')
               ) : null}
-              <span className='text-muted-foreground block type-caption'>
+              <span className='text-muted-foreground type-caption block'>
                 {t('deliveryCourierSystemHas', { name: d.courierProvider ?? '' })}
               </span>
             </span>
@@ -122,7 +130,7 @@ function DeliveryOrderBody({ order, close }: { order: BoardDelivery; close: () =
           )}
         </div>
       )}
-      <ul className='flex flex-col gap-1 type-detail'>
+      <ul className='type-detail flex flex-col gap-1'>
         {/* The count and the name apart, so an English item name in Arabic still reads count first */}
         {(order.items ?? []).map((item, i) => (
           <li key={`${localized(item.productName)}-${i}`} className='flex gap-1.5'>
@@ -200,7 +208,10 @@ function DeliveryOrderBody({ order, close }: { order: BoardDelivery; close: () =
                 </>
               )}
               <Confirm
-                text={t('deliveryCourierDeliveredConfirm', { name: rider, amount: money(courierCashOk ? courierCollected : 0) })}
+                text={t('deliveryCourierDeliveredConfirm', {
+                  name: rider,
+                  amount: money(courierCashOk ? courierCollected : 0),
+                })}
                 busy={actions.busy || !courierCashOk}
                 onConfirm={() => go(() => actions.courierDelivered(id, toCollect === 0 ? 0 : courierCollected), true)}
                 onCancel={() => setAsking(null)}
@@ -225,11 +236,20 @@ function DeliveryOrderBody({ order, close }: { order: BoardDelivery; close: () =
                 maxLength={300}
                 autoComplete='off'
               />
-              <Confirm busy={actions.busy} onConfirm={() => go(() => actions.markFailed(id, reason))} onCancel={() => setAsking(null)} />
+              <Confirm
+                busy={actions.busy}
+                onConfirm={() => go(() => actions.markFailed(id, reason))}
+                onCancel={() => setAsking(null)}
+              />
             </div>
           ) : (
             <div className='grid grid-cols-2 gap-2'>
-              <Button variant='outline' className='h-11' disabled={actions.busy} onClick={() => setAsking(courier ? 'courierDelivered' : 'delivered')}>
+              <Button
+                variant='outline'
+                className='h-11'
+                disabled={actions.busy}
+                onClick={() => setAsking(courier ? 'courierDelivered' : 'delivered')}
+              >
                 <Check className='size-4' />
                 {t('deliveryMarkDelivered')}
               </Button>
@@ -265,7 +285,12 @@ function DeliveryOrderBody({ order, close }: { order: BoardDelivery; close: () =
             />
           </div>
         ) : (
-          <Button variant='outline' className='text-destructive h-11' disabled={actions.busy} onClick={() => setAsking('cancel')}>
+          <Button
+            variant='outline'
+            className='text-destructive h-11'
+            disabled={actions.busy}
+            onClick={() => setAsking('cancel')}
+          >
             <X className='size-4' />
             {t('deliveryCancelOrder')}
           </Button>
@@ -338,7 +363,13 @@ function Confirm({
         <Button variant='outline' className='h-11' disabled={busy} onClick={onCancel}>
           {t('goBack')}
         </Button>
-        <Button variant={destructive ? 'destructive' : 'default'} className='h-11' disabled={busy} onClick={onConfirm} autoFocus>
+        <Button
+          variant={destructive ? 'destructive' : 'default'}
+          className='h-11'
+          disabled={busy}
+          onClick={onConfirm}
+          autoFocus
+        >
           {t('confirmAction')}
         </Button>
       </div>
@@ -374,7 +405,7 @@ function RiderRow({
       aria-pressed={current}
       className={cn(
         'flex h-14 items-center gap-3 rounded-lg border px-3 text-start transition-colors',
-        current ? 'border-primary bg-primary/5' : 'hover:bg-muted',
+        current ? 'border-primary bg-primary/5' : 'hover:bg-muted'
       )}
     >
       <span className='relative'>
@@ -383,14 +414,19 @@ function RiderRow({
           aria-hidden
           className={cn(
             'ring-background absolute -end-0.5 -bottom-0.5 size-2.5 rounded-full ring-2',
-            rider.onDuty ? 'bg-emerald-500' : 'bg-muted-foreground',
+            rider.onDuty ? 'bg-emerald-500' : 'bg-muted-foreground'
           )}
         />
       </span>
       <span className='min-w-0 flex-1'>
         <span className='block truncate font-medium'>{rider.name}</span>
         {/* Off duty or not signed in is said in words, not only by a dot or a fade */}
-        <span className={cn('block type-caption', rider.onDuty ? 'text-muted-foreground' : 'text-amber-700 dark:text-amber-400')}>
+        <span
+          className={cn(
+            'type-caption block',
+            rider.onDuty ? 'text-muted-foreground' : 'text-amber-700 dark:text-amber-400'
+          )}
+        >
           {status}
         </span>
       </span>

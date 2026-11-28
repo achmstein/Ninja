@@ -10,10 +10,20 @@ export type Page = (typeof PAGES)[number]
 export type KindPage = Exclude<Page, 'home'>
 
 /** Each page's part of the address; the home page has none */
-export const SLUG: Record<Page, string> = { home: '', gaming: 'game-lounges', cafes: 'cafes', restaurants: 'restaurants' }
+export const SLUG: Record<Page, string> = {
+  home: '',
+  gaming: 'game-lounges',
+  cafes: 'cafes',
+  restaurants: 'restaurants',
+}
 
 /** The kind of place a page's form starts on, by the control plane's names */
-export const FORM_KIND = { home: 'CoffeeShop', gaming: 'GameStation', cafes: 'CoffeeShop', restaurants: 'Restaurant' } as const satisfies Record<Page, string>
+export const FORM_KIND = {
+  home: 'CoffeeShop',
+  gaming: 'GameStation',
+  cafes: 'CoffeeShop',
+  restaurants: 'Restaurant',
+} as const satisfies Record<Page, string>
 
 /** A page's address in a language: /, /ar, /cafes, /ar/cafes */
 export function pathOf(lang: Lang, page: Page): string {

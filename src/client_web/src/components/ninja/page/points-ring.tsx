@@ -25,8 +25,22 @@ export function PointsRing({
   const r = (size - stroke) / 2
   return (
     <div className={cn('relative grid shrink-0 place-items-center', className)} style={{ width: size, height: size }}>
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className='absolute inset-0 -rotate-90' aria-hidden>
-        <circle cx={size / 2} cy={size / 2} r={r} fill='none' stroke='currentColor' strokeOpacity={0.14} strokeWidth={stroke} />
+      <svg
+        width={size}
+        height={size}
+        viewBox={`0 0 ${size} ${size}`}
+        className='absolute inset-0 -rotate-90'
+        aria-hidden
+      >
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
+          fill='none'
+          stroke='currentColor'
+          strokeOpacity={0.14}
+          strokeWidth={stroke}
+        />
         <motion.circle
           cx={size / 2}
           cy={size / 2}
@@ -43,7 +57,7 @@ export function PointsRing({
       </svg>
       <div className='flex flex-col items-center leading-none'>
         <Odometer value={String(points)} className='text-2xl font-extrabold' />
-        <span className='mt-1 text-micro font-semibold opacity-60'>{label}</span>
+        <span className='text-micro mt-1 font-semibold opacity-60'>{label}</span>
       </div>
     </div>
   )

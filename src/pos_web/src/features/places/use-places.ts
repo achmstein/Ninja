@@ -19,11 +19,7 @@ import {
   seatReservationMutation,
   startWalkInMutation,
 } from '@/api/spaces/@tanstack/react-query.gen'
-import type {
-  PlaceViewModel,
-  ReservationViewModel,
-  StayViewModel,
-} from '@/api/spaces/types.gen'
+import type { PlaceViewModel, ReservationViewModel, StayViewModel } from '@/api/spaces/types.gen'
 import { useT, type TranslationKey } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { toast } from '@/lib/toast'
@@ -72,44 +68,25 @@ export function usePlaces({ enabled = true }: { enabled?: boolean } = {}) {
       [...(placesQuery.data ?? [])].sort(
         (a, b) =>
           Number(a.kind ?? PLACE_ROOM) - Number(b.kind ?? PLACE_ROOM) ||
-          naturalCompare(orderName(a.name), orderName(b.name)),
+          naturalCompare(orderName(a.name), orderName(b.name))
       ),
-    [placesQuery.data],
+    [placesQuery.data]
   )
   const stays = useMemo(() => staysQuery.data ?? [], [staysQuery.data])
   // The server sends them soonest first: the ones keeping a place now, then the ones due later
-  const reservations = useMemo(
-    () => (reservationsQuery.data ?? []).filter(isOpenReservation),
-    [reservationsQuery.data],
-  )
+  const reservations = useMemo(() => (reservationsQuery.data ?? []).filter(isOpenReservation), [reservationsQuery.data])
 
-  const stayForPlace = (
-    placeId: number | string | undefined,
-  ): StayViewModel | undefined =>
-    stays.find(
-      (s) =>
-        toNumber(s.placeId) === toNumber(placeId) &&
-        Number(s.status) === STAY_RUNNING,
-    )
+  const stayForPlace = (placeId: number | string | undefined): StayViewModel | undefined =>
+    stays.find((s) => toNumber(s.placeId) === toNumber(placeId) && Number(s.status) === STAY_RUNNING)
 
   /** The next reservation on a place: the one keeping it now, else the soonest due. */
-  const reservationForPlace = (
-    placeId: number | string | undefined,
-  ): ReservationViewModel | undefined =>
+  const reservationForPlace = (placeId: number | string | undefined): ReservationViewModel | undefined =>
     reservations.find((r) => toNumber(r.placeId) === toNumber(placeId))
 
-  const runningStayById = (
-    stayId: number | string,
-  ): StayViewModel | undefined =>
-    stays.find(
-      (s) =>
-        toNumber(s.id) === toNumber(stayId) &&
-        Number(s.status) === STAY_RUNNING,
-    )
+  const runningStayById = (stayId: number | string): StayViewModel | undefined =>
+    stays.find((s) => toNumber(s.id) === toNumber(stayId) && Number(s.status) === STAY_RUNNING)
 
-  const placeById = (
-    placeId: number | string | undefined,
-  ): PlaceViewModel | undefined =>
+  const placeById = (placeId: number | string | undefined): PlaceViewModel | undefined =>
     places.find((p) => toNumber(p.id) === toNumber(placeId))
 
   return {
@@ -132,10 +109,7 @@ type Done = { onSuccess?: () => void }
  * settled: the people there are still being named, and their shares still
  * go on their tabs.
  */
-export function useStay(
-  stayId: number | string | null | undefined,
-  enabled = true,
-): StayViewModel | undefined {
+export function useStay(stayId: number | string | null | undefined, enabled = true): StayViewModel | undefined {
   const query = useQuery({
     ...getStayOptions({ path: { id: Number(stayId) } }),
     enabled: enabled && stayId != null,
@@ -171,10 +145,7 @@ export function useStayActions() {
     queryClient.invalidateQueries({ queryKey: [{ _id: 'getTicket' }] })
   }
 
-  const feedback = (
-    success: TranslationKey | null,
-    failure: TranslationKey,
-  ) => ({
+  const feedback = (success: TranslationKey | null, failure: TranslationKey) => ({
     onSuccess: () => {
       invalidate()
       if (success) toast.success(t(success))
@@ -258,16 +229,8 @@ export function useStayActions() {
   return {
     isBusy,
     startWalkIn: (placeId: number, optionCode: string | null, done?: Done) =>
-      startWalkIn.mutate(
-        { path: { id: placeId }, body: { notes: null, optionCode } },
-        done,
-      ),
-    seat: (
-      reservationId: number,
-      optionCode: string | null,
-      timed: boolean,
-      done?: Done,
-    ) =>
+      startWalkIn.mutate({ path: { id: placeId }, body: { notes: null, optionCode } }, done),
+    seat: (reservationId: number, optionCode: string | null, timed: boolean, done?: Done) =>
       seat.mutate(
         { path: { id: reservationId }, body: { optionCode } },
         {
@@ -275,44 +238,32 @@ export function useStayActions() {
             toast.success(t(timed ? 'sessionStarted' : 'partySeated'))
             done?.onSuccess?.()
           },
-        },
+        }
       ),
     confirm: (reservationId: number, startsClock: boolean, done?: Done) =>
       confirm.mutate(
         { path: { id: reservationId }, body: {} },
         {
           onSuccess: () => {
-            toast.success(
-              t(startsClock ? 'sessionStarted' : 'holdConfirmed'),
-            )
+            toast.success(t(startsClock ? 'sessionStarted' : 'holdConfirmed'))
             done?.onSuccess?.()
           },
-        },
+        }
       ),
-    endStay: (stayId: number, done?: Done) =>
-      endStay.mutate({ path: { id: stayId } }, done),
-    cancelStay: (stayId: number, done?: Done) =>
-      cancelStay.mutate({ path: { id: stayId } }, done),
+    endStay: (stayId: number, done?: Done) => endStay.mutate({ path: { id: stayId } }, done),
+    cancelStay: (stayId: number, done?: Done) => cancelStay.mutate({ path: { id: stayId } }, done),
     cancelReservation: (reservationId: number, done?: Done) =>
       cancelReservation.mutate({ path: { id: reservationId } }, done),
     completeReservation: (reservationId: number, done?: Done) =>
       completeReservation.mutate({ path: { id: reservationId } }, done),
     changeOption: (stayId: number, optionCode: string) =>
       changeOption.mutate({ path: { id: stayId }, body: { optionCode } }),
-    assignCustomer: (
-      stayId: number,
-      customerId: string,
-      customerName: string,
-    ) =>
+    assignCustomer: (stayId: number, customerId: string, customerName: string) =>
       assignCustomer.mutate({
         path: { id: stayId },
         body: { customerId, customerName },
       }),
-    assignReservationCustomer: (
-      reservationId: number,
-      customerId: string,
-      customerName: string,
-    ) =>
+    assignReservationCustomer: (reservationId: number, customerId: string, customerName: string) =>
       assignReservationCustomer.mutate({
         path: { id: reservationId },
         body: { customerId, customerName },
@@ -322,14 +273,13 @@ export function useStayActions() {
         path: { id: stayId },
         body: { customerId, customerName },
       }),
-    removeMember: (stayId: number, customerId: string) =>
-      removeMember.mutate({ path: { id: stayId, customerId } }),
+    removeMember: (stayId: number, customerId: string) => removeMember.mutate({ path: { id: stayId, customerId } }),
     reserve: (placeId: number, customerName: string | null, done?: Done) =>
       reserve.mutate(
         {
           body: { placeId, customerName, notes: null, startOnConfirm: false },
         },
-        done,
+        done
       ),
   }
 }

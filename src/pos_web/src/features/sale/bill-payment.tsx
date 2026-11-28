@@ -1,14 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
 import type { TicketDetail } from '@/api/sales/types.gen'
 import type { StayViewModel } from '@/api/spaces/types.gen'
+import { useT } from '@/lib/i18n'
+import { toNumber } from '@/lib/money'
 import { ConfirmDialog } from '@/components/confirm-dialog'
 import { pendingForTicket, usePendingOrders } from '@/features/orders/use-pending-orders'
 import { useStayActions } from '@/features/places/use-places'
 import { ReceiptSheet, type ReceiptPayment } from '@/features/receipt/receipt-sheet'
 import { SettleDialog, type SettleOutcome } from '@/features/ticket/settle-dialog'
 import { useOnlinePayments } from '@/features/ticket/use-online-payments'
-import { useT } from '@/lib/i18n'
-import { toNumber } from '@/lib/money'
 
 /**
  * Taking the money for an open bill, over the order screen it was rung up on.
@@ -101,7 +101,11 @@ export function BillPayment({
         onSettled={setOutcome}
       />
       {outcome && (
-        <ReceiptSheet ticket={ticket} paymentsOverride={paymentsOverride} receiptNumberOverride={outcome.receiptNumber} />
+        <ReceiptSheet
+          ticket={ticket}
+          paymentsOverride={paymentsOverride}
+          receiptNumberOverride={outcome.receiptNumber}
+        />
       )}
     </>
   )

@@ -27,8 +27,8 @@ let fontCss: string | null = null
 async function imagesLoaded(node: HTMLElement) {
   await Promise.all(
     Array.from(node.querySelectorAll('img')).map((img) =>
-      img.complete ? Promise.resolve() : img.decode().catch(() => undefined),
-    ),
+      img.complete ? Promise.resolve() : img.decode().catch(() => undefined)
+    )
   )
 }
 
@@ -38,8 +38,7 @@ async function imagesLoaded(node: HTMLElement) {
  * comes out shaped and right to left exactly as on the screen.
  */
 /** A transparent 1×1 GIF: paper, where a picture would have been */
-const BLANK_PIXEL =
-  'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'
+const BLANK_PIXEL = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'
 
 export async function sheetImage(sheet: HTMLElement): Promise<string> {
   const holder = document.createElement('div')

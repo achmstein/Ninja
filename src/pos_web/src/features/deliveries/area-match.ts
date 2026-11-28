@@ -30,7 +30,7 @@ export function matchAreas(
   zones: readonly StaffDeliveryZone[],
   query: string,
   language: Language,
-  limit = AREA_RESULTS,
+  limit = AREA_RESULTS
 ): StaffDeliveryZone[] {
   const typed = normalizeName(query)
   if (!typed) return zones.slice(0, limit)

@@ -1,10 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { getRouteApi } from '@tanstack/react-router'
 import { Area, AreaChart, CartesianGrid, Line, XAxis, YAxis } from 'recharts'
-import {
-  getBreakdownReportOptions,
-  getDailyReportOptions,
-} from '@/api/sales/@tanstack/react-query.gen'
+import { getBreakdownReportOptions, getDailyReportOptions } from '@/api/sales/@tanstack/react-query.gen'
 import { getStayStatsOptions } from '@/api/spaces/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useFeatures } from '@/lib/brand'
@@ -12,27 +9,9 @@ import { useNow } from '@/lib/business-clock'
 import { useLocale, useLocalized, useT, type TranslationKey } from '@/lib/i18n'
 import { localDateOf, parsePlainDate } from '@/lib/zoned-time'
 import { Badge } from '@/components/ui/badge'
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-  type ChartConfig,
-} from '@/components/ui/chart'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from '@/components/ui/chart'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { EmptyState } from '@/components/empty-state'
@@ -118,9 +97,7 @@ export function SalesChart() {
   })
 
   // Every business day on the axis, each with its twin before
-  const rows = windows
-    ? trendRows(windows, days, current.data?.days, previous.data?.days)
-    : []
+  const rows = windows ? trendRows(windows, days, current.data?.days, previous.data?.days) : []
 
   const total = rows.reduce((sum, d) => sum + d.revenue, 0)
   const totalBefore = rows.reduce((sum, d) => sum + d.previous, 0)
@@ -136,8 +113,7 @@ export function SalesChart() {
         })
       : key
   }
-  const compact = (value: number) =>
-    new Intl.NumberFormat(locale, { notation: 'compact' }).format(value)
+  const compact = (value: number) => new Intl.NumberFormat(locale, { notation: 'compact' }).format(value)
 
   const config = {
     revenue: { label: t('salesThisPeriod'), color: 'var(--chart-1)' },
@@ -166,20 +142,10 @@ export function SalesChart() {
             <Skeleton className='h-5 w-32' />
           ) : (
             <>
-              <span className='text-foreground text-lg font-semibold tabular-nums'>
-                {formatEgp(total)}
-              </span>
+              <span className='text-foreground text-lg font-semibold tabular-nums'>{formatEgp(total)}</span>
               {change !== undefined && (
                 <Badge
-                  variant={
-                    change == null
-                      ? 'muted'
-                      : change > 0.005
-                        ? 'success'
-                        : change < -0.005
-                          ? 'danger'
-                          : 'muted'
-                  }
+                  variant={change == null ? 'muted' : change > 0.005 ? 'success' : change < -0.005 ? 'danger' : 'muted'}
                   className='rounded-full'
                 >
                   {change == null
@@ -208,11 +174,7 @@ export function SalesChart() {
             ))}
           </ToggleGroup>
           <Select value={range} onValueChange={setRange}>
-            <SelectTrigger
-              size='sm'
-              className='w-36 @[560px]/card:hidden'
-              aria-label={t('salesTitle')}
-            >
+            <SelectTrigger size='sm' className='w-36 @[560px]/card:hidden' aria-label={t('salesTitle')}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent align='end'>
@@ -234,22 +196,11 @@ export function SalesChart() {
           <EmptyState compact title={t('noAnalyticsData')} />
         ) : (
           <ChartContainer config={config} className='aspect-auto h-64 w-full'>
-            <AreaChart
-              data={rows}
-              margin={{ top: 8, left: 0, right: 8, bottom: 0 }}
-            >
+            <AreaChart data={rows} margin={{ top: 8, left: 0, right: 8, bottom: 0 }}>
               <defs>
                 <linearGradient id='fillRevenue' x1='0' y1='0' x2='0' y2='1'>
-                  <stop
-                    offset='5%'
-                    stopColor='var(--color-revenue)'
-                    stopOpacity={0.45}
-                  />
-                  <stop
-                    offset='95%'
-                    stopColor='var(--color-revenue)'
-                    stopOpacity={0.02}
-                  />
+                  <stop offset='5%' stopColor='var(--color-revenue)' stopOpacity={0.45} />
+                  <stop offset='95%' stopColor='var(--color-revenue)' stopOpacity={0.02} />
                 </linearGradient>
               </defs>
               <CartesianGrid vertical={false} />
@@ -261,12 +212,7 @@ export function SalesChart() {
                 minTickGap={28}
                 tickFormatter={shortDay}
               />
-              <YAxis
-                tickLine={false}
-                axisLine={false}
-                width={44}
-                tickFormatter={compact}
-              />
+              <YAxis tickLine={false} axisLine={false} width={44} tickFormatter={compact} />
               <ChartTooltip
                 cursor={false}
                 content={
@@ -276,9 +222,7 @@ export function SalesChart() {
                     formatter={(value, name, item) => (
                       <div className='flex w-full items-center justify-between gap-4'>
                         <span className='text-muted-foreground'>
-                          {name === 'previous'
-                            ? t('salesPreviousPeriod')
-                            : t('salesThisPeriod')}
+                          {name === 'previous' ? t('salesPreviousPeriod') : t('salesThisPeriod')}
                         </span>
                         <span className='font-medium tabular-nums'>
                           {formatEgp(Number(value))}
@@ -395,16 +339,11 @@ export function TopLists() {
         </CardHeader>
         <CardContent>
           {breakdown.isError ? (
-            <ErrorState
-              error={breakdown.error}
-              onRetry={() => breakdown.refetch()}
-            />
+            <ErrorState error={breakdown.error} onRetry={() => breakdown.refetch()} />
           ) : breakdown.isLoading || windows === null ? (
             <Skeleton className='h-40 w-full' />
           ) : topItems.length === 0 ? (
-            <p className='text-muted-foreground py-3 text-sm'>
-              {t('noAnalyticsData')}
-            </p>
+            <p className='text-muted-foreground py-3 text-sm'>{t('noAnalyticsData')}</p>
           ) : (
             <RankedList items={topItems} className='divide-y-0' />
           )}
@@ -417,16 +356,11 @@ export function TopLists() {
           </CardHeader>
           <CardContent>
             {stayStats.isError ? (
-              <ErrorState
-                error={stayStats.error}
-                onRetry={() => stayStats.refetch()}
-              />
+              <ErrorState error={stayStats.error} onRetry={() => stayStats.refetch()} />
             ) : stayStats.isLoading ? (
               <Skeleton className='h-40 w-full' />
             ) : placeRows.length === 0 ? (
-              <p className='text-muted-foreground py-3 text-sm'>
-                {t('noAnalyticsData')}
-              </p>
+              <p className='text-muted-foreground py-3 text-sm'>{t('noAnalyticsData')}</p>
             ) : (
               <RankedList items={placeRows} className='divide-y-0' />
             )}

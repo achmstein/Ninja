@@ -32,8 +32,10 @@ export function StayBanner({ stay }: { stay: StayViewModel }) {
         </span>
       </span>
       <span className='flex min-w-0 flex-1 flex-col'>
-        <span className='truncate text-caption opacity-70'>{t('ninjaYoureIn', { name: localized(stay.placeName) })}</span>
-        <span dir='ltr' className='self-start text-name font-bold rtl:self-end'>
+        <span className='text-caption truncate opacity-70'>
+          {t('ninjaYoureIn', { name: localized(stay.placeName) })}
+        </span>
+        <span dir='ltr' className='text-name self-start font-bold rtl:self-end'>
           <Odometer value={formatClock((now - since) / 1000)} />
         </span>
       </span>

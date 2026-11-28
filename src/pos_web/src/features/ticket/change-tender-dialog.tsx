@@ -1,5 +1,8 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { changePaymentTenderMutation } from '@/api/sales/@tanstack/react-query.gen'
+import { API_VERSION } from '@/lib/api-client'
+import { useT } from '@/lib/i18n'
+import { toast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -9,9 +12,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { API_VERSION } from '@/lib/api-client'
-import { useT } from '@/lib/i18n'
-import { toast } from '@/lib/toast'
 import { BASE_TENDERS, tenderLabelKey } from './tenders'
 
 /** The payment being put right; null keeps the dialog closed. */
@@ -35,11 +35,7 @@ export const CORRECTABLE_TENDERS = ['Cash', 'Card', 'InstaPay']
  * while the shift is still open. The server refuses once the shift is
  * counted or the bill has a refund, and says why.
  */
-export function ChangeTenderDialog({
-  ticketId,
-  payment,
-  onOpenChange,
-}: ChangeTenderDialogProps) {
+export function ChangeTenderDialog({ ticketId, payment, onOpenChange }: ChangeTenderDialogProps) {
   const t = useT()
   const queryClient = useQueryClient()
 
@@ -78,13 +74,7 @@ export function ChangeTenderDialog({
         </DialogHeader>
         <div className='grid gap-2'>
           {BASE_TENDERS.filter((x) => x.name !== payment?.tender).map((x) => (
-            <Button
-              key={x.name}
-              size='lg'
-              variant='outline'
-              disabled={change.isPending}
-              onClick={() => pick(x.name)}
-            >
+            <Button key={x.name} size='lg' variant='outline' disabled={change.isPending} onClick={() => pick(x.name)}>
               {t(x.labelKey)}
             </Button>
           ))}

@@ -23,7 +23,6 @@ import { useT, type TranslationKey } from '@/lib/i18n'
 import { problemDetail } from '@/lib/problem'
 import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
-import { CopyButton } from '@/components/copy-button'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -40,6 +39,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
+import { CopyButton } from '@/components/copy-button'
 import { AppBuildCard } from '../app-build'
 import { GiveOwnApp, OwnAppRecord } from './app-record'
 
@@ -102,7 +102,13 @@ function AppCards({ tenant, app }: { tenant: TenantDetail; app: TenantAppStatus 
     onError,
   })
 
-  const done = [app.androidKey.set, app.play.set, app.apple.set, app.icons.icon, app.firebase.androidFile && app.firebase.iosFile]
+  const done = [
+    app.androidKey.set,
+    app.play.set,
+    app.apple.set,
+    app.icons.icon,
+    app.firebase.androidFile && app.firebase.iosFile,
+  ]
   const ready = done.filter(Boolean).length
 
   return (
@@ -121,7 +127,11 @@ function AppCards({ tenant, app }: { tenant: TenantDetail; app: TenantAppStatus 
               {setup.isPending ? <Spinner /> : <Sparkles />}
               {t('appSetUp')}
             </Button>
-            <Button variant='outline' disabled={check.isPending || setup.isPending} onClick={() => check.mutate({ path })}>
+            <Button
+              variant='outline'
+              disabled={check.isPending || setup.isPending}
+              onClick={() => check.mutate({ path })}
+            >
               {check.isPending ? <Spinner /> : <ShieldCheck />}
               {t('appCheckAll')}
             </Button>
@@ -132,7 +142,11 @@ function AppCards({ tenant, app }: { tenant: TenantDetail; app: TenantAppStatus 
             {app.checks.map((c) => (
               <CheckLine key={c.item} check={c} />
             ))}
-            {app.checkedAt && <p className='text-muted-foreground pt-1 text-xs'>{t('appCheckedAt', { when: format.dateTime(app.checkedAt) })}</p>}
+            {app.checkedAt && (
+              <p className='text-muted-foreground pt-1 text-xs'>
+                {t('appCheckedAt', { when: format.dateTime(app.checkedAt) })}
+              </p>
+            )}
           </CardContent>
         )}
       </Card>
@@ -157,9 +171,13 @@ function AppCards({ tenant, app }: { tenant: TenantDetail; app: TenantAppStatus 
             {(app.firebase.androidAppId || app.firebase.iosAppId) && (
               <dl className='grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs'>
                 <dt className='text-muted-foreground'>Android</dt>
-                <dd className='truncate font-mono' dir='ltr'>{app.firebase.androidAppId ?? '—'}</dd>
+                <dd className='truncate font-mono' dir='ltr'>
+                  {app.firebase.androidAppId ?? '—'}
+                </dd>
                 <dt className='text-muted-foreground'>iOS</dt>
-                <dd className='truncate font-mono' dir='ltr'>{app.firebase.iosAppId ?? '—'}</dd>
+                <dd className='truncate font-mono' dir='ltr'>
+                  {app.firebase.iosAppId ?? '—'}
+                </dd>
               </dl>
             )}
             <Button
@@ -176,7 +194,15 @@ function AppCards({ tenant, app }: { tenant: TenantDetail; app: TenantAppStatus 
         <div className='flex flex-col gap-4'>
           <PlayCard tenant={tenant} app={app} onSaved={onSaved} onError={onError} />
           <IconsCard tenant={tenant} app={app} onSaved={onSaved} onError={onError} />
-          {app.googleSignIn.project && <GoogleSignInCard key={`${app.googleSignIn.iosClientId}-${app.googleSignIn.playSigningSha1}`} tenant={tenant} app={app} onSaved={onSaved} onError={onError} />}
+          {app.googleSignIn.project && (
+            <GoogleSignInCard
+              key={`${app.googleSignIn.iosClientId}-${app.googleSignIn.playSigningSha1}`}
+              tenant={tenant}
+              app={app}
+              onSaved={onSaved}
+              onError={onError}
+            />
+          )}
         </div>
       </div>
     </div>
@@ -200,7 +226,11 @@ function AndroidKeyCard({ tenant, app, onSaved, onError }: CardProps) {
   const [storePassword, setStorePassword] = useState('')
   const [keyPassword, setKeyPassword] = useState('')
 
-  const generate = useMutation({ ...generateAndroidKeyMutation(), onSuccess: (s) => onSaved(s, t('appAndroidKeyMade')), onError })
+  const generate = useMutation({
+    ...generateAndroidKeyMutation(),
+    onSuccess: (s) => onSaved(s, t('appAndroidKeyMade')),
+    onError,
+  })
   const take = useMutation({
     ...importAndroidKeyMutation(),
     onSuccess: (s) => {
@@ -214,27 +244,57 @@ function AndroidKeyCard({ tenant, app, onSaved, onError }: CardProps) {
   })
   const doImport = (replace: boolean) =>
     file &&
-    take.mutate({ path, body: { keystore: file, alias, storePassword, keyPassword: keyPassword || null, confirm: replace } })
+    take.mutate({
+      path,
+      body: { keystore: file, alias, storePassword, keyPassword: keyPassword || null, confirm: replace },
+    })
 
   const key = app.androidKey
   return (
     <Item
       title={t('appAndroidKey')}
       set={key.set}
-      hint={key.set ? (key.format === 'jks' ? t('appAndroidKeyJks') : t('appAndroidKeySet', { alias: key.alias ?? '' })) : t('appAndroidKeyHint')}
+      hint={
+        key.set
+          ? key.format === 'jks'
+            ? t('appAndroidKeyJks')
+            : t('appAndroidKeySet', { alias: key.alias ?? '' })
+          : t('appAndroidKeyHint')
+      }
     >
       {key.sha256 && <Fingerprint label='SHA-256' value={key.sha256} />}
       {key.sha1 && <Fingerprint label='SHA-1' value={key.sha1} />}
       {importing ? (
         <div className='space-y-3'>
-          <Input type='file' accept='.jks,.keystore,.p12,.pfx' onChange={async (e) => setFile(e.target.files?.[0] ? await readFileBase64(e.target.files[0]) : null)} />
+          <Input
+            type='file'
+            accept='.jks,.keystore,.p12,.pfx'
+            onChange={async (e) => setFile(e.target.files?.[0] ? await readFileBase64(e.target.files[0]) : null)}
+          />
           <div className='grid gap-2 sm:grid-cols-3'>
             <Field id='key-alias' label={t('appKeyAlias')} value={alias} onChange={setAlias} />
-            <Field id='key-store' label={t('appStorePassword')} value={storePassword} onChange={setStorePassword} secret />
-            <Field id='key-pass' label={t('appKeyPassword')} value={keyPassword} onChange={setKeyPassword} secret placeholder={t('appKeyPasswordSame')} />
+            <Field
+              id='key-store'
+              label={t('appStorePassword')}
+              value={storePassword}
+              onChange={setStorePassword}
+              secret
+            />
+            <Field
+              id='key-pass'
+              label={t('appKeyPassword')}
+              value={keyPassword}
+              onChange={setKeyPassword}
+              secret
+              placeholder={t('appKeyPasswordSame')}
+            />
           </div>
           <div className='flex gap-2'>
-            <Button size='sm' disabled={!file || !storePassword || take.isPending} onClick={() => (key.set ? setConfirm('import') : doImport(false))}>
+            <Button
+              size='sm'
+              disabled={!file || !storePassword || take.isPending}
+              onClick={() => (key.set ? setConfirm('import') : doImport(false))}
+            >
               {take.isPending && <Spinner />}
               {t('appImport')}
             </Button>
@@ -295,24 +355,53 @@ function GoogleSignInCard({ tenant, app, onSaved, onError }: CardProps) {
   const google = app.googleSignIn
   const [ios, setIos] = useState(google.iosClientGiven ? (google.iosClientId ?? '') : '')
   const [playSha1, setPlaySha1] = useState(google.playSigningSha1 ?? '')
-  const save = useMutation({ ...setAppGoogleSignInMutation(), onSuccess: (s) => onSaved(s, t('appGoogleSignInSaved')), onError })
-  const dirty = ios.trim() !== (google.iosClientGiven ? (google.iosClientId ?? '') : '') || playSha1.trim() !== (google.playSigningSha1 ?? '')
+  const save = useMutation({
+    ...setAppGoogleSignInMutation(),
+    onSuccess: (s) => onSaved(s, t('appGoogleSignInSaved')),
+    onError,
+  })
+  const dirty =
+    ios.trim() !== (google.iosClientGiven ? (google.iosClientId ?? '') : '') ||
+    playSha1.trim() !== (google.playSigningSha1 ?? '')
   return (
-    <Item title={t('appGoogleSignIn')} set={google.iosClientInProject && !!google.playSigningSha1} hint={t('appGoogleSignInHint', { project: google.project ?? '' })}>
+    <Item
+      title={t('appGoogleSignIn')}
+      set={google.iosClientInProject && !!google.playSigningSha1}
+      hint={t('appGoogleSignInHint', { project: google.project ?? '' })}
+    >
       <div className='space-y-1'>
-        <Field id='google-play-sha1' label={t('appPlaySigningSha1')} value={playSha1} onChange={setPlaySha1} placeholder='AA:BB:…' />
+        <Field
+          id='google-play-sha1'
+          label={t('appPlaySigningSha1')}
+          value={playSha1}
+          onChange={setPlaySha1}
+          placeholder='AA:BB:…'
+        />
         <p className='text-muted-foreground text-xs'>{t('appPlaySigningSha1Hint')}</p>
       </div>
       <div className='space-y-1'>
-        <Field id='google-ios' label={t('appGoogleIosClient')} value={ios} onChange={setIos} placeholder={google.iosClientId ?? `${google.project}-….apps.googleusercontent.com`} />
+        <Field
+          id='google-ios'
+          label={t('appGoogleIosClient')}
+          value={ios}
+          onChange={setIos}
+          placeholder={google.iosClientId ?? `${google.project}-….apps.googleusercontent.com`}
+        />
         <p className={cn('text-xs', google.iosClientInProject ? 'text-muted-foreground' : 'text-destructive')}>
-          {google.iosClientInProject ? t('appGoogleIosClientOk') : t('appGoogleIosClientHint', { project: google.project ?? '', bundle: tenant.appId ?? '' })}
+          {google.iosClientInProject
+            ? t('appGoogleIosClientOk')
+            : t('appGoogleIosClientHint', { project: google.project ?? '', bundle: tenant.appId ?? '' })}
         </p>
       </div>
       <Button
         size='sm'
         disabled={!dirty || save.isPending}
-        onClick={() => save.mutate({ path: { slug: tenant.slug }, body: { iosClientId: ios.trim() || null, playSigningSha1: playSha1.trim() || null } })}
+        onClick={() =>
+          save.mutate({
+            path: { slug: tenant.slug },
+            body: { iosClientId: ios.trim() || null, playSigningSha1: playSha1.trim() || null },
+          })
+        }
       >
         {save.isPending && <Spinner />}
         {t('save')}
@@ -325,13 +414,20 @@ function PlayCard({ tenant, app, onSaved, onError }: CardProps) {
   const t = useT()
   const save = useMutation({ ...setPlayKeyMutation(), onSuccess: (s) => onSaved(s, t('appPlaySaved')), onError })
   return (
-    <Item title={t('appPlay')} set={app.play.set} hint={app.play.clientEmail ?? t('appPlayHint')} mono={!!app.play.clientEmail}>
+    <Item
+      title={t('appPlay')}
+      set={app.play.set}
+      hint={app.play.clientEmail ?? t('appPlayHint')}
+      mono={!!app.play.clientEmail}
+    >
       <FilePick
         id='play-key'
         accept='application/json,.json'
         label={app.play.set ? t('appReplaceFile') : t('appPlayFile')}
         busy={save.isPending}
-        onPick={async (f) => save.mutate({ path: { slug: tenant.slug }, body: { serviceAccountJson: await readFileText(f) } })}
+        onPick={async (f) =>
+          save.mutate({ path: { slug: tenant.slug }, body: { serviceAccountJson: await readFileText(f) } })
+        }
       />
     </Item>
   )
@@ -351,12 +447,21 @@ function AppleCard({ tenant, app, onSaved, onError }: CardProps) {
     onError,
   })
   return (
-    <Item title={t('appApple')} set={app.apple.set} hint={app.apple.set ? t('appAppleSet', { keyId: app.apple.keyId ?? '' }) : t('appAppleHint')}>
+    <Item
+      title={t('appApple')}
+      set={app.apple.set}
+      hint={app.apple.set ? t('appAppleSet', { keyId: app.apple.keyId ?? '' }) : t('appAppleHint')}
+    >
       <div className='grid gap-2 sm:grid-cols-2'>
         <Field id='asc-key' label={t('appAppleKeyId')} value={keyId} onChange={setKeyId} />
         <Field id='asc-issuer' label={t('appAppleIssuerId')} value={issuerId} onChange={setIssuerId} />
       </div>
-      <Input type='file' accept='.p8' aria-label={t('appAppleP8')} onChange={async (e) => setP8(e.target.files?.[0] ? await readFileText(e.target.files[0]) : null)} />
+      <Input
+        type='file'
+        accept='.p8'
+        aria-label={t('appAppleP8')}
+        onChange={async (e) => setP8(e.target.files?.[0] ? await readFileText(e.target.files[0]) : null)}
+      />
       <Button
         size='sm'
         disabled={!p8 || !keyId.trim() || !issuerId.trim() || save.isPending}
@@ -373,11 +478,20 @@ function IconsCard({ tenant, app, onSaved, onError }: CardProps) {
   const t = useT()
   const path = { slug: tenant.slug }
   const save = useMutation({ ...setAppIconsMutation(), onSuccess: (s) => onSaved(s, t('appIconsSaved')), onError })
-  const brand = useMutation({ ...setAppIconsFromBrandMutation(), onSuccess: (s) => onSaved(s, t('appIconsFromBrandDone')), onError })
+  const brand = useMutation({
+    ...setAppIconsFromBrandMutation(),
+    onSuccess: (s) => onSaved(s, t('appIconsFromBrandDone')),
+    onError,
+  })
   const busy = save.isPending || brand.isPending
   return (
     <Item title={t('appIcons')} set={app.icons.icon} hint={t('appIconsHint')}>
-      <Button size='sm' variant={app.icons.icon ? 'outline' : 'default'} disabled={busy} onClick={() => brand.mutate({ path })}>
+      <Button
+        size='sm'
+        variant={app.icons.icon ? 'outline' : 'default'}
+        disabled={busy}
+        onClick={() => brand.mutate({ path })}
+      >
         {brand.isPending && <Spinner />}
         {t('appIconsFromBrand')}
       </Button>
@@ -404,7 +518,21 @@ function IconsCard({ tenant, app, onSaved, onError }: CardProps) {
 }
 
 /** A saved icon, fetched with the bearer token like the app config download, and a picker for a new one */
-function IconPick({ slug, which, label, set, busy, onPick }: { slug: string; which: 'icon' | 'foreground'; label: string; set: boolean; busy: boolean; onPick: (f: File) => void }) {
+function IconPick({
+  slug,
+  which,
+  label,
+  set,
+  busy,
+  onPick,
+}: {
+  slug: string
+  which: 'icon' | 'foreground'
+  label: string
+  set: boolean
+  busy: boolean
+  onPick: (f: File) => void
+}) {
   const [url, setUrl] = useState<string | null>(null)
   const [version, setVersion] = useState(0)
   useEffect(() => {
@@ -424,8 +552,17 @@ function IconPick({ slug, which, label, set, busy, onPick }: { slug: string; whi
 
   return (
     <label className='flex cursor-pointer flex-col items-center gap-1.5'>
-      <span className={cn('bg-muted flex size-20 items-center justify-center overflow-hidden rounded-2xl border', busy && 'opacity-50')}>
-        {set && url ? <img src={url} alt='' className='size-full object-cover' /> : <Smartphone className='text-muted-foreground size-6' />}
+      <span
+        className={cn(
+          'bg-muted flex size-20 items-center justify-center overflow-hidden rounded-2xl border',
+          busy && 'opacity-50'
+        )}
+      >
+        {set && url ? (
+          <img src={url} alt='' className='size-full object-cover' />
+        ) : (
+          <Smartphone className='text-muted-foreground size-6' />
+        )}
       </span>
       <span className='text-muted-foreground text-xs'>{label}</span>
       <input
@@ -446,12 +583,28 @@ function IconPick({ slug, which, label, set, busy, onPick }: { slug: string; whi
   )
 }
 
-function Item({ title, set, hint, mono, children }: { title: string; set: boolean; hint: string; mono?: boolean; children: ReactNode }) {
+function Item({
+  title,
+  set,
+  hint,
+  mono,
+  children,
+}: {
+  title: string
+  set: boolean
+  hint: string
+  mono?: boolean
+  children: ReactNode
+}) {
   return (
     <Card className='gap-4'>
       <CardHeader>
         <CardTitle className='flex items-center gap-2 text-sm'>
-          {set ? <CheckCircle2 className='size-4 text-emerald-600' /> : <Circle className='text-muted-foreground size-4' />}
+          {set ? (
+            <CheckCircle2 className='size-4 text-emerald-600' />
+          ) : (
+            <Circle className='text-muted-foreground size-4' />
+          )}
           {title}
         </CardTitle>
         <CardDescription className={cn('break-words', mono && 'font-mono text-xs')} dir={mono ? 'ltr' : undefined}>
@@ -468,7 +621,11 @@ function CheckLine({ check }: { check: AppCheck }) {
   const label = CHECK_LABELS[check.item]
   return (
     <div className='flex items-start gap-2 text-sm'>
-      {check.ok ? <CheckCircle2 className='mt-0.5 size-4 shrink-0 text-emerald-600' /> : <XCircle className='text-destructive mt-0.5 size-4 shrink-0' />}
+      {check.ok ? (
+        <CheckCircle2 className='mt-0.5 size-4 shrink-0 text-emerald-600' />
+      ) : (
+        <XCircle className='text-destructive mt-0.5 size-4 shrink-0' />
+      )}
       <span className='font-medium'>{label ? t(label) : check.item}</span>
       <span className='text-muted-foreground min-w-0 break-words'>{check.detail}</span>
     </div>
@@ -479,25 +636,65 @@ function Fingerprint({ label, value }: { label: string; value: string }) {
   return (
     <div className='flex items-center gap-2 text-xs'>
       <span className='text-muted-foreground w-14 shrink-0'>{label}</span>
-      <span className='min-w-0 truncate font-mono' dir='ltr'>{value}</span>
+      <span className='min-w-0 truncate font-mono' dir='ltr'>
+        {value}
+      </span>
       <CopyButton value={value} />
     </div>
   )
 }
 
-function Field({ id, label, value, onChange, secret, placeholder }: { id: string; label: string; value: string; onChange: (v: string) => void; secret?: boolean; placeholder?: string }) {
+function Field({
+  id,
+  label,
+  value,
+  onChange,
+  secret,
+  placeholder,
+}: {
+  id: string
+  label: string
+  value: string
+  onChange: (v: string) => void
+  secret?: boolean
+  placeholder?: string
+}) {
   return (
     <div className='space-y-1'>
-      <Label htmlFor={id} className='text-xs'>{label}</Label>
-      <Input id={id} dir='ltr' type={secret ? 'password' : 'text'} autoComplete='off' value={value} placeholder={placeholder} onChange={(e) => onChange(e.target.value)} />
+      <Label htmlFor={id} className='text-xs'>
+        {label}
+      </Label>
+      <Input
+        id={id}
+        dir='ltr'
+        type={secret ? 'password' : 'text'}
+        autoComplete='off'
+        value={value}
+        placeholder={placeholder}
+        onChange={(e) => onChange(e.target.value)}
+      />
     </div>
   )
 }
 
-function FilePick({ id, accept, label, busy, onPick }: { id: string; accept: string; label: string; busy: boolean; onPick: (f: File) => void }) {
+function FilePick({
+  id,
+  accept,
+  label,
+  busy,
+  onPick,
+}: {
+  id: string
+  accept: string
+  label: string
+  busy: boolean
+  onPick: (f: File) => void
+}) {
   return (
     <div className='space-y-1'>
-      <Label htmlFor={id} className='text-xs'>{label}</Label>
+      <Label htmlFor={id} className='text-xs'>
+        {label}
+      </Label>
       <div className='flex items-center gap-2'>
         <Input
           id={id}

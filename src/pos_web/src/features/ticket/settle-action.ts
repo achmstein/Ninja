@@ -34,5 +34,7 @@ export function settleAction(tenderName: string, entered: number | null, remaini
  */
 export function cashNotes(remaining: number): number[] {
   if (remaining <= 0) return []
-  return [...new Set([50, 100, 200, 500].map((step) => Math.ceil(remaining / step) * step))].filter((note) => note > remaining)
+  return [...new Set([50, 100, 200, 500].map((step) => Math.ceil(remaining / step) * step))].filter(
+    (note) => note > remaining
+  )
 }

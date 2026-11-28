@@ -1,8 +1,8 @@
 import type { ReactNode, Ref } from 'react'
 import { Link } from '@tanstack/react-router'
 import { motion, type MotionStyle } from 'motion/react'
-import { spring } from '@/lib/motion'
 import { useIsland } from '@/lib/island'
+import { spring } from '@/lib/motion'
 import { cn } from '@/lib/utils'
 import { BrandWordmark } from '@/components/brand/brand-mark'
 import { ScanCodeButton } from '@/components/places/table-scanner'
@@ -43,7 +43,10 @@ export function NinjaTopBar({
     <motion.div
       ref={ref}
       // As tall as the business's header (--bar-h, styles/theme.css), so every brand's logo sits with room round it
-      className={cn('bg-background z-30 mx-auto flex h-(--bar-h) w-full max-w-lg items-center justify-between gap-3 px-4', className)}
+      className={cn(
+        'bg-background z-30 mx-auto flex h-(--bar-h) w-full max-w-lg items-center justify-between gap-3 px-4',
+        className
+      )}
       style={style}
     >
       <div className='flex min-w-0 items-center gap-1'>{start ?? brand}</div>

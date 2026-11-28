@@ -1,7 +1,17 @@
 import { describe, expect, it } from 'vitest'
 import { type BillLineView, type BillView } from '@/api/sales'
 import { type StayViewModel } from '@/api/spaces'
-import { billParts, closedAt, isOpen, isOthers, isSettled, isTimeLine, isUnassigned, percent, runningTime } from './bills'
+import {
+  billParts,
+  closedAt,
+  isOpen,
+  isOthers,
+  isSettled,
+  isTimeLine,
+  isUnassigned,
+  percent,
+  runningTime,
+} from './bills'
 
 // The customer's own bill, as their phone works it out between refreshes:
 // the clock's time before the till stops it, and how much of the total is
@@ -39,7 +49,13 @@ function stay(over: Partial<StayViewModel> = {}): StayViewModel {
   }
 }
 
-const line = (over: Partial<BillLineView> = {}): BillLineView => ({ id: 1, source: 'Order', total: 50, isMine: true, ...over })
+const line = (over: Partial<BillLineView> = {}): BillLineView => ({
+  id: 1,
+  source: 'Order',
+  total: 50,
+  isMine: true,
+  ...over,
+})
 
 describe('the clock on an open bill', () => {
   it('is the minutes so far, rounded to the tariff’s step at the rate they ran on', () => {
@@ -93,7 +109,11 @@ describe('whose round is whose', () => {
 describe('what of the bill is certainly the customer’s', () => {
   it('adds up their own rounds at menu prices, and the place’s time on its own', () => {
     const open = bill({
-      lines: [line({ total: 50 }), line({ id: 2, total: 30, isMine: false, customerName: 'Hany' }), line({ id: 3, source: 'SessionTime', total: 120, isMine: false })],
+      lines: [
+        line({ total: 50 }),
+        line({ id: 2, total: 30, isMine: false, customerName: 'Hany' }),
+        line({ id: 3, source: 'SessionTime', total: 120, isMine: false }),
+      ],
       total: 200,
     })
     const parts = billParts(open, null, undefined)

@@ -7,11 +7,7 @@ import { getPendingOrdersOptions } from '@/api/ordering/@tanstack/react-query.ge
 import { getRangeReportOptions } from '@/api/sales/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useFeatures, useIsCloudKitchen } from '@/lib/brand'
-import {
-  businessDateOf,
-  businessDayWindow,
-  elapsedOf,
-} from '@/lib/business-day'
+import { businessDateOf, businessDayWindow, elapsedOf } from '@/lib/business-day'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { addDays } from '@/lib/zoned-time'
@@ -22,11 +18,7 @@ import { PageHeader } from '@/components/page-header'
 import { urgencyTextClass } from '@/components/queue-card'
 import { stockLevelsQueryOptions } from '@/features/inventory/queries'
 import { formatEgp, orderUrgency, relativeTime } from '@/features/orders/status'
-import {
-  isRunning,
-  PLACE_OUT_OF_SERVICE,
-  PLACE_TABLE,
-} from '@/features/places/status'
+import { isRunning, PLACE_OUT_OF_SERVICE, PLACE_TABLE } from '@/features/places/status'
 import { orderIsAt, usePlaces } from '@/features/places/use-places'
 import { serviceRequestsService } from '@/features/requests/service'
 import { useTillWindow } from '@/features/till/use-till-window'
@@ -73,9 +65,7 @@ export function Dashboard() {
 
   // The branch's business day (17:00 → 17:00 the next day, in the
   // business's zone), re-evaluated every minute
-  const { branch, hours, timeZone, dayWindow, fromIso, toIso } = useTillWindow(
-    {}
-  )
+  const { branch, hours, timeZone, dayWindow, fromIso, toIso } = useTillWindow({})
 
   const pendingQuery = useQuery({
     ...getPendingOrdersOptions({ query: { 'api-version': API_VERSION } }),
@@ -104,10 +94,7 @@ export function Dashboard() {
 
   const pending = useMemo(
     () =>
-      [...(pendingQuery.data ?? [])].sort(
-        (a, b) =>
-          new Date(a.date ?? 0).getTime() - new Date(b.date ?? 0).getTime()
-      ),
+      [...(pendingQuery.data ?? [])].sort((a, b) => new Date(a.date ?? 0).getTime() - new Date(b.date ?? 0).getTime()),
     [pendingQuery.data]
   )
   const oldest = pending[0]
@@ -118,35 +105,22 @@ export function Dashboard() {
   const { places } = floor
   const running = floor.stays.filter(isRunning)
   // Timed places run a clock; an untimed table only takes orders
-  const timedInService = places.filter(
-    (p) => p.isTimed && Number(p.status) !== PLACE_OUT_OF_SERVICE
-  ).length
-  const tables = places.filter(
-    (p) => Number(p.kind) === PLACE_TABLE && !p.isTimed
-  )
+  const timedInService = places.filter((p) => p.isTimed && Number(p.status) !== PLACE_OUT_OF_SERVICE).length
+  const tables = places.filter((p) => Number(p.kind) === PLACE_TABLE && !p.isTimed)
   const activeTables = tables.filter((table) => table.isActive).length
-  const busyTables = tables.filter((table) =>
-    pending.some((order) => orderIsAt(order, table))
-  ).length
+  const busyTables = tables.filter((table) => pending.some((order) => orderIsAt(order, table))).length
 
   // The same business day a week ago, up to the same time into it: a fair
   // comparison while today is still going (to the 5 minutes, so it is not
   // asked for again every tick). Days, not 168 hours, so a clock change in
   // between does not move it by an hour.
   const lastWeekWindow =
-    dayWindow && hours
-      ? businessDayWindow(
-          addDays(businessDateOf(dayWindow.from, hours), -7),
-          hours
-        )
-      : null
+    dayWindow && hours ? businessDayWindow(addDays(businessDateOf(dayWindow.from, hours), -7), hours) : null
   const lastWeekFrom = lastWeekWindow?.from.toISOString() ?? ''
   const lastWeekTo =
     dayWindow && lastWeekWindow
       ? new Date(
-          lastWeekWindow.from.getTime() +
-            Math.floor(elapsedOf(dayWindow, new Date(nowMs)) / 300_000) *
-              300_000
+          lastWeekWindow.from.getTime() + Math.floor(elapsedOf(dayWindow, new Date(nowMs)) / 300_000) * 300_000
         ).toISOString()
       : ''
   const lastWeekQuery = useQuery({
@@ -183,16 +157,9 @@ export function Dashboard() {
     attention.push({
       key: 'orders',
       to: '/orders/live',
-      dot:
-        oldestUrgency === 'delayed'
-          ? 'bg-destructive'
-          : oldestUrgency === 'warning'
-            ? 'bg-warning'
-            : 'bg-primary',
+      dot: oldestUrgency === 'delayed' ? 'bg-destructive' : oldestUrgency === 'warning' ? 'bg-warning' : 'bg-primary',
       text: t('ordersWaitingLine', { count: pending.length }),
-      detail: oldest
-        ? t('oldestAge', { age: relativeTime(oldest.date, nowMs, t, locale) })
-        : undefined,
+      detail: oldest ? t('oldestAge', { age: relativeTime(oldest.date, nowMs, t, locale) }) : undefined,
       detailClass: urgencyTextClass(oldestUrgency),
     })
   }
@@ -216,18 +183,13 @@ export function Dashboard() {
 
   // What the dashboard has to show depends on what the business runs
   const hasFourth = !cloudKitchen || features.inventory
-  const showFloor =
-    !cloudKitchen && (features.timeBilling || features.reservations)
+  const showFloor = !cloudKitchen && (features.timeBilling || features.reservations)
 
   return (
     <Main>
       <PageHeader
         title={localized(branch?.name) || t('dashboard')}
-        description={
-          dayWindow
-            ? `${dateTime.format(dayWindow.from)} – ${dateTime.format(dayWindow.to)}`
-            : undefined
-        }
+        description={dayWindow ? `${dateTime.format(dayWindow.from)} – ${dateTime.format(dayWindow.to)}` : undefined}
       >
         {attention.length > 0 && (
           <ul className='flex flex-col gap-1.5'>
@@ -240,11 +202,7 @@ export function Dashboard() {
                 >
                   <span className={cn('size-2 rounded-full', line.dot)} />
                   <span className='font-medium'>{line.text}</span>
-                  {line.detail && (
-                    <span className={cn('text-xs', line.detailClass)}>
-                      · {line.detail}
-                    </span>
-                  )}
+                  {line.detail && <span className={cn('text-xs', line.detailClass)}>· {line.detail}</span>}
                 </Link>
               </li>
             ))}
@@ -258,9 +216,7 @@ export function Dashboard() {
       <Stagger
         className={cn(
           'grid auto-rows-fr grid-cols-2 gap-3 [&>*:last-child:nth-child(odd)]:col-span-2',
-          hasFourth
-            ? 'lg:grid-cols-4'
-            : 'lg:grid-cols-3 lg:[&>*:last-child:nth-child(odd)]:col-span-1'
+          hasFourth ? 'lg:grid-cols-4' : 'lg:grid-cols-3 lg:[&>*:last-child:nth-child(odd)]:col-span-1'
         )}
       >
         <StaggerItem>
@@ -276,18 +232,8 @@ export function Dashboard() {
         <StaggerItem>
           <KpiCard
             label={t('averageBill')}
-            value={
-              bills > 0 ? (
-                <CountUp value={averageBill} format={formatEgp} />
-              ) : (
-                '—'
-              )
-            }
-            change={
-              compared && bills > 0
-                ? changeOf(averageBill, lastAverage)
-                : undefined
-            }
+            value={bills > 0 ? <CountUp value={averageBill} format={formatEgp} /> : '—'}
+            change={compared && bills > 0 ? changeOf(averageBill, lastAverage) : undefined}
             footer={t('posTicketsCount', { count: bills })}
             loading={reportLoading}
             to='/till/tickets'
@@ -330,11 +276,7 @@ export function Dashboard() {
                   count: running.length,
                   total: timedInService,
                 })}
-                footer={
-                  t('tablesInUse') +
-                  ': ' +
-                  t('ofTotal', { count: busyTables, total: activeTables })
-                }
+                footer={t('tablesInUse') + ': ' + t('ofTotal', { count: busyTables, total: activeTables })}
                 loading={floor.isPending}
                 to='/places'
               />

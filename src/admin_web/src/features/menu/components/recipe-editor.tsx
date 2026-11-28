@@ -1,36 +1,15 @@
 import { useState } from 'react'
-import {
-  Ban,
-  ChevronDown,
-  ChevronsUpDown,
-  FlaskConical,
-  Plus,
-  X,
-} from 'lucide-react'
+import { Ban, ChevronDown, ChevronsUpDown, FlaskConical, Plus, X } from 'lucide-react'
 import { useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { useDirection } from '@/context/direction-provider'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { Input } from '@/components/ui/input'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { Combobox, type ComboboxOption } from '@/components/combobox'
 import { InfoTip } from '@/components/info-tip'
@@ -46,11 +25,7 @@ import {
   type SlotDraft,
   type SlotLine,
 } from '@/features/inventory/recipe-model'
-import {
-  type MenuGroup,
-  type MenuOption,
-  type MenuOptions,
-} from '../menu-options'
+import { type MenuGroup, type MenuOption, type MenuOptions } from '../menu-options'
 
 /** What a slot can be made of: the shelf, or (in the review sheet) an ingredient about to be created */
 export type IngredientOption = {
@@ -76,11 +51,7 @@ export function OptionChips({
 }) {
   const t = useT()
   if (optionIds.length === 0) {
-    return (
-      <span className={cn('text-muted-foreground text-xs', className)}>
-        {t('everySale')}
-      </span>
-    )
+    return <span className={cn('text-muted-foreground text-xs', className)}>{t('everySale')}</span>
   }
   const known = optionIds
     .map((id) => menu.byId.get(id))
@@ -125,12 +96,7 @@ type EditorProps = {
  * which choices change it — then a grid under the row with what each
  * choice (or pair of choices) makes of it. Size is one row of factors.
  */
-export function RecipeSlotsEditor({
-  draft,
-  onChange,
-  menu,
-  ingredients,
-}: EditorProps) {
+export function RecipeSlotsEditor({ draft, onChange, menu, ingredients }: EditorProps) {
   const t = useT()
   const byValue = new Map(ingredients.map((i) => [i.value, i]))
   const options: ComboboxOption[] = ingredients.map((i) => ({
@@ -174,9 +140,7 @@ export function RecipeSlotsEditor({
         type='button'
         variant='outline'
         size='sm'
-        onClick={() =>
-          onChange({ ...draft, slots: [...draft.slots, newSlot()] })
-        }
+        onClick={() => onChange({ ...draft, slots: [...draft.slots, newSlot()] })}
       >
         <Plus className='size-3.5' />
         {t('addIngredient')}
@@ -203,9 +167,7 @@ function SlotEditor({
   onRemove: () => void
 }) {
   const t = useT()
-  const unit = slot.stockItemId
-    ? (byValue.get(slot.stockItemId)?.unit ?? '')
-    : ''
+  const unit = slot.stockItemId ? (byValue.get(slot.stockItemId)?.unit ?? '') : ''
 
   return (
     <div className='rounded-lg border'>
@@ -214,9 +176,7 @@ function SlotEditor({
           value={slot.stockItemId}
           onChange={(value) => onChange({ stockItemId: value })}
           options={options}
-          placeholder={
-            slot.hasDefault ? t('pickStockItem') : t('nothingByDefault')
-          }
+          placeholder={slot.hasDefault ? t('pickStockItem') : t('nothingByDefault')}
           disabled={!slot.hasDefault}
           size='sm'
           wrap
@@ -228,11 +188,7 @@ function SlotEditor({
           onChange={(quantity) => onChange({ quantity })}
         />
         {hasChoices ? (
-          <DependsOnPicker
-            menu={menu}
-            value={slot.groupIds}
-            onChange={(groupIds) => onChange({ groupIds })}
-          />
+          <DependsOnPicker menu={menu} value={slot.groupIds} onChange={(groupIds) => onChange({ groupIds })} />
         ) : (
           <span />
         )}
@@ -252,10 +208,7 @@ function SlotEditor({
         <div className='text-muted-foreground flex flex-wrap items-center gap-x-4 gap-y-1 px-2 pb-2 text-xs'>
           {slot.groupIds.length > 0 && (
             <label className='flex cursor-pointer items-center gap-1.5'>
-              <Checkbox
-                checked={!slot.hasDefault}
-                onCheckedChange={(on) => onChange({ hasDefault: on !== true })}
-              />
+              <Checkbox checked={!slot.hasDefault} onCheckedChange={(on) => onChange({ hasDefault: on !== true })} />
               {t('onlyForSomeChoices')}
             </label>
           )}
@@ -349,28 +302,19 @@ function DependsOnPicker({
       </PopoverTrigger>
       <PopoverContent className='w-60 space-y-2 p-3' align='start'>
         {menu.groups.map((group) => (
-          <label
-            key={group.id}
-            className='flex cursor-pointer items-center gap-2 text-sm'
-          >
+          <label key={group.id} className='flex cursor-pointer items-center gap-2 text-sm'>
             <Checkbox
               checked={value.includes(group.id)}
               onCheckedChange={(on) =>
                 onChange(
                   on === true
-                    ? menu.groups
-                        .map((g) => g.id)
-                        .filter((id) => id === group.id || value.includes(id))
+                    ? menu.groups.map((g) => g.id).filter((id) => id === group.id || value.includes(id))
                     : value.filter((id) => id !== group.id)
                 )
               }
             />
             {group.label}
-            {group.allowMultiple && (
-              <span className='text-muted-foreground text-xs'>
-                {t('addOns')}
-              </span>
-            )}
+            {group.allowMultiple && <span className='text-muted-foreground text-xs'>{t('addOns')}</span>}
           </label>
         ))}
       </PopoverContent>
@@ -398,14 +342,9 @@ function OverrideEditor({
   onChange: (overrides: OverrideDraft[]) => void
 }) {
   const t = useT()
-  const groups = slot.groupIds
-    .map((id) => menu.groups.find((g) => g.id === id))
-    .filter((g): g is MenuGroup => !!g)
+  const groups = slot.groupIds.map((id) => menu.groups.find((g) => g.id === id)).filter((g): g is MenuGroup => !!g)
 
-  const find = (combo: string[]) =>
-    slot.overrides.find(
-      (o) => optionSetKey(o.optionIds) === optionSetKey(combo)
-    )
+  const find = (combo: string[]) => slot.overrides.find((o) => optionSetKey(o.optionIds) === optionSetKey(combo))
 
   const set = (combo: string[], patch: Partial<OverrideDraft>) => {
     const existing = find(combo)
@@ -438,10 +377,7 @@ function OverrideEditor({
     return (
       <div className='space-y-1.5 border-t p-2'>
         {group.options.map((option) => (
-          <div
-            key={option.id}
-            className='grid items-start gap-2 sm:grid-cols-[8rem_minmax(0,1fr)]'
-          >
+          <div key={option.id} className='grid items-start gap-2 sm:grid-cols-[8rem_minmax(0,1fr)]'>
             <span className='pt-1.5 text-xs'>{optionLabel(option, t)}</span>
             {cell([option.id])}
           </div>
@@ -470,9 +406,7 @@ function OverrideEditor({
           <tbody>
             {rows.options.map((r) => (
               <tr key={r.id} className='border-t'>
-                <td className='py-1.5 pe-2 align-top font-medium'>
-                  {optionLabel(r, t)}
-                </td>
+                <td className='py-1.5 pe-2 align-top font-medium'>{optionLabel(r, t)}</td>
                 {cols.options.map((c) => (
                   <td key={c.id} className='py-1.5 pe-2 align-top'>
                     {cell([r.id, c.id])}
@@ -505,9 +439,7 @@ function OverrideEditor({
                 {g.label}
               </th>
             ))}
-            <th className='min-w-40 pe-2 pb-1 text-start font-medium'>
-              {t('stockItem')}
-            </th>
+            <th className='min-w-40 pe-2 pb-1 text-start font-medium'>{t('stockItem')}</th>
             <th />
           </tr>
         </thead>
@@ -516,8 +448,7 @@ function OverrideEditor({
             <tr key={o.key} className='border-t'>
               {groups.map((g) => (
                 <td key={g.id} className='py-1 pe-2 align-middle'>
-                  {g.options.find((x) => o.optionIds.includes(x.id))?.label ??
-                    t('anyChoice')}
+                  {g.options.find((x) => o.optionIds.includes(x.id))?.label ?? t('anyChoice')}
                 </td>
               ))}
               <td className='py-1 pe-2 align-middle'>
@@ -536,9 +467,7 @@ function OverrideEditor({
                   size='icon'
                   className='size-7'
                   aria-label={t('removeLine')}
-                  onClick={() =>
-                    onChange(slot.overrides.filter((x) => x.key !== o.key))
-                  }
+                  onClick={() => onChange(slot.overrides.filter((x) => x.key !== o.key))}
                 >
                   <X className='h-3.5 w-3.5' />
                 </Button>
@@ -573,9 +502,7 @@ function OverrideCell({
   const none = override?.none ?? false
   const itemId = override?.stockItemId ?? slot.stockItemId
   const unit = itemId ? (byValue.get(itemId)?.unit ?? '') : ''
-  const defaultLabel = slot.stockItemId
-    ? byValue.get(slot.stockItemId)?.label
-    : undefined
+  const defaultLabel = slot.stockItemId ? byValue.get(slot.stockItemId)?.label : undefined
 
   return (
     <div className={cn('space-y-1', none && 'opacity-60')}>
@@ -583,9 +510,7 @@ function OverrideCell({
         value={override?.stockItemId ?? null}
         onChange={(value) => onChange({ stockItemId: value })}
         options={options}
-        placeholder={
-          slot.hasDefault && defaultLabel ? defaultLabel : t('pickStockItem')
-        }
+        placeholder={slot.hasDefault && defaultLabel ? defaultLabel : t('pickStockItem')}
         disabled={none}
         size='sm'
         wrap
@@ -594,9 +519,7 @@ function OverrideCell({
         <QuantityInput
           value={override?.quantity ?? ''}
           unit={unit}
-          placeholder={
-            slot.hasDefault && slot.quantity ? slot.quantity : undefined
-          }
+          placeholder={slot.hasDefault && slot.quantity ? slot.quantity : undefined}
           disabled={none}
           compact
           onChange={(quantity) => onChange({ quantity })}
@@ -619,13 +542,7 @@ function OverrideCell({
 }
 
 /** For a slot on three or more groups: pick one option per group to add a rule for */
-function RuleAdder({
-  groups,
-  onAdd,
-}: {
-  groups: MenuGroup[]
-  onAdd: (combo: string[]) => void
-}) {
+function RuleAdder({ groups, onAdd }: { groups: MenuGroup[]; onAdd: (combo: string[]) => void }) {
   const t = useT()
   const [picked, setPicked] = useState<Record<string, string>>({})
   const complete = groups.every((g) => picked[g.id])
@@ -635,9 +552,7 @@ function RuleAdder({
         <Select
           key={group.id}
           value={picked[group.id] ?? ''}
-          onValueChange={(value) =>
-            setPicked((prev) => ({ ...prev, [group.id]: value }))
-          }
+          onValueChange={(value) => setPicked((prev) => ({ ...prev, [group.id]: value }))}
         >
           <SelectTrigger className='h-7 w-36 text-xs' aria-label={group.label}>
             <SelectValue placeholder={group.label} />
@@ -691,9 +606,7 @@ export function DeductionPreview({
   const t = useT()
   const [open, setOpen] = useState(false)
   const [chosen, setChosen] = useState<string[]>(() =>
-    menu.groups
-      .flatMap((g) => g.options.filter((o) => o.isDefault))
-      .map((o) => o.id)
+    menu.groups.flatMap((g) => g.options.filter((o) => o.isDefault)).map((o) => o.id)
   )
 
   if (menu.groups.length === 0) return null
@@ -707,35 +620,20 @@ export function DeductionPreview({
   }
 
   return (
-    <Collapsible
-      open={open}
-      onOpenChange={setOpen}
-      className='rounded-lg border'
-    >
+    <Collapsible open={open} onOpenChange={setOpen} className='rounded-lg border'>
       <CollapsibleTrigger asChild>
-        <Button
-          type='button'
-          variant='ghost'
-          className='h-auto w-full justify-between px-3 py-2.5 font-normal'
-        >
+        <Button type='button' variant='ghost' className='h-auto w-full justify-between px-3 py-2.5 font-normal'>
           <span className='flex items-center gap-2 text-sm font-medium'>
             <FlaskConical className='text-muted-foreground h-4 w-4' />
             {t('tryIt')}
           </span>
-          <ChevronDown
-            className={cn(
-              'text-muted-foreground h-4 w-4 transition-transform',
-              open && 'rotate-180'
-            )}
-          />
+          <ChevronDown className={cn('text-muted-foreground h-4 w-4 transition-transform', open && 'rotate-180')} />
         </Button>
       </CollapsibleTrigger>
       <CollapsibleContent className='space-y-3 border-t p-3'>
         <div className='space-y-2'>
           {menu.groups.map((group) => {
-            const inGroup = group.options
-              .map((o) => o.id)
-              .filter((id) => chosenSet.has(id))
+            const inGroup = group.options.map((o) => o.id).filter((id) => chosenSet.has(id))
             const items = group.options.map((option) => (
               <ToggleGroupItem
                 key={option.id}
@@ -746,13 +644,8 @@ export function DeductionPreview({
               </ToggleGroupItem>
             ))
             return (
-              <div
-                key={group.id}
-                className='flex flex-wrap items-center gap-x-3 gap-y-1'
-              >
-                <span className='text-muted-foreground w-24 shrink-0 truncate text-xs'>
-                  {group.label}
-                </span>
+              <div key={group.id} className='flex flex-wrap items-center gap-x-3 gap-y-1'>
+                <span className='text-muted-foreground w-24 shrink-0 truncate text-xs'>{group.label}</span>
                 {group.allowMultiple ? (
                   <ToggleGroup
                     type='multiple'
@@ -770,9 +663,7 @@ export function DeductionPreview({
                     variant='outline'
                     size='sm'
                     value={inGroup[0] ?? ''}
-                    onValueChange={(value) =>
-                      pickGroup(group, value ? [value] : [])
-                    }
+                    onValueChange={(value) => pickGroup(group, value ? [value] : [])}
                     className='flex-wrap'
                   >
                     {items}
@@ -783,22 +674,15 @@ export function DeductionPreview({
           })}
         </div>
         {totals.size === 0 ? (
-          <p className='text-muted-foreground text-sm'>
-            {t('nothingDeducted')}
-          </p>
+          <p className='text-muted-foreground text-sm'>{t('nothingDeducted')}</p>
         ) : (
           <ul className='space-y-1 text-sm'>
             {[...totals].map(([stockItemId, quantity]) => {
               const info = stock.get(stockItemId)
               return (
-                <li
-                  key={stockItemId}
-                  className='flex flex-wrap items-baseline gap-x-2'
-                >
+                <li key={stockItemId} className='flex flex-wrap items-baseline gap-x-2'>
                   <span className='font-medium'>{info?.label ?? '—'}</span>
-                  <span className='tabular-nums'>
-                    {formatQuantity(quantity, info?.unit ?? '', t)}
-                  </span>
+                  <span className='tabular-nums'>{formatQuantity(quantity, info?.unit ?? '', t)}</span>
                 </li>
               )
             })}

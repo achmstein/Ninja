@@ -1,10 +1,5 @@
 import { useEffect, useState } from 'react'
-import {
-  keepPreviousData,
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from '@tanstack/react-query'
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { UserCheck, UserRound } from 'lucide-react'
 import { getGuestsOptions } from '@/api/ordering/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
@@ -13,21 +8,12 @@ import { useLocale, useT } from '@/lib/i18n'
 import { normalizeName, normalizePhone, showPhone } from '@/lib/phone'
 import { toast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { loyaltyService } from '@/features/loyalty/services/loyalty-service'
 import { customersKeys } from '../hooks/use-customers'
-import {
-  counterCustomersService,
-  existingCustomerOf,
-} from '../services/counter-customers-service'
+import { counterCustomersService, existingCustomerOf } from '../services/counter-customers-service'
 import { getCustomerDisplayName, type Customer } from '../types'
 
 const LOOKUP_DEBOUNCE_MS = 300
@@ -56,11 +42,7 @@ type AddCustomerDialogProps = {
  * before a second account splits their points; names that look alike are
  * suggested but never block (two Ahmeds are two people).
  */
-export function AddCustomerDialog({
-  open,
-  onOpenChange,
-  onOpenCustomer,
-}: AddCustomerDialogProps) {
+export function AddCustomerDialog({ open, onOpenChange, onOpenCustomer }: AddCustomerDialogProps) {
   const t = useT()
   const queryClient = useQueryClient()
   const brand = useBrand()
@@ -72,14 +54,8 @@ export function AddCustomerDialog({
 
   const normalized = normalizePhone(phone, country)
   const digits = normalized.replace(/\D/g, '')
-  const lookupPhone = useDebounced(
-    digits.length >= MIN_PHONE_DIGITS ? normalized : '',
-    LOOKUP_DEBOUNCE_MS
-  )
-  const lookupName = useDebounced(
-    normalizeName(name).length >= MIN_NAME_LENGTH ? name.trim() : '',
-    LOOKUP_DEBOUNCE_MS
-  )
+  const lookupPhone = useDebounced(digits.length >= MIN_PHONE_DIGITS ? normalized : '', LOOKUP_DEBOUNCE_MS)
+  const lookupName = useDebounced(normalizeName(name).length >= MIN_NAME_LENGTH ? name.trim() : '', LOOKUP_DEBOUNCE_MS)
 
   const lookup = useQuery({
     queryKey: ['customerLookup', lookupPhone, lookupName],
@@ -98,10 +74,7 @@ export function AddCustomerDialog({
 
   // A result for what is typed now, not what was typed a moment ago
   const current =
-    lookup.data &&
-    lookupPhone === (digits.length >= MIN_PHONE_DIGITS ? normalized : '')
-      ? lookup.data
-      : undefined
+    lookup.data && lookupPhone === (digits.length >= MIN_PHONE_DIGITS ? normalized : '') ? lookup.data : undefined
   const match = conflict ?? current?.match ?? null
   const similar = (lookup.data?.similar ?? []).filter((c) => c.id !== match?.id)
   // Someone who ordered without an account left this number: not a
@@ -116,13 +89,8 @@ export function AddCustomerDialog({
   })
   const guest = match
     ? undefined
-    : guests.data?.items?.find(
-        (g) => !!g.phone && normalizePhone(g.phone, country) === lookupPhone
-      )
-  const phoneInvalid =
-    digits.length >= MIN_PHONE_DIGITS &&
-    current !== undefined &&
-    !current.phoneValid
+    : guests.data?.items?.find((g) => !!g.phone && normalizePhone(g.phone, country) === lookupPhone)
+  const phoneInvalid = digits.length >= MIN_PHONE_DIGITS && current !== undefined && !current.phoneValid
 
   const create = useMutation({
     mutationFn: () => counterCustomersService.create(name.trim(), normalized),
@@ -144,11 +112,7 @@ export function AddCustomerDialog({
     onOpenCustomer(id)
   }
 
-  const canCreate =
-    name.trim().length > 0 &&
-    digits.length >= MIN_PHONE_DIGITS &&
-    !match &&
-    !phoneInvalid
+  const canCreate = name.trim().length > 0 && digits.length >= MIN_PHONE_DIGITS && !match && !phoneInvalid
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -180,20 +144,12 @@ export function AddCustomerDialog({
               }}
               aria-invalid={phoneInvalid || undefined}
             />
-            {phoneInvalid && (
-              <p className='text-destructive text-xs'>
-                {t('phoneLike', { placeholder })}
-              </p>
-            )}
+            {phoneInvalid && <p className='text-destructive text-xs'>{t('phoneLike', { placeholder })}</p>}
             {guest && (
               <div className='bg-muted/50 flex items-center justify-between gap-2 rounded-md border px-3 py-2 text-sm'>
                 <span className='min-w-0'>
-                  <span className='text-muted-foreground block text-xs'>
-                    {t('orderedAsGuest')}
-                  </span>
-                  <span className='block truncate font-medium'>
-                    {guest.name || t('guestBadge')}
-                  </span>
+                  <span className='text-muted-foreground block text-xs'>{t('orderedAsGuest')}</span>
+                  <span className='block truncate font-medium'>{guest.name || t('guestBadge')}</span>
                   <span className='text-muted-foreground text-xs'>
                     {t('guestOrderCount', {
                       count: Number(guest.orderCount ?? 0),
@@ -201,23 +157,13 @@ export function AddCustomerDialog({
                   </span>
                 </span>
                 {guest.name && !name.trim() && (
-                  <Button
-                    type='button'
-                    variant='outline'
-                    size='sm'
-                    onClick={() => setName(guest.name ?? '')}
-                  >
+                  <Button type='button' variant='outline' size='sm' onClick={() => setName(guest.name ?? '')}>
                     {t('useGuestName')}
                   </Button>
                 )}
               </div>
             )}
-            {match && (
-              <MatchCard
-                customer={match}
-                onOpen={() => openCustomer(match.id)}
-              />
-            )}
+            {match && <MatchCard customer={match} onOpen={() => openCustomer(match.id)} />}
           </div>
 
           <div className='flex flex-col gap-2'>
@@ -230,9 +176,7 @@ export function AddCustomerDialog({
             />
             {similar.length > 0 && (
               <div className='flex flex-col gap-1'>
-                <p className='text-muted-foreground text-xs'>
-                  {t('didYouMean')}
-                </p>
+                <p className='text-muted-foreground text-xs'>{t('didYouMean')}</p>
                 {similar.map((c) => (
                   <button
                     key={c.id}
@@ -241,14 +185,9 @@ export function AddCustomerDialog({
                     className='hover:bg-accent flex items-center gap-2 rounded-md px-2 py-1.5 text-start text-sm'
                   >
                     <UserRound className='text-muted-foreground size-4 shrink-0' />
-                    <span className='min-w-0 flex-1 truncate'>
-                      {getCustomerDisplayName(c)}
-                    </span>
+                    <span className='min-w-0 flex-1 truncate'>{getCustomerDisplayName(c)}</span>
                     {c.phoneNumber && (
-                      <span
-                        className='text-muted-foreground text-xs tabular-nums'
-                        dir='ltr'
-                      >
+                      <span className='text-muted-foreground text-xs tabular-nums' dir='ltr'>
                         <span dir='ltr'>{showPhone(c.phoneNumber)}</span>
                       </span>
                     )}
@@ -259,18 +198,10 @@ export function AddCustomerDialog({
           </div>
 
           <DialogFooter>
-            <Button
-              type='button'
-              variant='outline'
-              onClick={() => onOpenChange(false)}
-            >
+            <Button type='button' variant='outline' onClick={() => onOpenChange(false)}>
               {t('cancel')}
             </Button>
-            <Button
-              type='submit'
-              variant={match ? 'outline' : 'default'}
-              disabled={!canCreate || create.isPending}
-            >
+            <Button type='submit' variant={match ? 'outline' : 'default'} disabled={!canCreate || create.isPending}>
               {t('create')}
             </Button>
           </DialogFooter>
@@ -281,13 +212,7 @@ export function AddCustomerDialog({
 }
 
 /** The customer this number already belongs to, with the way to them. */
-function MatchCard({
-  customer,
-  onOpen,
-}: {
-  customer: Customer
-  onOpen: () => void
-}) {
+function MatchCard({ customer, onOpen }: { customer: Customer; onOpen: () => void }) {
   const t = useT()
   const locale = useLocale()
   const features = useFeatures()
@@ -303,9 +228,7 @@ function MatchCard({
       <UserCheck className='text-primary size-5 shrink-0' />
       <div className='min-w-0 flex-1'>
         <p className='text-muted-foreground text-xs'>{t('alreadyACustomer')}</p>
-        <p className='truncate text-sm font-medium'>
-          {getCustomerDisplayName(customer)}
-        </p>
+        <p className='truncate text-sm font-medium'>{getCustomerDisplayName(customer)}</p>
         <p className='text-muted-foreground truncate text-xs' dir='ltr'>
           {[
             customer.phoneNumber,

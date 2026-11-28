@@ -1,10 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import type { TenantDetail, UpdateTenantRequest } from '@/api/control'
-import {
-  getTenantQueryKey,
-  listTenantsQueryKey,
-  updateTenantMutation,
-} from '@/api/control/@tanstack/react-query.gen'
+import { getTenantQueryKey, listTenantsQueryKey, updateTenantMutation } from '@/api/control/@tanstack/react-query.gen'
 import { useT } from '@/lib/i18n'
 import { problemDetail } from '@/lib/problem'
 import { toast } from '@/lib/toast'

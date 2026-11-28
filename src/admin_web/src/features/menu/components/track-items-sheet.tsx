@@ -4,10 +4,7 @@ import { CircleCheck, Package, SearchX } from 'lucide-react'
 import { v4 as uuidv4 } from 'uuid'
 import { type CatalogItemDto } from '@/api/catalog'
 import { type RecipesProposal } from '@/api/inventory'
-import {
-  proposeRecipesMutation,
-  trackByUnitMutation,
-} from '@/api/inventory/@tanstack/react-query.gen'
+import { proposeRecipesMutation, trackByUnitMutation } from '@/api/inventory/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useContentLanguages } from '@/lib/content-languages'
 import { useLocalized, useT } from '@/lib/i18n'
@@ -39,10 +36,7 @@ type TrackItemsSheetProps = {
  * needed — or ask the assistant to propose a recipe for each, which opens
  * the review sheet. A long pick goes up in batches.
  */
-export function TrackItemsSheet({
-  untracked,
-  onOpenChange,
-}: TrackItemsSheetProps) {
+export function TrackItemsSheet({ untracked, onOpenChange }: TrackItemsSheetProps) {
   const t = useT()
   const localized = useLocalized()
   const queryClient = useQueryClient()
@@ -64,11 +58,7 @@ export function TrackItemsSheet({
   const groups = useMemo(() => {
     const needle = filter.trim().toLowerCase()
     const shown = needle
-      ? untracked.filter((item) =>
-          `${item.name?.en ?? ''} ${item.name?.ar ?? ''}`
-            .toLowerCase()
-            .includes(needle)
-        )
+      ? untracked.filter((item) => `${item.name?.en ?? ''} ${item.name?.ar ?? ''}`.toLowerCase().includes(needle))
       : untracked
     const byCategory = new Map<string, CatalogItemDto[]>()
     for (const item of shown) {
@@ -167,9 +157,7 @@ export function TrackItemsSheet({
             const wait = assistRetryAfter(error)
             // A wait of more than a couple of minutes is a spent allowance, not a busy minute: stop and say so
             if (wait == null || wait > 120 || attempt === 2) throw error
-            await new Promise((resolve) =>
-              setTimeout(resolve, Math.min(wait, 60) * 1000)
-            )
+            await new Promise((resolve) => setTimeout(resolve, Math.min(wait, 60) * 1000))
           }
         }
         setProgress({ done: index + 1, total: batches.length })
@@ -250,12 +238,7 @@ export function TrackItemsSheet({
       }
       actions={
         <>
-          <Button
-            type='button'
-            variant='outline'
-            disabled={picked.length === 0 || busy}
-            onClick={sellAsUnits}
-          >
+          <Button type='button' variant='outline' disabled={picked.length === 0 || busy} onClick={sellAsUnits}>
             {busy && trackByUnit.isPending ? <Spinner /> : <Package />}
             {t('sellAsUnits')}
           </Button>
@@ -285,19 +268,11 @@ export function TrackItemsSheet({
             <div key={category}>
               <label className='flex cursor-pointer items-center gap-2 py-1 text-sm font-medium'>
                 <Checkbox
-                  checked={
-                    all
-                      ? true
-                      : ids.some((id) => selected.has(id))
-                        ? 'indeterminate'
-                        : false
-                  }
+                  checked={all ? true : ids.some((id) => selected.has(id)) ? 'indeterminate' : false}
                   onCheckedChange={(on) => toggleMany(ids, on === true)}
                 />
                 {category}
-                <span className='text-muted-foreground text-xs font-normal'>
-                  {items.length}
-                </span>
+                <span className='text-muted-foreground text-xs font-normal'>{items.length}</span>
               </label>
               <ul className='ms-6 divide-y'>
                 {items.map((item) => {
@@ -310,13 +285,8 @@ export function TrackItemsSheet({
                           !item.isAvailable && 'text-muted-foreground'
                         )}
                       >
-                        <Checkbox
-                          checked={selected.has(id)}
-                          onCheckedChange={(on) => toggle(id, on === true)}
-                        />
-                        <span className='min-w-0 flex-1 truncate'>
-                          {localized(item.name) || '—'}
-                        </span>
+                        <Checkbox checked={selected.has(id)} onCheckedChange={(on) => toggle(id, on === true)} />
+                        <span className='min-w-0 flex-1 truncate'>{localized(item.name) || '—'}</span>
                       </label>
                     </li>
                   )

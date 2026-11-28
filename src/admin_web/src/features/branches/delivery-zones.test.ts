@@ -71,10 +71,7 @@ describe('parseDeliveryZones', () => {
   })
 
   it('reads empty optional fields as null, and a blank fee as free', () => {
-    const parsed = parseDeliveryZones(
-      [zone({ fee: ' ', minimum: '  ', minutes: '' })],
-      null
-    )
+    const parsed = parseDeliveryZones([zone({ fee: ' ', minimum: '  ', minutes: '' })], null)
     expect(parsed.ok && parsed.value[0]).toMatchObject({
       fee: 0,
       minimumOrder: null,
@@ -89,9 +86,7 @@ describe('parseDeliveryZones', () => {
   })
 
   it('asks for a name in either language', () => {
-    expect(
-      parseDeliveryZones([zone(), zone({ name: { en: '  ', ar: '' } })], centre)
-    ).toEqual({
+    expect(parseDeliveryZones([zone(), zone({ name: { en: '  ', ar: '' } })], centre)).toEqual({
       ok: false,
       errors: [{}, { name: 'required' }],
       tooMany: false,
@@ -99,20 +94,13 @@ describe('parseDeliveryZones', () => {
   })
 
   it('refuses a name longer than 80 characters', () => {
-    const parsed = parseDeliveryZones(
-      [zone({ name: { en: 'a'.repeat(81), ar: '' } })],
-      centre
-    )
+    const parsed = parseDeliveryZones([zone({ name: { en: 'a'.repeat(81), ar: '' } })], centre)
     expect(parsed).toMatchObject({ ok: false, errors: [{ name: 'tooLong' }] })
   })
 
   it('refuses two areas with one name, whatever the case, in either language', () => {
     const english = parseDeliveryZones(
-      [
-        zone(),
-        zone({ name: { en: 'Zamalek', ar: '' } }),
-        zone({ name: { en: 'maadi DEGLA', ar: '' } }),
-      ],
+      [zone(), zone({ name: { en: 'Zamalek', ar: '' } }), zone({ name: { en: 'maadi DEGLA', ar: '' } })],
       centre
     )
     expect(english).toMatchObject({
@@ -121,10 +109,7 @@ describe('parseDeliveryZones', () => {
     })
 
     const arabic = parseDeliveryZones(
-      [
-        zone({ name: { en: 'Zamalek', ar: 'الزمالك' } }),
-        zone({ name: { en: 'Zamalek North', ar: ' الزمالك ' } }),
-      ],
+      [zone({ name: { en: 'Zamalek', ar: 'الزمالك' } }), zone({ name: { en: 'Zamalek North', ar: ' الزمالك ' } })],
       centre
     )
     expect(arabic).toMatchObject({
@@ -134,19 +119,13 @@ describe('parseDeliveryZones', () => {
   })
 
   it('does not call an area a duplicate of itself', () => {
-    expect(
-      parseDeliveryZones([zone({ name: { en: 'Maadi', ar: 'Maadi' } })], centre)
-        .ok
-    ).toBe(true)
+    expect(parseDeliveryZones([zone({ name: { en: 'Maadi', ar: 'Maadi' } })], centre).ok).toBe(true)
   })
 
   it('refuses a negative fee or minimum, and anything that is not a number', () => {
     expect(
       parseDeliveryZones(
-        [
-          zone({ fee: '-5' }),
-          zone({ name: { en: 'Zamalek', ar: '' }, fee: 'abc', minimum: '-1' }),
-        ],
+        [zone({ fee: '-5' }), zone({ name: { en: 'Zamalek', ar: '' }, fee: 'abc', minimum: '-1' })],
         centre
       )
     ).toMatchObject({
@@ -156,8 +135,7 @@ describe('parseDeliveryZones', () => {
   })
 
   it('holds the minutes to whole numbers from 5 to 240', () => {
-    const minutes = (value: string) =>
-      parseDeliveryZones([zone({ minutes: value })], centre)
+    const minutes = (value: string) => parseDeliveryZones([zone({ minutes: value })], centre)
     expect(minutes('4')).toMatchObject({
       ok: false,
       errors: [{ minutes: true }],
@@ -180,20 +158,19 @@ describe('parseDeliveryZones', () => {
       ok: false,
       errors: [{ shape: 'tooFar' }],
     })
-    expect(
-      parseDeliveryZones([zone({ shape: triangle.slice(0, 2) })], centre)
-    ).toMatchObject({ ok: false, errors: [{ shape: 'tooFew' }] })
+    expect(parseDeliveryZones([zone({ shape: triangle.slice(0, 2) })], centre)).toMatchObject({
+      ok: false,
+      errors: [{ shape: 'tooFew' }],
+    })
     // A branch that is not on the map cannot keep a shape
-    expect(parseDeliveryZones([zone({ shape: triangle })], null)).toMatchObject(
-      { ok: false, errors: [{ shape: 'needsLocation' }] }
-    )
+    expect(parseDeliveryZones([zone({ shape: triangle })], null)).toMatchObject({
+      ok: false,
+      errors: [{ shape: 'needsLocation' }],
+    })
   })
 
   it('takes up to 100 areas', () => {
-    const many = (n: number) =>
-      Array.from({ length: n }, (_, i) =>
-        zone({ name: { en: `Area ${i}`, ar: '' } })
-      )
+    const many = (n: number) => Array.from({ length: n }, (_, i) => zone({ name: { en: `Area ${i}`, ar: '' } }))
     expect(parseDeliveryZones(many(100), centre).ok).toBe(true)
     expect(parseDeliveryZones(many(101), centre)).toMatchObject({
       ok: false,

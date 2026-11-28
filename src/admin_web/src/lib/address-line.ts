@@ -41,11 +41,7 @@ export function listSeparator(locale: string): string {
 }
 
 /** The address on one line, the street first: "Tahrir St · Bldg 12, Floor 3" */
-export function formatAddressLine(
-  parts: AddressParts,
-  words: AddressWords,
-  locale: string
-): string {
+export function formatAddressLine(parts: AddressParts, words: AddressWords, locale: string): string {
   const details = [
     parts.building ? `${words.building} ${parts.building}` : null,
     parts.floor ? `${words.floor} ${parts.floor}` : null,

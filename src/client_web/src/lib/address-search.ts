@@ -69,7 +69,15 @@ export type PickedPlace = LatLng & { address: string | null }
  * The search behind one field: what has been typed, Google's suggestions
  * for it, and `pick`, which asks where one is and starts a new session.
  */
-export function useAddressSearch({ near, language, enabled = true }: { near?: LatLng | null; language: string; enabled?: boolean }) {
+export function useAddressSearch({
+  near,
+  language,
+  enabled = true,
+}: {
+  near?: LatLng | null
+  language: string
+  enabled?: boolean
+}) {
   const [text, setText] = useState('')
   const [session, setSession] = useState<string | null>(null)
   const debounced = useDebounced(text)
@@ -79,7 +87,9 @@ export function useAddressSearch({ near, language, enabled = true }: { near?: La
   if (q && session == null) setSession(newSearchSession())
 
   const suggestions = useQuery({
-    ...autocompletePlacesOptions({ query: { q: q ?? '', session: session ?? undefined, near: nearParam(near), lang: language } }),
+    ...autocompletePlacesOptions({
+      query: { q: q ?? '', session: session ?? undefined, near: nearParam(near), lang: language },
+    }),
     enabled: enabled && q != null && session != null,
     // The same street typed again in the session costs nothing, here or on the server
     staleTime: 60 * 60_000,
@@ -91,7 +101,11 @@ export function useAddressSearch({ near, language, enabled = true }: { near?: La
     // The pick closes the session; the next search opens another
     setSession(null)
     try {
-      const { data } = await getPlace({ path: { placeId: suggestion.placeId }, query: { session: token, lang: language }, throwOnError: true })
+      const { data } = await getPlace({
+        path: { placeId: suggestion.placeId },
+        query: { session: token, lang: language },
+        throwOnError: true,
+      })
       const lat = Number(data.lat)
       const lng = Number(data.lng)
       if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null

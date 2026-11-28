@@ -74,10 +74,7 @@ export type PaySummary = {
 
 /** The confirm button's arithmetic: the share and the fee on it. */
 export function paySummary(share: number, options: PayOptionsView): PaySummary {
-  const fee =
-    options.feeMode === 'Guest'
-      ? guestFee(share, num(options.feePercent), num(options.feeFixed))
-      : 0
+  const fee = options.feeMode === 'Guest' ? guestFee(share, num(options.feePercent), num(options.feeFixed)) : 0
   return { share, fee, total: money(share + fee) }
 }
 
@@ -97,8 +94,7 @@ export const PAY_WHY = [
 ] as const
 export type PayWhy = (typeof PAY_WHY)[number]
 
-export const offersPay = (why: string | null | undefined) =>
-  why !== 'off' && why !== 'not-set-up' && why !== 'at-door'
+export const offersPay = (why: string | null | undefined) => why !== 'off' && why !== 'not-set-up' && why !== 'at-door'
 
 /** How many equal parts to start from: the room's party where the bill
  *  knows it, else two. */

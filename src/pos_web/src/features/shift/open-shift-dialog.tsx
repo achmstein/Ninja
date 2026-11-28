@@ -2,20 +2,14 @@ import { useEffect, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { openShiftMutation } from '@/api/sales/@tanstack/react-query.gen'
-import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { NumericKeypad } from '@/components/numeric-keypad'
 import { API_VERSION } from '@/lib/api-client'
 import { useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
+import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { NumericKeypad } from '@/components/numeric-keypad'
 
 type OpenShiftDialogProps = {
   open: boolean
@@ -52,11 +46,7 @@ export function OpenShiftDialog({ open, onOpenChange }: OpenShiftDialogProps) {
   })
 
   const amount = Number(amountStr)
-  const canOpen =
-    amountStr !== '' &&
-    Number.isFinite(amount) &&
-    amount >= 0 &&
-    !openShift.isPending
+  const canOpen = amountStr !== '' && Number.isFinite(amount) && amount >= 0 && !openShift.isPending
 
   const doOpen = () =>
     openShift.mutate({
@@ -89,20 +79,10 @@ export function OpenShiftDialog({ open, onOpenChange }: OpenShiftDialogProps) {
         <NumericKeypad value={amountStr} onChange={setAmountStr} />
 
         <DialogFooter className='gap-2'>
-          <Button
-            variant='outline'
-            size='lg'
-            className='h-12'
-            onClick={() => onOpenChange(false)}
-          >
+          <Button variant='outline' size='lg' className='h-12' onClick={() => onOpenChange(false)}>
             {t('cancel')}
           </Button>
-          <Button
-            size='lg'
-            className='h-12'
-            disabled={!canOpen}
-            onClick={doOpen}
-          >
+          <Button size='lg' className='h-12' disabled={!canOpen} onClick={doOpen}>
             {t('openShiftAction')}
           </Button>
         </DialogFooter>

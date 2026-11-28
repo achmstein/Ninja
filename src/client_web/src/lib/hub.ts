@@ -1,21 +1,14 @@
 import { useEffect } from 'react'
-import {
-  HubConnectionBuilder,
-  HubConnectionState,
-  type HubConnection,
-} from '@microsoft/signalr'
 import { useQueryClient } from '@tanstack/react-query'
+import { HubConnectionBuilder, HubConnectionState, type HubConnection } from '@microsoft/signalr'
 import { useAuth } from 'react-oidc-context'
 import { getGuestId, useGuestStore } from '@/stores/guest-store'
 import { getActivePlace, usePlaceStore } from '@/stores/place-store'
-import { getStoredUser } from './oidc'
 import { translate } from './i18n'
-import {
-  REQUEST_STATUS,
-  type ServiceRequestChangedEvent,
-} from './services/notifications'
-import { toast } from './toast'
+import { getStoredUser } from './oidc'
 import { pillShowsOrder } from './order-pill'
+import { REQUEST_STATUS, type ServiceRequestChangedEvent } from './services/notifications'
+import { toast } from './toast'
 
 // One SignalR connection for the whole app (mobile parity: single hub with
 // OrderStatusChanged / RoomStatusChanged / BranchSettingsChanged /
@@ -89,10 +82,7 @@ async function restart(conn: HubConnection) {
  * Group membership does not survive a reconnect, so this re-runs whenever the
  * connection id changes, the same way the rooms group is kept.
  */
-function joinGuestGroup(
-  conn: HubConnection,
-  onJoined: (connectionId: string, guestId: string) => void,
-): void {
+function joinGuestGroup(conn: HubConnection, onJoined: (connectionId: string, guestId: string) => void): void {
   if (conn.state !== HubConnectionState.Connected) return
   if (liveAccessToken()) return
 
@@ -213,9 +203,7 @@ export function useHub() {
       queryClient.invalidateQueries({ queryKey: ['my-service-requests'] })
       if (event?.status === REQUEST_STATUS.acknowledged) {
         toast.success(
-          event.acknowledgedBy
-            ? translate('onTheWayBy', { name: event.acknowledgedBy })
-            : translate('onTheWay'),
+          event.acknowledgedBy ? translate('onTheWayBy', { name: event.acknowledgedBy }) : translate('onTheWay')
         )
         try {
           navigator.vibrate?.(200)
@@ -255,11 +243,7 @@ export function useHub() {
       if (conn.state !== HubConnectionState.Connected) return
       const connectionId = conn.connectionId ?? ''
       const placeId = getActivePlace()?.id ?? null
-      if (
-        joinedPlace?.connectionId === connectionId &&
-        joinedPlace.placeId === placeId
-      )
-        return
+      if (joinedPlace?.connectionId === connectionId && joinedPlace.placeId === placeId) return
       if (joinedPlace && joinedPlace.connectionId === connectionId) {
         conn.invoke('LeavePlaceGroup', joinedPlace.placeId).catch(() => {})
       }
@@ -282,11 +266,7 @@ export function useHub() {
       if (conn.state !== HubConnectionState.Connected) return
       const connectionId = conn.connectionId ?? ''
       const guestId = getGuestId()
-      if (
-        !guestId ||
-        (joined?.connectionId === connectionId && joined.guestId === guestId)
-      )
-        return
+      if (!guestId || (joined?.connectionId === connectionId && joined.guestId === guestId)) return
       joinGuestGroup(conn, (c, g) => {
         joined = { connectionId: c, guestId: g }
       })

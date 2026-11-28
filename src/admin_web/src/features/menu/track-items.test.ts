@@ -14,9 +14,7 @@ const ingredient = (key: string, en: string, ar: string) => ({
 const recipe = (catalogItemId: number, newItemKey: string) => ({
   catalogItemId,
   kind: 'recipe',
-  lines: [
-    { stockItemId: null, newItemKey, quantity: 200, optionIds: [], slot: 0 },
-  ],
+  lines: [{ stockItemId: null, newItemKey, quantity: 200, optionIds: [], slot: 0 }],
   warnings: [],
 })
 
@@ -44,10 +42,7 @@ describe('toReview', () => {
 
   it('keeps different ingredients apart', () => {
     const proposal: RecipesProposal = {
-      newItems: [
-        ingredient('milk', 'Whole Milk', ''),
-        ingredient('oat', 'Oat Milk', ''),
-      ],
+      newItems: [ingredient('milk', 'Whole Milk', ''), ingredient('oat', 'Oat Milk', '')],
       recipes: [recipe(1, 'milk'), recipe(2, 'oat')],
       warnings: [],
       notes: null,

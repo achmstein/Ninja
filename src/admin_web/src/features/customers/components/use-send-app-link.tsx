@@ -21,8 +21,6 @@ export function useSendAppLink(customer: Customer) {
         {t('sendAppLink')}
       </DropdownMenuItem>
     ),
-    dialog: (
-      <AppLinkDialog customer={customer} open={open} onOpenChange={setOpen} />
-    ),
+    dialog: <AppLinkDialog customer={customer} open={open} onOpenChange={setOpen} />,
   }
 }

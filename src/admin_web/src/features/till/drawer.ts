@@ -33,9 +33,7 @@ export function drawerSum(shift: ShiftView): DrawerSum {
     shift.cashTendered != null
       ? toNumber(shift.cashTendered)
       : // An older server: its cash tender was what was handed over
-        toNumber(
-          (shift.tenderTotals ?? []).find((t) => t.tender === 'Cash')?.amount
-        )
+        toNumber((shift.tenderTotals ?? []).find((t) => t.tender === 'Cash')?.amount)
   const terms: DrawerTerm[] = [
     {
       key: 'float',
@@ -80,9 +78,7 @@ export function drawerSum(shift: ShiftView): DrawerSum {
       ? toNumber(shift.expectedCash ?? shift.expectedInDrawer)
       : toNumber(shift.expectedInDrawer)
   return {
-    terms: terms.filter(
-      (t) => t.amount !== 0 || t.key === 'float' || t.key === 'cash'
-    ),
+    terms: terms.filter((t) => t.amount !== 0 || t.key === 'float' || t.key === 'cash'),
     expected,
     matchesServer: round(server) === expected,
   }

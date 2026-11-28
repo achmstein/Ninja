@@ -7,12 +7,7 @@ import { type NavItem } from './types'
  * it lets a prefix match step aside for a sibling that matches more of the
  * path.
  */
-export function checkIsActive(
-  href: string,
-  item: NavItem,
-  mainNav = false,
-  groupUrls: string[] = []
-) {
+export function checkIsActive(href: string, item: NavItem, mainNav = false, groupUrls: string[] = []) {
   const path = href.split('?')[0]
   return (
     href === item.url || // /endpint?search=param
@@ -27,9 +22,7 @@ export function checkIsActive(
       item.url !== '/' &&
       path.startsWith(`${item.url}/`) &&
       !groupUrls.some(
-        (url) =>
-          url.length > (item.url as string).length &&
-          (path === url || path.startsWith(`${url}/`))
+        (url) => url.length > (item.url as string).length && (path === url || path.startsWith(`${url}/`))
       )) ||
     // a collapsible section is active when any page under its first segment is
     (mainNav &&
@@ -38,9 +31,7 @@ export function checkIsActive(
         const subPath = String(sub.url)
         return path === subPath || path.startsWith(`${subPath}/`)
       })) ||
-    (mainNav &&
-      href.split('/')[1] !== '' &&
-      href.split('/')[1] === item?.url?.split('/')[1]) ||
+    (mainNav && href.split('/')[1] !== '' && href.split('/')[1] === item?.url?.split('/')[1]) ||
     // the entry's other tabs, and paths given to it (Attendance → Employees)
     otherPaths(item).some((url) => path === url || path.startsWith(`${url}/`))
   )
@@ -49,10 +40,7 @@ export function checkIsActive(
 /** Paths beyond its own url that belong to an entry: its tabs, its `match` */
 function otherPaths(item: NavItem): string[] {
   if (item.items) return []
-  return [
-    ...(item.tabs ?? []).map((tab) => String(tab.url)),
-    ...(item.match ?? []),
-  ]
+  return [...(item.tabs ?? []).map((tab) => String(tab.url)), ...(item.match ?? [])]
 }
 
 /**
@@ -72,17 +60,12 @@ export function navTrail(
     length: number
   } | null = null
   for (const group of groups) {
-    const entries = group.items.flatMap((item) =>
-      item.items ? item.items : [item]
-    )
+    const entries = group.items.flatMap((item) => (item.items ? item.items : [item]))
     for (const entry of entries) {
       const own = typeof entry.url === 'string' ? entry.url : null
       if (!own) continue
       for (const url of [own, ...otherPaths(entry as NavItem)]) {
-        const matches =
-          url === '/'
-            ? pathname === '/'
-            : pathname === url || pathname.startsWith(`${url}/`)
+        const matches = url === '/' ? pathname === '/' : pathname === url || pathname.startsWith(`${url}/`)
         if (matches && (!best || url.length > best.length)) {
           best = { group: group.title, page: entry.title, length: url.length }
         }

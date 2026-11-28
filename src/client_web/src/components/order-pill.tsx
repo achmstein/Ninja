@@ -111,7 +111,13 @@ export function OrderPill() {
   const [since, setSince] = useState<{ stage: PillStage; at: number }>({ stage, at: placedAt ?? 0 })
   if (since.stage !== stage) setSince({ stage, at: ordersQuery.dataUpdatedAt || (placedAt ?? 0) })
 
-  const visibility = { placedAt: placedAt ?? 0, order, stageSince: since.at, dismissed: dismissed || placedAt == null, now }
+  const visibility = {
+    placedAt: placedAt ?? 0,
+    order,
+    stageSince: since.at,
+    dismissed: dismissed || placedAt == null,
+    now,
+  }
   const visible = following && pillVisible(visibility) && !pathname.startsWith('/pay')
 
   // Wake once, when the answer could next change: no ticking while idle
@@ -136,7 +142,8 @@ export function OrderPill() {
 
   // A delivery being made or on its way: the server says about how long is left and who is
   // bringing it. Keyed as an order, so the hub's OrderStatusChanged reads it again at once
-  const onItsWay = visible && order?.delivery != null && orderNumber != null && (stage === 'preparing' || stage === 'onTheWay')
+  const onItsWay =
+    visible && order?.delivery != null && orderNumber != null && (stage === 'preparing' || stage === 'onTheWay')
   const liveQuery = useQuery({
     queryKey: [{ _id: 'getOrder', part: 'deliveryLive', orderNumber }],
     queryFn: () => getDeliveryLive(orderNumber!),
@@ -177,7 +184,13 @@ export function OrderPill() {
         type: TYPES[stage],
         title: orderNumber != null ? `${say(STAGE_LABEL[stage])} · #${orderNumber}` : say(STAGE_LABEL[stage]),
         icon: <Icon className='size-4' />,
-        description: <OrderDetails note={noteText} items={items} total={total != null && Number(total) > 0 ? price(total) : null} />,
+        description: (
+          <OrderDetails
+            note={noteText}
+            items={items}
+            total={total != null && Number(total) > 0 ? price(total) : null}
+          />
+        ),
         button: { title: say(PILL_WORDS.seeBills), onClick: () => void navigate({ to: '/bills' }) },
       },
       ANNOUNCE_MS
@@ -195,7 +208,15 @@ export function OrderPill() {
 }
 
 /** The island opened: where the order is, what is in it, and what it comes to */
-function OrderDetails({ note, items, total }: { note: string; items: NonNullable<OrderSummary['items']>; total: string | null }) {
+function OrderDetails({
+  note,
+  items,
+  total,
+}: {
+  note: string
+  items: NonNullable<OrderSummary['items']>
+  total: string | null
+}) {
   const localized = useLocalized()
   return (
     <span className='flex flex-col gap-2 text-start'>

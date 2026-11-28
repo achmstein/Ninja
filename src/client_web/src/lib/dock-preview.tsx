@@ -1,7 +1,7 @@
 import { create } from 'zustand'
-import { accountPreview } from '@/components/auth/phone-gate'
 import { type PillStage } from '@/lib/order-pill'
 import { cn } from '@/lib/utils'
+import { accountPreview } from '@/components/auth/phone-gate'
 
 /**
  * The dock's proposed changes, tried in the real app: a development build
@@ -38,7 +38,10 @@ export function DockPreviewPanel() {
   if (!on) return null
   const chip = 'rounded-full px-2.5 py-1 text-[11px] font-semibold'
   return (
-    <div dir='ltr' className='fixed start-2 top-2 z-[300] flex max-w-[15rem] flex-col gap-1.5 rounded-2xl bg-amber-50 p-2 text-amber-950 shadow-lg ring-1 ring-amber-300'>
+    <div
+      dir='ltr'
+      className='fixed start-2 top-2 z-[300] flex max-w-[15rem] flex-col gap-1.5 rounded-2xl bg-amber-50 p-2 text-amber-950 shadow-lg ring-1 ring-amber-300'
+    >
       <span className='px-1 text-[11px] font-bold'>Preview: the order</span>
       <div className='flex flex-wrap gap-1'>
         {STAGES.map(([value, label]) => (
@@ -52,7 +55,11 @@ export function DockPreviewPanel() {
           </button>
         ))}
       </div>
-      <button type='button' onClick={() => useDockPreview.setState({ waiter: !waiter })} className={cn(chip, 'self-start', waiter ? 'bg-amber-900 text-amber-50' : 'bg-amber-200')}>
+      <button
+        type='button'
+        onClick={() => useDockPreview.setState({ waiter: !waiter })}
+        className={cn(chip, 'self-start', waiter ? 'bg-amber-900 text-amber-50' : 'bg-amber-200')}
+      >
         Waiter asked for
       </button>
     </div>

@@ -11,6 +11,12 @@ import {
   listTenantsQueryKey,
   restoreTenantBackupMutation,
 } from '@/api/control/@tanstack/react-query.gen'
+import { apiClient } from '@/lib/api-client'
+import { bytes, useFormat } from '@/lib/format'
+import { useT } from '@/lib/i18n'
+import { problemDetail } from '@/lib/problem'
+import { canBackup, isValidSlug, tenantStatus } from '@/lib/tenant'
+import { toast } from '@/lib/toast'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,21 +33,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import { apiClient } from '@/lib/api-client'
-import { bytes, useFormat } from '@/lib/format'
-import { useT } from '@/lib/i18n'
-import { problemDetail } from '@/lib/problem'
-import { canBackup, isValidSlug, tenantStatus } from '@/lib/tenant'
-import { toast } from '@/lib/toast'
 import { OffsiteCell } from '@/features/platform/platform-backups'
 
 /**
@@ -163,9 +156,7 @@ export function BackupsTab({ tenant }: { tenant: TenantDetail }) {
                   </TableCell>
                   <TableCell className='text-end tabular-nums'>
                     <div>{bytes(Number(b.sizeBytes))}</div>
-                    <div className='text-muted-foreground text-xs'>
-                      {b.databases.length} DB
-                    </div>
+                    <div className='text-muted-foreground text-xs'>{b.databases.length} DB</div>
                   </TableCell>
                   <TableCell className='text-end'>{b.hasUploads ? t('yes') : t('no')}</TableCell>
                   <TableCell className='font-mono text-xs' dir='ltr'>
@@ -238,11 +229,7 @@ export function BackupsTab({ tenant }: { tenant: TenantDetail }) {
         </div>
       )}
 
-      <RestoreDialog
-        slug={slug}
-        backup={restoring}
-        onOpenChange={(v) => !v && setRestoring(null)}
-      />
+      <RestoreDialog slug={slug} backup={restoring} onOpenChange={(v) => !v && setRestoring(null)} />
 
       <AlertDialog open={deleting !== null} onOpenChange={(v) => !v && setDeleting(null)}>
         <AlertDialogContent size='sm'>

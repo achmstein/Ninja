@@ -17,9 +17,8 @@
  * a port of it, so every surface derives the same colours from the same
  * seeds.
  */
-
-import { presetOf, withStyleDefaults } from './styles'
 import { ARABIC_FONTS, fontStylesheetUrl, knownFont, LATIN_FONTS } from './brand-fonts'
+import { presetOf, withStyleDefaults } from './styles'
 
 const STYLE_ID = 'brand-theme'
 const FONT_LINK_ID = 'brand-font'
@@ -143,7 +142,11 @@ export function oklchToHex(color: Oklch): string {
   return (
     '#' +
     toLinearRgb(color)
-      .map((v) => Math.round(linearToSrgb(v) * 255).toString(16).padStart(2, '0'))
+      .map((v) =>
+        Math.round(linearToSrgb(v) * 255)
+          .toString(16)
+          .padStart(2, '0')
+      )
       .join('')
   )
 }

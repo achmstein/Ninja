@@ -12,9 +12,7 @@ import { ticketTitle } from './components/ticket-title'
 import { TypeBadge } from './components/ticket-type'
 
 type Translate = (key: TranslationKey, params?: TranslateParams) => string
-type Localized = (
-  text: { en?: string | null; ar?: string | null } | null | undefined
-) => string
+type Localized = (text: { en?: string | null; ar?: string | null } | null | undefined) => string
 
 type ColumnsContext = {
   t: Translate
@@ -61,11 +59,7 @@ function BillTotal({
  * under it. Who closed it shows only for a voided bill, where it is the
  * point; who settled one is bookkeeping.
  */
-export function getHistoryColumns({
-  t,
-  localized,
-  voided,
-}: ColumnsContext & { voided: boolean }) {
+export function getHistoryColumns({ t, localized, voided }: ColumnsContext & { voided: boolean }) {
   return historyHelper.columns([
     historyHelper.accessor('receiptNumber', {
       id: 'receipt',
@@ -74,16 +68,8 @@ export function getHistoryColumns({
         const value = info.getValue()
         return (
           <div className='flex flex-col leading-tight'>
-            {value != null && (
-              <span className='font-medium tabular-nums'>
-                #{toNumber(value)}
-              </span>
-            )}
-            <When
-              value={info.row.original.closedAt}
-              mode='time'
-              className='text-muted-foreground text-xs'
-            />
+            {value != null && <span className='font-medium tabular-nums'>#{toNumber(value)}</span>}
+            <When value={info.row.original.closedAt} mode='time' className='text-muted-foreground text-xs' />
           </div>
         )
       },
@@ -112,13 +98,7 @@ export function getHistoryColumns({
       id: 'total',
       meta: { align: 'end' },
       header: t('total'),
-      cell: (info) => (
-        <BillTotal
-          total={info.getValue()}
-          refunded={info.row.original.refundedTotal}
-          t={t}
-        />
-      ),
+      cell: (info) => <BillTotal total={info.getValue()} refunded={info.row.original.refundedTotal} t={t} />,
     }),
   ])
 }
@@ -143,9 +123,7 @@ export function HistoryListRow({
         <>
           {bill.receiptNumber != null && (
             <>
-              <span className='tabular-nums'>
-                #{toNumber(bill.receiptNumber)}
-              </span>
+              <span className='tabular-nums'>#{toNumber(bill.receiptNumber)}</span>
               <Dot />
             </>
           )}
@@ -158,9 +136,7 @@ export function HistoryListRow({
           )}
         </>
       }
-      trailing={
-        <BillTotal total={bill.total} refunded={bill.refundedTotal} t={t} />
-      }
+      trailing={<BillTotal total={bill.total} refunded={bill.refundedTotal} t={t} />}
     />
   )
 }
@@ -176,12 +152,7 @@ function Idle({
   t: Translate
   locale: string
 }) {
-  const urgency = urgencyFor(
-    value ?? undefined,
-    nowMs,
-    IDLE_WARN_MINUTES,
-    IDLE_DELAYED_MINUTES
-  )
+  const urgency = urgencyFor(value ?? undefined, nowMs, IDLE_WARN_MINUTES, IDLE_DELAYED_MINUTES)
   return (
     <span className={cn('tabular-nums', urgencyTextClass(urgency))}>
       {relativeTime(value ?? undefined, nowMs, t, locale)}
@@ -193,12 +164,7 @@ function Idle({
  * Bills still on the floor: which and where, when it opened, how long since
  * anyone touched it (amber, then red, as it goes quiet), and how much so far.
  */
-export function getOpenColumns({
-  t,
-  localized,
-  locale,
-  nowMs,
-}: ColumnsContext & { nowMs: number }) {
+export function getOpenColumns({ t, localized, locale, nowMs }: ColumnsContext & { nowMs: number }) {
   return openHelper.columns([
     openHelper.accessor((row) => ticketTitle(row, localized, t), {
       id: 'place',
@@ -214,9 +180,7 @@ export function getOpenColumns({
               <TypeBadge type={info.row.original.type} />
             </div>
             {customers > 0 && (
-              <span className='text-muted-foreground text-xs'>
-                {t('customersCount', { count: customers })}
-              </span>
+              <span className='text-muted-foreground text-xs'>{t('customersCount', { count: customers })}</span>
             )}
           </div>
         )
@@ -231,9 +195,7 @@ export function getOpenColumns({
     openHelper.accessor('lastActivityAt', {
       id: 'lastActivity',
       header: t('lastActivity'),
-      cell: (info) => (
-        <Idle value={info.getValue()} nowMs={nowMs} t={t} locale={locale} />
-      ),
+      cell: (info) => <Idle value={info.getValue()} nowMs={nowMs} t={t} locale={locale} />,
     }),
     openHelper.accessor('total', {
       id: 'total',
@@ -273,12 +235,7 @@ export function OpenListRow({
       meta={
         <>
           <TypeBadge type={bill.type} />
-          <Idle
-            value={bill.lastActivityAt}
-            nowMs={nowMs}
-            t={t}
-            locale={locale}
-          />
+          <Idle value={bill.lastActivityAt} nowMs={nowMs} t={t} locale={locale} />
         </>
       }
       trailing={<Money value={bill.total} strong />}

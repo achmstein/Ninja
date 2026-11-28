@@ -1,11 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import {
-  draftLines,
-  optionSetKey,
-  resolve,
-  type RecipeDraft,
-  type SlotDraft,
-} from '@/features/inventory/recipe-model'
+import { draftLines, optionSetKey, resolve, type RecipeDraft, type SlotDraft } from '@/features/inventory/recipe-model'
 import { type MenuGroup, type MenuOptions } from './menu-options'
 import {
   compile,
@@ -50,9 +44,7 @@ function group(
 
 const menuOf = (...groups: MenuGroup[]): MenuOptions => ({
   groups,
-  byId: new Map(
-    groups.flatMap((g) => g.options.map((o) => [o.id, o] as const))
-  ),
+  byId: new Map(groups.flatMap((g) => g.options.map((o) => [o.id, o] as const))),
 })
 
 /** A value split across some groups, written as the cells it holds */
@@ -62,10 +54,7 @@ const by = <T>(groupIds: string[], cells: Record<string, T>): Varying<T> => ({
 })
 
 let nextKey = 1000
-function ingredient(patch: {
-  item?: Varying<string | null>
-  amount?: Varying<string>
-}): IngredientSpec {
+function ingredient(patch: { item?: Varying<string | null>; amount?: Varying<string> }): IngredientSpec {
   return {
     key: nextKey++,
     item: patch.item ?? single<string | null>(null),
@@ -73,10 +62,7 @@ function ingredient(patch: {
   }
 }
 
-const state = (
-  ingredients: IngredientSpec[],
-  custom: SlotDraft[] = []
-): BuilderState => ({ ingredients, custom })
+const state = (ingredients: IngredientSpec[], custom: SlotDraft[] = []): BuilderState => ({ ingredients, custom })
 
 /** What one sale with these options takes off the shelf, per stock item */
 function deducts(draft: RecipeDraft, chosen: string[]): Record<string, number> {
@@ -374,10 +360,7 @@ describe('reconstruct', () => {
         amount: single('7'),
       }),
     ])
-    const [card] = reconstruct(
-      compile(cards, menuOf(roast, spice)),
-      menuOf(roast, spice)
-    ).ingredients
+    const [card] = reconstruct(compile(cards, menuOf(roast, spice)), menuOf(roast, spice)).ingredients
 
     expect(card.item).toEqual({ groupIds: ['roast', 'spice'], cells })
     expect(card.amount).toEqual({ groupIds: [], cells: { '': '7' } })
@@ -561,33 +544,23 @@ describe('resplitItem', () => {
     ['42', '\u0648\u0633\u0637', true],
     ['43', '\u063a\u0627\u0645\u0642'],
   ])
-  const spice = group(
-    'spice',
-    '\u0627\u0644\u062a\u062d\u0648\u064a\u062c\u0629',
-    [
-      ['51', '\u0633\u0627\u062f\u0629', true],
-      ['52', '\u0645\u062d\u0648\u062c'],
-    ]
-  )
+  const spice = group('spice', '\u0627\u0644\u062a\u062d\u0648\u064a\u062c\u0629', [
+    ['51', '\u0633\u0627\u062f\u0629', true],
+    ['52', '\u0645\u062d\u0648\u062c'],
+  ])
   const menu = menuOf(roast, spice)
   const shelf = [
     {
       value: '1',
-      names: [
-        '\u0628\u0646 \u062a\u0631\u0643\u064a \u0648\u0633\u0637 \u0633\u0627\u062f\u0629',
-      ],
+      names: ['\u0628\u0646 \u062a\u0631\u0643\u064a \u0648\u0633\u0637 \u0633\u0627\u062f\u0629'],
     },
     {
       value: '2',
-      names: [
-        '\u0628\u0646 \u062a\u0631\u0643\u064a \u0641\u0627\u062a\u062d \u0633\u0627\u062f\u0629',
-      ],
+      names: ['\u0628\u0646 \u062a\u0631\u0643\u064a \u0641\u0627\u062a\u062d \u0633\u0627\u062f\u0629'],
     },
     {
       value: '3',
-      names: [
-        '\u0628\u0646 \u062a\u0631\u0643\u064a \u063a\u0627\u0645\u0642 \u0633\u0627\u062f\u0629',
-      ],
+      names: ['\u0628\u0646 \u062a\u0631\u0643\u064a \u063a\u0627\u0645\u0642 \u0633\u0627\u062f\u0629'],
     },
   ]
 
@@ -610,10 +583,7 @@ describe('resplitItem', () => {
 
   it('keeps a bag that serves every choice', () => {
     // One sack of beans, named for no roast and no spice
-    const plus = [
-      ...shelf,
-      { value: '9', names: ['\u0628\u0646 \u062a\u0631\u0643\u064a'] },
-    ]
+    const plus = [...shelf, { value: '9', names: ['\u0628\u0646 \u062a\u0631\u0643\u064a'] }]
 
     const out = resplitItem(single<string | null>('9'), ['roast'], menu, plus)
 
@@ -621,10 +591,7 @@ describe('resplitItem', () => {
   })
 
   it('keeps a bag the admin picked when another group is added', () => {
-    const plus = [
-      ...shelf,
-      { value: '9', names: ['\u0628\u0646 \u062a\u0631\u0643\u064a'] },
-    ]
+    const plus = [...shelf, { value: '9', names: ['\u0628\u0646 \u062a\u0631\u0643\u064a'] }]
     const picked = by<string | null>(['roast'], {
       [optionSetKey(['41'])]: '9',
       [optionSetKey(['42'])]: '1',
@@ -658,12 +625,7 @@ describe('resplitItem', () => {
   })
 
   it('merges back to the standard choice when a group is unticked', () => {
-    const split = resplitItem(
-      single<string | null>('1'),
-      ['roast'],
-      menu,
-      shelf
-    )
+    const split = resplitItem(single<string | null>('1'), ['roast'], menu, shelf)
     const out = resplitItem(split, [], menu, shelf)
 
     expect(out.groupIds).toEqual([])
@@ -690,15 +652,11 @@ describe('guessCell', () => {
   const [plain, spiced] = spice.options
 
   it('swaps the choice words in the base bag name', () => {
-    expect(guessCell(shelf[0], [light, spiced], [roast, spice], shelf)).toBe(
-      '2'
-    )
+    expect(guessCell(shelf[0], [light, spiced], [roast, spice], shelf)).toBe('2')
     expect(guessCell(shelf[0], [dark, plain], [roast, spice], shelf)).toBe('3')
   })
 
   it('leaves a cell empty when no bag on the shelf fits', () => {
-    expect(
-      guessCell(shelf[0], [dark, spiced], [roast, spice], shelf)
-    ).toBeNull()
+    expect(guessCell(shelf[0], [dark, spiced], [roast, spice], shelf)).toBeNull()
   })
 })

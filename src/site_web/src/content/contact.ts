@@ -10,4 +10,5 @@ export const CONTACT = {
 
 export const mailto = (subject: string) => `mailto:${CONTACT.email}?subject=${encodeURIComponent(subject)}`
 
-export const whatsappLink = (text: string) => (CONTACT.whatsapp ? `https://wa.me/${CONTACT.whatsapp}?text=${encodeURIComponent(text)}` : null)
+export const whatsappLink = (text: string) =>
+  CONTACT.whatsapp ? `https://wa.me/${CONTACT.whatsapp}?text=${encodeURIComponent(text)}` : null

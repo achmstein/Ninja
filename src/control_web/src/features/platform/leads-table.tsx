@@ -8,6 +8,12 @@ import {
   listLeadsQueryKey,
   updateLeadMutation,
 } from '@/api/control/@tanstack/react-query.gen'
+import { useFormat } from '@/lib/format'
+import { useT, type TranslationKey } from '@/lib/i18n'
+import { leadOrigin, whatsappNumber } from '@/lib/lead'
+import { problemDetail } from '@/lib/problem'
+import { toast } from '@/lib/toast'
+import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -20,12 +26,6 @@ import {
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { useFormat } from '@/lib/format'
-import { useT, type TranslationKey } from '@/lib/i18n'
-import { leadOrigin, whatsappNumber } from '@/lib/lead'
-import { problemDetail } from '@/lib/problem'
-import { toast } from '@/lib/toast'
-import { cn } from '@/lib/utils'
 
 const STATUS: Record<LeadStatus, { label: TranslationKey; className: string }> = {
   New: { label: 'leadNew', className: 'bg-sky-500/15 text-sky-700 dark:text-sky-400' },
@@ -120,7 +120,9 @@ export function LeadsTable() {
                   </a>
                 </TableCell>
                 <TableCell className='text-muted-foreground max-w-56 truncate'>{origin ?? '—'}</TableCell>
-                <TableCell className='text-muted-foreground whitespace-nowrap'>{format.dateTime(lead.createdAt)}</TableCell>
+                <TableCell className='text-muted-foreground whitespace-nowrap'>
+                  {format.dateTime(lead.createdAt)}
+                </TableCell>
                 <TableCell>
                   {lead.tenantSlug ? (
                     <Link to='/t/$slug' params={{ slug: lead.tenantSlug }} className='hover:underline'>
@@ -171,7 +173,10 @@ export function LeadsTable() {
                           )
                         )}
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem variant='destructive' onSelect={() => remove.mutate({ path: { id: Number(lead.id) } })}>
+                        <DropdownMenuItem
+                          variant='destructive'
+                          onSelect={() => remove.mutate({ path: { id: Number(lead.id) } })}
+                        >
                           <Trash2 />
                           {t('leadDelete')}
                         </DropdownMenuItem>

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useAuth } from 'react-oidc-context'
 import { CircleAlert, Loader2, Star } from 'lucide-react'
+import { useAuth } from 'react-oidc-context'
 import { rateOrder, type OrderSummary } from '@/api/ordering'
 import { type BillView } from '@/api/sales'
 import { API_VERSION } from '@/lib/api-client'
@@ -16,22 +16,14 @@ import { Textarea } from '@/components/ui/textarea'
  * rounds on it. Rating is account-only server-side, so a guest gets none.
  * Rated already, it shows what they gave.
  */
-export function BillStars({
-  bill,
-  ordersById,
-}: {
-  bill: BillView
-  ordersById: Map<number, OrderSummary>
-}) {
+export function BillStars({ bill, ordersById }: { bill: BillView; ordersById: Map<number, OrderSummary> }) {
   const t = useT()
   const auth = useAuth()
   if (!auth.isAuthenticated) return null
 
   const mine = [
     ...new Set(
-      (bill.lines ?? [])
-        .filter((line) => line.isMine && line.orderId != null)
-        .map((line) => Number(line.orderId))
+      (bill.lines ?? []).filter((line) => line.isMine && line.orderId != null).map((line) => Number(line.orderId))
     ),
   ]
     .map((id) => ordersById.get(id))
@@ -43,26 +35,19 @@ export function BillStars({
     const value = Number(mine[0].ratingValue ?? 0)
     return (
       <div className='flex items-center gap-1 pt-1'>
-        <span className='text-muted-foreground text-caption'>
-          {t('yourRating')}
-        </span>
+        <span className='text-muted-foreground text-caption'>{t('yourRating')}</span>
         <StarsDisplay value={value} />
       </div>
     )
   }
-  return (
-    <StarRow orderIds={unrated.map((order) => Number(order.orderNumber))} />
-  )
+  return <StarRow orderIds={unrated.map((order) => Number(order.orderNumber))} />
 }
 
 function StarsDisplay({ value }: { value: number }) {
   return (
     <span className='text-muted-foreground flex gap-0.5'>
       {[1, 2, 3, 4, 5].map((star) => (
-        <Star
-          key={star}
-          className={`h-3.5 w-3.5 ${star <= value ? 'fill-current' : 'opacity-40'}`}
-        />
+        <Star key={star} className={`h-3.5 w-3.5 ${star <= value ? 'fill-current' : 'opacity-40'}`} />
       ))}
     </span>
   )
@@ -80,20 +65,13 @@ function StarRow({ orderIds }: { orderIds: number[] }) {
   const [done, setDone] = useState(false)
 
   if (done) {
-    return (
-      <span className='text-muted-foreground pt-1 text-caption'>
-        {t('ratedThanks')}
-      </span>
-    )
+    return <span className='text-muted-foreground text-caption pt-1'>{t('ratedThanks')}</span>
   }
 
   return (
     <div className='flex flex-wrap items-center gap-2 pt-1'>
       <span className='text-caption font-semibold'>{t('howWasIt')}</span>
-      <div
-        className='text-amber-400 flex items-center'
-        onMouseLeave={() => setHover(0)}
-      >
+      <div className='flex items-center text-amber-400' onMouseLeave={() => setHover(0)}>
         {[1, 2, 3, 4, 5].map((value) => (
           <button
             key={value}
@@ -104,10 +82,7 @@ function StarRow({ orderIds }: { orderIds: number[] }) {
             onClick={() => setChosen(value)}
           >
             <Star
-              className={cn(
-                'h-5 w-5 transition-colors',
-                value <= hover ? 'fill-current' : 'text-muted-foreground/40'
-              )}
+              className={cn('h-5 w-5 transition-colors', value <= hover ? 'fill-current' : 'text-muted-foreground/40')}
             />
           </button>
         ))}
@@ -184,13 +159,9 @@ function RatingSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent
-      >
-
+      <SheetContent>
         <SheetHeader>
-          <SheetTitle className='heading text-headline pe-8'>
-            {t('rateYourOrder')}
-          </SheetTitle>
+          <SheetTitle className='heading text-headline pe-8'>{t('rateYourOrder')}</SheetTitle>
         </SheetHeader>
 
         <div className='mt-6 flex justify-center gap-1'>
@@ -208,11 +179,9 @@ function RatingSheet({
             </button>
           ))}
         </div>
-        <p className='text-muted-foreground mt-2 text-center text-body'>
-          {t(RATING_LABELS[rating])}
-        </p>
+        <p className='text-muted-foreground text-body mt-2 text-center'>{t(RATING_LABELS[rating])}</p>
 
-        <p className='mt-6 text-note font-semibold'>{t('yourReviewOptional')}</p>
+        <p className='text-note mt-6 font-semibold'>{t('yourReviewOptional')}</p>
         <Textarea
           rows={3}
           maxLength={500}
@@ -223,7 +192,7 @@ function RatingSheet({
         />
 
         {rateAll.isError && (
-          <div className='bg-destructive/10 text-destructive mt-4 flex items-center gap-2 rounded-lg p-3 text-caption'>
+          <div className='bg-destructive/10 text-destructive text-caption mt-4 flex items-center gap-2 rounded-lg p-3'>
             <CircleAlert className='h-4 w-4 shrink-0' />
             {t('failedToPlaceOrder')}
           </div>
@@ -231,18 +200,13 @@ function RatingSheet({
 
         <Button
           size='lg'
-          className='mt-6 w-full rounded-pill font-bold'
+          className='rounded-pill mt-6 w-full font-bold'
           disabled={rateAll.isPending}
           onClick={() => rateAll.mutate()}
         >
-          {rateAll.isPending ? (
-            <Loader2 className='h-4 w-4 animate-spin' />
-          ) : (
-            t('submitRating')
-          )}
+          {rateAll.isPending ? <Loader2 className='h-4 w-4 animate-spin' /> : t('submitRating')}
         </Button>
       </SheetContent>
     </Sheet>
   )
 }
-

@@ -12,11 +12,7 @@ import {
   CommandList,
   CommandSeparator,
 } from '@/components/ui/command'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 
 export type ComboboxOption = {
   value: string
@@ -72,28 +68,18 @@ export function Combobox({
           className={cn(
             'w-full justify-between font-normal',
             !selected && 'text-muted-foreground',
-            wrap &&
-              (size === 'sm' ? 'h-auto min-h-8 py-1' : 'h-auto min-h-9 py-1'),
+            wrap && (size === 'sm' ? 'h-auto min-h-8 py-1' : 'h-auto min-h-9 py-1'),
             className
           )}
         >
-          <span
-            className={
-              wrap ? 'text-start break-words whitespace-normal' : 'truncate'
-            }
-          >
+          <span className={wrap ? 'text-start break-words whitespace-normal' : 'truncate'}>
             {selected ? selected.label : placeholder}
-            {selected?.hint && (
-              <span className='text-muted-foreground'> · {selected.hint}</span>
-            )}
+            {selected?.hint && <span className='text-muted-foreground'> · {selected.hint}</span>}
           </span>
           <ChevronsUpDown className='ms-2 h-4 w-4 shrink-0 opacity-50' />
         </Button>
       </PopoverTrigger>
-      <PopoverContent
-        className='w-[var(--radix-popover-trigger-width)] min-w-[240px] p-0'
-        align='start'
-      >
+      <PopoverContent className='w-[var(--radix-popover-trigger-width)] min-w-[240px] p-0' align='start'>
         <Command>
           <CommandInput placeholder={t('search')} />
           <CommandList>
@@ -125,18 +111,9 @@ export function Combobox({
                     setOpen(false)
                   }}
                 >
-                  <Check
-                    className={cn(
-                      'me-2 h-4 w-4',
-                      option.value === value ? 'opacity-100' : 'opacity-0'
-                    )}
-                  />
+                  <Check className={cn('me-2 h-4 w-4', option.value === value ? 'opacity-100' : 'opacity-0')} />
                   <span className='truncate'>{option.label}</span>
-                  {option.hint && (
-                    <span className='text-muted-foreground ms-auto ps-2 text-xs'>
-                      {option.hint}
-                    </span>
-                  )}
+                  {option.hint && <span className='text-muted-foreground ms-auto ps-2 text-xs'>{option.hint}</span>}
                 </CommandItem>
               ))}
             </CommandGroup>

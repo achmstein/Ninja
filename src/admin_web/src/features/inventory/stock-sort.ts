@@ -4,12 +4,7 @@ import { toNumber } from '@/lib/money'
 /** What the stock list can be sorted by. */
 export type StockSort = 'low' | 'daysLeft' | 'value' | 'name'
 
-export const stockSorts = [
-  'low',
-  'daysLeft',
-  'value',
-  'name',
-] as const satisfies readonly StockSort[]
+export const stockSorts = ['low', 'daysLeft', 'value', 'name'] as const satisfies readonly StockSort[]
 
 /**
  * How many days what is on the shelf lasts at the rate the branch has been
@@ -37,20 +32,11 @@ export function sortLevels(
       numeric: true,
       sensitivity: 'base',
     })
-  const order: Record<
-    StockSort,
-    (a: StockLevelView, b: StockLevelView) => number
-  > = {
+  const order: Record<StockSort, (a: StockLevelView, b: StockLevelView) => number> = {
     name: () => 0,
     low: (a, b) => Number(b.isLow) - Number(a.isLow),
     value: (a, b) => toNumber(b.value) - toNumber(a.value),
-    daysLeft: (a, b) =>
-      (daysLeft(a) ?? Infinity) - (daysLeft(b) ?? Infinity) || 0,
+    daysLeft: (a, b) => (daysLeft(a) ?? Infinity) - (daysLeft(b) ?? Infinity) || 0,
   }
-  return [...levels].sort(
-    (a, b) =>
-      Number(b.isActive) - Number(a.isActive) ||
-      order[sort](a, b) ||
-      byName(a, b)
-  )
+  return [...levels].sort((a, b) => Number(b.isActive) - Number(a.isActive) || order[sort](a, b) || byName(a, b))
 }

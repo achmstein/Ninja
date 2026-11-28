@@ -7,7 +7,7 @@ describe('the orders this till rang up', () => {
     expect(await isOwnOrder(101)).toBe(true)
   })
 
-  it('takes an order as someone else\'s when no sale is on its way', async () => {
+  it("takes an order as someone else's when no sale is on its way", async () => {
     expect(await isOwnOrder(202)).toBe(false)
   })
 
@@ -18,7 +18,7 @@ describe('the orders this till rang up', () => {
     expect(await asked).toBe(true)
   })
 
-  it('does not claim another till\'s order that arrives while a sale is in flight', async () => {
+  it("does not claim another till's order that arrives while a sale is in flight", async () => {
     const answered = beginPlacing()
     const asked = isOwnOrder(404)
     answered(405)

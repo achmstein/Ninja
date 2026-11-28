@@ -3,22 +3,22 @@ import { isAxiosError } from 'axios'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { useAuth } from 'react-oidc-context'
-import { createOrderMutation } from '@/api/ordering/@tanstack/react-query.gen'
 import { getUserPreferencesQueryKey, saveUserPreferencesMutation } from '@/api/catalog/@tanstack/react-query.gen'
+import { createOrderMutation } from '@/api/ordering/@tanstack/react-query.gen'
+import { useGuestStore } from '@/stores/guest-store'
+import { useActivePlace, useActivePlaceConfirmed } from '@/stores/place-store'
 import { API_VERSION } from '@/lib/api-client'
-import { brandQueryKey, useBrand } from '@/lib/brand'
-import { isModuleOff, problemMessage } from '@/lib/problem'
 import { useSelectedBranch } from '@/lib/branch'
+import { brandQueryKey, useBrand } from '@/lib/brand'
 import { cartTotal, useCart } from '@/lib/cart'
 import { useDelivery } from '@/lib/delivery'
 import { useT } from '@/lib/i18n'
 import { useOrderDestination } from '@/lib/order-destination'
-import { usePayAhead } from '@/lib/pay-ahead'
 import { checkoutBlock, NO_EXTRAS, orderBody, orderSignature, type OrderExtras } from '@/lib/order-payload'
+import { usePayAhead } from '@/lib/pay-ahead'
+import { isModuleOff, problemMessage } from '@/lib/problem'
 import { toast } from '@/lib/toast'
 import { useOrderFollowsAddress } from '@/lib/use-branch-switch'
-import { useGuestStore } from '@/stores/guest-store'
-import { useActivePlace, useActivePlaceConfirmed } from '@/stores/place-store'
 import { useGuestGate } from '@/components/auth/guest-gate'
 import { phoneAccountOn, usePhoneGate } from '@/components/auth/phone-gate'
 import { useProfileGate } from '@/components/auth/profile-gate'
@@ -93,7 +93,10 @@ export function usePlaceOrder({
           body: {
             items: customized.map((line) => ({
               catalogItemId: line.productId,
-              selectedOptions: line.customizations.map((c) => ({ customizationId: c.customizationId, optionId: c.optionId })),
+              selectedOptions: line.customizations.map((c) => ({
+                customizationId: c.customizationId,
+                optionId: c.optionId,
+              })),
             })),
           },
           query: { 'api-version': API_VERSION },
@@ -106,7 +109,8 @@ export function usePlaceOrder({
       // order is then on the dock, waiting for its payment, with the way to pay it
       if ((variables.body as { payOnline?: boolean }).payOnline) {
         const orderId = created?.orderId != null ? Number(created.orderId) : null
-        if (orderId) void navigate({ to: '/pay/order/$orderId', params: { orderId: String(orderId) }, search: { start: true } })
+        if (orderId)
+          void navigate({ to: '/pay/order/$orderId', params: { orderId: String(orderId) }, search: { start: true } })
         else toast.info(t('payAheadFinishFromDock'))
       }
     },
@@ -159,7 +163,16 @@ export function usePlaceOrder({
       writePending(requestIdRef.current)
     }
     mutation.mutate({
-      body: orderBody({ lines, extras, isGuest, profile: auth.user?.profile, guestContact, destination, delivery: deliverTo, payOnline }),
+      body: orderBody({
+        lines,
+        extras,
+        isGuest,
+        profile: auth.user?.profile,
+        guestContact,
+        destination,
+        delivery: deliverTo,
+        payOnline,
+      }),
       headers: { 'x-requestid': requestIdRef.current.id },
       query: { 'api-version': API_VERSION },
     })
@@ -197,7 +210,9 @@ function readPending(): PendingRequest | null {
   try {
     const raw = localStorage.getItem(PENDING_KEY)
     const parsed: unknown = raw ? JSON.parse(raw) : null
-    return parsed && typeof parsed === 'object' && 'signature' in parsed && 'id' in parsed ? (parsed as PendingRequest) : null
+    return parsed && typeof parsed === 'object' && 'signature' in parsed && 'id' in parsed
+      ? (parsed as PendingRequest)
+      : null
   } catch {
     return null
   }

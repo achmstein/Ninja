@@ -1,6 +1,6 @@
+import type { DeliveryAddress } from '@/stores/delivery-store'
 import type { CartLine } from '@/lib/cart'
 import type { OrderDestination } from '@/lib/order-destination'
-import type { DeliveryAddress } from '@/stores/delivery-store'
 
 /**
  * The order a cart becomes, and what stands between a guest and sending it.

@@ -1,4 +1,3 @@
-import { Badge } from '@/components/ui/badge'
 import { useT } from '@/lib/i18n'
 import {
   kindLabelKey,
@@ -11,33 +10,23 @@ import {
   type TenantStatusName,
 } from '@/lib/tenant'
 import { cn } from '@/lib/utils'
+import { Badge } from '@/components/ui/badge'
 
 // The one place colour means something: green is up, amber is in motion,
 // red needs a look, grey is off.
 const statusClass: Record<TenantStatusName, string> = {
-  Running:
-    'border-transparent bg-emerald-500/15 text-emerald-700 dark:text-emerald-400',
-  Provisioning:
-    'border-transparent bg-amber-500/15 text-amber-700 dark:text-amber-400',
-  Requested:
-    'border-transparent bg-amber-500/15 text-amber-700 dark:text-amber-400',
-  Destroying:
-    'border-transparent bg-amber-500/15 text-amber-700 dark:text-amber-400',
-  Upgrading:
-    'border-transparent bg-amber-500/15 text-amber-700 dark:text-amber-400',
+  Running: 'border-transparent bg-emerald-500/15 text-emerald-700 dark:text-emerald-400',
+  Provisioning: 'border-transparent bg-amber-500/15 text-amber-700 dark:text-amber-400',
+  Requested: 'border-transparent bg-amber-500/15 text-amber-700 dark:text-amber-400',
+  Destroying: 'border-transparent bg-amber-500/15 text-amber-700 dark:text-amber-400',
+  Upgrading: 'border-transparent bg-amber-500/15 text-amber-700 dark:text-amber-400',
   Failed: 'border-transparent bg-destructive/15 text-destructive',
   Suspended: 'border-transparent bg-rose-500/15 text-rose-700 dark:text-rose-400',
   Stopped: 'border-transparent bg-muted text-muted-foreground',
   Destroyed: 'border-transparent bg-muted text-muted-foreground',
 }
 
-export function StatusBadge({
-  status,
-  className,
-}: {
-  status: number | string
-  className?: string
-}) {
+export function StatusBadge({ status, className }: { status: number | string; className?: string }) {
   const t = useT()
   const name = tenantStatus(status)
   return (
@@ -67,7 +56,15 @@ export function SubscriptionBadge({ status, className }: { status: number | stri
 }
 
 /** The check found the stack behind what its tag points to now (or a newer release out); blue, since nothing is wrong yet */
-export function UpdateBadge({ services, newerTag, className }: { services?: string[]; newerTag?: string | null; className?: string }) {
+export function UpdateBadge({
+  services,
+  newerTag,
+  className,
+}: {
+  services?: string[]
+  newerTag?: string | null
+  className?: string
+}) {
   const t = useT()
   const detail = newerTag ?? (services && services.length > 0 ? services.join(', ') : undefined)
   return (
@@ -86,9 +83,5 @@ export function KindBadge({ kind, isDrill }: { kind: number | string; isDrill?: 
   const name = tenantKind(kind)
   // A restore drill's scratch stack: a demo on the record, but nobody's; it destroys itself
   if (isDrill) return <Badge variant='outline'>{t('kindDrill')}</Badge>
-  return (
-    <Badge variant={name === 'Customer' ? 'default' : 'secondary'}>
-      {t(kindLabelKey[name])}
-    </Badge>
-  )
+  return <Badge variant={name === 'Customer' ? 'default' : 'secondary'}>{t(kindLabelKey[name])}</Badge>
 }

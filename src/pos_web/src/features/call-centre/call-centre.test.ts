@@ -69,7 +69,7 @@ describe('callerDelivery', () => {
           paused: false,
         },
       },
-      { latitude: 29.96, longitude: 31.25 },
+      { latitude: 29.96, longitude: 31.25 }
     )
     expect(delivery).toMatchObject({
       address: '9 Road 9',

@@ -1,17 +1,17 @@
 import { useQueries, useQuery } from '@tanstack/react-query'
-import { useAuth } from 'react-oidc-context'
 import { CalendarClock, Gamepad2, type LucideIcon } from 'lucide-react'
+import { useAuth } from 'react-oidc-context'
 import { type PlaceViewModel, type StayViewModel } from '@/api/spaces'
-import { type BranchResponse, type TenantFeatures } from '@/api/tenant'
 import { listPlacesOptions } from '@/api/spaces/@tanstack/react-query.gen'
+import { type BranchResponse, type TenantFeatures } from '@/api/tenant'
+import { useBranchStore } from '@/stores/branch-store'
+import { useActivePlace, type StoredPlace } from '@/stores/place-store'
+import { useBranchScope, useBranches } from '@/lib/branch'
+import { useFeatures } from '@/lib/brand'
 import { useLocalized, useT } from '@/lib/i18n'
 import { useOrderDestination } from '@/lib/order-destination'
 import { PLACE_ROOM, placeIcon } from '@/lib/places'
 import { useActiveStay, useMyHold, useMyStays } from '@/lib/stays'
-import { useActivePlace, type StoredPlace } from '@/stores/place-store'
-import { useFeatures } from '@/lib/brand'
-import { useBranchScope, useBranches } from '@/lib/branch'
-import { useBranchStore } from '@/stores/branch-store'
 
 /**
  * The places a customer may book: in service, and offering something the
@@ -21,13 +21,10 @@ import { useBranchStore } from '@/stores/branch-store'
  */
 export function bookablePlaces(
   places: PlaceViewModel[],
-  features: Pick<TenantFeatures, 'reservations' | 'timeBilling'>,
+  features: Pick<TenantFeatures, 'reservations' | 'timeBilling'>
 ): PlaceViewModel[] {
   return places.filter(
-    (p) =>
-      p.isActive !== false &&
-      ((p.isTimed && features.timeBilling) ||
-        (p.reservable && features.reservations)),
+    (p) => p.isActive !== false && ((p.isTimed && features.timeBilling) || (p.reservable && features.reservations))
   )
 }
 
@@ -62,7 +59,7 @@ export function useBookablePlacesByBranch(): { groups: BranchPlaces[]; isLoading
   const branchId = useBranchStore((s) => s.branchId)
   const { data: branches = [], isLoading: branchesLoading } = useBranches()
   const shown = branches.filter(
-    (b) => Number(b.id) === branchId || (features.reservations && b.isActive && b.isReservationsEnabled),
+    (b) => Number(b.id) === branchId || (features.reservations && b.isActive && b.isReservationsEnabled)
   )
   const results = useQueries({
     queries: shown.map((b) => ({
@@ -95,10 +92,7 @@ export function useBookablePlacesByBranch(): { groups: BranchPlaces[]; isLoading
  * because the chip is the table's door. Nothing is configured.
  */
 export type Visit = {
-  seat:
-    | { kind: 'stay'; stay: StayViewModel }
-    | { kind: 'table'; place: StoredPlace }
-    | { kind: 'none' }
+  seat: { kind: 'stay'; stay: StayViewModel } | { kind: 'table'; place: StoredPlace } | { kind: 'none' }
   hasBookablePlaces: boolean
   /** Among what there is to book is a PlayStation room: the tab wears the gamepad, else the calendar */
   hasRooms: boolean
@@ -119,18 +113,13 @@ export function useVisit(): Visit {
   // Until the list answers, assume there is something to book: a tab that
   // appears late is better than one that flickers out and back
   const hasBookablePlaces = isLoading || (bookable?.length ?? 0) > 0
-  const hasRooms =
-    bookable?.some((p) => Number(p.kind ?? PLACE_ROOM) === PLACE_ROOM) ??
-    false
+  const hasRooms = bookable?.some((p) => Number(p.kind ?? PLACE_ROOM) === PLACE_ROOM) ?? false
 
   return { seat: seatOf(stay, place), hasBookablePlaces, hasRooms, settling }
 }
 
 /** A clock always wins; then the table they scanned; then nothing. */
-export function seatOf(
-  stay: StayViewModel | null | undefined,
-  place: StoredPlace | null | undefined,
-): Visit['seat'] {
+export function seatOf(stay: StayViewModel | null | undefined, place: StoredPlace | null | undefined): Visit['seat'] {
   if (stay) return { kind: 'stay', stay }
   if (place) return { kind: 'table', place }
   return { kind: 'none' }
@@ -143,7 +132,7 @@ export function seatOf(
  */
 export function visitTabVisible(
   hasBookablePlaces: boolean,
-  features: Pick<TenantFeatures, 'reservations' | 'timeBilling'>,
+  features: Pick<TenantFeatures, 'reservations' | 'timeBilling'>
 ): boolean {
   return hasBookablePlaces && (features.reservations || features.timeBilling)
 }

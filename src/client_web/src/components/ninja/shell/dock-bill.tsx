@@ -1,31 +1,48 @@
-import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { useNavigate } from '@tanstack/react-router'
-import { Bike, Check, ChefHat, ChevronUp, CircleHelp, CreditCard, House, Phone, ReceiptText, Send, X } from 'lucide-react'
+import {
+  Bike,
+  Check,
+  ChefHat,
+  ChevronUp,
+  CircleHelp,
+  CreditCard,
+  House,
+  Phone,
+  ReceiptText,
+  Send,
+  X,
+} from 'lucide-react'
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
+import { useActivePlace, useActivePlaceConfirmed } from '@/stores/place-store'
+import { formatClock, useSecondTick } from '@/lib/clock'
+import { useDockPreview } from '@/lib/dock-preview'
+import { useDockSheet } from '@/lib/dock-sheet'
 import { useArabicStyle, useLanguage, useLocalized, usePrice, useT } from '@/lib/i18n'
-import { payOrderLink, useDockOrder } from '@/lib/live-order'
-import { PILL_WORDS, STAGE_LABEL, words, type PillStage } from '@/lib/order-pill'
-import { cn } from '@/lib/utils'
 import { type LiveBills } from '@/lib/live-bills'
+import { payOrderLink, useDockOrder } from '@/lib/live-order'
 import { blurSwap } from '@/lib/motion'
+import { PILL_WORDS, STAGE_LABEL, words, type PillStage } from '@/lib/order-pill'
 import { PlaceIcon, placeKindOf } from '@/lib/places'
 import { useServiceRequests } from '@/lib/service-requests'
 import { SERVICE_REQUEST } from '@/lib/services/notifications'
-import { useActivePlace, useActivePlaceConfirmed } from '@/stores/place-store'
-import { TableView } from '@/components/places/table-view'
-import { RoomView } from '@/components/places/room-view'
-import { formatClock, useSecondTick } from '@/lib/clock'
-import { useDockSheet } from '@/lib/dock-sheet'
-import { useDockPreview } from '@/lib/dock-preview'
 import { useActiveStay } from '@/lib/stays'
-import { hasLiveBill, OpenBills } from '@/components/bills/open-bills'
-import { trayOpensAfterDrag } from '@/components/tray/tray-model'
+import { cn } from '@/lib/utils'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
+import { hasLiveBill, OpenBills } from '@/components/bills/open-bills'
+import { RoomView } from '@/components/places/room-view'
+import { TableView } from '@/components/places/table-view'
+import { trayOpensAfterDrag } from '@/components/tray/tray-model'
 import { Odometer } from '../odometer'
 import { DOCK_H } from './chrome'
 import { useDockRowShown } from './use-dock-row'
 
 /** What a dot on the row stands for: something asked for and not yet done with */
-const ASKED = [SERVICE_REQUEST.callWaiter, SERVICE_REQUEST.receiptToPay, SERVICE_REQUEST.controllerChange, SERVICE_REQUEST.changeOption]
+const ASKED = [
+  SERVICE_REQUEST.callWaiter,
+  SERVICE_REQUEST.receiptToPay,
+  SERVICE_REQUEST.controllerChange,
+  SERVICE_REQUEST.changeOption,
+]
 
 const STAGE_ICONS: Record<PillStage, typeof Send> = {
   awaitingPayment: CreditCard,
@@ -84,7 +101,12 @@ export function DockBill({ live, trayEmpty, className }: { live: LiveBills; tray
   // A dot on the table while the waiter or the bill is asked for, so the answer is one tap away
   const requests = useServiceRequests(
     stay
-      ? { placeId: Number(stay.placeId), placeKind: Number(stay.placeKind), placeName: stay.placeName ?? {}, sessionId: Number(stay.id) }
+      ? {
+          placeId: Number(stay.placeId),
+          placeKind: Number(stay.placeKind),
+          placeName: stay.placeName ?? {},
+          sessionId: Number(stay.id),
+        }
       : { placeId: table?.id ?? 0, placeKind: table?.kind ?? 0, placeName: table?.name ?? {} }
   )
   const asking =
@@ -96,25 +118,37 @@ export function DockBill({ live, trayEmpty, className }: { live: LiveBills; tray
   if (!shown) return null
 
   const first = live.open[0]?.bill ?? live.forming?.bill
-  const billed = live.open.reduce((sum, { bill }) => sum + Number(bill.total ?? 0), 0) + Number(live.forming?.bill.total ?? 0)
+  const billed =
+    live.open.reduce((sum, { bill }) => sum + Number(bill.total ?? 0), 0) + Number(live.forming?.bill.total ?? 0)
   // The previewed order comes to something, as a real one would
   const total = billed > 0 ? billed : previewed ? 310 : 0
-  const place = (stay ? localized(stay.placeName) : table ? localized(table.name) : localized(first?.locationName)) || t('atTheCounter')
+  const place =
+    (stay ? localized(stay.placeName) : table ? localized(table.name) : localized(first?.locationName)) ||
+    t('atTheCounter')
   // The order on its way says where it is in the row's top line; otherwise the line is where the customer is
   // With nothing on the bill yet the place is the row's one line
   const clock = stay?.startedAt ? formatClock((now - new Date(stay.startedAt).getTime()) / 1000) : null
   // About how long is left: the server says it for a delivery (lib/live-order), and nothing is said where it does not
-  const headline = stage ? `${words(STAGE_LABEL[stage], language, standard)}${minutes ? ` · ${t('dockAboutMinutes', { n: minutes })}` : ''}` : ''
+  const headline = stage
+    ? `${words(STAGE_LABEL[stage], language, standard)}${minutes ? ` · ${t('dockAboutMinutes', { n: minutes })}` : ''}`
+    : ''
   // A waiter or the bill asked for is said in words, not only by the dot
-  const line = asking && !stage
-    ? t('dockWaiterComing')
-    : stage
-    ? `${words(STAGE_LABEL[stage], language, standard)}${orderNumber != null ? ` · #${orderNumber}` : ''}`
-    : total > 0 || clock
-      ? place
-      : null
+  const line =
+    asking && !stage
+      ? t('dockWaiterComing')
+      : stage
+        ? `${words(STAGE_LABEL[stage], language, standard)}${orderNumber != null ? ` · #${orderNumber}` : ''}`
+        : total > 0 || clock
+          ? place
+          : null
   const StageIcon = stage ? STAGE_ICONS[stage] : null
-  const placeKind = stay ? Number(stay.placeKind) : table ? table.kind : first?.placeId != null ? placeKindOf(first.placeKind) : null
+  const placeKind = stay
+    ? Number(stay.placeKind)
+    : table
+      ? table.kind
+      : first?.placeId != null
+        ? placeKindOf(first.placeKind)
+        : null
   // The end button is the next thing to do. Pay, once there is something to pay and nothing
   // still on its way (the sheet it opens has the way to pay under the bill)
   const payNext = !toPay && total > 0 && (stage == null || stage === 'delivered')
@@ -162,7 +196,10 @@ export function DockBill({ live, trayEmpty, className }: { live: LiveBills; tray
             style={{ height: DOCK_H }}
           >
             {/* The dock's grab handle, as on the tray's row: every row of the dock has it */}
-            <span aria-hidden className='bg-background/30 absolute top-1.5 left-1/2 h-1 w-9 -translate-x-1/2 rounded-full' />
+            <span
+              aria-hidden
+              className='bg-background/30 absolute top-1.5 left-1/2 h-1 w-9 -translate-x-1/2 rounded-full'
+            />
             {/* The order's stage when one is on its way (its colour saying how it is going), else the place */}
             <span
               className={cn(
@@ -179,7 +216,9 @@ export function DockBill({ live, trayEmpty, className }: { live: LiveBills; tray
               <AnimatePresence mode='popLayout' initial={false}>
                 <motion.span key={stage ?? 'place'} {...swap} className='grid place-items-center'>
                   {StageIcon ? (
-                    <StageIcon className={cn('size-5', stage === 'sent' && 'animate-pulse motion-reduce:animate-none')} />
+                    <StageIcon
+                      className={cn('size-5', stage === 'sent' && 'animate-pulse motion-reduce:animate-none')}
+                    />
                   ) : table && !confirmed ? (
                     // A table from an earlier session shows as a question until answered
                     <CircleHelp className='size-5' />
@@ -208,11 +247,11 @@ export function DockBill({ live, trayEmpty, className }: { live: LiveBills; tray
             {stage ? (
               <span className='flex min-w-0 flex-1 flex-col'>
                 <AnimatePresence mode='popLayout' initial={false}>
-                  <motion.span key={headline} {...swap} className='truncate text-name font-bold'>
+                  <motion.span key={headline} {...swap} className='text-name truncate font-bold'>
                     {headline}
                   </motion.span>
                 </AnimatePresence>
-                <span className='flex min-w-0 items-center gap-1 text-caption'>
+                <span className='text-caption flex min-w-0 items-center gap-1'>
                   {asking ? (
                     <span className='truncate font-semibold text-amber-300'>{t('dockWaiterComing')}</span>
                   ) : (
@@ -220,7 +259,9 @@ export function DockBill({ live, trayEmpty, className }: { live: LiveBills; tray
                   )}
                   {total > 0 && (
                     <>
-                      <span aria-hidden className='shrink-0 opacity-70'>·</span>
+                      <span aria-hidden className='shrink-0 opacity-70'>
+                        ·
+                      </span>
                       <Odometer value={price(total)} className='shrink-0 opacity-70' />
                     </>
                   )}
@@ -228,7 +269,7 @@ export function DockBill({ live, trayEmpty, className }: { live: LiveBills; tray
               </span>
             ) : (
               <span className='flex min-w-0 flex-1 flex-col'>
-                <span className='flex min-w-0 items-center gap-1 text-caption'>
+                <span className='text-caption flex min-w-0 items-center gap-1'>
                   <AnimatePresence mode='popLayout' initial={false}>
                     {line && (
                       <motion.span key={line} {...swap} className='truncate opacity-70'>
@@ -241,7 +282,9 @@ export function DockBill({ live, trayEmpty, className }: { live: LiveBills; tray
                       inside the time's ltr span it ended up after the time in Arabic */}
                   {clock && total > 0 && !stage && (
                     <>
-                      <span aria-hidden className='shrink-0 opacity-70'>·</span>
+                      <span aria-hidden className='shrink-0 opacity-70'>
+                        ·
+                      </span>
                       <span dir='ltr' className='shrink-0 opacity-70'>
                         <Odometer value={clock} />
                       </span>
@@ -251,11 +294,11 @@ export function DockBill({ live, trayEmpty, className }: { live: LiveBills; tray
                 {total > 0 ? (
                   <Odometer value={price(total)} className='text-name font-bold' />
                 ) : clock ? (
-                  <span dir='ltr' className='self-start text-name font-bold'>
+                  <span dir='ltr' className='text-name self-start font-bold'>
                     <Odometer value={clock} />
                   </span>
                 ) : (
-                  <span className='truncate text-name font-bold'>{place}</span>
+                  <span className='text-name truncate font-bold'>{place}</span>
                 )}
               </span>
             )}
@@ -271,7 +314,7 @@ export function DockBill({ live, trayEmpty, className }: { live: LiveBills; tray
                   : undefined
               }
               className={cn(
-                'flex h-10 shrink-0 items-center gap-1 rounded-full ps-4 pe-3 text-note font-semibold',
+                'text-note flex h-10 shrink-0 items-center gap-1 rounded-full ps-4 pe-3 font-semibold',
                 toPay || payNext || endPress ? 'bg-background text-foreground pe-4' : 'bg-background/12',
                 callRider && 'ps-3'
               )}
@@ -318,4 +361,3 @@ export function DockBill({ live, trayEmpty, className }: { live: LiveBills; tray
     </>
   )
 }
-

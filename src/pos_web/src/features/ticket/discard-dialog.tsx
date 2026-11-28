@@ -1,20 +1,11 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
-import {
-  discardTicketMutation,
-  getTicketQueryKey,
-} from '@/api/sales/@tanstack/react-query.gen'
-import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+import { discardTicketMutation, getTicketQueryKey } from '@/api/sales/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
+import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 
 type DiscardTicketDialogProps = {
   ticketId: number
@@ -28,11 +19,7 @@ type DiscardTicketDialogProps = {
  * void there is no reason to type and no owner to fetch: the server deletes
  * the row (it refuses once a line exists) and the floor forgets the tile.
  */
-export function DiscardTicketDialog({
-  ticketId,
-  open,
-  onOpenChange,
-}: DiscardTicketDialogProps) {
+export function DiscardTicketDialog({ ticketId, open, onOpenChange }: DiscardTicketDialogProps) {
   const t = useT()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -71,21 +58,10 @@ export function DiscardTicketDialog({
         </DialogHeader>
 
         <DialogFooter className='gap-2'>
-          <Button
-            variant='outline'
-            size='lg'
-            className='h-12'
-            onClick={() => onOpenChange(false)}
-          >
+          <Button variant='outline' size='lg' className='h-12' onClick={() => onOpenChange(false)}>
             {t('cancel')}
           </Button>
-          <Button
-            variant='destructive'
-            size='lg'
-            className='h-12'
-            disabled={discard.isPending}
-            onClick={doDiscard}
-          >
+          <Button variant='destructive' size='lg' className='h-12' disabled={discard.isPending} onClick={doDiscard}>
             {t('confirmDiscard')}
           </Button>
         </DialogFooter>

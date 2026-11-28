@@ -7,17 +7,17 @@ import {
 } from '@/api/finance/@tanstack/react-query.gen'
 import { getTillEmployeesOptions } from '@/api/payroll/@tanstack/react-query.gen'
 import { addCashMovementMutation } from '@/api/sales/@tanstack/react-query.gen'
-import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { NumericKeypad } from '@/components/numeric-keypad'
 import { API_VERSION } from '@/lib/api-client'
 import { useFeatures, type FeatureKey } from '@/lib/brand'
 import { useLocalized, useT, type TranslationKey } from '@/lib/i18n'
 import { toNumber, useMoney } from '@/lib/money'
 import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { NumericKeypad } from '@/components/numeric-keypad'
 
 // CashMovementType enum values (Sales.Domain: PayIn=0, PayOut=1)
 const MOVEMENT_TYPE = { in: 0, out: 1 } as const
@@ -84,9 +84,7 @@ export function MovementDialog({ shiftId, direction, open, onOpenChange }: Movem
   const [picked, setPicked] = useState<Picked | null>(null)
 
   const isOut = direction === 'out'
-  const kinds = (isOut ? OUT_KINDS : IN_KINDS).filter(
-    (k) => !k.feature || features[k.feature]
-  )
+  const kinds = (isOut ? OUT_KINDS : IN_KINDS).filter((k) => !k.feature || features[k.feature])
   const picks = kinds.find((k) => k.value === kind)?.picks ?? null
 
   // The lists behind the pickers, loaded only when their kind is picked
@@ -268,7 +266,7 @@ export function MovementDialog({ shiftId, direction, open, onOpenChange }: Movem
                           {balance !== 0 && (
                             <span
                               className={cn(
-                                'shrink-0 type-caption tabular-nums',
+                                'type-caption shrink-0 tabular-nums',
                                 isPicked
                                   ? 'text-primary-foreground/80'
                                   : balance < 0
@@ -276,9 +274,7 @@ export function MovementDialog({ shiftId, direction, open, onOpenChange }: Movem
                                     : 'text-muted-foreground'
                               )}
                             >
-                              {balance < 0
-                                ? t('owesAmount', { amount: money(-balance) })
-                                : money(balance)}
+                              {balance < 0 ? t('owesAmount', { amount: money(-balance) }) : money(balance)}
                             </span>
                           )}
                         </Button>
@@ -318,12 +314,7 @@ export function MovementDialog({ shiftId, direction, open, onOpenChange }: Movem
             <NumericKeypad value={amountStr} onChange={setAmountStr} />
 
             <div className='mt-auto flex justify-end gap-2'>
-              <Button
-                variant='outline'
-                size='lg'
-                className='h-12'
-                onClick={() => onOpenChange(false)}
-              >
+              <Button variant='outline' size='lg' className='h-12' onClick={() => onOpenChange(false)}>
                 {t('cancel')}
               </Button>
               <Button size='lg' className='h-12' disabled={!canSubmit} onClick={submit}>

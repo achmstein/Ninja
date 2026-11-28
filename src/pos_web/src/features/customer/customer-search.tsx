@@ -3,10 +3,6 @@ import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Pencil, UserPlus, X } from 'lucide-react'
 import { getRecentCustomersOptions } from '@/api/sales/@tanstack/react-query.gen'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Skeleton } from '@/components/ui/skeleton'
-import type { SaleCustomer } from '@/features/sale/cart'
 import { API_VERSION, apiClient } from '@/lib/api-client'
 import { Highlight, matchRanges } from '@/lib/highlight'
 import { useLanguage, useT } from '@/lib/i18n'
@@ -14,6 +10,10 @@ import { editablePhone } from '@/lib/phone'
 import { toast } from '@/lib/toast'
 import { useDebounced } from '@/lib/use-debounced'
 import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Skeleton } from '@/components/ui/skeleton'
+import type { SaleCustomer } from '@/features/sale/cart'
 import { customerName, type IdentityCustomer } from './counter-customers'
 import { looksLikePhone, NewCustomerForm } from './new-customer-form'
 import { readRecentCustomers, rememberRecentCustomer } from './recent-customers'
@@ -157,13 +157,18 @@ function SearchBody({
   // The till's own alphabet first
   const arabicFirst = language === 'ar'
   const isArabic = (ch: string) => /[\u0600-\u06FF]/.test(ch)
-  const strip = [...letters.filter((ch) => isArabic(ch) === arabicFirst), ...letters.filter((ch) => isArabic(ch) !== arabicFirst)]
+  const strip = [
+    ...letters.filter((ch) => isArabic(ch) === arabicFirst),
+    ...letters.filter((ch) => isArabic(ch) !== arabicFirst),
+  ]
 
   if (adding) {
     return (
       <Frame>
         <TopRow onBack={() => setAdding(false)}>
-          <DialogPrimitive.Title className='min-w-0 flex-1 type-title truncate'>{t('newCustomer')}</DialogPrimitive.Title>
+          <DialogPrimitive.Title className='type-title min-w-0 flex-1 truncate'>
+            {t('newCustomer')}
+          </DialogPrimitive.Title>
         </TopRow>
         <div className='min-h-0 flex-1 overflow-y-auto p-4'>
           <NewCustomerForm
@@ -191,7 +196,7 @@ function SearchBody({
         type='button'
         disabled={off || !!where}
         onClick={() => onPick(toCustomer(user))}
-        className='hover:bg-muted flex min-h-14 w-full items-center gap-3 border-b px-4 py-2 type-body text-start disabled:cursor-not-allowed disabled:opacity-50'
+        className='hover:bg-muted type-body flex min-h-14 w-full items-center gap-3 border-b px-4 py-2 text-start disabled:cursor-not-allowed disabled:opacity-50'
       >
         <span className='min-w-0 flex-1'>
           <span className='block truncate font-semibold'>
@@ -200,7 +205,9 @@ function SearchBody({
           {off ? (
             <span className='text-muted-foreground type-detail block truncate'>{t('customerDisabled')}</span>
           ) : (
-            where && <span className='text-muted-foreground type-detail block truncate'>{t('alreadyOnBill', { where })}</span>
+            where && (
+              <span className='text-muted-foreground type-detail block truncate'>{t('alreadyOnBill', { where })}</span>
+            )
           )}
         </span>
         {user.phoneNumber && (
@@ -218,7 +225,13 @@ function SearchBody({
     const waiting = search !== typed || (matches.isFetching && found.length === 0)
     body = (
       <>
-        {waiting ? <RowSkeletons /> : found.length > 0 ? found.map((u) => row(u, true)) : <Nothing>{t('customerSearchNone')}</Nothing>}
+        {waiting ? (
+          <RowSkeletons />
+        ) : found.length > 0 ? (
+          found.map((u) => row(u, true))
+        ) : (
+          <Nothing>{t('customerSearchNone')}</Nothing>
+        )}
         {/* A name that is nobody's yet: on this order as it is, or a customer from now on */}
         {!accountsOnly && !looksLikePhone(typed) && (
           <>
@@ -259,9 +272,7 @@ function SearchBody({
       const under = all.filter((u) => filedUnder(customerName(u)) === letter)
       body = under.length > 0 ? under.map((u) => row(u)) : <Nothing>{t('customerSearchNone')}</Nothing>
     } else {
-      const recent = recentIds
-        .map((id) => all.find((u) => u.id === id))
-        .filter((u): u is IdentityCustomer => !!u)
+      const recent = recentIds.map((id) => all.find((u) => u.id === id)).filter((u): u is IdentityCustomer => !!u)
       body = (
         <>
           {offered.length > 0 && (
@@ -328,7 +339,14 @@ function SearchBody({
         </div>
       </TopRow>
       {/* A name's first letter, without the keyboard: only letters somebody is filed under */}
-      <div className={cn('no-scrollbar flex shrink-0 gap-1 overflow-x-auto border-b px-3 py-2', strip.length === 0 && 'hidden')} role='toolbar' aria-label={t('customerSearchLetters')}>
+      <div
+        className={cn(
+          'no-scrollbar flex shrink-0 gap-1 overflow-x-auto border-b px-3 py-2',
+          strip.length === 0 && 'hidden'
+        )}
+        role='toolbar'
+        aria-label={t('customerSearchLetters')}
+      >
         {strip.map((ch) => (
           <button
             key={ch}
@@ -340,7 +358,7 @@ function SearchBody({
             }}
             className={cn(
               'size-10 shrink-0 rounded-lg text-base font-semibold',
-              letter === ch ? 'bg-primary text-primary-foreground' : 'hover:bg-muted',
+              letter === ch ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
             )}
           >
             {ch}
@@ -370,11 +388,11 @@ function TopRow({ onBack, children }: { onBack: () => void; children: React.Reac
 }
 
 function Caption({ children }: { children: React.ReactNode }) {
-  return <div className='text-muted-foreground px-4 pt-3 pb-1 type-label'>{children}</div>
+  return <div className='text-muted-foreground type-label px-4 pt-3 pb-1'>{children}</div>
 }
 
 function Nothing({ children }: { children: React.ReactNode }) {
-  return <p className='text-muted-foreground px-4 py-6 type-detail text-center'>{children}</p>
+  return <p className='text-muted-foreground type-detail px-4 py-6 text-center'>{children}</p>
 }
 
 function RowSkeletons() {

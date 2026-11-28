@@ -25,6 +25,6 @@ export const usePrintSettings = create<PrintSettingsState>()(
       setKitchenPrinter: (kitchenPrinter) => set({ kitchenPrinter }),
       setDrawerOnCash: (drawerOnCash) => set({ drawerOnCash }),
     }),
-    { name: 'ninja-pos-printing' },
-  ),
+    { name: 'ninja-pos-printing' }
+  )
 )

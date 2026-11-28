@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { UtensilsCrossed } from 'lucide-react'
-import type { PosterTone } from '@/components/menu/data/sections'
 import { cn } from '@/lib/utils'
+import type { PosterTone } from '@/components/menu/data/sections'
 import { TONE_CLASS } from './deck/deck-model'
 
 /**
@@ -35,5 +35,15 @@ export function ItemPhoto({
       </span>
     )
   }
-  return <img src={src} alt='' loading='lazy' decoding='async' draggable={false} onError={() => setFailed(true)} className={cn('size-full object-cover', className)} />
+  return (
+    <img
+      src={src}
+      alt=''
+      loading='lazy'
+      decoding='async'
+      draggable={false}
+      onError={() => setFailed(true)}
+      className={cn('size-full object-cover', className)}
+    />
+  )
 }

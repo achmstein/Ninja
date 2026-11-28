@@ -6,28 +6,13 @@ import { useLocalized, useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Spinner } from '@/components/ui/spinner'
 import { Field, SwitchRow } from '@/components/field'
-import {
-  customersService,
-  type StaffRole,
-} from '@/features/customers/services/customers-service'
+import { customersService, type StaffRole } from '@/features/customers/services/customers-service'
 import { staffError } from '../staff-errors'
 
 interface AddStaffDialogProps {
@@ -45,12 +30,7 @@ interface AddStaffDialogProps {
  * the branches it may work in. Owners hold every branch, so the branch list
  * hides for them.
  */
-export function AddStaffDialog({
-  open,
-  onOpenChange,
-  defaults,
-  onCreated,
-}: AddStaffDialogProps) {
+export function AddStaffDialog({ open, onOpenChange, defaults, onCreated }: AddStaffDialogProps) {
   const t = useT()
   const localized = useLocalized()
   const features = useFeatures()
@@ -60,9 +40,7 @@ export function AddStaffDialog({
   const [password, setPassword] = useState('')
   const [role, setRole] = useState<StaffRole>(defaults?.role ?? 'Admin')
   const [isOwner, setIsOwner] = useState(false)
-  const [branchIds, setBranchIds] = useState<Set<number>>(
-    () => new Set(defaults?.branchIds ?? [])
-  )
+  const [branchIds, setBranchIds] = useState<Set<number>>(() => new Set(defaults?.branchIds ?? []))
   const [allBranches, setAllBranches] = useState(false)
   const [error, setError] = useState('')
 
@@ -70,10 +48,7 @@ export function AddStaffDialog({
   const branches = branchesQuery.data ?? []
   const makeOwner = role === 'Admin' && isOwner
   // A call centre's account holds every branch, those opened later too
-  const offerAll =
-    Boolean(features.callCentre) &&
-    !makeOwner &&
-    (role === 'Admin' || role === 'Cashier')
+  const offerAll = Boolean(features.callCentre) && !makeOwner && (role === 'Admin' || role === 'Cashier')
   const everyBranch = offerAll && allBranches
 
   const reset = () => {
@@ -95,8 +70,7 @@ export function AddStaffDialog({
         password,
         role,
         isOwner: makeOwner,
-        branchIds:
-          makeOwner || everyBranch ? [] : [...branchIds].sort((a, b) => a - b),
+        branchIds: makeOwner || everyBranch ? [] : [...branchIds].sort((a, b) => a - b),
         allBranches: everyBranch,
       }),
     onSuccess: (userId) => {
@@ -120,11 +94,7 @@ export function AddStaffDialog({
     onError: (error) => {
       const why = staffError(error)
       toast.error(
-        why === null
-          ? t('failedToCreateAdmin')
-          : 'key' in why
-            ? t(why.key)
-            : `${t('failedToCreateAdmin')}: ${why.text}`
+        why === null ? t('failedToCreateAdmin') : 'key' in why ? t(why.key) : `${t('failedToCreateAdmin')}: ${why.text}`
       )
     },
   })
@@ -195,13 +165,9 @@ export function AddStaffDialog({
                 <SelectItem value='Admin'>{t('adminRole')}</SelectItem>
                 <SelectItem value='Cashier'>{t('cashierRole')}</SelectItem>
                 {/* The kitchen role signs in to the kitchen screen: only where the business runs it */}
-                {features.kds && (
-                  <SelectItem value='Kitchen'>{t('kitchenRole')}</SelectItem>
-                )}
+                {features.kds && <SelectItem value='Kitchen'>{t('kitchenRole')}</SelectItem>}
                 {/* Riders only where the business delivers (an add-on) */}
-                {features.delivery && (
-                  <SelectItem value='Rider'>{t('riderRole')}</SelectItem>
-                )}
+                {features.delivery && <SelectItem value='Rider'>{t('riderRole')}</SelectItem>}
               </SelectContent>
             </Select>
           </Field>
@@ -232,9 +198,7 @@ export function AddStaffDialog({
                       <Checkbox
                         id={id}
                         checked={branchIds.has(branchId)}
-                        onCheckedChange={(checked) =>
-                          toggleBranch(branchId, checked === true)
-                        }
+                        onCheckedChange={(checked) => toggleBranch(branchId, checked === true)}
                       />
                       <Label htmlFor={id} className='font-normal'>
                         {localized(branch.name)}
@@ -249,11 +213,7 @@ export function AddStaffDialog({
           {error && <p className='text-destructive text-sm'>{error}</p>}
 
           <DialogFooter>
-            <Button
-              type='button'
-              variant='outline'
-              onClick={() => onOpenChange(false)}
-            >
+            <Button type='button' variant='outline' onClick={() => onOpenChange(false)}>
               {t('cancel')}
             </Button>
             <Button type='submit' disabled={register.isPending}>

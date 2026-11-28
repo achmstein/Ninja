@@ -1,10 +1,9 @@
 import { useState } from 'react'
+import { isAxiosError } from 'axios'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from 'react-oidc-context'
-import { isAxiosError } from 'axios'
 import type { LocalizedText } from '@/api/spaces'
 import { getGuestId, useGuestStore } from '@/stores/guest-store'
-import { toast } from '@/lib/toast'
 import { useT, type TranslationKey } from '@/lib/i18n'
 import {
   cancelServiceRequest,
@@ -15,6 +14,7 @@ import {
   type ServiceRequestType,
   type ServiceRequestView,
 } from '@/lib/services/notifications'
+import { toast } from '@/lib/toast'
 
 /** The place a request is sent from: a table the customer scanned, or the
  *  place of their running stay. */
@@ -46,8 +46,7 @@ const successKey: Partial<Record<ServiceRequestType, TranslationKey>> = {
 }
 
 const isOpen = (r: ServiceRequestView) =>
-  r.status === REQUEST_STATUS.pending ||
-  r.status === REQUEST_STATUS.acknowledged
+  r.status === REQUEST_STATUS.pending || r.status === REQUEST_STATUS.acknowledged
 
 /**
  * The customer's requests from a place, with the state the till has put
@@ -75,12 +74,7 @@ export function useServiceRequests(target: RequestTarget) {
   })
 
   const openOf = (type: ServiceRequestType) =>
-    mine.find(
-      (r) =>
-        r.requestType === type &&
-        Number(r.placeId) === target.placeId &&
-        isOpen(r),
-    )
+    mine.find((r) => r.requestType === type && Number(r.placeId) === target.placeId && isOpen(r))
 
   const stateOf = (type: ServiceRequestType): RequestState => {
     if (pending === type) return { phase: 'sending' }
@@ -91,12 +85,8 @@ export function useServiceRequests(target: RequestTarget) {
       : { phase: 'sent', id: open.id }
   }
 
-  const setMine = (
-    update: (prev: ServiceRequestView[]) => ServiceRequestView[],
-  ) =>
-    queryClient.setQueryData<ServiceRequestView[]>(MY_REQUESTS_KEY, (prev) =>
-      update(prev ?? []),
-    )
+  const setMine = (update: (prev: ServiceRequestView[]) => ServiceRequestView[]) =>
+    queryClient.setQueryData<ServiceRequestView[]>(MY_REQUESTS_KEY, (prev) => update(prev ?? []))
 
   /** `optionCode`: the rate option wanted, for a changeOption request */
   const send = async (type: ServiceRequestType, optionCode?: string): Promise<boolean> => {

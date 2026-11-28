@@ -2,13 +2,13 @@ import { useEffect, useRef } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { Check, Loader2, MapPinned, Send } from 'lucide-react'
 import { createLocationShareMutation, getLocationShareOptions } from '@/api/ordering/@tanstack/react-query.gen'
-import { Button } from '@/components/ui/button'
-import { useBrandName, useCustomerOrigin } from '@/lib/brand'
 import { API_VERSION } from '@/lib/api-client'
+import { useBrandName, useCustomerOrigin } from '@/lib/brand'
 import { useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { whatsAppLink } from '@/lib/phone'
 import { toast } from '@/lib/toast'
+import { Button } from '@/components/ui/button'
 
 /** The page on the business's customer site a caller opens to share where they are */
 export function locationLinkUrl(customerOrigin: string, token: string): string {
@@ -71,13 +71,16 @@ export function LocationLink({
           open(made.token)
         },
         onError: () => toast.error(t('locationLinkFailed')),
-      },
+      }
     )
   }
 
   if (shared)
     return (
-      <div className='flex items-center gap-2 rounded-lg bg-emerald-500/10 p-3 type-detail font-medium text-emerald-700 dark:text-emerald-400' role='status'>
+      <div
+        className='type-detail flex items-center gap-2 rounded-lg bg-emerald-500/10 p-3 font-medium text-emerald-700 dark:text-emerald-400'
+        role='status'
+      >
         <Check className='size-4 shrink-0' aria-hidden />
         {t('locationLinkReceived')}
       </div>
@@ -85,9 +88,11 @@ export function LocationLink({
 
   if (token)
     return (
-      <div className='flex flex-wrap items-center gap-2 rounded-lg border border-dashed p-3 type-detail' role='status'>
+      <div className='type-detail flex flex-wrap items-center gap-2 rounded-lg border border-dashed p-3' role='status'>
         <Loader2 className='text-muted-foreground size-4 shrink-0 animate-spin' aria-hidden />
-        <span className='text-muted-foreground flex-1'>{share.data?.expired ? t('locationLinkExpired') : t('locationLinkWaiting')}</span>
+        <span className='text-muted-foreground flex-1'>
+          {share.data?.expired ? t('locationLinkExpired') : t('locationLinkWaiting')}
+        </span>
         <Button variant='outline' size='sm' className='h-9' onClick={() => send(share.data?.expired ? null : token)}>
           <Send className='size-3.5' aria-hidden />
           {t('locationLinkSendAgain')}
@@ -96,8 +101,17 @@ export function LocationLink({
     )
 
   return (
-    <Button variant='secondary' className='h-auto min-h-14 justify-start gap-3 py-2 text-start' onClick={() => send(null)} disabled={create.isPending}>
-      {create.isPending ? <Loader2 className='size-5 shrink-0 animate-spin' aria-hidden /> : <MapPinned className='size-5 shrink-0' aria-hidden />}
+    <Button
+      variant='secondary'
+      className='h-auto min-h-14 justify-start gap-3 py-2 text-start'
+      onClick={() => send(null)}
+      disabled={create.isPending}
+    >
+      {create.isPending ? (
+        <Loader2 className='size-5 shrink-0 animate-spin' aria-hidden />
+      ) : (
+        <MapPinned className='size-5 shrink-0' aria-hidden />
+      )}
       <span className='flex flex-col'>
         <span className='font-semibold'>{t('locationLinkAsk')}</span>
         <span className='text-muted-foreground type-caption whitespace-normal'>{t('locationLinkAskHint')}</span>

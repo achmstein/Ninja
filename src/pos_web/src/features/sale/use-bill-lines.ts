@@ -1,14 +1,14 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { AxiosError } from 'axios'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { assignOrderCustomerMutation } from '@/api/ordering/@tanstack/react-query.gen'
 import { assignTicketLinesCustomerMutation, moveTicketLinesMutation } from '@/api/sales/@tanstack/react-query.gen'
 import type { TicketDetail } from '@/api/sales/types.gen'
-import type { MoveTarget } from '@/features/ticket/move-target-dialog'
 import { API_VERSION } from '@/lib/api-client'
 import { useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { TICKET_TYPE_COUNTER, TICKET_TYPE_TABLE } from '@/lib/ticket-types'
 import { toast } from '@/lib/toast'
+import type { MoveTarget } from '@/features/ticket/move-target-dialog'
 import type { SaleCustomer } from './cart'
 
 /**
@@ -89,8 +89,8 @@ export function useBillLines(ticket: TicketDetail | undefined) {
               // A fresh id per call: the server deduplicates a retried request, and a later naming is a new one
               headers: { 'x-requestid': crypto.randomUUID() },
               body: { customerUserId: customer.id, customerName: customer.name },
-            }),
-          ),
+            })
+          )
         )
         if (loose.length > 0) {
           await assignLines.mutateAsync({
@@ -105,7 +105,8 @@ export function useBillLines(ticket: TicketDetail | undefined) {
         return true
       } catch (error) {
         // A 400 carries the domain's own words (cancelled, already somebody's)
-        const detail = error instanceof AxiosError && typeof error.response?.data === 'string' ? error.response.data : undefined
+        const detail =
+          error instanceof AxiosError && typeof error.response?.data === 'string' ? error.response.data : undefined
         toast.error(t('failedToAssignCustomer'), detail ? { description: detail } : undefined)
         return false
       }

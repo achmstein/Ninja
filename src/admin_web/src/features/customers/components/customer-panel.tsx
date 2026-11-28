@@ -2,21 +2,9 @@ import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { isOwner } from '@/config/oidc-config'
-import {
-  ArrowLeft,
-  Ban,
-  CircleCheck,
-  Merge,
-  Pencil,
-  MessageCircle,
-  MoreHorizontal,
-  Plus,
-} from 'lucide-react'
+import { ArrowLeft, Ban, CircleCheck, Merge, Pencil, MessageCircle, MoreHorizontal, Plus } from 'lucide-react'
 import { useAuth } from 'react-oidc-context'
-import {
-  getCustomerTopItemsOptions,
-  listItemsOptions,
-} from '@/api/catalog/@tanstack/react-query.gen'
+import { getCustomerTopItemsOptions, listItemsOptions } from '@/api/catalog/@tanstack/react-query.gen'
 import { getOrdersByUserIdOptions } from '@/api/ordering/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useFeatures } from '@/lib/brand'
@@ -49,29 +37,13 @@ import { AdjustPointsDialog } from '@/features/loyalty/components/adjust-points-
 import { EarnPointsDialog } from '@/features/loyalty/components/earn-points-dialog'
 import { LoyaltyTransactionList } from '@/features/loyalty/components/loyalty-transaction-list'
 import { tierNameKeys } from '@/features/loyalty/components/tier-name'
-import {
-  loyaltyKeys,
-  useEnrolCustomer,
-  useLoyaltyTransactions,
-} from '@/features/loyalty/hooks/use-loyalty'
+import { loyaltyKeys, useEnrolCustomer, useLoyaltyTransactions } from '@/features/loyalty/hooks/use-loyalty'
 import { loyaltyService } from '@/features/loyalty/services/loyalty-service'
-import {
-  tierColors,
-  type LoyaltyAccount,
-  type LoyaltyTier,
-} from '@/features/loyalty/types'
-import {
-  formatEgp,
-  getOrderStatus,
-  relativeTime,
-} from '@/features/orders/status'
+import { tierColors, type LoyaltyAccount, type LoyaltyTier } from '@/features/loyalty/types'
+import { formatEgp, getOrderStatus, relativeTime } from '@/features/orders/status'
 import { customersKeys, useCustomer } from '../hooks/use-customers'
 import { customersService } from '../services/customers-service'
-import {
-  getCustomerDisplayName,
-  getCustomerInitials,
-  type Customer,
-} from '../types'
+import { getCustomerDisplayName, getCustomerInitials, type Customer } from '../types'
 import { AddedAtCounterBadge } from './counter-customer'
 import { EditCustomerDialog } from './edit-customer-dialog'
 import { MergeCustomerDialog } from './merge-customer-dialog'
@@ -91,11 +63,7 @@ type CustomerPanelProps = {
  * there: the tab and the points side by side, the orders under them. Loads
  * its own customer, so a link carrying only an id opens the same page.
  */
-export function CustomerPanel({
-  customerId,
-  onBack,
-  onOpenCustomer,
-}: CustomerPanelProps) {
+export function CustomerPanel({ customerId, onBack, onOpenCustomer }: CustomerPanelProps) {
   const t = useT()
   const query = useCustomer(customerId)
 
@@ -109,20 +77,9 @@ export function CustomerPanel({
     )
   }
   if (query.isError || !query.data) {
-    return (
-      <ErrorState
-        error={query.error ?? new Error(t('somethingWentWrong'))}
-        onRetry={() => query.refetch()}
-      />
-    )
+    return <ErrorState error={query.error ?? new Error(t('somethingWentWrong'))} onRetry={() => query.refetch()} />
   }
-  return (
-    <CustomerHub
-      customer={query.data}
-      onBack={onBack}
-      onOpenCustomer={onOpenCustomer}
-    />
-  )
+  return <CustomerHub customer={query.data} onBack={onBack} onOpenCustomer={onOpenCustomer} />
 }
 
 function CustomerHub({
@@ -149,9 +106,7 @@ function CustomerHub({
     mutationFn: () => customersService.toggleEnabled(customer.id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: customersKeys.all })
-      toast.success(
-        customer.enabled ? t('accountDisabled') : t('accountEnabled')
-      )
+      toast.success(customer.enabled ? t('accountDisabled') : t('accountEnabled'))
       setToggleOpen(false)
     },
     onError: () => toast.error(t('somethingWentWrong')),
@@ -161,37 +116,23 @@ function CustomerHub({
     <div className='flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto'>
       <div className='flex flex-none items-center justify-between gap-2'>
         <div className='flex min-w-0 items-center gap-3'>
-          <Button
-            size='icon'
-            variant='ghost'
-            className='-ms-2'
-            onClick={onBack}
-            aria-label={t('customers')}
-          >
+          <Button size='icon' variant='ghost' className='-ms-2' onClick={onBack} aria-label={t('customers')}>
             <ArrowLeft className='rtl:rotate-180' />
           </Button>
           <Avatar className='size-10'>
-            <AvatarFallback className='bg-muted text-muted-foreground'>
-              {getCustomerInitials(customer)}
-            </AvatarFallback>
+            <AvatarFallback className='bg-muted text-muted-foreground'>{getCustomerInitials(customer)}</AvatarFallback>
           </Avatar>
           <div className='min-w-0'>
             <div className='flex items-center gap-2'>
-              <h1 className='truncate text-lg font-semibold tracking-tight'>
-                {name}
-              </h1>
-              {!customer.enabled && (
-                <Badge variant='danger'>{t('disabled')}</Badge>
-              )}
+              <h1 className='truncate text-lg font-semibold tracking-tight'>{name}</h1>
+              {!customer.enabled && <Badge variant='danger'>{t('disabled')}</Badge>}
               {customer.addedAtCounter && <AddedAtCounterBadge />}
             </div>
             {/* One way to reach them, not everything known about them: the
                 phone (with WhatsApp, from the owner's own account), or the
                 email of someone who gave no phone */}
             <p className='text-muted-foreground flex items-center gap-1.5 truncate text-xs'>
-              {showPhone(customer.phoneNumber) ||
-                customer.email ||
-                customer.username}
+              {showPhone(customer.phoneNumber) || customer.email || customer.username}
               {customer.phoneNumber && (
                 <a
                   href={whatsAppLink(customer.phoneNumber)}
@@ -234,11 +175,7 @@ function CustomerHub({
               variant={customer.enabled ? 'destructive' : 'default'}
               onClick={() => setToggleOpen(true)}
             >
-              {customer.enabled ? (
-                <Ban className='h-4 w-4' />
-              ) : (
-                <CircleCheck className='h-4 w-4' />
-              )}
+              {customer.enabled ? <Ban className='h-4 w-4' /> : <CircleCheck className='h-4 w-4' />}
               {customer.enabled ? t('disableAccount') : t('enableAccount')}
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -249,12 +186,7 @@ function CustomerHub({
 
       {/* What they owe and the points they hold, side by side where there is room */}
       {(features.tabs || features.loyalty) && (
-        <div
-          className={cn(
-            'grid flex-none gap-4',
-            features.tabs && features.loyalty && 'lg:grid-cols-2'
-          )}
-        >
+        <div className={cn('grid flex-none gap-4', features.tabs && features.loyalty && 'lg:grid-cols-2')}>
           {features.tabs && (
             <SectionCard title={t('tab')}>
               <TabSection key={customer.id} customer={customer} />
@@ -285,18 +217,12 @@ function CustomerHub({
         onOpenChange={setToggleOpen}
         destructive={customer.enabled}
         title={customer.enabled ? t('disableAccount') : t('enableAccount')}
-        confirmText={
-          customer.enabled ? t('disableAccount') : t('enableAccount')
-        }
+        confirmText={customer.enabled ? t('disableAccount') : t('enableAccount')}
         isLoading={toggleEnabled.isPending}
         handleConfirm={() => toggleEnabled.mutate()}
       />
       {appLink.dialog}
-      <EditCustomerDialog
-        customer={customer}
-        open={editOpen}
-        onOpenChange={setEditOpen}
-      />
+      <EditCustomerDialog customer={customer} open={editOpen} onOpenChange={setEditOpen} />
       {owner && (
         <MergeCustomerDialog
           customer={customer}
@@ -413,15 +339,8 @@ function LoyaltySection({ customer }: { customer: Customer }) {
     return (
       <Pane>
         <div className='flex flex-wrap items-center justify-between gap-3'>
-          <p className='text-muted-foreground text-sm'>
-            {t('notInLoyaltyProgram')}
-          </p>
-          <Button
-            variant='outline'
-            size='sm'
-            disabled={enrol.isPending}
-            onClick={() => enrol.mutate(customer.id)}
-          >
+          <p className='text-muted-foreground text-sm'>{t('notInLoyaltyProgram')}</p>
+          <Button variant='outline' size='sm' disabled={enrol.isPending} onClick={() => enrol.mutate(customer.id)}>
             {enrol.isPending ? <Spinner /> : <Plus />}
             {t('enrolInLoyalty')}
           </Button>
@@ -443,12 +362,7 @@ function LoyaltySection({ customer }: { customer: Customer }) {
             <Plus />
             {t('addPoints')}
           </Button>
-          <Button
-            size='sm'
-            variant='ghost'
-            className='text-muted-foreground'
-            onClick={() => setAdjustOpen(true)}
-          >
+          <Button size='sm' variant='ghost' className='text-muted-foreground' onClick={() => setAdjustOpen(true)}>
             {t('adjust')}
           </Button>
         </>
@@ -459,13 +373,8 @@ function LoyaltySection({ customer }: { customer: Customer }) {
             <span className='text-2xl font-semibold tracking-tight tabular-nums'>
               {member.pointsBalance.toLocaleString(locale)}
             </span>
-            <span className='text-muted-foreground text-sm'>
-              {t('pointsUnit', { count: member.pointsBalance })}
-            </span>
-            <span
-              className='ms-1 text-sm font-medium'
-              style={{ color: tierColors[tier] }}
-            >
+            <span className='text-muted-foreground text-sm'>{t('pointsUnit', { count: member.pointsBalance })}</span>
+            <span className='ms-1 text-sm font-medium' style={{ color: tierColors[tier] }}>
               {t(tierNameKeys[tier])}
             </span>
           </div>
@@ -474,9 +383,7 @@ function LoyaltySection({ customer }: { customer: Customer }) {
               {nextPoints - member.lifetimePoints > 0
                 ? t('pointsToTier', {
                     count: nextPoints - member.lifetimePoints,
-                    points: (nextPoints - member.lifetimePoints).toLocaleString(
-                      locale
-                    ),
+                    points: (nextPoints - member.lifetimePoints).toLocaleString(locale),
                     tier: t(tierNameKeys[nextTier]),
                   })
                 : t('eligibleForTier', { tier: t(tierNameKeys[nextTier]) })}
@@ -485,16 +392,9 @@ function LoyaltySection({ customer }: { customer: Customer }) {
         </div>
       }
     >
-      <LoyaltyTransactionList
-        transactions={transactions.data}
-        isLoading={transactions.isLoading}
-      />
+      <LoyaltyTransactionList transactions={transactions.data} isLoading={transactions.isLoading} />
 
-      <EarnPointsDialog
-        open={earnOpen}
-        onOpenChange={setEarnOpen}
-        userId={customer.id}
-      />
+      <EarnPointsDialog open={earnOpen} onOpenChange={setEarnOpen} userId={customer.id} />
       <AdjustPointsDialog
         open={adjustOpen}
         onOpenChange={setAdjustOpen}
@@ -526,19 +426,15 @@ function TabSection({ customer }: { customer: Customer }) {
   const ledger = useMemo(
     () =>
       [...(account.data?.transactions ?? [])].sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       ),
     [account.data]
   )
 
   const label = (tx: AccountTransaction) => {
-    if (tx.source === 'posReceipt' && tx.sourceNumber != null)
-      return t('posReceipt', { number: tx.sourceNumber })
-    if (tx.source === 'posCreditNote' && tx.sourceNumber != null)
-      return t('posCreditNote', { number: tx.sourceNumber })
-    if (tx.source === 'posTabPayment' && tx.sourceNumber != null)
-      return t('posTabPayment', { number: tx.sourceNumber })
+    if (tx.source === 'posReceipt' && tx.sourceNumber != null) return t('posReceipt', { number: tx.sourceNumber })
+    if (tx.source === 'posCreditNote' && tx.sourceNumber != null) return t('posCreditNote', { number: tx.sourceNumber })
+    if (tx.source === 'posTabPayment' && tx.sourceNumber != null) return t('posTabPayment', { number: tx.sourceNumber })
     return tx.description || (tx.type === 'charge' ? t('charge') : t('payment'))
   }
 
@@ -551,12 +447,7 @@ function TabSection({ customer }: { customer: Customer }) {
               {t('recordPayment')}
             </Button>
           )}
-          <Button
-            size='sm'
-            variant='ghost'
-            className='text-muted-foreground'
-            onClick={() => setChargeOpen(true)}
-          >
+          <Button size='sm' variant='ghost' className='text-muted-foreground' onClick={() => setChargeOpen(true)}>
             {t('addCharge')}
           </Button>
         </>
@@ -576,11 +467,7 @@ function TabSection({ customer }: { customer: Customer }) {
               {formatEgp(Math.abs(balance))}
             </span>
             <span className='text-muted-foreground text-sm'>
-              {balance > 0
-                ? t('owedByCustomer')
-                : balance < 0
-                  ? t('customerCredit')
-                  : t('settled')}
+              {balance > 0 ? t('owedByCustomer') : balance < 0 ? t('customerCredit') : t('settled')}
             </span>
           </div>
         )
@@ -590,10 +477,7 @@ function TabSection({ customer }: { customer: Customer }) {
         <ul className='divide-y text-sm'>
           {(wholeLedger ? ledger : ledger.slice(0, LEDGER_LINES)).map((tx) => (
             <li key={tx.id} className='flex items-center gap-3 py-2'>
-              <When
-                value={tx.createdAt}
-                className='text-muted-foreground w-24 shrink-0 text-xs'
-              />
+              <When value={tx.createdAt} className='text-muted-foreground w-24 shrink-0 text-xs' />
               <span className='min-w-0 flex-1 truncate'>{label(tx)}</span>
               <span className='shrink-0 tabular-nums'>
                 {tx.type === 'charge' ? '+' : '−'}
@@ -604,12 +488,7 @@ function TabSection({ customer }: { customer: Customer }) {
         </ul>
       )}
       {!wholeLedger && ledger.length > LEDGER_LINES && (
-        <Button
-          variant='link'
-          size='sm'
-          className='h-auto p-0'
-          onClick={() => setWholeLedger(true)}
-        >
+        <Button variant='link' size='sm' className='h-auto p-0' onClick={() => setWholeLedger(true)}>
           {t('viewAll')}
         </Button>
       )}
@@ -654,20 +533,13 @@ function UsualOrder({ customerId }: { customerId: string }) {
       query: { 'api-version': API_VERSION },
     })
   )
-  const catalog = useQuery(
-    listItemsOptions({ query: { 'api-version': API_VERSION } })
-  )
+  const catalog = useQuery(listItemsOptions({ query: { 'api-version': API_VERSION } }))
   const names = useMemo(() => {
-    const byId = new Map(
-      (catalog.data ?? []).map((item) => [toNumber(item.id), item])
-    )
-    return (top.data ?? [])
-      .map((id) => localized(byId.get(toNumber(id))?.name))
-      .filter(Boolean)
+    const byId = new Map((catalog.data ?? []).map((item) => [toNumber(item.id), item]))
+    return (top.data ?? []).map((id) => localized(byId.get(toNumber(id))?.name)).filter(Boolean)
   }, [top.data, catalog.data, localized])
 
-  if (top.isLoading || catalog.isLoading)
-    return <Skeleton className='h-4 w-40' />
+  if (top.isLoading || catalog.isLoading) return <Skeleton className='h-4 w-40' />
   if (names.length === 0) return null
   return (
     <span className='min-w-0'>
@@ -703,30 +575,18 @@ function RecentOrders({ customerId }: { customerId: string }) {
           {rows.map((order) => {
             const status = getOrderStatus(order.status)
             return (
-              <li
-                key={String(order.orderNumber)}
-                className='flex items-center justify-between gap-2 py-2'
-              >
+              <li key={String(order.orderNumber)} className='flex items-center justify-between gap-2 py-2'>
                 {/* Two flex items, so the bidi algorithm never merges the
                     order number's digits into the date's in RTL */}
                 <div className='flex min-w-0 items-baseline gap-2'>
                   <span className='font-medium' dir='ltr'>
                     #{order.orderNumber}
                   </span>
-                  {order.date && (
-                    <When
-                      value={order.date}
-                      className='text-muted-foreground text-xs'
-                    />
-                  )}
+                  {order.date && <When value={order.date} className='text-muted-foreground text-xs' />}
                 </div>
                 <div className='flex shrink-0 items-center gap-2'>
-                  {status && (
-                    <Badge variant={status.variant}>{t(status.key)}</Badge>
-                  )}
-                  <span className='font-medium tabular-nums'>
-                    {formatEgp(order.total)}
-                  </span>
+                  {status && <Badge variant={status.variant}>{t(status.key)}</Badge>}
+                  <span className='font-medium tabular-nums'>{formatEgp(order.total)}</span>
                 </div>
               </li>
             )

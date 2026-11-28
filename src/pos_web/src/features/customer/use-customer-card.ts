@@ -1,5 +1,5 @@
-import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query'
 import { AxiosError } from 'axios'
+import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query'
 import { getAccountBalanceOptions } from '@/api/accounts/@tanstack/react-query.gen'
 import type { AccountSummaryViewModel } from '@/api/accounts/types.gen'
 import { getAccountOptions } from '@/api/loyalty/@tanstack/react-query.gen'
@@ -14,8 +14,7 @@ import { API_VERSION } from '@/lib/api-client'
 const STALE_MS = 30_000
 
 /** 404 from either service means "none yet", not an error. */
-const isNotFound = (error: unknown) =>
-  error instanceof AxiosError && error.response?.status === 404
+const isNotFound = (error: unknown) => error instanceof AxiosError && error.response?.status === 404
 
 /** The customer's loyalty account, or null when they never joined. */
 export function useLoyalty(userId: string | null | undefined, enabled = true) {

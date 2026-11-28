@@ -9,11 +9,7 @@ const KEY = 'pos.lastOpenShift'
 export type OpenShifts = Record<string, number>
 
 /** The map after hearing that `branchId`'s open shift is `shiftId` (null: none open) */
-export function withOpenShift(
-  shifts: OpenShifts,
-  branchId: number,
-  shiftId: number | null,
-): OpenShifts {
+export function withOpenShift(shifts: OpenShifts, branchId: number, shiftId: number | null): OpenShifts {
   const next = { ...shifts }
   if (shiftId == null) delete next[String(branchId)]
   else next[String(branchId)] = shiftId

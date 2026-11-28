@@ -21,9 +21,7 @@ export function toPersonalityForm(dto: AssistantDto | null | undefined): Persona
   return {
     tone: dto?.tone === 'detailed' ? 'detailed' : 'brief',
     manner: dto?.manner === 'formal' ? 'formal' : 'friendly',
-    language: LANGUAGES.includes(dto?.language as AssistantLanguage)
-      ? (dto!.language as AssistantLanguage)
-      : 'match',
+    language: LANGUAGES.includes(dto?.language as AssistantLanguage) ? (dto!.language as AssistantLanguage) : 'match',
     notes: dto?.notes ?? '',
   }
 }
@@ -41,10 +39,5 @@ export function toPersonalityRequest(form: PersonalityForm): AssistantDto {
 export function samePersonality(a: PersonalityForm, b: PersonalityForm): boolean {
   const x = toPersonalityRequest(a)
   const y = toPersonalityRequest(b)
-  return (
-    x.tone === y.tone &&
-    x.manner === y.manner &&
-    x.language === y.language &&
-    x.notes === y.notes
-  )
+  return x.tone === y.tone && x.manner === y.manner && x.language === y.language && x.notes === y.notes
 }

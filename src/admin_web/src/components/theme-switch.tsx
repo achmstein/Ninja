@@ -4,12 +4,7 @@ import { useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { useTheme } from '@/context/theme-provider'
 import { Button } from '@/components/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 
 export function ThemeSwitch() {
   const t = useT()
@@ -34,25 +29,15 @@ export function ThemeSwitch() {
       </DropdownMenuTrigger>
       <DropdownMenuContent align='end'>
         <DropdownMenuItem onClick={() => setTheme('light')}>
-          {t('light')}{' '}
-          <Check
-            size={14}
-            className={cn('ms-auto', theme !== 'light' && 'hidden')}
-          />
+          {t('light')} <Check size={14} className={cn('ms-auto', theme !== 'light' && 'hidden')} />
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => setTheme('dark')}>
           {t('dark')}
-          <Check
-            size={14}
-            className={cn('ms-auto', theme !== 'dark' && 'hidden')}
-          />
+          <Check size={14} className={cn('ms-auto', theme !== 'dark' && 'hidden')} />
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => setTheme('system')}>
           {t('systemDefault')}
-          <Check
-            size={14}
-            className={cn('ms-auto', theme !== 'system' && 'hidden')}
-          />
+          <Check size={14} className={cn('ms-auto', theme !== 'system' && 'hidden')} />
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

@@ -1,15 +1,15 @@
 import { useState } from 'react'
 import { Download } from 'lucide-react'
 import type { TenantDetail } from '@/api/control'
+import { apiClient } from '@/lib/api-client'
+import { useT } from '@/lib/i18n'
+import { problemDetail } from '@/lib/problem'
+import { toast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Spinner } from '@/components/ui/spinner'
 import { Textarea } from '@/components/ui/textarea'
-import { apiClient } from '@/lib/api-client'
-import { useT } from '@/lib/i18n'
-import { problemDetail } from '@/lib/problem'
-import { toast } from '@/lib/toast'
 import { useRecordSave } from '../record-save'
 import { Section } from './business'
 
@@ -31,7 +31,14 @@ export function GiveOwnApp({ tenant }: { tenant: TenantDetail }) {
     >
       <div className='grid max-w-md gap-2'>
         <Label htmlFor='app-id-new'>{t('appId')}</Label>
-        <Input id='app-id-new' dir='ltr' autoCapitalize='none' spellCheck={false} value={appId} onChange={(e) => setAppId(e.target.value)} />
+        <Input
+          id='app-id-new'
+          dir='ltr'
+          autoCapitalize='none'
+          spellCheck={false}
+          value={appId}
+          onChange={(e) => setAppId(e.target.value)}
+        />
         <p className='text-muted-foreground text-xs'>{t('appIdHint')}</p>
       </div>
     </Section>
@@ -52,13 +59,18 @@ export function OwnAppRecord({ tenant, uploadSha256 }: { tenant: TenantDetail; u
   const [fingerprints, setFingerprints] = useState(savedFingerprints)
   const [downloading, setDownloading] = useState(false)
 
-  const dirty = appId.trim() !== (tenant.appId ?? '') || team.trim() !== (tenant.appleTeamId ?? '') || fingerprints.trim() !== savedFingerprints
+  const dirty =
+    appId.trim() !== (tenant.appId ?? '') ||
+    team.trim() !== (tenant.appleTeamId ?? '') ||
+    fingerprints.trim() !== savedFingerprints
 
   // A plain link would not carry the bearer token: fetch the record through the shared client and hand the browser a blob
   const downloadConfig = async () => {
     setDownloading(true)
     try {
-      const res = await apiClient.get<Blob>(`/api/control/tenants/${encodeURIComponent(tenant.slug)}/app-config`, { responseType: 'blob' })
+      const res = await apiClient.get<Blob>(`/api/control/tenants/${encodeURIComponent(tenant.slug)}/app-config`, {
+        responseType: 'blob',
+      })
       const url = URL.createObjectURL(res.data)
       const a = document.createElement('a')
       a.href = url
@@ -80,12 +92,21 @@ export function OwnAppRecord({ tenant, uploadSha256 }: { tenant: TenantDetail; u
       hint={t('appOwnRecordHint')}
       dirty={dirty}
       pending={pending}
-      onSave={() => save({ appId: appId.trim(), appleTeamId: team.trim(), androidCertFingerprints: fingerprints.trim() })}
+      onSave={() =>
+        save({ appId: appId.trim(), appleTeamId: team.trim(), androidCertFingerprints: fingerprints.trim() })
+      }
     >
       <div className='grid gap-4 sm:grid-cols-2'>
         <div className='grid content-start gap-2'>
           <Label htmlFor='app-id'>{t('appId')}</Label>
-          <Input id='app-id' dir='ltr' autoCapitalize='none' spellCheck={false} value={appId} onChange={(e) => setAppId(e.target.value)} />
+          <Input
+            id='app-id'
+            dir='ltr'
+            autoCapitalize='none'
+            spellCheck={false}
+            value={appId}
+            onChange={(e) => setAppId(e.target.value)}
+          />
           <p className='text-muted-foreground text-xs'>{t('appIdClearHint')}</p>
         </div>
         <div className='grid content-start gap-2'>
@@ -116,11 +137,21 @@ export function OwnAppRecord({ tenant, uploadSha256 }: { tenant: TenantDetail; u
           onChange={(e) => setFingerprints(e.target.value)}
         />
         <p className='text-muted-foreground text-xs'>
-          {uploadSha256 ? t('androidFingerprintsAuto', { key: `${uploadSha256.slice(0, 11)}…` }) : t('androidFingerprintsHint')}
+          {uploadSha256
+            ? t('androidFingerprintsAuto', { key: `${uploadSha256.slice(0, 11)}…` })
+            : t('androidFingerprintsHint')}
         </p>
       </div>
       <div>
-        <Button type='button' variant='ghost' size='sm' className='-ms-2' title={t('appConfigHint')} disabled={downloading} onClick={downloadConfig}>
+        <Button
+          type='button'
+          variant='ghost'
+          size='sm'
+          className='-ms-2'
+          title={t('appConfigHint')}
+          disabled={downloading}
+          onClick={downloadConfig}
+        >
           {downloading ? <Spinner /> : <Download />}
           {t('appConfig')}
         </Button>

@@ -1,8 +1,8 @@
 import { Monitor, Moon, Sun, SunMoon } from 'lucide-react'
-import { useTheme } from '@/context/theme-provider'
 import { useT } from '@/lib/i18n'
-import { TileRow } from '@/components/ninja/page/tile-row'
+import { useTheme } from '@/context/theme-provider'
 import { Segment } from '@/components/ninja/page/parts'
+import { TileRow } from '@/components/ninja/page/tile-row'
 
 /** The theme row on the settings page: the three choices in one track, the pill sliding to the one picked. */
 export function ThemeSwitch() {

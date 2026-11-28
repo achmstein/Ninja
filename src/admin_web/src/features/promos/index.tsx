@@ -3,11 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTable } from '@tanstack/react-table'
 import { Plus, Trash2 } from 'lucide-react'
 import { type PromoCodeDto } from '@/api/catalog'
-import {
-  deletePromoMutation,
-  listPromosOptions,
-  setPromoActiveMutation,
-} from '@/api/catalog/@tanstack/react-query.gen'
+import { deletePromoMutation, listPromosOptions, setPromoActiveMutation } from '@/api/catalog/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { formatDay } from '@/lib/business-day'
 import { useLocale, useT } from '@/lib/i18n'
@@ -17,11 +13,7 @@ import { formatWhen } from '@/lib/when'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { ConfirmDialog } from '@/components/confirm-dialog'
-import {
-  createAppColumnHelper,
-  DataTable,
-  dataTableFeatures,
-} from '@/components/data-table'
+import { createAppColumnHelper, DataTable, dataTableFeatures } from '@/components/data-table'
 import { ErrorState } from '@/components/error-state'
 import { Main } from '@/components/layout/main'
 import { Dot, ListRow } from '@/components/list-row'
@@ -46,13 +38,10 @@ export function PromoCodesManagement() {
   const [editing, setEditing] = useState<PromoCodeDto | null>(null)
   const [deleting, setDeleting] = useState<PromoCodeDto | null>(null)
 
-  const promosQuery = useQuery(
-    listPromosOptions({ query: { 'api-version': API_VERSION } })
-  )
+  const promosQuery = useQuery(listPromosOptions({ query: { 'api-version': API_VERSION } }))
   const promos = useMemo(() => promosQuery.data ?? [], [promosQuery.data])
 
-  const invalidate = () =>
-    queryClient.invalidateQueries({ queryKey: [{ _id: 'listPromos' }] })
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: [{ _id: 'listPromos' }] })
 
   const setActive = useMutation({
     ...setPromoActiveMutation(),
@@ -80,11 +69,8 @@ export function PromoCodesManagement() {
 
   const discountOf = (p: PromoCodeDto) =>
     [
-      Number(p.kind) === PROMO_KIND.percent
-        ? `${Number(p.value)}%`
-        : formatEgp(p.value),
-      p.minSubtotal != null &&
-        `${t('minimumOrder')} ${formatEgp(p.minSubtotal)}`,
+      Number(p.kind) === PROMO_KIND.percent ? `${Number(p.value)}%` : formatEgp(p.value),
+      p.minSubtotal != null && `${t('minimumOrder')} ${formatEgp(p.minSubtotal)}`,
     ]
       .filter(Boolean)
       .join(' · ')
@@ -97,8 +83,7 @@ export function PromoCodesManagement() {
   /** Outside its days, a code is switched on and still takes nothing: say so */
   const stateOf = (p: PromoCodeDto) => {
     const now = Date.now()
-    if (p.endsAt && new Date(p.endsAt).getTime() <= now)
-      return <StatusChip tone='muted'>{t('promoEnded')}</StatusChip>
+    if (p.endsAt && new Date(p.endsAt).getTime() <= now) return <StatusChip tone='muted'>{t('promoEnded')}</StatusChip>
     if (p.startsAt && new Date(p.startsAt).getTime() > now)
       return <StatusChip tone='info'>{t('promoScheduled')}</StatusChip>
     if (p.maxUses != null && Number(p.uses) >= Number(p.maxUses))
@@ -129,9 +114,7 @@ export function PromoCodesManagement() {
       <div className='flex min-w-24 flex-col gap-1'>
         <span className='text-sm tabular-nums'>
           {uses}
-          {max != null && (
-            <span className='text-muted-foreground'> / {max}</span>
-          )}
+          {max != null && <span className='text-muted-foreground'> / {max}</span>}
         </span>
         {max != null && max > 0 && (
           <span className='bg-muted h-1 w-full overflow-hidden rounded-full'>
@@ -141,11 +124,7 @@ export function PromoCodesManagement() {
             />
           </span>
         )}
-        {p.oncePerCustomer && (
-          <span className='text-muted-foreground text-xs'>
-            {t('oncePerCustomer')}
-          </span>
-        )}
+        {p.oncePerCustomer && <span className='text-muted-foreground text-xs'>{t('oncePerCustomer')}</span>}
       </div>
     )
   }
@@ -158,14 +137,10 @@ export function PromoCodesManagement() {
           cell: ({ row }) => (
             <div className='flex flex-col leading-tight'>
               <span className='flex items-center gap-2'>
-                <span className='font-mono font-semibold'>
-                  {row.original.code}
-                </span>
+                <span className='font-mono font-semibold'>{row.original.code}</span>
                 {stateOf(row.original)}
               </span>
-              <span className='text-muted-foreground text-xs tabular-nums'>
-                {discountOf(row.original)}
-              </span>
+              <span className='text-muted-foreground text-xs tabular-nums'>{discountOf(row.original)}</span>
             </div>
           ),
         }),
@@ -173,9 +148,7 @@ export function PromoCodesManagement() {
           id: 'window',
           header: t('validFrom'),
           meta: { emphasis: 'muted' },
-          cell: ({ row }) => (
-            <span className='tabular-nums'>{windowOf(row.original)}</span>
-          ),
+          cell: ({ row }) => <span className='tabular-nums'>{windowOf(row.original)}</span>,
         }),
         columnHelper.display({
           id: 'uses',
@@ -274,10 +247,7 @@ export function PromoCodesManagement() {
                     <span className='tabular-nums'>
                       {Number(p.uses)}
                       {p.maxUses != null && (
-                        <span className='text-muted-foreground font-normal'>
-                          {' '}
-                          / {Number(p.maxUses)}
-                        </span>
+                        <span className='text-muted-foreground font-normal'> / {Number(p.maxUses)}</span>
                       )}
                     </span>
                   }
@@ -289,11 +259,7 @@ export function PromoCodesManagement() {
         )}
       </Main>
 
-      <PromoDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        promo={editing}
-      />
+      <PromoDialog open={dialogOpen} onOpenChange={setDialogOpen} promo={editing} />
 
       <ConfirmDialog
         open={deleting !== null}

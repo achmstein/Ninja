@@ -1,8 +1,8 @@
 import { createContext, useContext, useEffect, useState, useMemo } from 'react'
 import { create } from 'zustand'
+import { applyThemeColor } from '@/lib/brand-theme'
 import { getCookie, setCookie, removeCookie } from '@/lib/cookies'
 import { preview } from '@/lib/preview'
-import { applyThemeColor } from '@/lib/brand-theme'
 
 type Theme = 'dark' | 'light' | 'system'
 export type ResolvedTheme = Exclude<Theme, 'system'>
@@ -39,12 +39,13 @@ const ThemeContext = createContext<ThemeProviderState>(initialState)
  * The business's starting theme, from its brand: what a customer who never
  * chose sees. Null follows the device.
  */
-export const useBusinessTheme = create<{ mode: 'light' | 'dark' | null; set: (mode: string | null | undefined) => void }>()(
-  (set) => ({
-    mode: null,
-    set: (mode) => set({ mode: mode === 'light' || mode === 'dark' ? mode : null }),
-  })
-)
+export const useBusinessTheme = create<{
+  mode: 'light' | 'dark' | null
+  set: (mode: string | null | undefined) => void
+}>()((set) => ({
+  mode: null,
+  set: (mode) => set({ mode: mode === 'light' || mode === 'dark' ? mode : null }),
+}))
 
 export function ThemeProvider({
   children,
@@ -54,18 +55,14 @@ export function ThemeProvider({
 }: ThemeProviderProps) {
   // The control panel's preview asks for a scheme; a real visit reads the
   // cookie, and a customer who never chose gets the business's starting theme
-  const [chosen, _setTheme] = useState<Theme | null>(
-    () => preview.theme ?? ((getCookie(storageKey) as Theme) || null)
-  )
+  const [chosen, _setTheme] = useState<Theme | null>(() => preview.theme ?? ((getCookie(storageKey) as Theme) || null))
   const business = useBusinessTheme((s) => s.mode)
   const theme: Theme = chosen ?? business ?? defaultTheme
 
   // Optimized: Memoize the resolved theme calculation to prevent unnecessary re-computations
   const resolvedTheme = useMemo((): ResolvedTheme => {
     if (theme === 'system') {
-      return window.matchMedia('(prefers-color-scheme: dark)').matches
-        ? 'dark'
-        : 'light'
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
     }
     return theme as ResolvedTheme
   }, [theme])

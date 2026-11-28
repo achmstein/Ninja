@@ -17,11 +17,7 @@ type TransferSheetProps = {
 }
 
 /** One transfer, read-only: which way it went, who sent it, what was in it. */
-export function TransferSheet({
-  transferId,
-  branchName,
-  onOpenChange,
-}: TransferSheetProps) {
+export function TransferSheet({ transferId, branchName, onOpenChange }: TransferSheetProps) {
   const t = useT()
   const locale = useLocale()
   const localized = useLocalized()
@@ -38,11 +34,7 @@ export function TransferSheet({
       open={transferId != null}
       onOpenChange={onOpenChange}
       title={t('transferHash', { id: toNumber(transfer?.id ?? transferId) })}
-      subtitle={
-        transfer
-          ? formatWhen(transfer.sentAt, 'dateTime', locale, t)
-          : undefined
-      }
+      subtitle={transfer ? formatWhen(transfer.sentAt, 'dateTime', locale, t) : undefined}
     >
       {isLoading || !transfer ? (
         <div className='space-y-3'>
@@ -57,21 +49,12 @@ export function TransferSheet({
             <ArrowRight className='text-muted-foreground h-3.5 w-3.5 shrink-0 rtl:rotate-180' />
             {branchName(transfer.toBranchId)}
           </div>
-          {transfer.note && (
-            <p className='text-muted-foreground text-sm'>{transfer.note}</p>
-          )}
+          {transfer.note && <p className='text-muted-foreground text-sm'>{transfer.note}</p>}
           <div className='divide-y'>
             {transfer.lines.map((line, index) => (
-              <div
-                key={`${line.stockItemId}-${index}`}
-                className='flex items-center gap-3 py-2'
-              >
-                <div className='min-w-0 flex-1 truncate text-sm font-medium'>
-                  {localized(line.name)}
-                </div>
-                <div className='shrink-0 text-sm tabular-nums'>
-                  {formatQuantity(line.quantity, line.unit, t)}
-                </div>
+              <div key={`${line.stockItemId}-${index}`} className='flex items-center gap-3 py-2'>
+                <div className='min-w-0 flex-1 truncate text-sm font-medium'>{localized(line.name)}</div>
+                <div className='shrink-0 text-sm tabular-nums'>{formatQuantity(line.quantity, line.unit, t)}</div>
               </div>
             ))}
           </div>

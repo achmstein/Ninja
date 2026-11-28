@@ -33,12 +33,6 @@ export function ItemImage({ src, className, alt = '' }: ItemImageProps) {
   }
 
   return (
-    <img
-      src={src}
-      alt={alt}
-      loading='lazy'
-      className={cn('object-cover', className)}
-      onError={() => setFailed(true)}
-    />
+    <img src={src} alt={alt} loading='lazy' className={cn('object-cover', className)} onError={() => setFailed(true)} />
   )
 }

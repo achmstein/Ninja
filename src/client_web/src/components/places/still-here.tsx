@@ -1,10 +1,6 @@
 import { CircleHelp } from 'lucide-react'
+import { usePlaceStore, useSessionPlaceStore, type StoredPlace } from '@/stores/place-store'
 import { useLocalized, useT } from '@/lib/i18n'
-import {
-  usePlaceStore,
-  useSessionPlaceStore,
-  type StoredPlace,
-} from '@/stores/place-store'
 import { Button } from '@/components/ui/button'
 
 /**
@@ -23,9 +19,7 @@ export function StillHereCard({ place }: { place: StoredPlace }) {
     <div className='bg-card flex flex-col gap-3 rounded-xl border p-4'>
       <div className='flex items-center gap-2'>
         <CircleHelp className='text-primary h-5 w-5 shrink-0' />
-        <span className='text-note font-bold'>
-          {t('stillAtTable', { name: localized(place.name) })}
-        </span>
+        <span className='text-note font-bold'>{t('stillAtTable', { name: localized(place.name) })}</span>
       </div>
       <div className='grid grid-cols-2 gap-2'>
         <Button className='rounded-pill' onClick={() => confirm(place.id)}>

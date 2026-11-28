@@ -33,9 +33,7 @@ describe('the breakdown’s items', () => {
   ])
 
   it('are in paid money less refunds, most first, with the refunded units kept', () => {
-    expect(
-      items.map((i) => [i.catalogItemId, i.amount, i.qty, i.refundedQty])
-    ).toEqual([
+    expect(items.map((i) => [i.catalogItemId, i.amount, i.qty, i.refundedQty])).toEqual([
       [1, 540, 9, 1],
       [2, 300, 4, 0],
       [3, 80, 2, 0],
@@ -70,9 +68,7 @@ describe('the breakdown’s items', () => {
   })
 
   it('count an item no longer on the menu as uncategorised', () => {
-    expect(categoryRows(items, [])).toEqual([
-      { id: null, name: undefined, amount: 920, qty: 15, refundedQty: 1 },
-    ])
+    expect(categoryRows(items, [])).toEqual([{ id: null, name: undefined, amount: 920, qty: 15, refundedQty: 1 }])
   })
 })
 

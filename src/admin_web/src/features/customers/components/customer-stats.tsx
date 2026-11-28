@@ -6,11 +6,7 @@ import { useBusinessTimeZone } from '@/lib/business-clock'
 import { useLocale, useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { Skeleton } from '@/components/ui/skeleton'
 import { accountsService } from '@/features/accounts/services/accounts-service'
 import { tierNameKeys } from '@/features/loyalty/components/tier-name'
@@ -44,15 +40,12 @@ export function CustomerStats() {
   const byTier = stats.data?.accountsByTier ?? {}
   const members = stats.data?.totalAccounts ?? 0
   const timeZone = useBusinessTimeZone()
-  const monthStart = stats.data?.monthStartsAt
-    ? new Date(stats.data.monthStartsAt)
-    : new Date()
+  const monthStart = stats.data?.monthStartsAt ? new Date(stats.data.monthStartsAt) : new Date()
   const monthName = new Intl.DateTimeFormat(locale, {
     month: 'long',
     timeZone,
   }).format(monthStart)
-  const points = (value: number | undefined) =>
-    stats.data ? Number(value ?? 0).toLocaleString(locale) : null
+  const points = (value: number | undefined) => (stats.data ? Number(value ?? 0).toLocaleString(locale) : null)
 
   // The tab figures with tabs, the points figures with loyalty; nothing to show without either
   const cells: { label: string; value: React.ReactNode; tone?: string }[] = [
@@ -103,9 +96,7 @@ export function CustomerStats() {
       <CollapsibleTrigger asChild>
         <Button variant='ghost' size='sm' className='-ms-2 h-8 gap-1.5'>
           {t('stats')}
-          <ChevronDown
-            className={cn('h-4 w-4 transition-transform', open && 'rotate-180')}
-          />
+          <ChevronDown className={cn('h-4 w-4 transition-transform', open && 'rotate-180')} />
         </Button>
       </CollapsibleTrigger>
       <CollapsibleContent>
@@ -113,22 +104,14 @@ export function CustomerStats() {
           {cells.map((cell) => (
             <div key={cell.label} className='min-w-0'>
               <div className='text-muted-foreground text-xs'>{cell.label}</div>
-              <div
-                className={cn('text-lg font-semibold tabular-nums', cell.tone)}
-              >
-                {cell.value === null ? (
-                  <Skeleton className='mt-1 h-5 w-20' />
-                ) : (
-                  cell.value
-                )}
+              <div className={cn('text-lg font-semibold tabular-nums', cell.tone)}>
+                {cell.value === null ? <Skeleton className='mt-1 h-5 w-20' /> : cell.value}
               </div>
             </div>
           ))}
           {members > 0 && (
             <div className='min-w-64 flex-1'>
-              <div className='text-muted-foreground mb-1.5 text-xs'>
-                {t('tiers')}
-              </div>
+              <div className='text-muted-foreground mb-1.5 text-xs'>{t('tiers')}</div>
               <div className='bg-muted flex h-2 overflow-hidden rounded-full'>
                 {tierOrder.map((tier) => {
                   const count = byTier[tier] ?? 0
@@ -148,13 +131,8 @@ export function CustomerStats() {
               <div className='mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-xs'>
                 {tierOrder.map((tier) => (
                   <span key={tier} className='flex items-center gap-1.5'>
-                    <span
-                      className='size-2 rounded-full'
-                      style={{ backgroundColor: tierColors[tier] }}
-                    />
-                    <span className='text-muted-foreground'>
-                      {t(tierNameKeys[tier])}
-                    </span>
+                    <span className='size-2 rounded-full' style={{ backgroundColor: tierColors[tier] }} />
+                    <span className='text-muted-foreground'>{t(tierNameKeys[tier])}</span>
                     <span className='tabular-nums'>{byTier[tier] ?? 0}</span>
                   </span>
                 ))}

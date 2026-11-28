@@ -72,11 +72,7 @@ export function OrderCard({
   // The clock runs from confirmation — the moment the order reached the
   // kitchen. A ready order shows when it was finished instead.
   const since = order.confirmedAt ?? order.date
-  const tone: CardTone = isCancelled
-    ? 'cancelled'
-    : isReady
-      ? 'ready'
-      : orderUrgency(since, nowMs)
+  const tone: CardTone = isCancelled ? 'cancelled' : isReady ? 'ready' : orderUrgency(since, nowMs)
   const clock = isReady
     ? new Date(order.readyAt!).toLocaleTimeString(locale, {
         hour: '2-digit',
@@ -120,7 +116,7 @@ export function OrderCard({
     <article
       className={cn(
         'flex flex-col overflow-hidden rounded-xl border',
-        isCancelled ? 'border-dashed bg-transparent' : 'bg-card',
+        isCancelled ? 'border-dashed bg-transparent' : 'bg-card'
       )}
     >
       <div className={cn('h-[3px] shrink-0', toneBarClass(tone))} />
@@ -139,9 +135,7 @@ export function OrderCard({
               </span>
             </div>
           ) : (
-            <div className={cn('type-place break-words', isCancelled && 'text-muted-foreground')}>
-              {channel}
-            </div>
+            <div className={cn('type-place break-words', isCancelled && 'text-muted-foreground')}>{channel}</div>
           )}
           <div className='text-muted-foreground type-quiet line-clamp-2 break-words'>
             {/* The mark keeps the hash before the number in Arabic */}
@@ -196,7 +190,7 @@ export function OrderCard({
                 className={cn(
                   'type-item w-7 shrink-0 font-semibold tabular-nums',
                   struck && 'font-medium line-through',
-                  gone && 'text-muted-foreground',
+                  gone && 'text-muted-foreground'
                 )}
               >
                 {gone ? item.units : unitsToMake(item)}×
@@ -212,9 +206,7 @@ export function OrderCard({
                   </div>
                 )}
                 {!gone && item.customizationsDescription && (
-                  <div className='text-muted-foreground type-detail'>
-                    {localized(item.customizationsDescription)}
-                  </div>
+                  <div className='text-muted-foreground type-detail'>{localized(item.customizationsDescription)}</div>
                 )}
                 {!gone && item.specialInstructions && (
                   <div className='type-detail font-semibold text-amber-700 dark:text-amber-400'>
@@ -228,7 +220,7 @@ export function OrderCard({
       </ul>
 
       {order.customerNote && (
-        <div className='bg-muted/60 mx-4 mb-3 border-s-[3px] border-amber-500 px-3 py-2 type-detail font-medium'>
+        <div className='bg-muted/60 type-detail mx-4 mb-3 border-s-[3px] border-amber-500 px-3 py-2 font-medium'>
           {order.customerNote}
         </div>
       )}
@@ -254,7 +246,12 @@ export function OrderCard({
       {(onReady || onBringBack) && (
         <footer className='mt-auto px-3 pt-0.5 pb-3'>
           {onBringBack ? (
-            <Button variant='outline' className='type-action h-11 w-full gap-2' disabled={isActing} onClick={onBringBack}>
+            <Button
+              variant='outline'
+              className='type-action h-11 w-full gap-2'
+              disabled={isActing}
+              onClick={onBringBack}
+            >
               <Undo2 className='size-4' />
               {t('bringBack')}
             </Button>

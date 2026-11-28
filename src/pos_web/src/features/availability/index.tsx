@@ -9,15 +9,15 @@ import {
   toggleItemAvailabilityMutation,
 } from '@/api/catalog/@tanstack/react-query.gen'
 import type { CatalogItemDto } from '@/api/catalog/types.gen'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Skeleton } from '@/components/ui/skeleton'
-import { Switch } from '@/components/ui/switch'
 import { API_VERSION } from '@/lib/api-client'
 import { useLanguage, useLocalized, useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Switch } from '@/components/ui/switch'
 
 /** The list's first entry: everything that is off now, whatever its category */
 const OFF = 'off' as const
@@ -48,16 +48,10 @@ export function Availability() {
   const [picked, setPicked] = useState<Picked | null>(null)
   const [term, setTerm] = useState('')
 
-  const { data: categories = [] } = useQuery(
-    listCategoriesOptions({ query: { 'api-version': API_VERSION } })
-  )
-  const { data: items = [], isLoading } = useQuery(
-    listItemsOptions({ query: { 'api-version': API_VERSION } })
-  )
+  const { data: categories = [] } = useQuery(listCategoriesOptions({ query: { 'api-version': API_VERSION } }))
+  const { data: items = [], isLoading } = useQuery(listItemsOptions({ query: { 'api-version': API_VERSION } }))
 
-  const sortedCategories = categories
-    .slice()
-    .sort((a, b) => Number(a.displayOrder ?? 0) - Number(b.displayOrder ?? 0))
+  const sortedCategories = categories.slice().sort((a, b) => Number(a.displayOrder ?? 0) - Number(b.displayOrder ?? 0))
   const byOrder = (a: CatalogItemDto, b: CatalogItemDto) => Number(a.displayOrder ?? 0) - Number(b.displayOrder ?? 0)
   const isOff = (item: CatalogItemDto) => item.isAvailable === false
   const offCount = items.filter(isOff).length
@@ -91,9 +85,7 @@ export function Availability() {
       const previous = queryClient.getQueryData<CatalogItemDto[]>(queryKey)
       queryClient.setQueryData<CatalogItemDto[]>(queryKey, (old) =>
         old?.map((item) =>
-          Number(item.id) === variables.path.id
-            ? { ...item, isAvailable: variables.body?.isAvailable ?? false }
-            : item
+          Number(item.id) === variables.path.id ? { ...item, isAvailable: variables.body?.isAvailable ?? false } : item
         )
       )
       return { previous, queryKey }
@@ -104,8 +96,7 @@ export function Availability() {
       }
       toast.error(t('failedToUpdateAvailability'))
     },
-    onSettled: () =>
-      queryClient.invalidateQueries({ queryKey: [{ _id: 'listItems' }] }),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: [{ _id: 'listItems' }] }),
   })
 
   const setAvailable = (item: CatalogItemDto, isAvailable: boolean) =>
@@ -158,13 +149,15 @@ export function Availability() {
       <span
         className={cn(
           'type-caption shrink-0 rounded-full px-2.5 font-semibold tabular-nums',
-          lit ? 'bg-primary-foreground/20' : 'bg-destructive/10 text-destructive',
+          lit ? 'bg-primary-foreground/20' : 'bg-destructive/10 text-destructive'
         )}
       >
         {entry.off}
       </span>
     ) : entry.key === OFF ? null : (
-      <span className={cn('type-caption shrink-0 px-2.5 tabular-nums', !lit && 'text-muted-foreground')}>{entry.all}</span>
+      <span className={cn('type-caption shrink-0 px-2.5 tabular-nums', !lit && 'text-muted-foreground')}>
+        {entry.all}
+      </span>
     )
 
   return (
@@ -187,10 +180,15 @@ export function Availability() {
                 aria-current={on ? 'true' : undefined}
                 className={cn(
                   'hover:bg-accent/50 flex min-h-14 w-full items-center gap-3 border-b px-4 py-2 text-start',
-                  on && 'bg-accent hover:bg-accent border-s-primary border-s-[3px] ps-[calc(1rem-3px)]',
+                  on && 'bg-accent hover:bg-accent border-s-primary border-s-[3px] ps-[calc(1rem-3px)]'
                 )}
               >
-                <span className={cn('type-heading min-w-0 flex-1 break-words', entry.key === OFF && entry.off > 0 && 'text-destructive')}>
+                <span
+                  className={cn(
+                    'type-heading min-w-0 flex-1 break-words',
+                    entry.key === OFF && entry.off > 0 && 'text-destructive'
+                  )}
+                >
                   {entry.name}
                 </span>
                 {count(entry)}
@@ -262,7 +260,12 @@ export function Availability() {
                   >
                     <span className='min-w-0 flex-1'>
                       {/* The name whole: it wraps, it is never cut */}
-                      <span className={cn('type-heading block break-words', !available && 'text-muted-foreground line-through')}>
+                      <span
+                        className={cn(
+                          'type-heading block break-words',
+                          !available && 'text-muted-foreground line-through'
+                        )}
+                      >
                         {localized(item.name)}
                       </span>
                       {/* Off is said under the name, and why when inventory pulled it and not a person:

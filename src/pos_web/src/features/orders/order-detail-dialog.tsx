@@ -1,8 +1,13 @@
 import { useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import type { OrderSummary } from '@/api/ordering/types.gen'
 import { Check, CircleAlert, MessageSquare, RefreshCw, ShieldQuestion, UserX, X } from 'lucide-react'
 import { getOrderOptions } from '@/api/ordering/@tanstack/react-query.gen'
+import type { OrderSummary } from '@/api/ordering/types.gen'
+import { API_VERSION } from '@/lib/api-client'
+import { useLocalized, useT } from '@/lib/i18n'
+import { useMoney, toNumber } from '@/lib/money'
+import { phoneInText } from '@/lib/phone'
+import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -14,13 +19,8 @@ import {
 } from '@/components/ui/dialog'
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
-import { API_VERSION } from '@/lib/api-client'
-import { useLocalized, useT } from '@/lib/i18n'
-import { cn } from '@/lib/utils'
-import { useMoney, toNumber } from '@/lib/money'
-import { phoneInText } from '@/lib/phone'
-import { PlatformBadge, PlatformHandover, platformRejectReasons } from './platform-badge'
 import { DeliveryDetails, DeliveryFeeRow } from '@/features/deliveries/delivery-details'
+import { PlatformBadge, PlatformHandover, platformRejectReasons } from './platform-badge'
 
 type OrderDetailDialogProps = {
   /** The order to show; null keeps the dialog closed. */
@@ -63,7 +63,12 @@ export function OrderDetailDialog({
     }
   }, [open])
 
-  const { data: order, isLoading, isError, refetch } = useQuery({
+  const {
+    data: order,
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({
     ...getOrderOptions({
       path: { orderId: orderNumber ?? 0 },
       query: { 'api-version': API_VERSION },
@@ -89,10 +94,7 @@ export function OrderDetailDialog({
   const guestAtPlace = !!order?.guestName && order?.placeId != null
   // Who this is: account or guest, the phone, and how many orders the
   // device has had confirmed here before
-  const ordersBefore =
-    summary?.guestOrdersBefore == null
-      ? null
-      : toNumber(summary.guestOrdersBefore)
+  const ordersBefore = summary?.guestOrdersBefore == null ? null : toNumber(summary.guestOrdersBefore)
   const identity = [
     ordersBefore == null ? t('accountHolder') : t('guest'),
     summary?.guestPhone ? phoneInText(summary.guestPhone) : null,
@@ -109,36 +111,32 @@ export function OrderDetailDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className='max-h-[95svh] gap-4'>
         <DialogHeader>
-          <DialogTitle className='type-title'>
-            {t('orderNumber', { id: orderNumber ?? 0 })}
-          </DialogTitle>
+          <DialogTitle className='type-title'>{t('orderNumber', { id: orderNumber ?? 0 })}</DialogTitle>
           {(place || who) && (
-            <DialogDescription className='type-body'>
-              {[place, who].filter(Boolean).join(' · ')}
-            </DialogDescription>
+            <DialogDescription className='type-body'>{[place, who].filter(Boolean).join(' · ')}</DialogDescription>
           )}
           {platform ? (
-            <div className='flex flex-col gap-1 type-detail'>
+            <div className='type-detail flex flex-col gap-1'>
               <PlatformBadge platform={platform} />
               <PlatformHandover platform={platform} className='text-muted-foreground' />
             </div>
-          ) : summary && (
-            <p
-              className={cn(
-                'flex items-center gap-1.5 type-detail',
-                ordersBefore === 0
-                  ? 'text-amber-600 dark:text-amber-500'
-                  : 'text-muted-foreground',
-              )}
-            >
-              <ShieldQuestion className='size-4 shrink-0' />
-              {identity}
-            </p>
+          ) : (
+            summary && (
+              <p
+                className={cn(
+                  'type-detail flex items-center gap-1.5',
+                  ordersBefore === 0 ? 'text-amber-600 dark:text-amber-500' : 'text-muted-foreground'
+                )}
+              >
+                <ShieldQuestion className='size-4 shrink-0' />
+                {identity}
+              </p>
+            )
           )}
         </DialogHeader>
 
         {failed ? (
-          <div className='bg-muted flex items-center gap-2 rounded-lg p-3 type-detail'>
+          <div className='bg-muted type-detail flex items-center gap-2 rounded-lg p-3'>
             <CircleAlert className='text-muted-foreground size-5 shrink-0' />
             <span className='flex-1'>{t('orderDetailsFailed')}</span>
             <Button variant='outline' size='sm' onClick={() => refetch()}>
@@ -166,14 +164,10 @@ export function OrderDetailDialog({
                     </span>
                   </div>
                   {localized(item.customizationsDescription) && (
-                    <div className='text-muted-foreground type-detail'>
-                      {localized(item.customizationsDescription)}
-                    </div>
+                    <div className='text-muted-foreground type-detail'>{localized(item.customizationsDescription)}</div>
                   )}
                   {item.specialInstructions && (
-                    <div className='text-muted-foreground type-detail italic'>
-                      "{item.specialInstructions}"
-                    </div>
+                    <div className='text-muted-foreground type-detail italic'>"{item.specialInstructions}"</div>
                   )}
                 </div>
               ))}
@@ -182,7 +176,7 @@ export function OrderDetailDialog({
             {order.delivery && <DeliveryDetails delivery={order.delivery} />}
 
             {order.customerNote && (
-              <div className='bg-muted flex items-start gap-2 rounded-lg p-3 type-detail'>
+              <div className='bg-muted type-detail flex items-start gap-2 rounded-lg p-3'>
                 <MessageSquare className='text-muted-foreground mt-0.5 size-4 shrink-0' />
                 <span>{order.customerNote}</span>
               </div>
@@ -194,14 +188,12 @@ export function OrderDetailDialog({
               {/* The fee is part of the bill: shown with it, so the total adds up */}
               {order.delivery && <DeliveryFeeRow delivery={order.delivery} />}
               {loyaltyDiscount > 0 && (
-                <div className='text-muted-foreground flex justify-between type-detail'>
+                <div className='text-muted-foreground type-detail flex justify-between'>
                   <span>{t('loyaltyDiscount')}</span>
-                  <span className='tabular-nums'>
-                    −{money(loyaltyDiscount)}
-                  </span>
+                  <span className='tabular-nums'>−{money(loyaltyDiscount)}</span>
                 </div>
               )}
-              <div className='flex justify-between type-heading'>
+              <div className='type-heading flex justify-between'>
                 <span>{t('total')}</span>
                 <span className='tabular-nums'>{money(order.total)}</span>
               </div>
@@ -211,15 +203,11 @@ export function OrderDetailDialog({
 
         {cancelling ? (
           <>
-            <p className='text-destructive type-body'>
-              {t('cancelOrderConfirm')}
-            </p>
+            <p className='text-destructive type-body'>{t('cancelOrderConfirm')}</p>
             {/* The platform tells its customer why; one tap picks it */}
             {platform && (
               <div className='flex flex-col gap-2'>
-                <span className='text-muted-foreground type-detail'>
-                  {t('platformRejectReason')}
-                </span>
+                <span className='text-muted-foreground type-detail'>{t('platformRejectReason')}</span>
                 <div className='flex flex-wrap gap-2'>
                   {platformRejectReasons.map((r) => (
                     <Button
@@ -241,22 +229,14 @@ export function OrderDetailDialog({
                 wide buttons never overflow the dialog */}
             <DialogFooter className='flex-col gap-2 sm:flex-col'>
               <div className='flex justify-end gap-2'>
-                <Button
-                  variant='outline'
-                  size='lg'
-                  className='h-12'
-                  onClick={() => setCancelling(false)}
-                >
+                <Button variant='outline' size='lg' className='h-12' onClick={() => setCancelling(false)}>
                   {t('keepOrder')}
                 </Button>
                 <Button
                   variant='destructive'
                   size='lg'
                   className='h-12'
-                  onClick={() =>
-                    orderNumber != null &&
-                    onCancel(orderNumber, platform ? reason : undefined)
-                  }
+                  onClick={() => orderNumber != null && onCancel(orderNumber, platform ? reason : undefined)}
                 >
                   <X className='size-5' />
                   {t('cancelOrder')}
@@ -267,9 +247,7 @@ export function OrderDetailDialog({
                   variant='outline'
                   size='lg'
                   className='text-destructive hover:text-destructive h-12 w-full'
-                  onClick={() =>
-                    orderNumber != null && onRejectGuest(orderNumber)
-                  }
+                  onClick={() => orderNumber != null && onRejectGuest(orderNumber)}
                 >
                   <UserX className='size-5' />
                   {t('nobodyAtTheTable')}

@@ -48,7 +48,7 @@ export function useItem({
 }: Pick<ItemProps, 'item' | 'onOpen' | 'onQuickAdd'> & { photo: RefObject<HTMLElement | null>; grows?: boolean }) {
   const [failed, setFailed] = useState(false)
   const preference = useItemPreference(Number(item.id))
-  const open =() => onOpen(item, grows ? photo.current : null)
+  const open = () => onOpen(item, grows ? photo.current : null)
   const { pressing, handlers } = usePress({
     onTap: open,
     onLongPress: () => onQuickAdd(item, photo.current),

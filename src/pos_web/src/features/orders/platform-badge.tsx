@@ -27,13 +27,7 @@ export const platformRejectReasons: { value: string; key: TranslationKey }[] = [
  * logo (so it is never mistaken for one of ours) and the code its rider asks
  * for.
  */
-export function PlatformBadge({
-  platform,
-  className,
-}: {
-  platform: PlatformOrderView
-  className?: string
-}) {
+export function PlatformBadge({ platform, className }: { platform: PlatformOrderView; className?: string }) {
   const t = useT()
   const logo = platformLogos[platform.name ?? '']
   return (
@@ -43,11 +37,11 @@ export function PlatformBadge({
       ) : (
         <span className='type-detail font-semibold'>{platform.name}</span>
       )}
-      <span className='font-mono type-detail font-semibold tabular-nums' dir='ltr'>
+      <span className='type-detail font-mono font-semibold tabular-nums' dir='ltr'>
         {platform.shortCode ?? platform.code}
       </span>
       {platform.cancelledAt && (
-        <span className='text-destructive flex items-center gap-1 type-detail'>
+        <span className='text-destructive type-detail flex items-center gap-1'>
           <TriangleAlert className='size-3.5' />
           {t('platformCancelled')}
         </span>
@@ -57,20 +51,12 @@ export function PlatformBadge({
 }
 
 /** How a platform's order leaves: the platform's rider (and when), the customer, or ours to an address. */
-export function PlatformHandover({
-  platform,
-  className,
-}: {
-  platform: PlatformOrderView
-  className?: string
-}) {
+export function PlatformHandover({ platform, className }: { platform: PlatformOrderView; className?: string }) {
   const t = useT()
   const locale = useLocale()
   const money = useMoney()
   const time = (value?: string | null) =>
-    value
-      ? new Date(value).toLocaleTimeString(locale, { hour: 'numeric', minute: '2-digit' })
-      : null
+    value ? new Date(value).toLocaleTimeString(locale, { hour: 'numeric', minute: '2-digit' }) : null
   const collect = toNumber(platform.collectFromCustomer)
 
   if (platform.expedition === 'Pickup') {

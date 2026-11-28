@@ -15,23 +15,14 @@ import { cn } from '@/lib/utils'
 import { useTableUrlState } from '@/hooks/use-table-url-state'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import {
-  DataTable,
-  DataTablePagination,
-  DataTableToolbar,
-  dataTableFeatures,
-} from '@/components/data-table'
+import { DataTable, DataTablePagination, DataTableToolbar, dataTableFeatures } from '@/components/data-table'
 import { DateRangePicker } from '@/components/date-range-picker'
 import { InfoTip } from '@/components/info-tip'
 import { Main } from '@/components/layout/main'
 import { Dot, ListRow } from '@/components/list-row'
 import { PageHeader } from '@/components/page-header'
 import { Stat, StatStrip } from '@/components/stat-strip'
-import {
-  formatShare,
-  profitBase,
-  shareOf,
-} from '@/features/finance/profit-math'
+import { formatShare, profitBase, shareOf } from '@/features/finance/profit-math'
 import { useTillWindow } from '@/features/till/use-till-window'
 import { formatQuantity, formatSignedQuantity } from './format'
 import { getReportColumns } from './report-columns'
@@ -85,20 +76,14 @@ export function Reports() {
   // and its ratios are on, shown the same way
   const salesBase = profitBase(profit.data)
   const cogsPercent =
-    month && isOwner && profit.data
-      ? formatShare(
-          shareOf(toNumber(data?.theoreticalValue), salesBase),
-          locale
-        )
-      : null
+    month && isOwner && profit.data ? formatShare(shareOf(toNumber(data?.theoreticalValue), salesBase), locale) : null
 
-  const { globalFilter, onGlobalFilterChange, pagination, onPaginationChange } =
-    useTableUrlState({
-      search,
-      navigate,
-      pagination: { defaultPageSize: 20 },
-      globalFilter: { enabled: true, key: 'q' },
-    })
+  const { globalFilter, onGlobalFilterChange, pagination, onPaginationChange } = useTableUrlState({
+    search,
+    navigate,
+    pagination: { defaultPageSize: 20 },
+    globalFilter: { enabled: true, key: 'q' },
+  })
 
   const columns = useMemo(
     () => getReportColumns({ t, localized }),
@@ -164,58 +149,33 @@ export function Reports() {
         ) : (
           <>
             <StatStrip>
-              <Stat
-                label={t('openingStock')}
-                value={formatEgp(data?.openingValue)}
-              />
-              <Stat
-                label={t('purchased')}
-                value={formatEgp(data?.receivedValue)}
-              />
+              <Stat label={t('openingStock')} value={formatEgp(data?.openingValue)} />
+              <Stat label={t('purchased')} value={formatEgp(data?.receivedValue)} />
               <Stat
                 label={t('costOfGoodsSold')}
                 value={formatEgp(data?.theoreticalValue)}
-                hint={
-                  cogsPercent !== null
-                    ? t('ofNetSalesExVat', { share: cogsPercent })
-                    : undefined
-                }
+                hint={cogsPercent !== null ? t('ofNetSalesExVat', { share: cogsPercent }) : undefined}
               />
               <Stat
                 label={t('waste')}
                 value={formatEgp(data?.wastedValue)}
                 tone={toNumber(data?.wastedValue) > 0 ? 'negative' : 'default'}
               />
-              <Stat
-                label={t('closingStock')}
-                value={formatEgp(data?.closingValue)}
-              />
+              <Stat label={t('closingStock')} value={formatEgp(data?.closingValue)} />
             </StatStrip>
             <p className='text-muted-foreground flex items-center gap-1.5 text-sm'>
               <ClipboardCheck className='h-4 w-4' />
               {t('countVariance')}
-              <span
-                className={cn(
-                  'text-foreground font-medium tabular-nums',
-                  countVariance < 0 && 'text-destructive'
-                )}
-              >
+              <span className={cn('text-foreground font-medium tabular-nums', countVariance < 0 && 'text-destructive')}>
                 {formatEgp(countVariance)}
               </span>
               <InfoTip>{t('countVarianceHint')}</InfoTip>
             </p>
-            {data?.valuedAtCurrentAverage && (
-              <p className='text-warning text-xs'>
-                {t('reportValuedAtTodaysAverage')}
-              </p>
-            )}
+            {data?.valuedAtCurrentAverage && <p className='text-warning text-xs'>{t('reportValuedAtTodaysAverage')}</p>}
           </>
         )}
 
-        <DataTableToolbar
-          table={table}
-          searchPlaceholder={t('searchReportPlaceholder')}
-        />
+        <DataTableToolbar table={table} searchPlaceholder={t('searchReportPlaceholder')} />
 
         <DataTable
           table={table}
@@ -230,15 +190,13 @@ export function Reports() {
                 meta={
                   <>
                     <span className='tabular-nums'>
-                      {t('theoreticalUsage')}{' '}
-                      {formatQuantity(toNumber(r.theoretical), r.unit, t)}
+                      {t('theoreticalUsage')} {formatQuantity(toNumber(r.theoretical), r.unit, t)}
                     </span>
                     {toNumber(r.wasted) > 0 && (
                       <>
                         <Dot />
                         <span className='tabular-nums'>
-                          {t('waste')}{' '}
-                          {formatQuantity(toNumber(r.wasted), r.unit, t)}
+                          {t('waste')} {formatQuantity(toNumber(r.wasted), r.unit, t)}
                         </span>
                       </>
                     )}
@@ -258,9 +216,7 @@ export function Reports() {
                     <span
                       className={cn(
                         'text-xs tabular-nums',
-                        missing < 0
-                          ? 'text-destructive/80'
-                          : 'text-muted-foreground'
+                        missing < 0 ? 'text-destructive/80' : 'text-muted-foreground'
                       )}
                     >
                       {formatEgp(r.countVarianceValue)}
@@ -294,7 +250,5 @@ function calendarMonthOf(search: {
     to.getFullYear() === from.getFullYear() &&
     to.getMonth() === from.getMonth() &&
     to.getDate() === lastDay.getDate()
-  return isMonth
-    ? { year: from.getFullYear(), month: from.getMonth() + 1 }
-    : null
+  return isMonth ? { year: from.getFullYear(), month: from.getMonth() + 1 } : null
 }

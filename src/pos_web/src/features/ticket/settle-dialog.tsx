@@ -1,46 +1,25 @@
 import { useEffect, useRef, useState } from 'react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
 import * as DialogPrimitive from '@radix-ui/react-dialog'
-import {
-  ArrowLeft,
-  CheckCircle2,
-  CloudOff,
-  Loader2,
-  Printer,
-  Smartphone,
-  X,
-} from 'lucide-react'
-import {
-  assignTicketLinesCustomerMutation,
-  settleTicketMutation,
-} from '@/api/sales/@tanstack/react-query.gen'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { ArrowLeft, CheckCircle2, CloudOff, Loader2, Printer, Smartphone, X } from 'lucide-react'
+import { assignTicketLinesCustomerMutation, settleTicketMutation } from '@/api/sales/@tanstack/react-query.gen'
 import type { OnlinePaymentView, TicketDetail } from '@/api/sales/types.gen'
+import { API_VERSION } from '@/lib/api-client'
+import { useFeatures } from '@/lib/brand'
+import { useLocalized, useT } from '@/lib/i18n'
+import { useMoney, toNumber } from '@/lib/money'
+import { toast } from '@/lib/toast'
+import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { NumericKeypad } from '@/components/numeric-keypad'
 import { invalidateCustomer, useTab } from '@/features/customer/use-customer-card'
 import type { OfflinePayment } from '@/features/offline/offline-replay'
+import { openCashDrawer, printSheets, takesCash } from '@/features/printing/print-sheets'
 import { type ReceiptPayment } from '@/features/receipt/receipt-sheet'
-import { API_VERSION } from '@/lib/api-client'
-import { useFeatures } from '@/lib/brand'
-import { useLocalized, useT } from '@/lib/i18n'
-import {
-  openCashDrawer,
-  printSheets,
-  takesCash,
-} from '@/features/printing/print-sheets'
-import { useMoney, toNumber } from '@/lib/money'
-import { toast } from '@/lib/toast'
-import { cn } from '@/lib/utils'
 import { PAID_DIM, PaidTag } from './bill-lines'
-import { cashNotes, settleAction } from './settle-action'
 import { canSettleWith, onlineSummary } from './online-payments'
-import {
-  ACCOUNT_TENDER,
-  BASE_TENDERS,
-  ONLINE_TENDER,
-  tenderLabelKey,
-  type TenderName,
-} from './tenders'
+import { cashNotes, settleAction } from './settle-action'
+import { ACCOUNT_TENDER, BASE_TENDERS, ONLINE_TENDER, tenderLabelKey, type TenderName } from './tenders'
 
 type PendingPayment = {
   tenderValue: number
@@ -73,15 +52,7 @@ type SettledView = {
  * One tab the bill can go on: the person, what they already owe (so the
  * cashier is never adding to a tab blind), and their share of this bill.
  */
-function HolderButton({
-  holder,
-  chosen,
-  onChoose,
-}: {
-  holder: AccountHolder
-  chosen: boolean
-  onChoose: () => void
-}) {
+function HolderButton({ holder, chosen, onChoose }: { holder: AccountHolder; chosen: boolean; onChoose: () => void }) {
   const t = useT()
   const money = useMoney()
   const { tab, noTab, isPending } = useTab(holder.id)
@@ -95,22 +66,11 @@ function HolderButton({
     >
       <span className='truncate'>{holder.name || t('guest')}</span>
       <span className='flex shrink-0 flex-col items-end text-sm leading-tight'>
-        <span
-          className={cn(
-            'tabular-nums',
-            !chosen && owed > 0 && 'text-destructive'
-          )}
-        >
-          {isPending
-            ? '…'
-            : noTab
-              ? t('noTab')
-              : t('owesAmount', { amount: money(Math.max(0, owed)) })}
+        <span className={cn('tabular-nums', !chosen && owed > 0 && 'text-destructive')}>
+          {isPending ? '…' : noTab ? t('noTab') : t('owesAmount', { amount: money(Math.max(0, owed)) })}
         </span>
         {holder.subtotal > 0 && (
-          <span className='tabular-nums opacity-80'>
-            {t('thisBill', { amount: money(holder.subtotal) })}
-          </span>
+          <span className='tabular-nums opacity-80'>{t('thisBill', { amount: money(holder.subtotal) })}</span>
         )}
       </span>
     </Button>
@@ -131,9 +91,7 @@ type SettleDialogProps = {
    * The people in the room, for a room ticket: each is a tab the bill can go
    * on, whether or not they ordered anything themselves.
    */
-  members?:
-    | { customerId?: string | null; customerName?: string | null }[]
-    | null
+  members?: { customerId?: string | null; customerName?: string | null }[] | null
   open: boolean
   onOpenChange: (open: boolean) => void
   onSettled?: (outcome: SettleOutcome) => void
@@ -219,17 +177,12 @@ export function SettleDialog({
   // on the ticket screen), and ignoring it is fine - the bill settles either
   // way. The room's time is nobody's and never asked about.
   const unnamed = (ticket.lines ?? []).filter(
-    (line) =>
-      !line.customerId &&
-      !line.customerName &&
-      line.source !== 'SessionTime' &&
-      toNumber(line.total) > 0
+    (line) => !line.customerId && !line.customerName && line.source !== 'SessionTime' && toNumber(line.total) > 0
   )
   const nudge = accountHolders.length > 1 && unnamed.length > 0
   const nameLine = useMutation({
     ...assignTicketLinesCustomerMutation(),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: [{ _id: 'getTicket' }] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: [{ _id: 'getTicket' }] }),
   })
   const nameLineFor = (lineId: number, holder: AccountHolder) =>
     nameLine.mutate({
@@ -242,9 +195,7 @@ export function SettleDialog({
   // Settling on account needs tabs switched on and a tab to charge (the
   // server enforces both)
   const tenders =
-    !offline && features.tabs && accountHolders.length > 0
-      ? [...BASE_TENDERS, ACCOUNT_TENDER]
-      : BASE_TENDERS
+    !offline && features.tabs && accountHolders.length > 0 ? [...BASE_TENDERS, ACCOUNT_TENDER] : BASE_TENDERS
 
   const [payments, setPayments] = useState<PendingPayment[]>([])
   const [accountHolder, setAccountHolder] = useState<AccountHolder | null>(null)
@@ -318,9 +269,7 @@ export function SettleDialog({
       setResult({
         receiptNumber: outcome.receiptNumber,
         change: outcome.change,
-        accountAmount: outcome.payments
-          .filter((p) => p.tender === 'Account')
-          .reduce((sum, p) => sum + p.amount, 0),
+        accountAmount: outcome.payments.filter((p) => p.tender === 'Account').reduce((sum, p) => sum + p.amount, 0),
       })
       onSettled?.(outcome)
       // Cash opens the drawer though the receipt waits for Print: the
@@ -340,17 +289,14 @@ export function SettleDialog({
   })
 
   // One account holder needs no choosing
-  const chosenHolder =
-    accountHolder ?? (accountHolders.length === 1 ? accountHolders[0] : null)
+  const chosenHolder = accountHolder ?? (accountHolders.length === 1 ? accountHolders[0] : null)
 
   // A person's own items, capped at what is still owed — the common case
   // is "Ahmed's items go on Ahmed's tab". Never the remainder: someone who
   // ordered nothing owes only the part of the time the group says, and
   // that is typed.
   const shareOf = (holder: AccountHolder | null) =>
-    holder && holder.subtotal > 0
-      ? String(+Math.min(holder.subtotal, remaining).toFixed(2))
-      : ''
+    holder && holder.subtotal > 0 ? String(+Math.min(holder.subtotal, remaining).toFixed(2)) : ''
 
   const chooseHolder = (holder: AccountHolder) => {
     setAccountHolder(holder)
@@ -365,12 +311,7 @@ export function SettleDialog({
       setAmountStr('')
       return
     }
-    setAmountStr(
-      shareOf(
-        accountHolder ??
-          (accountHolders.length === 1 ? accountHolders[0] : null)
-      )
-    )
+    setAmountStr(shareOf(accountHolder ?? (accountHolders.length === 1 ? accountHolders[0] : null)))
   }
 
   // An account payment has to name the tab it charges
@@ -384,8 +325,7 @@ export function SettleDialog({
     customerName: tender.name === 'Account' ? chosenHolder?.name : undefined,
   })
 
-  const removePayment = (index: number) =>
-    setPayments((prev) => prev.filter((_, i) => i !== index))
+  const removePayment = (index: number) => setPayments((prev) => prev.filter((_, i) => i !== index))
 
   const [savingOffline, setSavingOffline] = useState(false)
   const busyNow = settle.isPending || savingOffline
@@ -418,7 +358,7 @@ export function SettleDialog({
           tenderName: p.tenderName,
           amount: p.amount,
         })),
-        change,
+        change
       )
       setResult({
         receiptNumber: 0,
@@ -440,9 +380,7 @@ export function SettleDialog({
       void settleOffline(list, Math.max(0, +(paidNow - due).toFixed(2)))
       return
     }
-    const signature = JSON.stringify(
-      list.map((p) => [p.tenderValue, p.amount, p.customerId ?? null])
-    )
+    const signature = JSON.stringify(list.map((p) => [p.tenderValue, p.amount, p.customerId ?? null]))
     if (requestIdRef.current?.signature !== signature) {
       requestIdRef.current = { signature, id: crypto.randomUUID() }
     }
@@ -499,9 +437,7 @@ export function SettleDialog({
       </Button>
       <DialogPrimitive.Title className='min-w-0 flex-1 truncate text-xl font-bold'>
         {t('settleTitle')}
-        {title && (
-          <span className='text-muted-foreground font-normal'> · {title}</span>
-        )}
+        {title && <span className='text-muted-foreground font-normal'> · {title}</span>}
       </DialogPrimitive.Title>
       <span className='text-xl font-bold tabular-nums'>{money(total)}</span>
     </div>
@@ -588,7 +524,7 @@ export function SettleDialog({
         dir='ltr'
         className={cn(
           'bg-muted flex h-14 items-center justify-end rounded-lg px-4 text-3xl font-bold tabular-nums rtl:justify-start',
-          amountStr === '' && 'text-muted-foreground/60',
+          amountStr === '' && 'text-muted-foreground/60'
         )}
       >
         {amountStr || (tender.name !== 'Account' && remaining > 0 ? String(remaining) : '0')}
@@ -629,22 +565,21 @@ export function SettleDialog({
         <div className='divide-y'>
           {(ticket.lines ?? []).map((line) => (
             <div key={String(line.id)} className='flex items-start gap-3 py-2 text-base'>
-              <span style={{ width: countWidth }} className={cn('text-muted-foreground shrink-0 whitespace-nowrap tabular-nums', line.paid && PAID_DIM)}>
+              <span
+                style={{ width: countWidth }}
+                className={cn('text-muted-foreground shrink-0 whitespace-nowrap tabular-nums', line.paid && PAID_DIM)}
+              >
                 {toNumber(line.qty)}×
               </span>
               <span className={cn('min-w-0 flex-1', line.paid && PAID_DIM)}>
                 <span className='line-clamp-2'>{localized(line.description)}</span>
                 {line.customerName && (
-                  <span className='text-muted-foreground block truncate text-sm'>
-                    {line.customerName}
-                  </span>
+                  <span className='text-muted-foreground block truncate text-sm'>{line.customerName}</span>
                 )}
               </span>
               {/* Taken earlier as a part payment: on the bill, not in what is due now */}
               {line.paid && <PaidTag />}
-              <span className={cn('shrink-0 tabular-nums', line.paid && PAID_DIM)}>
-                {money(toNumber(line.total))}
-              </span>
+              <span className={cn('shrink-0 tabular-nums', line.paid && PAID_DIM)}>{money(toNumber(line.total))}</span>
             </div>
           ))}
         </div>
@@ -702,9 +637,7 @@ export function SettleDialog({
       )}
 
       <div className='grid gap-2'>
-        <h2 className='text-muted-foreground text-sm font-semibold tracking-wide uppercase'>
-          {t('payments')}
-        </h2>
+        <h2 className='text-muted-foreground text-sm font-semibold tracking-wide uppercase'>{t('payments')}</h2>
         {payments.length > 0 ? (
           payments.map((payment, index) => (
             <div
@@ -715,9 +648,7 @@ export function SettleDialog({
                 {tenderLabel(payment.tenderName)}
                 {payment.customerName && ` · ${payment.customerName}`}
               </span>
-              <span className='font-semibold whitespace-nowrap tabular-nums'>
-                {money(payment.amount)}
-              </span>
+              <span className='font-semibold whitespace-nowrap tabular-nums'>{money(payment.amount)}</span>
               <Button
                 variant='ghost'
                 size='icon'
@@ -746,7 +677,7 @@ export function SettleDialog({
           <span
             className={cn(
               'font-bold tabular-nums transition-colors',
-              remaining > 0 ? 'text-destructive' : 'text-emerald-600 dark:text-emerald-400',
+              remaining > 0 ? 'text-destructive' : 'text-emerald-600 dark:text-emerald-400'
             )}
           >
             {money(remaining)}
@@ -755,9 +686,7 @@ export function SettleDialog({
         {changeDue > 0 && (
           <div className='flex items-center justify-between gap-4'>
             <span className='text-muted-foreground'>{t('changeDue')}</span>
-            <span className='font-bold text-emerald-600 tabular-nums dark:text-emerald-400'>
-              {money(changeDue)}
-            </span>
+            <span className='font-bold text-emerald-600 tabular-nums dark:text-emerald-400'>{money(changeDue)}</span>
           </div>
         )}
       </div>
@@ -811,9 +740,7 @@ export function SettleDialog({
                   {howPaid}
                   <div className='mt-6'>{whatPaid(false)}</div>
                 </div>
-                <div className='min-w-0 flex-1 overflow-y-auto p-4 max-lg:hidden'>
-                  {whatPaid(true)}
-                </div>
+                <div className='min-w-0 flex-1 overflow-y-auto p-4 max-lg:hidden'>{whatPaid(true)}</div>
                 <div className='bg-muted/40 w-[400px] shrink-0 overflow-y-auto border-s p-4 max-lg:hidden xl:w-[440px]'>
                   {howPaid}
                 </div>

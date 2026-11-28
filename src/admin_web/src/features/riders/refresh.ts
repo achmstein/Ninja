@@ -6,8 +6,7 @@ import { type QueryClient } from '@tanstack/react-query'
  * the login is saved
  */
 export function refreshRiders(queryClient: QueryClient) {
-  const again = () =>
-    queryClient.invalidateQueries({ queryKey: [{ _id: 'getRidersOverview' }] })
+  const again = () => queryClient.invalidateQueries({ queryKey: [{ _id: 'getRidersOverview' }] })
   void again()
   setTimeout(() => void again(), 2000)
 }

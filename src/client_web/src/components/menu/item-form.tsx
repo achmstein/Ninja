@@ -1,12 +1,8 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { useAuth } from 'react-oidc-context'
 import { Minus, Plus } from 'lucide-react'
-import {
-  type CatalogItemDto,
-  type ItemCustomizationDto,
-  type UserItemPreferenceDto,
-} from '@/api/catalog'
+import { useAuth } from 'react-oidc-context'
+import { type CatalogItemDto, type ItemCustomizationDto, type UserItemPreferenceDto } from '@/api/catalog'
 import { getUserPreferenceOptions } from '@/api/catalog/@tanstack/react-query.gen'
 import { type CartCustomization } from '@/lib/cart'
 import { useLocalized, usePrice, useT } from '@/lib/i18n'
@@ -16,14 +12,10 @@ import { Textarea } from '@/components/ui/textarea'
 
 export type Selections = Record<string, number[]>
 
-export function defaultSelections(
-  customizations: ItemCustomizationDto[] | undefined
-): Selections {
+export function defaultSelections(customizations: ItemCustomizationDto[] | undefined): Selections {
   const result: Selections = {}
   for (const customization of customizations ?? []) {
-    result[String(customization.id)] = (customization.options ?? [])
-      .filter((o) => o.isDefault)
-      .map((o) => Number(o.id))
+    result[String(customization.id)] = (customization.options ?? []).filter((o) => o.isDefault).map((o) => Number(o.id))
   }
   return result
 }
@@ -42,9 +34,7 @@ export function preferenceSelections(
     const saved = preference.selectedOptions
       .filter((o) => Number(o.customizationId) === Number(customization.id))
       .map((o) => Number(o.optionId))
-      .filter((optionId) =>
-        (customization.options ?? []).some((o) => Number(o.id) === optionId)
-      )
+      .filter((optionId) => (customization.options ?? []).some((o) => Number(o.id) === optionId))
     if (saved.length > 0) {
       result[String(customization.id)] = saved
     }
@@ -63,18 +53,13 @@ export function withoutOutOfStock(
   for (const customization of customizations ?? []) {
     const key = String(customization.id)
     result[key] = (selections[key] ?? []).filter((optionId) =>
-      (customization.options ?? []).some(
-        (o) => Number(o.id) === optionId && !o.isOutOfStock
-      )
+      (customization.options ?? []).some((o) => Number(o.id) === optionId && !o.isOutOfStock)
     )
   }
   return result
 }
 
-export function selectionsToCustomizations(
-  item: CatalogItemDto,
-  selections: Selections
-): CartCustomization[] {
+export function selectionsToCustomizations(item: CatalogItemDto, selections: Selections): CartCustomization[] {
   return (item.customizations ?? []).flatMap((customization) => {
     const selected = selections[String(customization.id)] ?? []
     return (customization.options ?? [])
@@ -93,9 +78,7 @@ export function selectionsToCustomizations(
 
 export function effectiveBasePrice(item: CatalogItemDto): number {
   return Number(
-    item.isOnOffer && Number(item.offerPrice ?? 0) < Number(item.price ?? 0)
-      ? item.offerPrice
-      : (item.price ?? 0)
+    item.isOnOffer && Number(item.offerPrice ?? 0) < Number(item.price ?? 0) ? item.offerPrice : (item.price ?? 0)
   )
 }
 
@@ -110,12 +93,7 @@ export function useSavedPreference(itemId: number) {
 
 interface ItemCustomizeFormProps {
   item: CatalogItemDto
-  onAdd: (
-    customizations: CartCustomization[],
-    quantity: number,
-    instructions: string,
-    unitPrice: number
-  ) => void
+  onAdd: (customizations: CartCustomization[], quantity: number, instructions: string, unitPrice: number) => void
   /**
    * Dialog layout: the options scroll in their own area and the CTA stays
    * pinned at the bottom. The default inline layout flows with the page.
@@ -127,11 +105,7 @@ interface ItemCustomizeFormProps {
  * The customization form shared by the customize dialog and the item deep-link
  * page: option chips, quantity, special instructions, add-to-cart CTA.
  */
-export function ItemCustomizeForm({
-  item,
-  onAdd,
-  pinnedCta = false,
-}: ItemCustomizeFormProps) {
+export function ItemCustomizeForm({ item, onAdd, pinnedCta = false }: ItemCustomizeFormProps) {
   const t = useT()
   const localized = useLocalized()
   const price = usePrice()
@@ -141,8 +115,7 @@ export function ItemCustomizeForm({
   // until we know. isLoading rather than isPending is what tells a request in
   // flight apart from a query disabled for a signed-out customer, who has no
   // saved choices to wait for and should see the defaults straight away.
-  const { data: preference, isLoading: loadingPreference } =
-    useSavedPreference(Number(item.id))
+  const { data: preference, isLoading: loadingPreference } = useSavedPreference(Number(item.id))
 
   const [quantity, setQuantity] = useState(1)
   const [instructions, setInstructions] = useState('')
@@ -155,32 +128,24 @@ export function ItemCustomizeForm({
   )
 
   const chosen = selectionsToCustomizations(item, selections)
-  const unitPrice =
-    effectiveBasePrice(item) +
-    chosen.reduce((sum, c) => sum + c.priceAdjustment, 0)
+  const unitPrice = effectiveBasePrice(item) + chosen.reduce((sum, c) => sum + c.priceAdjustment, 0)
 
   const missingRequired = (item.customizations ?? []).some(
     (c) => c.isRequired && (selections[String(c.id)] ?? []).length === 0
   )
 
-  const toggleOption = (
-    customization: ItemCustomizationDto,
-    optionId: number
-  ) => {
+  const toggleOption = (customization: ItemCustomizationDto, optionId: number) => {
     const key = String(customization.id)
     const current = selections[key] ?? []
     if (customization.allowMultiple) {
       setOverrides({
         ...selections,
-        [key]: current.includes(optionId)
-          ? current.filter((id) => id !== optionId)
-          : [...current, optionId],
+        [key]: current.includes(optionId) ? current.filter((id) => id !== optionId) : [...current, optionId],
       })
       return
     }
     // Single-choice: tap again to clear only when the group is optional
-    const next =
-      current.includes(optionId) && !customization.isRequired ? [] : [optionId]
+    const next = current.includes(optionId) && !customization.isRequired ? [] : [optionId]
     setOverrides({ ...selections, [key]: next })
   }
 
@@ -188,69 +153,49 @@ export function ItemCustomizeForm({
     <>
       {(item.customizations ?? [])
         .slice()
-        .sort(
-          (a, b) => Number(a.displayOrder ?? 0) - Number(b.displayOrder ?? 0)
-        )
+        .sort((a, b) => Number(a.displayOrder ?? 0) - Number(b.displayOrder ?? 0))
         .map((customization) => {
           const selected = selections[String(customization.id)] ?? []
           return (
             <div key={String(customization.id)} className='flex flex-col gap-2'>
               <div className='flex items-baseline gap-2'>
-                <span className='text-note font-semibold'>
-                  {localized(customization.name)}
-                </span>
-                {customization.isRequired && (
-                  <span className='text-destructive text-caption'>
-                    {t('required')}
-                  </span>
-                )}
+                <span className='text-note font-semibold'>{localized(customization.name)}</span>
+                {customization.isRequired && <span className='text-destructive text-caption'>{t('required')}</span>}
               </div>
               <div className='flex flex-wrap gap-2'>
                 {loadingPreference &&
                   // Same shape as the chips they stand in for, so the sheet
                   // does not resize when the real ones arrive
                   (customization.options ?? []).map((option) => (
-                    <Skeleton
-                      key={String(option.id)}
-                      className='h-8 w-20 rounded-full'
-                    />
+                    <Skeleton key={String(option.id)} className='h-8 w-20 rounded-full' />
                   ))}
                 {!loadingPreference &&
                   (customization.options ?? [])
-                  .slice()
-                  .sort(
-                    (a, b) =>
-                      Number(a.displayOrder ?? 0) - Number(b.displayOrder ?? 0)
-                  )
-                  .map((option) => {
-                    const optionId = Number(option.id)
-                    const isSelected = selected.includes(optionId)
-                    const adjustment = Number(option.priceAdjustment ?? 0)
-                    const outOfStock = option.isOutOfStock ?? false
-                    return (
-                      <Button
-                        key={optionId}
-                        size='sm'
-                        variant={isSelected ? 'default' : 'outline'}
-                        className='rounded-pill'
-                        disabled={outOfStock}
-                        onClick={() => toggleOption(customization, optionId)}
-                      >
-                        {localized(option.name)}
-                        {outOfStock ? (
-                          <span className='text-muted-foreground text-caption'>
-                            {t('outOfStock')}
-                          </span>
-                        ) : (
-                          adjustment > 0 && (
-                            <span className='text-caption opacity-70'>
-                              +{adjustment}
-                            </span>
-                          )
-                        )}
-                      </Button>
-                    )
-                  })}
+                    .slice()
+                    .sort((a, b) => Number(a.displayOrder ?? 0) - Number(b.displayOrder ?? 0))
+                    .map((option) => {
+                      const optionId = Number(option.id)
+                      const isSelected = selected.includes(optionId)
+                      const adjustment = Number(option.priceAdjustment ?? 0)
+                      const outOfStock = option.isOutOfStock ?? false
+                      return (
+                        <Button
+                          key={optionId}
+                          size='sm'
+                          variant={isSelected ? 'default' : 'outline'}
+                          className='rounded-pill'
+                          disabled={outOfStock}
+                          onClick={() => toggleOption(customization, optionId)}
+                        >
+                          {localized(option.name)}
+                          {outOfStock ? (
+                            <span className='text-muted-foreground text-caption'>{t('outOfStock')}</span>
+                          ) : (
+                            adjustment > 0 && <span className='text-caption opacity-70'>+{adjustment}</span>
+                          )}
+                        </Button>
+                      )
+                    })}
               </div>
             </div>
           )
@@ -268,9 +213,7 @@ export function ItemCustomizeForm({
           >
             <Minus className='h-4 w-4' />
           </Button>
-          <span className='w-6 text-center font-semibold tabular-nums'>
-            {quantity}
-          </span>
+          <span className='w-6 text-center font-semibold tabular-nums'>{quantity}</span>
           <Button
             variant='outline'
             size='icon'
@@ -294,14 +237,12 @@ export function ItemCustomizeForm({
 
   // Mobile-app parity: label at the start, price at the end (plus the
   // struck-through original price when the item is on offer)
-  const originalUnitPrice =
-    Number(item.price ?? 0) +
-    chosen.reduce((sum, c) => sum + c.priceAdjustment, 0)
+  const originalUnitPrice = Number(item.price ?? 0) + chosen.reduce((sum, c) => sum + c.priceAdjustment, 0)
 
   const cta = (
     <Button
       size='lg'
-      className='w-full justify-between rounded-pill'
+      className='rounded-pill w-full justify-between'
       disabled={!item.isAvailable || missingRequired || loadingPreference}
       onClick={() => onAdd(chosen, quantity, instructions.trim(), unitPrice)}
     >
@@ -310,7 +251,7 @@ export function ItemCustomizeForm({
           <span className='font-bold'>{t('addToCart')}</span>
           <span className='flex items-center gap-1.5 font-bold'>
             {item.isOnOffer && originalUnitPrice > unitPrice && (
-              <span className='text-caption font-normal opacity-70 line-through'>
+              <span className='text-caption font-normal line-through opacity-70'>
                 {price(originalUnitPrice * quantity)}
               </span>
             )}
@@ -338,9 +279,7 @@ export function ItemCustomizeForm({
     // when content is short — flex-1 pushes it down). Desktop: the body is
     // the scroll area and the CTA sits statically below it.
     <div className='flex flex-1 flex-col md:min-h-0'>
-      <div className='flex flex-1 flex-col gap-4 p-4 md:overflow-y-auto'>
-        {body}
-      </div>
+      <div className='flex flex-1 flex-col gap-4 p-4 md:overflow-y-auto'>{body}</div>
       <div className='bg-background sticky bottom-0 border-t p-4 pb-[max(1rem,env(safe-area-inset-bottom))] md:static md:pb-4'>
         {cta}
       </div>

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { Loader2 } from 'lucide-react'
 import { APILoadingStatus, APIProvider, Map, useApiLoadingStatus, useMap } from '@vis.gl/react-google-maps'
+import { Loader2 } from 'lucide-react'
 import type { LatLng } from '@/lib/geo'
 import { CentrePin } from './map-pin'
 

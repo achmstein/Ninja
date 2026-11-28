@@ -1,12 +1,13 @@
 import { memo, useCallback, useEffect, useLayoutEffect, useRef, useState, type MutableRefObject } from 'react'
-import { motion, useReducedMotion } from 'motion/react'
 import { ArrowRight, Plus, Repeat2 } from 'lucide-react'
+import { motion, useReducedMotion } from 'motion/react'
 import type { CatalogItemDto } from '@/api/catalog'
 import { useLocalized, usePrice, useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { itemPictureSrcSet, itemPictureUrl } from '@/components/menu/item-picture'
-import { CARD_RADIUS, columnAt, pinchIntent, TONE_CLASS, type DeckColumn } from './deck-model'
+import { LONG_PRESS_MS, usePress } from '@/components/ninja/gestures/use-press'
 import { OfferBadge } from '../offer'
+import { CARD_RADIUS, columnAt, pinchIntent, TONE_CLASS, type DeckColumn } from './deck-model'
 
 /** How much of the next card shows under the one in view, px */
 const PEEK = 44
@@ -17,7 +18,6 @@ const PEEK = 44
  * it between the two)
  */
 const topOf = (column: HTMLElement) => parseFloat(getComputedStyle(column).scrollPaddingTop) || 0
-import { LONG_PRESS_MS, usePress } from '@/components/ninja/gestures/use-press'
 
 /** How long the deck must rest on the next category's card before it moves on, ms (counted once the column has come to rest) */
 const ADVANCE_AFTER = 60
@@ -86,8 +86,14 @@ export const Deck = memo(function Deck({
   useLayoutEffect(() => {
     handlers.current = { onOpen, onQuickAdd }
   })
-  const open = useCallback((item: CatalogItemDto, photo: HTMLElement | null) => handlers.current.onOpen(item, photo), [])
-  const quickAdd = useCallback((item: CatalogItemDto, photo: HTMLElement | null) => handlers.current.onQuickAdd(item, photo), [])
+  const open = useCallback(
+    (item: CatalogItemDto, photo: HTMLElement | null) => handlers.current.onOpen(item, photo),
+    []
+  )
+  const quickAdd = useCallback(
+    (item: CatalogItemDto, photo: HTMLElement | null) => handlers.current.onQuickAdd(item, photo),
+    []
+  )
 
   // Open where asked, before paint, so a tile growing back lands on its card
   useLayoutEffect(() => {
@@ -187,7 +193,7 @@ export const Deck = memo(function Deck({
   return (
     <motion.div
       ref={pager}
-      className='no-scrollbar flex h-full snap-x snap-mandatory overflow-x-auto overflow-y-hidden overscroll-x-contain [touch-action:pan-x_pan-y]'
+      className='no-scrollbar flex h-full [touch-action:pan-x_pan-y] snap-x snap-mandatory overflow-x-auto overflow-y-hidden overscroll-x-contain'
       onScroll={(e) => {
         if (steering.current) return
         const el = e.currentTarget
@@ -212,7 +218,7 @@ export const Deck = memo(function Deck({
           }}
           role='group'
           aria-label={col.label}
-          className='no-scrollbar h-full w-full shrink-0 snap-start snap-always snap-y snap-mandatory overflow-y-auto overscroll-y-contain px-4'
+          className='no-scrollbar h-full w-full shrink-0 snap-y snap-mandatory snap-start snap-always overflow-y-auto overscroll-y-contain px-4'
           style={{ paddingTop: 'var(--deck-top)', scrollPaddingTop: 'var(--deck-top)' }}
           onScroll={(e) => {
             const el = e.currentTarget
@@ -266,12 +272,17 @@ function UpNext({ column, onGo }: { column: DeckColumn; onGo: () => void }) {
       whileInView={{ y: 0, opacity: 1, scale: 1 }}
       viewport={{ amount: 0.25 }}
       transition={{ type: 'spring', stiffness: 260, damping: 30 }}
-      className={cn('mb-3 flex w-full shrink-0 snap-start flex-col justify-between p-6 text-start', TONE_CLASS[column.tone])}
+      className={cn(
+        'mb-3 flex w-full shrink-0 snap-start flex-col justify-between p-6 text-start',
+        TONE_CLASS[column.tone]
+      )}
       style={{ height: `calc((100% - var(--deck-top) - ${PEEK}px) * 0.5)`, borderRadius: CARD_RADIUS }}
     >
       <span className='text-note font-semibold opacity-70'>{t('ninjaUpNext')}</span>
       <span className='flex items-end justify-between gap-4'>
-        <span className='heading min-w-0 text-[calc(2.25rem*var(--heading-scale))] leading-[1] break-words'>{column.label}</span>
+        <span className='heading min-w-0 text-[calc(2.25rem*var(--heading-scale))] leading-[1] break-words'>
+          {column.label}
+        </span>
         <span className='grid size-12 shrink-0 place-items-center rounded-full bg-black/15'>
           <ArrowRight className='size-6 rtl:rotate-180' />
         </span>
@@ -337,7 +348,13 @@ const DeckCard = memo(function DeckCard({
         <CardFace item={item} usual={usual} photoRef={photo} action={!soldOut} />
         {/* Held, a ring fills round a plus: at the full ring an item with nothing to choose (or a saved way) is in the tray, any other opens */}
         {!soldOut && (
-          <span aria-hidden className={cn('absolute end-4 top-4 z-20 transition-opacity duration-150', pressing ? 'opacity-100' : 'opacity-0')}>
+          <span
+            aria-hidden
+            className={cn(
+              'absolute end-4 top-4 z-20 transition-opacity duration-150',
+              pressing ? 'opacity-100' : 'opacity-0'
+            )}
+          >
             <PressRing pressing={pressing} blur={pressing} />
           </span>
         )}
@@ -369,9 +386,23 @@ const RING_C = 2 * Math.PI * RING_R
  * off leaves the frosted backdrop out while the ring is hidden: a backdrop blur on every card of
  * the deck, even at no opacity, is a layer the phone keeps re-reading as the cards scroll under it
  */
-export function PressRing({ pressing, small = false, blur = true }: { pressing: boolean; small?: boolean; blur?: boolean }) {
+export function PressRing({
+  pressing,
+  small = false,
+  blur = true,
+}: {
+  pressing: boolean
+  small?: boolean
+  blur?: boolean
+}) {
   return (
-    <span className={cn('relative grid place-items-center rounded-full bg-black/45 text-white', blur && 'backdrop-blur-sm', small ? 'size-9' : 'size-11')}>
+    <span
+      className={cn(
+        'relative grid place-items-center rounded-full bg-black/45 text-white',
+        blur && 'backdrop-blur-sm',
+        small ? 'size-9' : 'size-11'
+      )}
+    >
       <svg viewBox='0 0 44 44' className='absolute inset-0 size-full -rotate-90'>
         <circle
           cx='22'
@@ -419,12 +450,16 @@ export function CardFace({
   const badges = (
     <div className='absolute inset-x-4 top-4 z-10 flex flex-wrap gap-2'>
       {usual && (
-        <span className='flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1 text-caption font-semibold text-black'>
+        <span className='text-caption flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1 font-semibold text-black'>
           <Repeat2 className='size-3.5' />
           {t('yourUsuals')}
         </span>
       )}
-      {soldOut && <span className='rounded-full bg-black/70 px-3 py-1 text-caption font-semibold text-white'>{t('unavailable')}</span>}
+      {soldOut && (
+        <span className='text-caption rounded-full bg-black/70 px-3 py-1 font-semibold text-white'>
+          {t('unavailable')}
+        </span>
+      )}
       {onOffer && !soldOut && <OfferBadge item={item} photo />}
     </div>
   )
@@ -441,11 +476,18 @@ export function CardFace({
       <div
         ref={photoRef}
         data-photo={String(item.id)}
-        className={cn('absolute inset-0 flex flex-col justify-end p-6', action && 'pe-20', TONE_CLASS.primary, soldOut && 'grayscale')}
+        className={cn(
+          'absolute inset-0 flex flex-col justify-end p-6',
+          action && 'pe-20',
+          TONE_CLASS.primary,
+          soldOut && 'grayscale'
+        )}
       >
         {badges}
-        <h2 className='heading text-[calc(2.75rem*var(--heading-scale))] leading-[0.95] break-words hyphens-auto'>{name}</h2>
-        {description && <p className='mt-3 line-clamp-3 max-w-[28ch] text-note opacity-80'>{description}</p>}
+        <h2 className='heading text-[calc(2.75rem*var(--heading-scale))] leading-[0.95] break-words hyphens-auto'>
+          {name}
+        </h2>
+        {description && <p className='text-note mt-3 line-clamp-3 max-w-[28ch] opacity-80'>{description}</p>}
         <div className='mt-4'>{priceLine}</div>
       </div>
     )
@@ -473,8 +515,10 @@ export function CardFace({
       <div aria-hidden className='absolute inset-0 -z-10 bg-gradient-to-t from-black/80 via-black/15 to-transparent' />
       {badges}
       <div className={cn('absolute inset-x-0 bottom-0 p-6 text-white', action && 'pe-20')}>
-        <h2 className='heading text-[calc(2rem*var(--heading-scale))] leading-[1.05] [text-shadow:0_1px_8px_rgba(0,0,0,0.35)]'>{name}</h2>
-        {description && <p className='mt-2 line-clamp-2 max-w-[34ch] text-note text-white/80'>{description}</p>}
+        <h2 className='heading text-[calc(2rem*var(--heading-scale))] leading-[1.05] [text-shadow:0_1px_8px_rgba(0,0,0,0.35)]'>
+          {name}
+        </h2>
+        {description && <p className='text-note mt-2 line-clamp-2 max-w-[34ch] text-white/80'>{description}</p>}
         <div className='mt-3'>{priceLine}</div>
       </div>
     </>

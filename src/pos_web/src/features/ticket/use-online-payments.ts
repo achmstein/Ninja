@@ -21,8 +21,7 @@ export function useOnlinePayments(ticketId: number, enabled: boolean) {
       query: { 'api-version': API_VERSION },
     }),
     enabled: enabled && inPlan,
-    refetchInterval: (q) =>
-      q.state.data?.some((p) => p.status === 'Pending') ? 5_000 : 20_000,
+    refetchInterval: (q) => (q.state.data?.some((p) => p.status === 'Pending') ? 5_000 : 20_000),
   })
   return {
     payments: (enabled && inPlan ? query.data : undefined) ?? [],

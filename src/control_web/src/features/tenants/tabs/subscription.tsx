@@ -13,32 +13,7 @@ import {
   suspendTenantMutation,
   updateTenantSubscriptionMutation,
 } from '@/api/control/@tanstack/react-query.gen'
-import { SubscriptionBadge } from '@/components/tenant-badges'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Empty, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty'
-import { Label } from '@/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { Skeleton } from '@/components/ui/skeleton'
-import { Spinner } from '@/components/ui/spinner'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
 import { useFormat } from '@/lib/format'
-import { FeatureSwitchesCard } from '../feature-switches'
 import { useT } from '@/lib/i18n'
 import { problemDetail } from '@/lib/problem'
 import {
@@ -55,7 +30,19 @@ import {
   type TenantPlanName,
 } from '@/lib/tenant'
 import { toast } from '@/lib/toast'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Empty, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty'
+import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Spinner } from '@/components/ui/spinner'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { SubscriptionBadge } from '@/components/tenant-badges'
 import { RecordPaymentDialog, SuspendDialog } from '../dialogs'
+import { FeatureSwitchesCard } from '../feature-switches'
 
 /**
  * What the business pays for: its plan and the modules bought on top, what that
@@ -168,7 +155,12 @@ export function SubscriptionTab({ tenant }: { tenant: TenantDetail }) {
                 </Button>
               )}
               {canResume(status) && (
-                <Button size='sm' variant='outline' disabled={resume.isPending} onClick={() => resume.mutate({ path: { slug } })}>
+                <Button
+                  size='sm'
+                  variant='outline'
+                  disabled={resume.isPending}
+                  onClick={() => resume.mutate({ path: { slug } })}
+                >
                   {resume.isPending ? <Spinner /> : <Play />}
                   {t('resume')}
                 </Button>
@@ -220,7 +212,9 @@ export function SubscriptionTab({ tenant }: { tenant: TenantDetail }) {
                           {format.date(p.periodStart)} → {format.date(p.periodEnd)}
                         </TableCell>
                         <TableCell>
-                          <div className='font-mono text-xs' dir='ltr'>{p.reference ?? '—'}</div>
+                          <div className='font-mono text-xs' dir='ltr'>
+                            {p.reference ?? '—'}
+                          </div>
                           {p.note && <div className='text-muted-foreground text-xs'>{p.note}</div>}
                         </TableCell>
                       </TableRow>
@@ -348,7 +342,11 @@ function PlanCard({
           />
         </div>
         <div className='text-muted-foreground text-xs'>
-          {isDemo ? t('demoHasEverything') : `${t('entitlements')}: ${MODULES.filter((m) => entitled.has(m)).map((m) => t(moduleLabelKey[m])).join(', ')}`}
+          {isDemo
+            ? t('demoHasEverything')
+            : `${t('entitlements')}: ${MODULES.filter((m) => entitled.has(m))
+                .map((m) => t(moduleLabelKey[m]))
+                .join(', ')}`}
         </div>
         <div className='flex justify-end'>
           <Button disabled={!valid || isPending} onClick={() => onSave(plan, addons, graceValue)}>

@@ -2,13 +2,7 @@ import { createContext, useContext, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet'
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 type SheetTab = {
@@ -112,9 +106,7 @@ export function EntitySheet({
           {figures.map((f, i) => (
             <div key={i} className='px-2 py-2'>
               <div className='text-muted-foreground text-xs'>{f.label}</div>
-              <div className={cn('font-semibold tabular-nums', f.tone)}>
-                {f.value}
-              </div>
+              <div className={cn('font-semibold tabular-nums', f.tone)}>{f.value}</div>
             </div>
           ))}
         </div>
@@ -124,17 +116,10 @@ export function EntitySheet({
           {tabs.items
             .filter((tab) => !tab.hidden)
             .map((tab) => (
-              <TabsTrigger
-                key={tab.value}
-                value={tab.value}
-                disabled={tab.disabled}
-              >
+              <TabsTrigger key={tab.value} value={tab.value} disabled={tab.disabled}>
                 {tab.label}
                 {tab.badge ? (
-                  <Badge
-                    variant='secondary'
-                    className='h-5 min-w-5 rounded-full px-1.5 text-[11px] tabular-nums'
-                  >
+                  <Badge variant='secondary' className='h-5 min-w-5 rounded-full px-1.5 text-[11px] tabular-nums'>
                     {tab.badge}
                   </Badge>
                 ) : null}
@@ -146,25 +131,12 @@ export function EntitySheet({
   )
 
   const body = (
-    <div
-      className={cn(
-        'flex min-h-0 flex-1 flex-col overflow-y-auto',
-        !flush && 'gap-5 p-5'
-      )}
-    >
-      {children}
-    </div>
+    <div className={cn('flex min-h-0 flex-1 flex-col overflow-y-auto', !flush && 'gap-5 p-5')}>{children}</div>
   )
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent
-        className={cn(
-          'overflow-hidden',
-          size === 'wide' ? 'sm:max-w-3xl' : 'sm:max-w-xl',
-          className
-        )}
-      >
+      <SheetContent className={cn('overflow-hidden', size === 'wide' ? 'sm:max-w-3xl' : 'sm:max-w-xl', className)}>
         <SlotsContext.Provider value={{ start, end }}>
           {tabs ? (
             <Tabs
@@ -186,21 +158,11 @@ export function EntitySheet({
           )}
           {/* Shown once anything is in it: a prop, or a SheetActions portal */}
           <div className='border-border/60 bg-background hidden items-center gap-2 border-t p-4 has-[[data-sheet-slot]>*]:flex'>
-            <div
-              ref={setStart}
-              data-sheet-slot=''
-              className='flex items-center gap-2 empty:hidden'
-            >
+            <div ref={setStart} data-sheet-slot='' className='flex items-center gap-2 empty:hidden'>
               {danger}
             </div>
-            <span className='text-muted-foreground min-w-0 flex-1 truncate text-sm'>
-              {footerNote}
-            </span>
-            <div
-              ref={setEnd}
-              data-sheet-slot=''
-              className='flex items-center gap-2 empty:hidden'
-            >
+            <span className='text-muted-foreground min-w-0 flex-1 truncate text-sm'>{footerNote}</span>
+            <div ref={setEnd} data-sheet-slot='' className='flex items-center gap-2 empty:hidden'>
               {actions}
             </div>
           </div>
@@ -216,13 +178,7 @@ export function EntitySheet({
  * (Delete). Rendered only while the part is, so a tab's actions leave with
  * the tab.
  */
-export function SheetActions({
-  side = 'end',
-  children,
-}: {
-  side?: 'start' | 'end'
-  children: ReactNode
-}) {
+export function SheetActions({ side = 'end', children }: { side?: 'start' | 'end'; children: ReactNode }) {
   const slots = useContext(SlotsContext)
   const target = side === 'start' ? slots.start : slots.end
   return target ? createPortal(children, target) : null

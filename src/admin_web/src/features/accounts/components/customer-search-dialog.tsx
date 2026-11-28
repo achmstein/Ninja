@@ -1,22 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { User } from 'lucide-react'
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from '@/components/ui/command'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import { Skeleton } from '@/components/ui/skeleton'
 import { useT } from '@/lib/i18n'
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Skeleton } from '@/components/ui/skeleton'
 import { accountsService } from '../services/accounts-service'
 import type { KeycloakUser } from '../types'
 
@@ -35,11 +23,7 @@ function displayName(user: KeycloakUser): string {
  * Command-palette style customer picker: type to search the identity
  * directory server-side, arrow keys + Enter to pick.
  */
-export function CustomerSearchDialog({
-  open,
-  onOpenChange,
-  onSelectCustomer,
-}: CustomerSearchDialogProps) {
+export function CustomerSearchDialog({ open, onOpenChange, onSelectCustomer }: CustomerSearchDialogProps) {
   const t = useT()
   const [searchTerm, setSearchTerm] = useState('')
   const [debouncedTerm, setDebouncedTerm] = useState('')
@@ -79,11 +63,7 @@ export function CustomerSearchDialog({
           shouldFilter={false}
           className='[&_[cmdk-group-heading]]:text-muted-foreground **:data-[slot=command-input-wrapper]:h-12 [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group]]:px-2 [&_[cmdk-input]]:h-12 [&_[cmdk-item]]:px-2 [&_[cmdk-item]]:py-3'
         >
-          <CommandInput
-            placeholder={t('searchByNameOrEmail')}
-            value={searchTerm}
-            onValueChange={setSearchTerm}
-          />
+          <CommandInput placeholder={t('searchByNameOrEmail')} value={searchTerm} onValueChange={setSearchTerm} />
           <CommandList>
             {isLoading ? (
               <div className='space-y-2 p-3'>
@@ -94,9 +74,7 @@ export function CustomerSearchDialog({
             ) : (
               <>
                 <CommandEmpty>{t('noCustomersFound')}</CommandEmpty>
-                <CommandGroup
-                  heading={debouncedTerm ? t('results') : t('customers')}
-                >
+                <CommandGroup heading={debouncedTerm ? t('results') : t('customers')}>
                   {users.map((user) => (
                     <CommandItem
                       key={user.id}
@@ -108,14 +86,8 @@ export function CustomerSearchDialog({
                         <User className='text-muted-foreground h-4 w-4' />
                       </div>
                       <div className='min-w-0'>
-                        <p className='truncate font-medium'>
-                          {displayName(user)}
-                        </p>
-                        {user.email && (
-                          <p className='text-muted-foreground truncate text-xs'>
-                            {user.email}
-                          </p>
-                        )}
+                        <p className='truncate font-medium'>{displayName(user)}</p>
+                        {user.email && <p className='text-muted-foreground truncate text-xs'>{user.email}</p>}
                       </div>
                     </CommandItem>
                   ))}

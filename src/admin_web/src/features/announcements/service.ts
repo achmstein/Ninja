@@ -13,18 +13,12 @@ interface Announcement {
 
 export const announcementsService = {
   async list(limit = 50): Promise<Announcement[]> {
-    const response = await apiClient.get<Announcement[]>(
-      '/api/notifications/announcements',
-      { params: { limit } }
-    )
+    const response = await apiClient.get<Announcement[]>('/api/notifications/announcements', { params: { limit } })
     return response.data
   },
 
   async send(title: string, body: string): Promise<Announcement> {
-    const response = await apiClient.post<Announcement>(
-      '/api/notifications/announcements',
-      { title, body }
-    )
+    const response = await apiClient.post<Announcement>('/api/notifications/announcements', { title, body })
     return response.data
   },
 }
