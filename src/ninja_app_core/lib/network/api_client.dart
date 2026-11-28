@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'network_status.dart';
 import 'server_clock.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,6 +8,9 @@ import 'package:uuid/uuid.dart';
 import '../auth/auth_service.dart';
 import '../config.dart';
 import '../providers/branch_provider.dart';
+import 'token_source.dart';
+
+export 'token_source.dart';
 
 const _uuid = Uuid();
 
@@ -20,16 +24,33 @@ const _retriedKey = 'ninja.retriedAfterRefresh';
 /// a fresh one here.
 class ApiClient {
   final Dio _dio;
-  final AuthService _authService;
+  final TokenSource _authService;
 
-  ApiClient(this._authService, {required String baseUrl, int? Function()? branchIdGetter})
-      : _dio = Dio(BaseOptions(
+  /// [timeout] for connecting and for the answer; [logInDebug] writes requests
+  /// to the console in a debug build (never their headers: the token rides in
+  /// one, and a release build's log can be read off a phone).
+  ApiClient(
+    this._authService, {
+    required String baseUrl,
+    int? Function()? branchIdGetter,
+    Duration timeout = const Duration(seconds: 30),
+    bool logInDebug = false,
+  }) : _dio = Dio(BaseOptions(
           baseUrl: baseUrl,
-          connectTimeout: const Duration(seconds: 30),
-          receiveTimeout: const Duration(seconds: 30),
-          headers: {'Content-Type': 'application/json'},
+          connectTimeout: timeout,
+          receiveTimeout: timeout,
+          headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
           queryParameters: {'api-version': '1.0'}, // Required by YARP BFF routes
         )) {
+    if (logInDebug && kDebugMode) {
+      _dio.interceptors.add(LogInterceptor(
+        requestHeader: false,
+        responseHeader: false,
+        requestBody: true,
+        responseBody: true,
+        logPrint: (obj) => debugPrint('[Dio] $obj'),
+      ));
+    }
     _dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) async {
         final token = await _authService.getAccessToken();
@@ -41,12 +62,13 @@ class ApiClient {
         if (options.method != 'GET' && options.headers['x-requestid'] == null) {
           options.headers['x-requestid'] = _uuid.v4();
         }
-        // Add branch header if getter is provided
-        // The branch header is sent only while a branch is selected: an
+        // The branch the call is for: one it names itself (the customer app's
+        // menu cached under another branch), else the one an inBranch zone
+        // set, else the selected one. None while no branch is selected: an
         // account with none to work in must not fall back to some default
-        final branchId = branchInZone ?? branchIdGetter?.call();
-        if (branchId != null) {
-          options.headers['X-Branch-Id'] = '$branchId';
+        if (!options.headers.containsKey('X-Branch-Id')) {
+          final branchId = branchInZone ?? branchIdGetter?.call();
+          if (branchId != null) options.headers['X-Branch-Id'] = '$branchId';
         }
         return handler.next(options);
       },
@@ -87,28 +109,33 @@ class ApiClient {
     ));
   }
 
-  Options? _options(String? requestId) =>
-      requestId == null ? null : Options(headers: {'x-requestid': requestId});
+  /// The underlying client, for a test to answer its requests
+  @visibleForTesting
+  Dio get dio => _dio;
+
+  Options? _options(String? requestId, Map<String, dynamic>? headers) => requestId == null && headers == null
+      ? null
+      : Options(headers: {...?headers, 'x-requestid': ?requestId});
 
   Future<Response<T>> get<T>(String path,
       {Map<String, dynamic>? queryParameters, Map<String, dynamic>? headers}) {
     return _dio.get<T>(path, queryParameters: queryParameters, options: headers == null ? null : Options(headers: headers));
   }
 
-  Future<Response<T>> post<T>(String path, {dynamic data, String? requestId}) {
-    return _dio.post<T>(path, data: data, options: _options(requestId));
+  Future<Response<T>> post<T>(String path, {dynamic data, String? requestId, Map<String, dynamic>? headers}) {
+    return _dio.post<T>(path, data: data, options: _options(requestId, headers));
   }
 
-  Future<Response<T>> put<T>(String path, {dynamic data, String? requestId}) {
-    return _dio.put<T>(path, data: data, options: _options(requestId));
+  Future<Response<T>> put<T>(String path, {dynamic data, String? requestId, Map<String, dynamic>? headers}) {
+    return _dio.put<T>(path, data: data, options: _options(requestId, headers));
   }
 
-  Future<Response<T>> delete<T>(String path, {String? requestId}) {
-    return _dio.delete<T>(path, options: _options(requestId));
+  Future<Response<T>> delete<T>(String path, {String? requestId, Map<String, dynamic>? headers}) {
+    return _dio.delete<T>(path, options: _options(requestId, headers));
   }
 
-  Future<Response<T>> patch<T>(String path, {dynamic data, String? requestId}) {
-    return _dio.patch<T>(path, data: data, options: _options(requestId));
+  Future<Response<T>> patch<T>(String path, {dynamic data, String? requestId, Map<String, dynamic>? headers}) {
+    return _dio.patch<T>(path, data: data, options: _options(requestId, headers));
   }
 }
 

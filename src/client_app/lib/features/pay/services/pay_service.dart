@@ -112,7 +112,7 @@ class PayRepository {
 
 final paymentsApiProvider = Provider<ApiClient>((ref) {
   final authService = ref.read(authServiceProvider.notifier);
-  return ApiClient(authService, baseUrl: AppConfig.paymentsApiUrl);
+  return appApiClient(authService, AppConfig.paymentsApiUrl);
 });
 
 final payRepositoryProvider = Provider<PayRepository>((ref) => PayRepository(ref.read(paymentsApiProvider)));

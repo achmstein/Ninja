@@ -1,89 +1,21 @@
-import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../auth/auth_service.dart';
 import '../config/app_config.dart';
 import '../providers/branch_provider.dart';
 
-/// Base API client with authentication interceptor
-class ApiClient {
-  final Dio _dio;
-  final AuthService _authService;
+import 'package:ninja_app_core/network/api_client.dart' show ApiClient, TokenSource;
 
-  ApiClient(this._authService, {required String baseUrl, int? Function()? branchIdGetter})
-      : _dio = Dio(BaseOptions(
-          baseUrl: baseUrl,
-          connectTimeout: const Duration(seconds: 60),
-          receiveTimeout: const Duration(seconds: 60),
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-          },
-          queryParameters: {'api-version': '1.0'},
-        )) {
-    // Requests are logged in a debug build only, and never their headers: the sign-in token rides in
-    // one, and a release build's log can be read off a phone
-    if (kDebugMode) {
-      _dio.interceptors.add(LogInterceptor(
-        requestHeader: false,
-        responseHeader: false,
-        requestBody: true,
-        responseBody: true,
-        logPrint: (obj) => debugPrint('[Dio] $obj'),
-      ));
-    }
+export 'package:ninja_app_core/network/api_client.dart' show ApiClient;
 
-    _dio.interceptors.add(InterceptorsWrapper(
-      onRequest: (options, handler) async {
-        final token = await _authService.getAccessToken();
-        if (token != null) {
-          options.headers['Authorization'] = 'Bearer $token';
-        }
-        // The selected branch, unless the call names its own (booking lists every branch's places,
-        // a cached menu its key's). None chosen yet (a first visit, the branches still loading):
-        // no header, so the server's own default answers rather than a guessed id that may not exist
-        if (branchIdGetter != null && !options.headers.containsKey('X-Branch-Id')) {
-          final branchId = branchIdGetter();
-          if (branchId != null) options.headers['X-Branch-Id'] = '$branchId';
-        }
-        return handler.next(options);
-      },
-      onError: (error, handler) async {
-        if (error.response?.statusCode == 401) {
-          // Token expired, try to refresh
-          final refreshed = await _authService.refreshToken();
-          if (refreshed) {
-            // Retry the request
-            final token = await _authService.getAccessToken();
-            error.requestOptions.headers['Authorization'] = 'Bearer $token';
-            final response = await _dio.fetch<dynamic>(error.requestOptions);
-            return handler.resolve(response);
-          }
-        }
-        return handler.next(error);
-      },
-    ));
-  }
-
-  Future<Response<T>> get<T>(String path,
-      {Map<String, dynamic>? queryParameters, Map<String, dynamic>? headers}) {
-    return _dio.get<T>(path, queryParameters: queryParameters, options: headers != null ? Options(headers: headers) : null);
-  }
-
-  Future<Response<T>> post<T>(String path,
-      {dynamic data, Map<String, dynamic>? headers}) {
-    return _dio.post<T>(path,
-        data: data, options: headers != null ? Options(headers: headers) : null);
-  }
-
-  Future<Response<T>> put<T>(String path, {dynamic data}) {
-    return _dio.put<T>(path, data: data);
-  }
-
-  Future<Response<T>> delete<T>(String path) {
-    return _dio.delete<T>(path);
-  }
-}
+/// The customer app's clients: a minute to answer (a phone on a weak network), and requests
+/// logged in a debug build only
+ApiClient appApiClient(TokenSource auth, String baseUrl, {int? Function()? branchIdGetter}) => ApiClient(
+      auth,
+      baseUrl: baseUrl,
+      branchIdGetter: branchIdGetter,
+      timeout: const Duration(seconds: 60),
+      logInDebug: true,
+    );
 
 /// Helper to get the current branch ID from the provider container
 int? Function() _branchIdGetter(Ref ref) {
@@ -93,58 +25,58 @@ int? Function() _branchIdGetter(Ref ref) {
 /// Providers for API clients — branch-scoped services include X-Branch-Id header
 final catalogApiProvider = Provider<ApiClient>((ref) {
   final authService = ref.read(authServiceProvider.notifier);
-  return ApiClient(authService, baseUrl: AppConfig.catalogApiUrl, branchIdGetter: _branchIdGetter(ref));
+  return appApiClient(authService, AppConfig.catalogApiUrl, branchIdGetter: _branchIdGetter(ref));
 });
 
 final ordersApiProvider = Provider<ApiClient>((ref) {
   final authService = ref.read(authServiceProvider.notifier);
-  return ApiClient(authService, baseUrl: AppConfig.ordersApiUrl, branchIdGetter: _branchIdGetter(ref));
+  return appApiClient(authService, AppConfig.ordersApiUrl, branchIdGetter: _branchIdGetter(ref));
 });
 
 final placesApiProvider = Provider<ApiClient>((ref) {
   final authService = ref.read(authServiceProvider.notifier);
-  return ApiClient(authService, baseUrl: AppConfig.placesApiUrl, branchIdGetter: _branchIdGetter(ref));
+  return appApiClient(authService, AppConfig.placesApiUrl, branchIdGetter: _branchIdGetter(ref));
 });
 
 final staysApiProvider = Provider<ApiClient>((ref) {
   final authService = ref.read(authServiceProvider.notifier);
-  return ApiClient(authService, baseUrl: AppConfig.staysApiUrl, branchIdGetter: _branchIdGetter(ref));
+  return appApiClient(authService, AppConfig.staysApiUrl, branchIdGetter: _branchIdGetter(ref));
 });
 
 final reservationsApiProvider = Provider<ApiClient>((ref) {
   final authService = ref.read(authServiceProvider.notifier);
-  return ApiClient(authService, baseUrl: AppConfig.reservationsApiUrl, branchIdGetter: _branchIdGetter(ref));
+  return appApiClient(authService, AppConfig.reservationsApiUrl, branchIdGetter: _branchIdGetter(ref));
 });
 
 final notificationsApiProvider = Provider<ApiClient>((ref) {
   final authService = ref.read(authServiceProvider.notifier);
-  return ApiClient(authService, baseUrl: AppConfig.notificationsApiUrl, branchIdGetter: _branchIdGetter(ref));
+  return appApiClient(authService, AppConfig.notificationsApiUrl, branchIdGetter: _branchIdGetter(ref));
 });
 
 /// Global services — no branch header needed
 final loyaltyApiProvider = Provider<ApiClient>((ref) {
   final authService = ref.read(authServiceProvider.notifier);
-  return ApiClient(authService, baseUrl: AppConfig.loyaltyApiUrl);
+  return appApiClient(authService, AppConfig.loyaltyApiUrl);
 });
 
 final accountsApiProvider = Provider<ApiClient>((ref) {
   final authService = ref.read(authServiceProvider.notifier);
-  return ApiClient(authService, baseUrl: AppConfig.accountsApiUrl);
+  return appApiClient(authService, AppConfig.accountsApiUrl);
 });
 
 final identityApiProvider = Provider<ApiClient>((ref) {
   final authService = ref.read(authServiceProvider.notifier);
-  return ApiClient(authService, baseUrl: AppConfig.identityApiUrl);
+  return appApiClient(authService, AppConfig.identityApiUrl);
 });
 
 /// Branches API — no branch header (it IS the branch service)
 final branchesApiProvider = Provider<ApiClient>((ref) {
   final authService = ref.read(authServiceProvider.notifier);
-  return ApiClient(authService, baseUrl: AppConfig.branchesApiUrl);
+  return appApiClient(authService, AppConfig.branchesApiUrl);
 });
 
 /// Tenant brand — anonymous, no branch header
 final tenantApiProvider = Provider<ApiClient>((ref) {
   final authService = ref.read(authServiceProvider.notifier);
-  return ApiClient(authService, baseUrl: AppConfig.tenantApiUrl);
+  return appApiClient(authService, AppConfig.tenantApiUrl);
 });

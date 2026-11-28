@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../config.dart';
+import '../network/token_source.dart';
 
 /// Auth state
 class AuthState {
@@ -85,7 +86,7 @@ class AuthState {
 /// [NinjaAppConfig.passwordSignIn]) or from tokens the app obtained itself (the
 /// rider app's browser sign-in, [completeSignIn]), and then lives on silent
 /// refreshes. Who may stay signed in is [NinjaAppConfig.allowedRoles].
-class AuthService extends Notifier<AuthState> {
+class AuthService extends Notifier<AuthState> implements TokenSource {
   final Dio _dio = Dio();
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
@@ -227,6 +228,7 @@ class AuthService extends Notifier<AuthState> {
   }
 
   /// Refresh the access token; callers at the same moment share the one refresh
+  @override
   Future<bool> refreshToken() => _refreshing ??= _refresh().whenComplete(() => _refreshing = null);
 
   Future<bool> _refresh() async {
@@ -270,6 +272,7 @@ class AuthService extends Notifier<AuthState> {
   }
 
   /// Get current access token
+  @override
   Future<String?> getAccessToken() async => state.accessToken;
 
   /// An access token still good for [leeway]: the one held, or a refreshed

@@ -111,5 +111,5 @@ class AddressSearchService {
 
 final addressSearchProvider = Provider<AddressSearchService>((ref) {
   final auth = ref.read(authServiceProvider.notifier);
-  return AddressSearchService(ApiClient(auth, baseUrl: '${AppConfig.tenantApiUrl}/places/'));
+  return AddressSearchService(appApiClient(auth, '${AppConfig.tenantApiUrl}/places/'));
 });

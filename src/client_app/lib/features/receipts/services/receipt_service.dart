@@ -8,7 +8,7 @@ import '../models/receipt.dart';
 /// on it. The client is not branch-scoped — a ticket id is global.
 final ticketsApiProvider = Provider<ApiClient>((ref) {
   final authService = ref.read(authServiceProvider.notifier);
-  return ApiClient(authService, baseUrl: AppConfig.ticketsApiUrl);
+  return appApiClient(authService, AppConfig.ticketsApiUrl);
 });
 
 class ReceiptService {

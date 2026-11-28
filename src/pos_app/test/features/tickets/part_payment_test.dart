@@ -13,7 +13,7 @@ class _Api implements ApiClient {
   final List<(String path, Object? data, String? requestId)> posts = [];
 
   @override
-  Future<Response<T>> post<T>(String path, {dynamic data, String? requestId}) async {
+  Future<Response<T>> post<T>(String path, {dynamic data, String? requestId, Map<String, dynamic>? headers}) async {
     posts.add((path, data, requestId));
     return Response<T>(requestOptions: RequestOptions(path: path), statusCode: 200, data: answer(path) as T?);
   }
@@ -25,7 +25,7 @@ class _Api implements ApiClient {
 /// A refusal in the domain's own words
 class _Refusing implements ApiClient {
   @override
-  Future<Response<T>> post<T>(String path, {dynamic data, String? requestId}) async {
+  Future<Response<T>> post<T>(String path, {dynamic data, String? requestId, Map<String, dynamic>? headers}) async {
     final options = RequestOptions(path: path);
     throw DioException(
       requestOptions: options,

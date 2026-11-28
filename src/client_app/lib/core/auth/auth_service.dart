@@ -11,6 +11,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import '../config/app_config.dart';
 import '../services/signalr_service.dart';
+import 'package:ninja_app_core/network/token_source.dart';
 
 /// Supported social login providers
 enum SocialProvider { google, apple }
@@ -143,7 +144,7 @@ class AuthState {
 
 /// Authentication service using native OIDC with Resource Owner Password Credentials
 /// and native social login SDKs (Google Sign-In, Apple Sign In)
-class AuthService extends Notifier<AuthState> {
+class AuthService extends Notifier<AuthState> implements TokenSource {
   final Dio _dio = Dio(BaseOptions(
     connectTimeout: const Duration(seconds: 10),
     receiveTimeout: const Duration(seconds: 10),
@@ -713,6 +714,7 @@ class AuthService extends Notifier<AuthState> {
   /// Refresh the access token; callers at the same moment share the one
   /// refresh. Keycloak takes each refresh token once, so a second refresh
   /// with the same token would be refused and sign the customer out
+  @override
   Future<bool> refreshToken() => _refreshing ??= _refresh().whenComplete(() => _refreshing = null);
 
   Future<bool> _refresh() async {
@@ -764,6 +766,7 @@ class AuthService extends Notifier<AuthState> {
   }
 
   /// Get current access token
+  @override
   Future<String?> getAccessToken() async {
     return state.accessToken;
   }
