@@ -20,6 +20,7 @@ import UserNotifications
     // Set up method channels
     if let controller = window?.rootViewController as? FlutterViewController {
       SessionNotificationHelper.shared.setupChannel(with: controller)
+      DeliveryCardHelper.shared.setupChannel(with: controller)
       setupMapsChannel(with: controller)
     }
 
@@ -51,11 +52,16 @@ import UserNotifications
     open url: URL,
     options: [UIApplication.OpenURLOptionsKey: Any] = [:]
   ) -> Bool {
-    // Handle Live Activity action deep links: com.chillax.client://action/<actionId>
-    if url.scheme == "com.chillax.client" && url.host == "action" {
-      let actionId = url.lastPathComponent
-      SessionNotificationHelper.shared.handleDeepLinkAction(actionId)
-      return true
+    // The Live Activities' buttons open the app with a link of its own scheme:
+    // …://action/<actionId> from the room card, …://delivery/<action> from the delivery card
+    if url.scheme == "com.chillax.client" {
+      if url.host == "action" {
+        SessionNotificationHelper.shared.handleDeepLinkAction(url.lastPathComponent)
+        return true
+      }
+      if DeliveryCardHelper.shared.handleLink(url) {
+        return true
+      }
     }
     return super.application(app, open: url, options: options)
   }
@@ -71,6 +77,11 @@ import UserNotifications
 
     if type == "session_ended" {
       SessionNotificationHelper.shared.dismiss()
+    }
+
+    // The delivery moved: its card follows, the app open or in the background
+    if type == "delivery_card" {
+      DeliveryCardHelper.shared.apply(userInfo)
     }
 
     // Let Flutter's firebase_messaging plugin handle everything else

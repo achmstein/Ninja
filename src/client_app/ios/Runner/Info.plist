@@ -93,5 +93,10 @@
 		<false/>
 		<key>NSSupportsLiveActivities</key>
 		<true/>
+		<!-- The server's silent pushes reach the app in the background, so the delivery card keeps moving -->
+		<key>UIBackgroundModes</key>
+		<array>
+			<string>remote-notification</string>
+		</array>
 	</dict>
 </plist>

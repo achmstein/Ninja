@@ -5,5 +5,6 @@ import WidgetKit
 struct ChillaxLiveActivityBundle: WidgetBundle {
     var body: some Widget {
         SessionLiveActivity()
+        DeliveryLiveActivity()
     }
 }

@@ -23,6 +23,12 @@
 		D1A2B3C4E5F60A180000000A /* SessionActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1A2B3C4E5F60A1800000004 /* SessionActivityAttributes.swift */; };
 		D1A2B3C4E5F60A180000000B /* ChillaxLiveActivity.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = D1A2B3C4E5F60A1800000006 /* ChillaxLiveActivity.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		E1A2B3C4E5F60A1800000001 /* SessionActionIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1A2B3C4E5F60A1800000002 /* SessionActionIntent.swift */; };
+		F1A2B3C4E5F60A1800000002 /* DeliveryCardHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1A2B3C4E5F60A1800000001 /* DeliveryCardHelper.swift */; };
+		F1A2B3C4E5F60A1800000004 /* DeliveryActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1A2B3C4E5F60A1800000003 /* DeliveryActivityAttributes.swift */; };
+		F1A2B3C4E5F60A1800000006 /* DeliveryActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1A2B3C4E5F60A1800000005 /* DeliveryActivityAttributes.swift */; };
+		F1A2B3C4E5F60A1800000008 /* DeliveryLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1A2B3C4E5F60A1800000007 /* DeliveryLiveActivity.swift */; };
+		F1A2B3C4E5F60A180000000A /* DeliveryActionIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1A2B3C4E5F60A1800000009 /* DeliveryActionIntent.swift */; };
+		F1A2B3C4E5F60A180000000C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F1A2B3C4E5F60A180000000B /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -93,6 +99,12 @@
 		D1A2B3C4E5F60A1800000005 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		D1A2B3C4E5F60A1800000006 /* ChillaxLiveActivity.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ChillaxLiveActivity.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		E1A2B3C4E5F60A1800000002 /* SessionActionIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionActionIntent.swift; sourceTree = "<group>"; };
+		F1A2B3C4E5F60A1800000001 /* DeliveryCardHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeliveryCardHelper.swift; sourceTree = "<group>"; };
+		F1A2B3C4E5F60A1800000003 /* DeliveryActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeliveryActivityAttributes.swift; sourceTree = "<group>"; };
+		F1A2B3C4E5F60A1800000005 /* DeliveryActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeliveryActivityAttributes.swift; sourceTree = "<group>"; };
+		F1A2B3C4E5F60A1800000007 /* DeliveryLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeliveryLiveActivity.swift; sourceTree = "<group>"; };
+		F1A2B3C4E5F60A1800000009 /* DeliveryActionIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeliveryActionIntent.swift; sourceTree = "<group>"; };
+		F1A2B3C4E5F60A180000000B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -167,6 +179,8 @@
 				74858FAE1ED2DC5600515810 /* AppDelegate.swift */,
 				A1B2C3D4E5F6071800000002 /* SessionNotificationHelper.swift */,
 				D1A2B3C4E5F60A1800000001 /* SessionActivityAttributes.swift */,
+				F1A2B3C4E5F60A1800000001 /* DeliveryCardHelper.swift */,
+				F1A2B3C4E5F60A1800000003 /* DeliveryActivityAttributes.swift */,
 				74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */,
 			);
 			path = Runner;
@@ -179,6 +193,10 @@
 				D1A2B3C4E5F60A1800000003 /* SessionLiveActivity.swift */,
 				D1A2B3C4E5F60A1800000004 /* SessionActivityAttributes.swift */,
 				E1A2B3C4E5F60A1800000002 /* SessionActionIntent.swift */,
+				F1A2B3C4E5F60A1800000005 /* DeliveryActivityAttributes.swift */,
+				F1A2B3C4E5F60A1800000007 /* DeliveryLiveActivity.swift */,
+				F1A2B3C4E5F60A1800000009 /* DeliveryActionIntent.swift */,
+				F1A2B3C4E5F60A180000000B /* Assets.xcassets */,
 				D1A2B3C4E5F60A1800000005 /* Info.plist */,
 			);
 			path = ChillaxLiveActivity;
@@ -312,6 +330,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F1A2B3C4E5F60A180000000C /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -368,6 +387,8 @@
 				A1B2C3D4E5F6071800000001 /* SessionNotificationHelper.swift in Sources */,
 				1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */,
 				D1A2B3C4E5F60A1800000007 /* SessionActivityAttributes.swift in Sources */,
+				F1A2B3C4E5F60A1800000002 /* DeliveryCardHelper.swift in Sources */,
+				F1A2B3C4E5F60A1800000004 /* DeliveryActivityAttributes.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -379,6 +400,9 @@
 				D1A2B3C4E5F60A1800000009 /* SessionLiveActivity.swift in Sources */,
 				D1A2B3C4E5F60A180000000A /* SessionActivityAttributes.swift in Sources */,
 				E1A2B3C4E5F60A1800000001 /* SessionActionIntent.swift in Sources */,
+				F1A2B3C4E5F60A1800000006 /* DeliveryActivityAttributes.swift in Sources */,
+				F1A2B3C4E5F60A1800000008 /* DeliveryLiveActivity.swift in Sources */,
+				F1A2B3C4E5F60A180000000A /* DeliveryActionIntent.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

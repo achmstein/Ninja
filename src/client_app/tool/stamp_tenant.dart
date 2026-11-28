@@ -8,7 +8,8 @@
 // Reads ../../tenants/<slug>.json, the record the control plane hands out
 // (tenants/README.md). A record without APP_ID is a build of the shared app,
 // and nothing is stamped. Beside the record, tenants/<slug>/ may hold:
-//   icon.png             1024x1024, no transparency: the iOS icon and Android's legacy one
+//   icon.png             1024x1024, no transparency: the iOS icon (and the logo on the iPhone's
+//                        delivery card) and Android's legacy one
 //   icon-foreground.png  Android's adaptive foreground, the mark inside its middle two thirds
 // For iOS the Apple team is the record's APPLE_TEAM_ID (an APPLE_TEAM_ID in
 // the environment overrides it). The Firebase files
@@ -131,6 +132,7 @@ void _ios(_Stamp stamp, String appId, String name, String host, String team) {
   stamp.edit('ios/Runner/Runner.entitlements', [('applinks:$_host', 'applinks:$host')]);
   stamp.edit('ios/Runner/AppDelegate.swift', [('url.scheme == "$_id"', 'url.scheme == "$appId"')]);
   stamp.edit('ios/ChillaxLiveActivity/SessionLiveActivity.swift', [('"$_id://action/', '"$appId://action/')]);
+  stamp.edit('ios/ChillaxLiveActivity/DeliveryLiveActivity.swift', [('"$_id://delivery/', '"$appId://delivery/')]);
   stamp.edit('ios/Runner/SessionNotificationHelper.swift', [('content.title = "$_name"', 'content.title = "${_swift(name)}"')]);
   stamp.edit('ios/ExportOptions.plist', [
     (RegExp(r'(<key>teamID</key>\s*<string>)[^<]*'), (Match m) => '${m[1]}$team'),
@@ -170,6 +172,8 @@ Future<void> _iosIcons(String root, String assets) async {
     return;
   }
   await _icons(root, {'android': false, 'ios': true, 'remove_alpha_ios': true, 'image_path': icon.absolute.path});
+  // The delivery card's Live Activity draws the logo too, from the extension's own picture
+  icon.copySync('$root/ios/ChillaxLiveActivity/Assets.xcassets/DeliveryLogo.imageset/logo.png');
 }
 
 Future<void> _icons(String root, Map<String, Object> config) async {
